@@ -1,26 +1,55 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Engida Design System - Silver Blue, Crisp White, Black Text Palette */
+  --background: #FFFFFF;
+  --foreground: #000000;
+  --text-dark: #000000;
+  --card: #FFFFFF;
+  --card-foreground: #000000;
+  
+  /* Silver Blue System Colors */
+  --silver-50: #F4F7FC;
+  --silver-100: #E3EAF5;
+  --silver-200: #C5D4EC;
+  --silver-300: #9BB3DD;
+  --silver-400: #7093CD;
+  --silver-500: #4672BE;
+  --silver-600: #33599E;
+  --silver-700: #234079;
+  --silver-800: #162B54;
+  
+  --primary: #33599E;
+  --primary-hover: #234079;
+  --primary-light: #E3EAF5;
+  
+  --muted: #334155;
+  --border: #CBD5E1;
+  --border-light: #E2E8F0;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-light: var(--primary-light);
+  --color-silver-50: var(--silver-50);
+  --color-silver-100: var(--silver-100);
+  --color-silver-200: var(--silver-200);
+  --color-silver-300: var(--silver-300);
+  --color-silver-500: var(--silver-500);
+  --color-silver-700: var(--silver-700);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  margin: 0;
+  padding: 0;
 }
