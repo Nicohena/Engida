@@ -9,6 +9,9 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { User } from './users/entities/user.entity';
 import { RefreshToken } from './auth/entities/refresh-token.entity';
+import { HealthModule } from './health/health.module';
+import { DatabaseModule } from './database/database.module';
+import { AiModule } from './modules/ai/ai.module';
 
 @Module({
   imports: [
@@ -41,6 +44,9 @@ import { RefreshToken } from './auth/entities/refresh-token.entity';
         },
       ],
     }),
+    HealthModule,
+    DatabaseModule,
+    AiModule,
     UsersModule,
     AuthModule,
   ],
