@@ -30,6 +30,7 @@ htmlcov/
 *.swo
 *~
 .DS_Store
+.agents
 
 # Logs
 logs/
