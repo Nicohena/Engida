@@ -1,9 +1,19 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UnauthorizedException, ConflictException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { getRepositoryToken } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { UserRole } from '../users/entities/user.entity';
+import { RefreshToken } from './entities/refresh-token.entity';
+
+jest.mock('bcrypt', () => ({
+  ...jest.requireActual('bcrypt'),
+  hash: jest.fn(),
+  compare: jest.fn(),
+}));
 
 describe('AuthService', () => {
   let authService: AuthService;
@@ -45,10 +55,10 @@ describe('AuthService', () => {
       providers: [
         AuthService,
         { provide: UsersService, useValue: mockUsersService },
-        { provide: 'JwtService', useValue: mockJwtService },
-        { provide: 'ConfigService', useValue: mockConfigService },
+        { provide: JwtService, useValue: mockJwtService },
+        { provide: ConfigService, useValue: mockConfigService },
         {
-          provide: 'RefreshTokenRepository',
+          provide: getRepositoryToken(RefreshToken),
           useValue: mockRefreshTokenRepository,
         },
       ],
@@ -66,6 +76,7 @@ describe('AuthService', () => {
     it('should register a new user successfully', async () => {
       mockUsersService.findByEmail.mockResolvedValue(null);
       mockUsersService.createUser.mockResolvedValue(mockUser);
+      (bcrypt.hash as jest.Mock).mockResolvedValue('hashed_password');
 
       const result = await authService.register({
         name: 'Test User',
@@ -101,7 +112,7 @@ describe('AuthService', () => {
 
     it('should throw UnauthorizedException if password is invalid', async () => {
       mockUsersService.findByEmail.mockResolvedValue(mockUser);
-      jest.spyOn(bcrypt, 'compare').mockImplementation(() => Promise.resolve(false));
+      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
       await expect(
         authService.login({ email: 'test@example.com', password: 'wrongpassword' }),
@@ -109,3 +120,4 @@ describe('AuthService', () => {
     });
   });
 });
+

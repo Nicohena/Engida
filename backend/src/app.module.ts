@@ -12,6 +12,16 @@ import { RefreshToken } from './auth/entities/refresh-token.entity';
 import { HealthModule } from './health/health.module';
 import { DatabaseModule } from './database/database.module';
 import { AiModule } from './modules/ai/ai.module';
+import { PropertiesModule } from './modules/properties/properties.module';
+import { AmenitiesModule } from './modules/amenities/amenities.module';
+import { BookingsModule } from './modules/bookings/bookings.module';
+import { ReviewsModule } from './modules/reviews/reviews.module';
+import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
+import { Property } from './modules/properties/entities/property.entity';
+import { Room } from './modules/properties/entities/room.entity';
+import { Amenity } from './modules/amenities/entities/amenity.entity';
+import { Booking } from './modules/bookings/entities/booking.entity';
+import { Review } from './modules/reviews/entities/review.entity';
 
 @Module({
   imports: [
@@ -29,9 +39,12 @@ import { AiModule } from './modules/ai/ai.module';
         username: configService.get<string>('DATABASE_USER', 'postgres'),
         password: configService.get<string>('DATABASE_PASSWORD', 'postgres'),
         database: configService.get<string>('DATABASE_NAME', 'engida_db'),
-        entities: [User, RefreshToken],
+        entities: [User, RefreshToken, Property, Room, Amenity, Booking, Review],
         synchronize: configService.get<boolean>('DATABASE_SYNCHRONIZE', true),
-        logging: configService.get<string>('NODE_ENV') === 'development',
+        logging:
+          configService.get<string>('DEBUG_SQL') === 'true'
+            ? true
+            : ['error', 'warn'],
       }),
     }),
     ThrottlerModule.forRootAsync({
@@ -49,6 +62,11 @@ import { AiModule } from './modules/ai/ai.module';
     AiModule,
     UsersModule,
     AuthModule,
+    PropertiesModule,
+    AmenitiesModule,
+    BookingsModule,
+    ReviewsModule,
+    CloudinaryModule,
   ],
   controllers: [AppController],
   providers: [

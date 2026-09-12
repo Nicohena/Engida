@@ -1,5 +1,5 @@
 export default () => ({
-  port: parseInt(process.env.PORT, 10) || 3000,
+  port: parseInt(process.env.PORT ?? '3000', 10) || 3000,
   database: {
     url: process.env.DATABASE_URL,
   },
@@ -9,5 +9,10 @@ export default () => ({
   },
   ai: {
     serviceUrl: process.env.AI_SERVICE_URL || 'http://localhost:8000',
+  },
+  cloudinary: {
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+    apiKey: process.env.CLOUDINARY_API_KEY,
+    apiSecret: process.env.CLOUDINARY_API_SECRET,
   },
 });
