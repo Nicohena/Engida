@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 
 interface ListingItem {
   id: string;
   title: string;
   category: string;
+  additionalCategories?: string[];
   location: string;
   distance: string;
   rating: number;
@@ -17,7 +19,8 @@ interface ListingItem {
   instantBook: boolean;
   tag?: string;
   gradient: string;
-  renderIllustration: () => React.ReactNode;
+  imageUrl?: string;
+  renderIllustration?: () => React.ReactNode;
 }
 
 const CATEGORIES = [
@@ -105,202 +108,286 @@ const CATEGORIES = [
 
 const LISTINGS: ListingItem[] = [
   {
-    id: 'stay-1',
-    title: 'Atlas Executive Serviced Suite',
-    category: 'apartments',
+    id: 'c0000000-0000-0000-0000-000000000001',
+    title: 'Modern Cozy Villa in Bole',
+    category: 'villas',
+    additionalCategories: ['airport'],
     location: 'Bole Atlas, Addis Ababa',
     distance: '2.4 km from Bole Intl. Airport',
     rating: 4.98,
     reviewsCount: 46,
     trustScore: 99,
-    pricePerNight: '4,200',
-    hostName: 'Abebe (Superhost)',
-    amenities: ['24/7 Generator', 'Water Tank', 'Fiber WiFi'],
+    pricePerNight: '120',
+    hostName: 'Abebe Bikila (Superhost)',
+    amenities: ['24/7 Generator', 'Water Tank', 'Swimming Pool', 'Smart Home'],
     instantBook: true,
-    tag: 'Guest Favorite',
+    tag: 'Featured Luxury',
     gradient: 'from-blue-600 via-indigo-700 to-slate-900',
-    renderIllustration: () => (
-      <div className="w-full h-full flex items-center justify-center relative">
-        <svg width="120" height="90" viewBox="0 0 120 90" fill="none">
-          <rect x="25" y="15" width="70" height="65" rx="3" fill="#ffffff" opacity="0.95" />
-          <rect x="25" y="15" width="70" height="12" fill="#2563eb" />
-          <rect x="33" y="34" width="14" height="14" rx="2" fill="#dbeafe" />
-          <rect x="53" y="34" width="14" height="14" rx="2" fill="#dbeafe" />
-          <rect x="73" y="34" width="14" height="14" rx="2" fill="#dbeafe" />
-          <rect x="33" y="54" width="14" height="14" rx="2" fill="#dbeafe" />
-          <rect x="53" y="54" width="14" height="14" rx="2" fill="#dbeafe" />
-          <rect x="73" y="54" width="14" height="14" rx="2" fill="#dbeafe" />
-        </svg>
-      </div>
-    ),
+    imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCkz2OG6oE8xWZHZkQBsfXBgI2gioKNMBSOfW5AJFgpMJ96qmbxt9Xjs9KnrrlgHmSC5HqhehkaETbqVTb37boq5fhlaT-qjqiZXsL4bQZ5z8waLri8TfQSdogqXmc9lkeabctZpgsYT1oEeY8bnW3dbWeXrPjDcuBhvCj_SGAfnNRZ0LiZvr2Dv-dSVKMRIQ0hPo_8N8XdNfKEMu9xdQMHOuWNSNTwBbFld0-Cj--rTkx39QREYun-ag',
   },
   {
-    id: 'stay-2',
-    title: 'Babogaya Lakefront Panoramic Villa',
+    id: 'd0000000-0000-0000-0000-000000000003',
+    title: 'The Palm Sanctuary Resort',
     category: 'lakeside',
-    location: 'Lakefront Shore, Bishoftu',
+    location: 'Lake Hawassa Shore Road, Hawassa',
     distance: 'Direct waterfront dock & terrace',
     rating: 4.95,
     reviewsCount: 38,
     trustScore: 98,
-    pricePerNight: '5,800',
-    hostName: 'Selamawit (Superhost)',
-    amenities: ['Lake View', '24/7 Generator', 'Breakfast'],
+    pricePerNight: '412',
+    hostName: 'Abebe Bikila (Superhost)',
+    amenities: ['Lake View', 'Private Pool', 'Garden', 'WiFi'],
     instantBook: true,
     tag: 'Rare Find',
     gradient: 'from-teal-600 via-cyan-700 to-emerald-900',
-    renderIllustration: () => (
-      <div className="w-full h-full flex items-center justify-center relative">
-        <svg width="120" height="90" viewBox="0 0 120 90" fill="none">
-          <path d="M15 75 C35 70, 45 78, 65 72 C85 68, 95 76, 110 70 L110 85 L15 85 Z" fill="#06b6d4" opacity="0.6" />
-          <path d="M30 45 L60 22 L90 45 L85 75 L35 75 Z" fill="#ffffff" opacity="0.95" />
-          <polygon points="60 16 26 42 94 42" fill="#0d9488" />
-          <rect x="52" y="54" width="16" height="21" fill="#1e293b" rx="1" />
-          <circle cx="85" cy="30" r="10" fill="#fef08a" opacity="0.9" />
-        </svg>
-      </div>
-    ),
+    imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCWb-zNCPTotyBn6DsH750-rNTwzxG5p9rsKAA3r87enJxxmU87-dTW7LEEMgxtDtLU5jTqvRqkVIuNTJ3DaBcCYDEPgd6zfJep5aF9-84kXcnDlBf-zNGyXkDPb7pTi_SMmSg637iGf8w0xcNDhrsImQGrH5V2wo-d_kLoAJK0WZ2H6BsxlSr8XiVLLaEDdt-Y_8k7xjc2kdb69cvGj9aH54mqv_giQkBTmKVULHPtERfOZy-GRhzvWA',
   },
   {
-    id: 'stay-3',
-    title: 'Diplomatic Studio near UNECA',
+    id: 'd0000000-0000-0000-0000-000000000002',
+    title: 'Skyline Panorama Suite',
     category: 'apartments',
-    location: 'Kazanchis, Kirkos, Addis Ababa',
-    distance: '450m from UNECA Gate',
+    location: 'Bole Medhanialem, Tower 12',
+    distance: 'Heart of Addis nightlife & dining',
     rating: 4.91,
     reviewsCount: 29,
     trustScore: 97,
-    pricePerNight: '3,400',
-    hostName: 'Dawit (Verified Host)',
-    amenities: ['Fiber Internet', 'Dedicated Desk', '24h Guard'],
+    pricePerNight: '285',
+    hostName: 'Abebe Bikila (Verified Host)',
+    amenities: ['Fiber Internet', 'Fitness Center', 'Elevator', 'Security'],
     instantBook: true,
     tag: 'Popular',
     gradient: 'from-slate-700 via-slate-800 to-slate-950',
-    renderIllustration: () => (
-      <div className="w-full h-full flex items-center justify-center relative">
-        <svg width="120" height="90" viewBox="0 0 120 90" fill="none">
-          <rect x="35" y="20" width="50" height="60" rx="3" fill="#ffffff" opacity="0.95" />
-          <line x1="45" y1="32" x2="75" y2="32" stroke="#2563eb" strokeWidth="3" strokeLinecap="round" />
-          <line x1="45" y1="42" x2="68" y2="42" stroke="#93c5fd" strokeWidth="2.5" strokeLinecap="round" />
-          <line x1="45" y1="52" x2="72" y2="52" stroke="#93c5fd" strokeWidth="2.5" strokeLinecap="round" />
-          <circle cx="60" cy="65" r="5" fill="#2563eb" />
-        </svg>
-      </div>
-    ),
+    imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCD9YC9LX0yAmsB0rZ9SCGkjL5YzUVJMozYhj1KnYdMRaf2_3Vkw4U0-77uvDsnjubCBnmtiE4Js-NOehKP-H6m51ZAwajG6_GigX4eL_ffyL5DpZt7tSp441bQcblIuPenTKTcngUMcIfW65di23QgbcWMynNlvswCqRPg2oQqhqv7jtic026hOYky60ASF7qG84Cer198EtbzcFaSsFmm5TFGK93IDGJYE1S_yKXznM74Kvv37AQgtw',
   },
   {
-    id: 'stay-4',
-    title: 'Sidama Shore Garden Guesthouse',
-    category: 'guesthouses',
-    location: 'Tabor Area, Hawassa Lake',
-    distance: '80m from Lake Hawassa Trail',
+    id: 'd0000000-0000-0000-0000-000000000001',
+    title: 'Hillside Minimalist Villa',
+    category: 'villas',
+    location: 'Entoto Hills, North Addis',
+    distance: 'Panoramic mountain views & fresh air',
     rating: 4.96,
     reviewsCount: 34,
     trustScore: 99,
-    pricePerNight: '2,600',
-    hostName: 'Tigist (Superhost)',
-    amenities: ['Sidama Coffee', 'Garden View', 'Water Tank'],
-    instantBook: false,
+    pricePerNight: '345',
+    hostName: 'Abebe Bikila (Superhost)',
+    amenities: ['Mountain View', 'Infinity Pool', 'Free Parking', 'Chef Kitchen'],
+    instantBook: true,
     tag: 'Top Rated',
     gradient: 'from-amber-600 via-orange-700 to-stone-900',
-    renderIllustration: () => (
-      <div className="w-full h-full flex items-center justify-center relative">
-        <svg width="120" height="90" viewBox="0 0 120 90" fill="none">
-          <path d="M35 48 L60 25 L85 48 L80 75 L40 75 Z" fill="#ffffff" opacity="0.95" />
-          <polygon points="60 18 30 45 90 45" fill="#d97706" />
-          <circle cx="28" cy="65" r="12" fill="#22c55e" opacity="0.85" />
-          <circle cx="92" cy="65" r="14" fill="#16a34a" opacity="0.85" />
-        </svg>
-      </div>
-    ),
+    imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDoerE6yNADEE4L07QLGRJG1e4O-Dj5XutS0xRZLAJIBqtoh0Kv0eS0PS21GyXhnGFKHviUgn4dxpy2jUGmi5UWKyrD2uGPsni8RcyxvqdpZ8TkNmsgTMaLQjUYw_OxrmI3dIK2rGWTjLj3hSJ7gXntTjZBjO1a8iba7HXryKc83-ijjS0mQUQ97A4D2f86EWRMnsh-GMK-XdTzJfcQfuAr2-X2Gr3A6lkucUxIcWvXKvd0JoB6sJ7Rvw',
   },
   {
-    id: 'stay-5',
-    title: 'Old Airport Modern 3-Bedroom Villa',
+    id: 'd0000000-0000-0000-0000-000000000006',
+    title: 'Kuriftu Crater Lakefront Villa',
+    category: 'lakeside',
+    additionalCategories: ['villas'],
+    location: 'Lake Kuriftu Shoreline, Bishoftu',
+    distance: '45 mins from Addis via Expressway',
+    rating: 4.97,
+    reviewsCount: 52,
+    trustScore: 99,
+    pricePerNight: '480',
+    hostName: 'Abebe Bikila (Superhost)',
+    amenities: ['Lake View', 'Private Pool', 'Spa Access', 'Kayaking'],
+    instantBook: true,
+    tag: 'Crater Escape',
+    gradient: 'from-emerald-700 via-teal-800 to-slate-900',
+    imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCWb-zNCPTotyBn6DsH750-rNTwzxG5p9rsKAA3r87enJxxmU87-dTW7LEEMgxtDtLU5jTqvRqkVIuNTJ3DaBcCYDEPgd6zfJep5aF9-84kXcnDlBf-zNGyXkDPb7pTi_SMmSg637iGf8w0xcNDhrsImQGrH5V2wo-d_kLoAJK0WZ2H6BsxlSr8XiVLLaEDdt-Y_8k7xjc2kdb69cvGj9aH54mqv_giQkBTmKVULHPtERfOZy-GRhzvWA',
+  },
+  {
+    id: 'd0000000-0000-0000-0000-000000000007',
+    title: 'Kazanchis UNECA Diplomatic Penthouse',
+    category: 'apartments',
+    location: 'Kazanchis Diplomatic Quarter, Addis Ababa',
+    distance: 'Walking distance to UNECA & Sheraton',
+    rating: 4.93,
+    reviewsCount: 31,
+    trustScore: 98,
+    pricePerNight: '290',
+    hostName: 'Abebe Bikila (Superhost)',
+    amenities: ['24/7 Power', 'High Speed WiFi', 'Concierge', 'Gym'],
+    instantBook: true,
+    tag: 'Diplomatic Tier',
+    gradient: 'from-slate-800 via-indigo-900 to-blue-950',
+    imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCD9YC9LX0yAmsB0rZ9SCGkjL5YzUVJMozYhj1KnYdMRaf2_3Vkw4U0-77uvDsnjubCBnmtiE4Js-NOehKP-H6m51ZAwajG6_GigX4eL_ffyL5DpZt7tSp441bQcblIuPenTKTcngUMcIfW65di23QgbcWMynNlvswCqRPg2oQqhqv7jtic026hOYky60ASF7qG84Cer198EtbzcFaSsFmm5TFGK93IDGJYE1S_yKXznM74Kvv37AQgtw',
+  },
+  {
+    id: 'd0000000-0000-0000-0000-000000000004',
+    title: 'Glass Pavilion Residence',
     category: 'villas',
-    location: 'Bisrate Gabriel, Addis Ababa',
-    distance: 'Quiet diplomatic enclave',
+    location: 'Old Airport Road, Lideta',
+    distance: 'Exclusive gated diplomatic enclave',
     rating: 4.99,
     reviewsCount: 58,
     trustScore: 100,
-    pricePerNight: '7,500',
-    hostName: 'Yared (Superhost)',
-    amenities: ['Auto-Generator', 'Private Garage', 'Housekeeper'],
+    pricePerNight: '520',
+    hostName: 'Abebe Bikila (Superhost)',
+    amenities: ['Smart Automation', 'Wine Cellar', 'Private Pool', 'Security'],
     instantBook: true,
-    tag: 'Superhost',
+    tag: 'Architectural Gem',
     gradient: 'from-blue-700 via-indigo-800 to-slate-900',
-    renderIllustration: () => (
-      <div className="w-full h-full flex items-center justify-center relative">
-        <svg width="120" height="90" viewBox="0 0 120 90" fill="none">
-          <rect x="25" y="32" width="70" height="46" rx="3" fill="#ffffff" opacity="0.95" />
-          <polygon points="60 14 18 34 102 34" fill="#1d4ed8" />
-          <rect x="35" y="44" width="14" height="12" rx="1" fill="#bfdbfe" />
-          <rect x="71" y="44" width="14" height="12" rx="1" fill="#bfdbfe" />
-          <rect x="53" y="54" width="14" height="24" rx="1" fill="#0f172a" />
-        </svg>
-      </div>
-    ),
+    imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCSLpDNiC2MVR2ZzfZBQX8mEsKix2gnavtN0drMzfT1qQDBIwWnb-F0X1ewBYeQ0bkPsFk4Ng4Y6FdlzitQd_BG68UupCkxuQmobonWRHEoz__QwqIDQ3ld0KhF3D5uegW1KEFehLj1jBObBAttnV2ZtAoDI3CcpdKdcivb2r1dBnmIxIN9ESZvNkXA26ABljVUDUBi_6cXu8ctibvGXe38ne8oQyu7BeQjSTcjiP7IPxz2NQCXwh_x9w',
   },
   {
-    id: 'stay-6',
+    id: 'd0000000-0000-0000-0000-000000000008',
+    title: 'Lake Tana Shoreline Resort Suite',
+    category: 'lakeside',
+    additionalCategories: ['guesthouses'],
+    location: 'Lake Tana North Boulevard, Bahir Dar',
+    distance: 'Private pier & boat trip departure',
+    rating: 4.92,
+    reviewsCount: 27,
+    trustScore: 97,
+    pricePerNight: '230',
+    hostName: 'Abebe Bikila (Superhost)',
+    amenities: ['Lake View', 'Boat Dock', 'Organic Breakfast', 'WiFi'],
+    instantBook: true,
+    tag: 'Blue Nile Source',
+    gradient: 'from-cyan-700 via-blue-800 to-indigo-950',
+    imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDoerE6yNADEE4L07QLGRJG1e4O-Dj5XutS0xRZLAJIBqtoh0Kv0eS0PS21GyXhnGFKHviUgn4dxpy2jUGmi5UWKyrD2uGPsni8RcyxvqdpZ8TkNmsgTMaLQjUYw_OxrmI3dIK2rGWTjLj3hSJ7gXntTjZBjO1a8iba7HXryKc83-ijjS0mQUQ97A4D2f86EWRMnsh-GMK-XdTzJfcQfuAr2-X2Gr3A6lkucUxIcWvXKvd0JoB6sJ7Rvw',
+  },
+  {
+    id: 'd0000000-0000-0000-0000-000000000005',
     title: 'Lalibela Escarpment Heritage Lodge',
     category: 'historic',
+    additionalCategories: ['guesthouses'],
     location: 'Mountain Ridge, Lalibela',
     distance: '8-min walk to Biete Giyorgis',
     rating: 4.94,
     reviewsCount: 42,
     trustScore: 98,
-    pricePerNight: '3,600',
-    hostName: 'Mulugeta (Heritage Host)',
-    amenities: ['Canyon View', 'Tour Guides', 'Local Breakfast'],
+    pricePerNight: '310',
+    hostName: 'Abebe Bikila (Heritage Host)',
+    amenities: ['Canyon View', 'Private Balcony', 'Security', 'Free Parking'],
     instantBook: true,
     tag: 'Historic Gem',
     gradient: 'from-amber-700 via-orange-800 to-stone-900',
-    renderIllustration: () => (
-      <div className="w-full h-full flex items-center justify-center relative">
-        <svg width="120" height="90" viewBox="0 0 120 90" fill="none">
-          <polygon points="60 20 72 44 98 48 79 66 84 92 60 79 36 92 41 66 22 48 48 44" fill="#f59e0b" opacity="0.85" />
-          <circle cx="60" cy="50" r="12" fill="#ffffff" opacity="0.95" />
-          <polygon points="60 42 63 48 70 49 65 54 66 60 60 57 54 60 55 54 50 49 57 48" fill="#d97706" />
-        </svg>
-      </div>
-    ),
+    imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDxknKoUW7P36f-lE2P7BXH1loEt4sNBtWxQq-YpFUO2J5gknUYVgweT_RCJ1Da1lJ70AUimqr7RF09P6tGZy1ZqPsjMbhYYb6K9ro0GdKUoejBOxLO4Xy7WI1anbTapUOypBPwZ0ynO-PFKVw0k8o7OKeDynqJSvRAsKDA-qYlmWogfFZqzJlpu1gysTyAlHlbjqGTQdbfhqnwd2dMRkaG2_u7_oipi34kV1lRNmBiiX9Zo2GrSUU40Q',
+  },
+  {
+    id: 'd0000000-0000-0000-0000-000000000009',
+    title: 'Fasil Ghebbi Heritage Guest Manor',
+    category: 'historic',
+    additionalCategories: ['guesthouses'],
+    location: 'Royal Enclosure Hills, Gondar',
+    distance: '5 mins to Royal Castles & Debre Berhan',
+    rating: 4.95,
+    reviewsCount: 39,
+    trustScore: 99,
+    pricePerNight: '275',
+    hostName: 'Abebe Bikila (Heritage Host)',
+    amenities: ['Historical Tour', 'Garden Terrace', 'Security', 'Traditional Coffee'],
+    instantBook: true,
+    tag: 'Camelot of Africa',
+    gradient: 'from-amber-800 via-yellow-900 to-stone-950',
+    imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDxknKoUW7P36f-lE2P7BXH1loEt4sNBtWxQq-YpFUO2J5gknUYVgweT_RCJ1Da1lJ70AUimqr7RF09P6tGZy1ZqPsjMbhYYb6K9ro0GdKUoejBOxLO4Xy7WI1anbTapUOypBPwZ0ynO-PFKVw0k8o7OKeDynqJSvRAsKDA-qYlmWogfFZqzJlpu1gysTyAlHlbjqGTQdbfhqnwd2dMRkaG2_u7_oipi34kV1lRNmBiiX9Zo2GrSUU40Q',
+  },
+  {
+    id: 'd0000000-0000-0000-0000-000000000010',
+    title: 'Bisrate Gabriel Luxury Garden Villa',
+    category: 'villas',
+    location: 'South Ring Road, Bisrate Gabriel, Addis Ababa',
+    distance: 'Serene residential expat quarter',
+    rating: 4.98,
+    reviewsCount: 48,
+    trustScore: 100,
+    pricePerNight: '460',
+    hostName: 'Abebe Bikila (Superhost)',
+    amenities: ['Lush Garden', '24/7 Power Backup', 'Water Reservoir', 'Chef Service'],
+    instantBook: true,
+    tag: 'Private Oasis',
+    gradient: 'from-emerald-800 via-green-900 to-slate-950',
+    imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCkz2OG6oE8xWZHZkQBsfXBgI2gioKNMBSOfW5AJFgpMJ96qmbxt9Xjs9KnrrlgHmSC5HqhehkaETbqVTb37boq5fhlaT-qjqiZXsL4bQZ5z8waLri8TfQSdogqXmc9lkeabctZpgsYT1oEeY8bnW3dbWeXrPjDcuBhvCj_SGAfnNRZ0LiZvr2Dv-dSVKMRIQ0hPo_8N8XdNfKEMu9xdQMHOuWNSNTwBbFld0-Cj--rTkx39QREYun-ag',
+  },
+  {
+    id: 'd0000000-0000-0000-0000-000000000011',
+    title: 'Bole Executive Airport Transit Suite',
+    category: 'airport',
+    additionalCategories: ['apartments'],
+    location: 'Cameroon Street, Bole Hub, Addis Ababa',
+    distance: '5 mins free shuttle to Bole Terminal 2',
+    rating: 4.96,
+    reviewsCount: 63,
+    trustScore: 99,
+    pricePerNight: '195',
+    hostName: 'Abebe Bikila (Superhost)',
+    amenities: ['Airport Shuttle', 'Soundproof Windows', 'Fast WiFi', '24/7 Check-in'],
+    instantBook: true,
+    tag: 'Transit Perfect',
+    gradient: 'from-blue-800 via-sky-900 to-slate-950',
+    imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCSLpDNiC2MVR2ZzfZBQX8mEsKix2gnavtN0drMzfT1qQDBIwWnb-F0X1ewBYeQ0bkPsFk4Ng4Y6FdlzitQd_BG68UupCkxuQmobonWRHEoz__QwqIDQ3ld0KhF3D5uegW1KEFehLj1jBObBAttnV2ZtAoDI3CcpdKdcivb2r1dBnmIxIN9ESZvNkXA26ABljVUDUBi_6cXu8ctibvGXe38ne8oQyu7BeQjSTcjiP7IPxz2NQCXwh_x9w',
   },
 ];
 
-export default function CategoryListingsSection({ onBookClick }: { onBookClick?: () => void }) {
+interface CategoryListingsSectionProps {
+  onSelectProperty?: (id: string) => void;
+  onBookClick?: (id: string) => void;
+  title?: string;
+  subtitle?: string;
+  badge?: string;
+  limit?: number;
+  showViewAllButton?: boolean;
+  onViewAllClick?: () => void;
+}
+
+export default function CategoryListingsSection({
+  onSelectProperty,
+  onBookClick,
+  title = 'Verified Luxury Homes & Boutique Lodges',
+  subtitle,
+  badge = 'EXPLORE ETHIOPIAN STAYS',
+  limit,
+  showViewAllButton = false,
+  onViewAllClick,
+}: CategoryListingsSectionProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
 
   const toggleFavorite = (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
     setFavorites((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const filteredListings = selectedCategory === 'all'
+  const handlePropertyClick = (id: string) => {
+    if (onSelectProperty) {
+      onSelectProperty(id);
+    } else if (onBookClick) {
+      onBookClick(id);
+    }
+  };
+
+  const baseFiltered = selectedCategory === 'all'
     ? LISTINGS
-    : LISTINGS.filter((l) => l.category === selectedCategory);
+    : LISTINGS.filter((l) => l.category === selectedCategory || l.additionalCategories?.includes(selectedCategory));
+
+  const filteredListings = limit ? baseFiltered.slice(0, limit) : baseFiltered;
 
   return (
-    <section className="w-full py-12 sm:py-16 bg-white">
+    <section className="w-full py-10 sm:py-14 bg-white">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         
         {/* Section Header */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 gap-3">
           <div>
-            <h2 className="text-xs font-bold tracking-widest text-slate-900 uppercase mb-1.5">
-              EXPLORE ETHIOPIAN STAYS
+            <h2 className="text-xs font-bold tracking-widest text-[#2563eb] uppercase mb-1.5 font-mono">
+              {badge}
             </h2>
-            <h3 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-[-0.03em]">
-              Verified Homes & Boutique Lodges
+            <h3 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-slate-900 tracking-[-0.03em]">
+              {title}
             </h3>
+            {subtitle && (
+              <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-xl">
+                {subtitle}
+              </p>
+            )}
           </div>
           <div className="text-xs text-slate-400 font-medium">
-            Showing <strong className="text-slate-800">{filteredListings.length}</strong> verified stays with 24/7 power & water
+            Showing <strong className="text-slate-800">{filteredListings.length}</strong> of {LISTINGS.length} verified stays with 24/7 power &amp; water
           </div>
         </div>
 
-        {/* Airbnb-style Category Bar (Exact styling) */}
+        {/* Airbnb-style Category Bar */}
         <div className="relative mb-8 border-b border-slate-100 pb-1">
           <div className="flex items-center gap-6 sm:gap-8 overflow-x-auto scrollbar-none py-1.5 px-0.5">
             {CATEGORIES.map((cat) => {
@@ -334,21 +421,38 @@ export default function CategoryListingsSection({ onBookClick }: { onBookClick?:
             const isFav = favorites[item.id] || false;
 
             return (
-              <div
+              <Link
                 key={item.id}
-                onClick={onBookClick}
-                className="group bg-white border border-slate-200 hover:border-blue-300 rounded-2xl overflow-hidden shadow-2xs hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between transform hover:-translate-y-1"
+                href={`/properties/${item.id}`}
+                onClick={(e: React.MouseEvent) => {
+                  if (onSelectProperty) {
+                    e.preventDefault();
+                    onSelectProperty(item.id);
+                  }
+                }}
+                className="group bg-white border border-slate-200 hover:border-blue-400 rounded-2xl overflow-hidden shadow-2xs hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between transform hover:-translate-y-1"
               >
                 {/* Visual Header / Artwork */}
-                <div className={`h-36 sm:h-40 w-full bg-gradient-to-br ${item.gradient} relative overflow-hidden flex flex-col justify-between p-3.5 text-white`}>
+                <div className={`h-44 sm:h-48 w-full bg-gradient-to-br ${item.gradient} relative overflow-hidden flex flex-col justify-between p-3.5 text-white`}>
                   
-                  {/* Subtle Background Geometry */}
-                  <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:14px_14px]" />
-
-                  {/* Artwork vector illustration */}
-                  <div className="absolute inset-0 flex items-center justify-center opacity-85 group-hover:scale-105 transition-transform duration-300">
-                    {item.renderIllustration()}
-                  </div>
+                  {/* Real Photo or Illustration */}
+                  {item.imageUrl ? (
+                    <>
+                      <img
+                        src={item.imageUrl}
+                        alt={item.title}
+                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-black/40 pointer-events-none" />
+                    </>
+                  ) : (
+                    <>
+                      <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:14px_14px]" />
+                      <div className="absolute inset-0 flex items-center justify-center opacity-85 group-hover:scale-105 transition-transform duration-300">
+                        {item.renderIllustration?.()}
+                      </div>
+                    </>
+                  )}
 
                   {/* Top Badges Row */}
                   <div className="relative z-10 flex items-center justify-between">
@@ -363,7 +467,7 @@ export default function CategoryListingsSection({ onBookClick }: { onBookClick?:
                       type="button"
                       onClick={(e) => toggleFavorite(item.id, e)}
                       aria-label="Save stay"
-                      className="w-7 h-7 rounded-full bg-black/25 backdrop-blur-xs flex items-center justify-center text-white hover:bg-white hover:text-red-500 transition-colors shadow-sm"
+                      className="w-7 h-7 rounded-full bg-black/35 backdrop-blur-xs flex items-center justify-center text-white hover:bg-white hover:text-red-500 transition-colors shadow-sm"
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill={isFav ? '#ef4444' : 'none'} stroke={isFav ? '#ef4444' : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
@@ -373,7 +477,7 @@ export default function CategoryListingsSection({ onBookClick }: { onBookClick?:
 
                   {/* Bottom Trust Badge */}
                   <div className="relative z-10 flex items-center justify-between">
-                    <span className="text-[10px] font-semibold text-white/90 bg-black/30 backdrop-blur-xs px-2 py-0.5 rounded-md">
+                    <span className="text-[10px] font-semibold text-white/90 bg-black/40 backdrop-blur-xs px-2 py-0.5 rounded-md">
                       {item.distance}
                     </span>
                     <span className="text-[10px] font-bold bg-[#2563eb] text-white px-2 py-0.5 rounded-md border border-white/20 shadow-2xs">
@@ -397,7 +501,7 @@ export default function CategoryListingsSection({ onBookClick }: { onBookClick?:
                     </div>
 
                     {/* Title */}
-                    <h4 className="text-xs sm:text-sm font-semibold text-slate-700 group-hover:text-[#2563eb] transition-colors line-clamp-1 mb-2">
+                    <h4 className="text-xs sm:text-sm font-semibold text-slate-900 group-hover:text-[#2563eb] transition-colors line-clamp-1 mb-2">
                       {item.title}
                     </h4>
 
@@ -407,7 +511,10 @@ export default function CategoryListingsSection({ onBookClick }: { onBookClick?:
                         <span key={idx} className="text-[9px] font-semibold bg-slate-50 text-slate-600 border border-slate-200/80 px-1.5 py-0.5 rounded">
                           {am.includes('Generator') && '⚡ '}
                           {am.includes('Water') && '💧 '}
-                          {am.includes('Coffee') && '☕ '}
+                          {am.includes('Pool') && '🏊 '}
+                          {am.includes('View') && '🌅 '}
+                          {am.includes('Smart') && '🏠 '}
+                          {am.includes('WiFi') && '📶 '}
                           {am.includes('Fiber') && '📶 '}
                           {am}
                         </span>
@@ -419,25 +526,39 @@ export default function CategoryListingsSection({ onBookClick }: { onBookClick?:
                   <div className="flex items-center justify-between pt-3 border-t border-slate-100 mt-1">
                     <div>
                       <span className="text-sm sm:text-base font-black text-slate-900">
-                        {item.pricePerNight} <span className="text-xs font-semibold text-slate-500">ETB</span>
+                        ${item.pricePerNight} <span className="text-xs font-semibold text-slate-500">/ night</span>
                       </span>
-                      <span className="text-[10px] text-slate-400 block -mt-0.5">night</span>
+                      <span className="text-[10px] text-slate-400 block -mt-0.5 font-medium">{item.hostName}</span>
                     </div>
 
-                    <button
-                      type="button"
-                      className="px-3.5 py-1.5 bg-blue-50 hover:bg-[#2563eb] text-[#2563eb] hover:text-white rounded-xl text-xs font-semibold transition-all duration-200 shadow-2xs group-hover:bg-[#2563eb] group-hover:text-white"
-                    >
-                      Instant Book
-                    </button>
+                    <span className="px-3.5 py-1.5 bg-slate-900 group-hover:bg-[#2563eb] text-white rounded-lg text-xs font-semibold uppercase tracking-wider transition-all duration-200 shadow-2xs">
+                      View Details
+                    </span>
                   </div>
 
                 </div>
 
-              </div>
+              </Link>
             );
           })}
         </div>
+
+        {/* Optional View All Button */}
+        {showViewAllButton && (
+          <div className="mt-10 text-center">
+            <button
+              type="button"
+              onClick={onViewAllClick}
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#2563eb] hover:bg-blue-700 text-white font-semibold rounded-xl text-sm shadow-md hover:shadow-lg transition-all cursor-pointer transform hover:-translate-y-0.5"
+            >
+              <span>Explore All {LISTINGS.length} Ethiopian Stays</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14" />
+                <path d="M12 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        )}
 
       </div>
     </section>

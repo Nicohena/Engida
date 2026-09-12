@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { LandingProvider } from '../context/LandingContext';
 import LandingHeader, { PartitionTab } from '../components/landing/LandingHeader';
 import SkylineIllustration from '../components/landing/SkylineIllustration';
@@ -17,7 +18,17 @@ import PaymentEscrowSection from '../components/landing/PaymentEscrowSection';
 import DestinationsSection from '../components/landing/DestinationsSection';
 
 function MainLandingPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab') as PartitionTab | null;
+
   const [activeTab, setActiveTab] = useState<PartitionTab>('home');
+
+  useEffect(() => {
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
 
   const navigateToTab = (tab: PartitionTab) => {
     setActiveTab(tab);
@@ -36,38 +47,97 @@ function MainLandingPage() {
       <main className="flex-1 w-full pt-[98px] md:pt-[65px] flex flex-col">
         
         {/* ============================================================ */}
-        {/* PARTITION 1: HOME (HERO + SKYLINE + DOCKED BANNER) */}
+        {/* PARTITION 1: HOME (HERO + SKYLINE + FEATURED STAYS) */}
         {/* ============================================================ */}
         {activeTab === 'home' && (
-          <section
-            key="home"
-            className="animate-partition flex-1 flex flex-col justify-between overflow-hidden bg-gradient-to-b from-amber-50/20 via-blue-50/15 to-white relative min-h-[calc(100vh-65px)]"
-          >
-            {/* Central Hero Typography & Search Pill */}
-            <div className="relative z-20 max-w-4xl mx-auto px-4 sm:px-6 text-center my-auto py-6 sm:py-8">
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[50px] font-extrabold text-slate-900 tracking-[-0.03em] leading-[1.14]">
-                Effortless to the perfect stay
-              </h1>
+          <div key="home" className="animate-partition flex-1 flex flex-col w-full">
+            {/* Hero Top Viewport Section */}
+            <section
+              className="flex flex-col justify-between overflow-hidden bg-gradient-to-b from-amber-50/20 via-blue-50/15 to-white relative min-h-[calc(100vh-65px)]"
+            >
+              {/* Central Hero Typography & Search Pill */}
+              <div className="relative z-20 max-w-4xl mx-auto px-4 sm:px-6 text-center my-auto py-6 sm:py-8">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[50px] font-extrabold text-slate-900 tracking-[-0.03em] leading-[1.14]">
+                  Effortless to the perfect stay
+                </h1>
 
-              <p className="mt-2.5 sm:mt-3 text-xs sm:text-sm md:text-base text-slate-500 font-normal max-w-xl mx-auto leading-relaxed">
-                Find verified accommodations across Ethiopia directly and without stress.
-              </p>
+                <p className="mt-2.5 sm:mt-3 text-xs sm:text-sm md:text-base text-slate-500 font-normal max-w-xl mx-auto leading-relaxed">
+                  Find verified accommodations across Ethiopia directly and without stress.
+                </p>
 
-              <div className="mt-5 sm:mt-7">
-                <HeroSearchBar onSearchClick={() => navigateToTab('stays')} />
+                <div className="mt-5 sm:mt-7">
+                  <HeroSearchBar onSearchClick={() => {
+                    const el = document.getElementById('featured-stays-section');
+                    if (el) {
+                      el.scrollIntoView({ behavior: 'smooth' });
+                    } else {
+                      navigateToTab('stays');
+                    }
+                  }} />
+                </div>
+              </div>
+
+              {/* Architectural Ethiopian Modern Skyline Artwork */}
+              <div className="relative w-full z-10 -mb-2 sm:-mb-4 pointer-events-none select-none">
+                <SkylineIllustration />
+              </div>
+
+              {/* Docked Blue Feature Strip (Bottom of Hero Viewport) */}
+              <div className="relative z-30 w-full">
+                <HeroDockedBanner />
+              </div>
+            </section>
+
+            {/* Featured Stays directly on Home Page */}
+            <div id="featured-stays-section" className="w-full bg-slate-50/50 border-t border-slate-200/80">
+              <CategoryListingsSection
+                title="Featured Ethiopian Stays & Homes"
+                subtitle="Browse handpicked luxury villas, penthouses, and heritage lodges verified with 24/7 power, water reservoirs, and fast internet."
+                badge="EXPLORE DIRECTLY ON ENGIDA"
+                showViewAllButton={true}
+                onViewAllClick={() => navigateToTab('stays')}
+                onSelectProperty={(id) => router.push(`/properties/${id}`)}
+              />
+            </div>
+
+            {/* Quick Benefits / Trust callout on Home page */}
+            <div className="w-full bg-white border-t border-slate-100 py-12 px-4 sm:px-6">
+              <div className="max-w-6xl mx-auto">
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50/50 border border-blue-100/80 rounded-2xl p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+                  <div className="max-w-xl">
+                    <span className="text-xs font-bold tracking-widest text-[#2563eb] uppercase font-mono">
+                      ENGIDA ASSURANCE GUARANTEE
+                    </span>
+                    <h3 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-[-0.03em] mt-1">
+                      Every Stay Physically Inspected
+                    </h3>
+                    <p className="text-xs sm:text-sm text-slate-600 mt-2 leading-relaxed">
+                      Say goodbye to unexpected blackouts, water cuts, or mismatched photos. All Engida hosts are strictly identity-verified with guaranteed power and water backups.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => navigateToTab('stays')}
+                      className="px-5 py-2.5 bg-[#2563eb] hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-semibold shadow-md transition-all cursor-pointer"
+                    >
+                      Browse All Stays
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => navigateToTab('trust-verification')}
+                      className="px-4 py-2.5 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 rounded-xl text-xs sm:text-sm font-medium transition-all cursor-pointer"
+                    >
+                      Learn Verification
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Architectural Ethiopian Modern Skyline Artwork */}
-            <div className="relative w-full z-10 -mb-2 sm:-mb-4 pointer-events-none select-none">
-              <SkylineIllustration />
-            </div>
-
-            {/* Docked Blue Feature Strip (Bottom of Hero Viewport) */}
-            <div className="relative z-30 w-full">
-              <HeroDockedBanner />
-            </div>
-          </section>
+            {/* Landing Footer on Home page */}
+            <LandingFooter />
+          </div>
         )}
 
         {/* ============================================================ */}
@@ -76,10 +146,15 @@ function MainLandingPage() {
         {activeTab === 'stays' && (
           <section
             key="stays"
-            className="animate-partition flex-1 w-full bg-white px-4 sm:px-6 py-6 sm:py-10"
+            className="animate-partition flex-1 w-full bg-white px-4 sm:px-6 py-6 sm:py-10 flex flex-col justify-between"
           >
-            <div className="max-w-6xl mx-auto">
-              <CategoryListingsSection onBookClick={() => navigateToTab('payments-escrow')} />
+            <div className="max-w-6xl mx-auto w-full flex-1">
+              <CategoryListingsSection
+                onSelectProperty={(id) => router.push(`/properties/${id}`)}
+              />
+            </div>
+            <div className="w-full mt-12">
+              <LandingFooter />
             </div>
           </section>
         )}
@@ -206,7 +281,9 @@ function MainLandingPage() {
 export default function HomePage() {
   return (
     <LandingProvider>
-      <MainLandingPage />
+      <Suspense fallback={null}>
+        <MainLandingPage />
+      </Suspense>
     </LandingProvider>
   );
 }
