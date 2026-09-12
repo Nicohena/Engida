@@ -137,9 +137,6 @@ export default function LandingHeader({ activeTab, onTabChange }: LandingHeaderP
           <span className="text-2xl sm:text-[25px] font-extrabold tracking-[-0.03em] text-slate-900 group-hover:text-[#2563eb] transition-colors select-none">
             Engida
           </span>
-          <span className="text-[11px] font-semibold text-[#2563eb] bg-blue-50 px-1.5 py-0.5 rounded-md border border-blue-100/80">
-            እንግዳ
-          </span>
         </button>
 
         {/* Center Marketing-Driven Navbar Items (High-Value Features Visible) */}

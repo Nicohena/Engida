@@ -8,8 +8,9 @@ import Footer from './Footer';
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isLandingPage = pathname === '/';
+  const isPropertyDetailsPage = pathname.startsWith('/properties/');
 
-  if (isLandingPage) {
+  if (isLandingPage || isPropertyDetailsPage) {
     return <>{children}</>;
   }
 
