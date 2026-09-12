@@ -34,6 +34,21 @@ export class User {
   })
   role: UserRole;
 
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  phone: string | null;
+
+  @Column({ type: 'varchar', length: 150, nullable: true })
+  title: string | null;
+
+  @Column({ type: 'text', nullable: true })
+  bio: string | null;
+
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  avatar: string | null;
+
+  @Column({ type: 'varchar', length: 150, nullable: true, name: 'office_location' })
+  officeLocation: string | null;
+
   @Column({ type: 'boolean', default: true, name: 'is_active' })
   isActive: boolean;
 
