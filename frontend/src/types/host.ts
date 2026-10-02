@@ -73,6 +73,17 @@ export interface HostListingsResponse {
   totalPages: number;
 }
 
+/** Query params for GET /host/listings — mirrors QueryHostListingsDto */
+export interface HostListingsQuery {
+  listingType?: ListingType | '';
+  status?: ListingStatus | '';
+  city?: string;
+  subCity?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
 // ──────────────────────────────────────
 // Host Reservations
 // ──────────────────────────────────────
