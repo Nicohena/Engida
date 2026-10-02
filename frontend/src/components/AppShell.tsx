@@ -9,8 +9,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isLandingPage = pathname === '/';
   const isPropertyDetailsPage = pathname.startsWith('/properties/');
+  // Host area manages its own sidebar layout — bypass the public shell entirely
+  const isHostArea = pathname.startsWith('/host');
 
-  if (isLandingPage || isPropertyDetailsPage) {
+  if (isLandingPage || isPropertyDetailsPage || isHostArea) {
     return <>{children}</>;
   }
 
