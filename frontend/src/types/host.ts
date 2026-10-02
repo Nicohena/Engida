@@ -34,6 +34,62 @@ export interface CreateHostListingPayload {
   coverImage?: string;
 }
 
+export interface UpdateHostListingPayload {
+  title?: string;
+  description?: string;
+  propertyType?: PropertyType;
+  pricePerNight?: number;
+  salePrice?: number;
+  maxGuests?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  areaSqm?: number;
+  parkingSpaces?: number;
+  address?: string;
+  city?: string;
+  country?: string;
+  region?: string;
+  zone?: string;
+  subCity?: string;
+  woreda?: string;
+  neighborhood?: string;
+  latitude?: number;
+  longitude?: number;
+  coverImage?: string;
+}
+
+export interface HostListingDetail {
+  id: string;
+  hostId: string;
+  title: string;
+  description: string;
+  propertyType: PropertyType;
+  listingType: ListingType;
+  status: ListingStatus;
+  address: string;
+  city: string;
+  country: string;
+  region: string | null;
+  zone: string | null;
+  subCity: string | null;
+  woreda: string | null;
+  neighborhood: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  pricePerNight: string | number;
+  salePrice: string | number | null;
+  maxGuests: number;
+  bedrooms: number;
+  bathrooms: number;
+  areaSqm: number;
+  parkingSpaces: number;
+  isAvailable: boolean;
+  coverImage: string | null;
+  images: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 // ──────────────────────────────────────
 // Host Profile
 // ──────────────────────────────────────
