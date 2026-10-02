@@ -3,11 +3,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Booking } from './entities/booking.entity';
 import { Property } from '../properties/entities/property.entity';
 import { Room } from '../properties/entities/room.entity';
+import { AvailabilityBlock } from '../properties/entities/availability-block.entity';
 import { BookingsService } from './bookings.service';
 import { BookingsController } from './bookings.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Booking, Property, Room])],
+  imports: [TypeOrmModule.forFeature([Booking, Property, Room, AvailabilityBlock])],
   controllers: [BookingsController],
   providers: [BookingsService],
   exports: [BookingsService],

@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Property } from './entities/property.entity';
 import { Room } from './entities/room.entity';
 import { Amenity } from '../amenities/entities/amenity.entity';
+import { AvailabilityBlock } from './entities/availability-block.entity';
 import { PropertiesService } from './properties.service';
 import { PropertiesController } from './properties.controller';
 
@@ -11,7 +12,7 @@ import { CloudinaryModule } from '../cloudinary/cloudinary.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Property, Room, Amenity]),
+    TypeOrmModule.forFeature([Property, Room, Amenity, AvailabilityBlock]),
     CloudinaryModule,
   ],
   controllers: [PropertiesController],

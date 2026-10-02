@@ -8,6 +8,7 @@ import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { User } from './users/entities/user.entity';
+import { HostProfile } from './users/entities/host-profile.entity';
 import { RefreshToken } from './auth/entities/refresh-token.entity';
 import { HealthModule } from './health/health.module';
 import { DatabaseModule } from './database/database.module';
@@ -19,6 +20,7 @@ import { ReviewsModule } from './modules/reviews/reviews.module';
 import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
 import { Property } from './modules/properties/entities/property.entity';
 import { Room } from './modules/properties/entities/room.entity';
+import { AvailabilityBlock } from './modules/properties/entities/availability-block.entity';
 import { Amenity } from './modules/amenities/entities/amenity.entity';
 import { Booking } from './modules/bookings/entities/booking.entity';
 import { Review } from './modules/reviews/entities/review.entity';
@@ -41,7 +43,17 @@ import { Review } from './modules/reviews/entities/review.entity';
           configService.get<string>('DEBUG_SQL') === 'true'
             ? true
             : (['error', 'warn'] as ('error' | 'warn')[]);
-        const entities = [User, RefreshToken, Property, Room, Amenity, Booking, Review];
+        const entities = [
+          User,
+          HostProfile,
+          RefreshToken,
+          Property,
+          Room,
+          AvailabilityBlock,
+          Amenity,
+          Booking,
+          Review,
+        ];
 
         if (databaseUrl) {
           return {

@@ -8,8 +8,9 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not, In } from 'typeorm';
 import { Booking, BookingStatus } from './entities/booking.entity';
-import { Property } from '../properties/entities/property.entity';
+import { Property, ListingType, ListingStatus } from '../properties/entities/property.entity';
 import { Room } from '../properties/entities/room.entity';
+import { AvailabilityBlock } from '../properties/entities/availability-block.entity';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingStatusDto } from './dto/update-booking-status.dto';
 import { UserRole } from '../../users/entities/user.entity';
@@ -25,6 +26,8 @@ export class BookingsService {
     private readonly propertyRepository: Repository<Property>,
     @InjectRepository(Room)
     private readonly roomRepository: Repository<Room>,
+    @InjectRepository(AvailabilityBlock)
+    private readonly availabilityBlockRepository: Repository<AvailabilityBlock>,
   ) {}
 
   async create(createBookingDto: CreateBookingDto, guestId: string): Promise<Booking> {
@@ -51,6 +54,15 @@ export class BookingsService {
 
     if (!property) {
       throw new NotFoundException('Property not found or not available');
+    }
+
+    // Property must be for rental and published
+    if (property.listingType === ListingType.SALE) {
+      throw new BadRequestException('This property is listed for sale, not for short-term booking');
+    }
+
+    if (property.status !== ListingStatus.PUBLISHED) {
+      throw new BadRequestException('This property is not currently published for booking');
     }
 
     // Hosts cannot book their own property
@@ -87,6 +99,22 @@ export class BookingsService {
     if (overlapping > 0) {
       throw new BadRequestException(
         'The selected dates overlap with an existing booking',
+      );
+    }
+
+    // Check for overlapping host availability blocks
+    const blocked = await this.availabilityBlockRepository
+      .createQueryBuilder('block')
+      .where('block.property_id = :propertyId', { propertyId })
+      .andWhere('(block.start_date < :checkOut AND block.end_date > :checkIn)', {
+        checkIn: checkInDate,
+        checkOut: checkOutDate,
+      })
+      .getCount();
+
+    if (blocked > 0) {
+      throw new BadRequestException(
+        'The selected dates are blocked by the host and not available for booking',
       );
     }
 
