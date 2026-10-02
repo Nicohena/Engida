@@ -7,6 +7,32 @@ export type HostVerificationStatus = 'UNVERIFIED' | 'PENDING' | 'VERIFIED' | 'RE
 export type ListingType = 'RENTAL' | 'SALE';
 export type ListingStatus = 'DRAFT' | 'PUBLISHED' | 'PAUSED' | 'ARCHIVED' | 'SOLD';
 export type BookingStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED';
+export type PropertyType = 'HOUSE' | 'APARTMENT' | 'VILLA' | 'BEDROOM' | 'STUDIO';
+
+export interface CreateHostListingPayload {
+  title: string;
+  description: string;
+  propertyType?: PropertyType;
+  listingType: ListingType;
+  pricePerNight?: number;
+  salePrice?: number;
+  maxGuests?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  areaSqm?: number;
+  parkingSpaces?: number;
+  address: string;
+  city: string;
+  country?: string;
+  region?: string;
+  zone?: string;
+  subCity?: string;
+  woreda?: string;
+  neighborhood?: string;
+  latitude?: number;
+  longitude?: number;
+  coverImage?: string;
+}
 
 // ──────────────────────────────────────
 // Host Profile
