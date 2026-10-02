@@ -14,7 +14,7 @@ services:
       - /app/.next
     environment:
       - NODE_ENV=development
-      - NEXT_PUBLIC_API_URL=http://backend:3000
+      - NEXT_PUBLIC_API_URL=http://localhost:3000
     depends_on:
       - backend
     command: npm run dev
@@ -35,6 +35,7 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=3000
+      - FRONTEND_URL=http://localhost:3001
       - AI_SERVICE_URL=http://ai-service:8000
       - DATABASE_URL=postgresql://engida:engida@postgres:5432/engida
       - JWT_SECRET=development-secret-change-in-production

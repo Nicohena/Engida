@@ -30,7 +30,7 @@ async function bootstrap() {
   );
 
   // CORS Configuration
-  const frontendUrl = configService.get<string>('FRONTEND_URL', 'http://localhost:3000');
+  const frontendUrl = configService.get<string>('FRONTEND_URL', 'http://localhost:3001');
   app.enableCors({
     origin: [frontendUrl, 'http://localhost:3000', 'http://localhost:3001'],
     credentials: true,
@@ -38,7 +38,7 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
   });
 
-  const port = Number(configService.get('PORT')) || 5000;
+  const port = Number(configService.get('PORT')) || 3000;
   await app.listen(port);
 
   const env = configService.get<string>('NODE_ENV', 'development');

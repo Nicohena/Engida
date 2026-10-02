@@ -32,20 +32,39 @@ import { Review } from './modules/reviews/entities/review.entity';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        host: configService.get<string>('DATABASE_HOST', 'localhost'),
-        port: configService.get<number>('DATABASE_PORT', 5432),
-        username: configService.get<string>('DATABASE_USER', 'postgres'),
-        password: configService.get<string>('DATABASE_PASSWORD', 'postgres'),
-        database: configService.get<string>('DATABASE_NAME', 'engida_db'),
-        entities: [User, RefreshToken, Property, Room, Amenity, Booking, Review],
-        synchronize: configService.get<boolean>('DATABASE_SYNCHRONIZE', true),
-        logging:
+      useFactory: (configService: ConfigService) => {
+        const databaseUrl = configService.get<string>('DATABASE_URL');
+        const syncEnv = configService.get<string | boolean>('DATABASE_SYNCHRONIZE');
+        const synchronize =
+          syncEnv === false || syncEnv === 'false' ? false : true;
+        const logging =
           configService.get<string>('DEBUG_SQL') === 'true'
             ? true
-            : ['error', 'warn'],
-      }),
+            : (['error', 'warn'] as ('error' | 'warn')[]);
+        const entities = [User, RefreshToken, Property, Room, Amenity, Booking, Review];
+
+        if (databaseUrl) {
+          return {
+            type: 'postgres',
+            url: databaseUrl,
+            entities,
+            synchronize,
+            logging,
+          };
+        }
+
+        return {
+          type: 'postgres',
+          host: configService.get<string>('DATABASE_HOST', 'localhost'),
+          port: configService.get<number>('DATABASE_PORT', 5432),
+          username: configService.get<string>('DATABASE_USER', 'postgres'),
+          password: configService.get<string>('DATABASE_PASSWORD', 'postgres'),
+          database: configService.get<string>('DATABASE_NAME', 'engida_db'),
+          entities,
+          synchronize,
+          logging,
+        };
+      },
     }),
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule],
