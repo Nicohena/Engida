@@ -31,13 +31,13 @@ services:
     volumes:
       - ./backend:/app
       - /app/node_modules
-      - /app/dist
     environment:
       - NODE_ENV=development
       - PORT=3000
       - FRONTEND_URL=http://localhost:3001
       - AI_SERVICE_URL=http://ai-service:8000
       - DATABASE_URL=postgresql://engida:engida@postgres:5432/engida
+      - DATABASE_SYNCHRONIZE=false
       - JWT_SECRET=development-secret-change-in-production
     depends_on:
       - postgres

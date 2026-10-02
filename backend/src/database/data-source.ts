@@ -17,7 +17,7 @@ import { Review } from '../modules/reviews/entities/review.entity';
 
 const databaseUrl = process.env.DATABASE_URL;
 
-export const AppDataSource = new DataSource(
+const AppDataSource = new DataSource(
   databaseUrl
     ? {
         type: 'postgres',

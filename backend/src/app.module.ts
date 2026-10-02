@@ -38,7 +38,7 @@ import { Review } from './modules/reviews/entities/review.entity';
         const databaseUrl = configService.get<string>('DATABASE_URL');
         const syncEnv = configService.get<string | boolean>('DATABASE_SYNCHRONIZE');
         const synchronize =
-          syncEnv === false || syncEnv === 'false' ? false : true;
+          syncEnv === true || syncEnv === 'true';
         const logging =
           configService.get<string>('DEBUG_SQL') === 'true'
             ? true
