@@ -18,6 +18,7 @@ import { AmenitiesModule } from './modules/amenities/amenities.module';
 import { BookingsModule } from './modules/bookings/bookings.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
 import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
+import { HostModule } from './modules/host/host.module';
 import { Property } from './modules/properties/entities/property.entity';
 import { Room } from './modules/properties/entities/room.entity';
 import { AvailabilityBlock } from './modules/properties/entities/availability-block.entity';
@@ -98,6 +99,7 @@ import { Review } from './modules/reviews/entities/review.entity';
     BookingsModule,
     ReviewsModule,
     CloudinaryModule,
+    HostModule,
   ],
   controllers: [AppController],
   providers: [
