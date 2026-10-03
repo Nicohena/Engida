@@ -32,8 +32,12 @@ export default function BecomeAHostPage() {
       
       // Redirect to host dashboard
       router.push('/host/dashboard');
-    } catch (err: any) {
-      setError(err.message || 'Failed to create host profile');
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('Failed to create host profile');
+      }
       setLoading(false);
     }
   };
