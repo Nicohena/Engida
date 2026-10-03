@@ -9,6 +9,12 @@ export type ListingStatus = 'DRAFT' | 'PUBLISHED' | 'PAUSED' | 'ARCHIVED' | 'SOL
 export type BookingStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED';
 export type PropertyType = 'HOUSE' | 'APARTMENT' | 'VILLA' | 'BEDROOM' | 'STUDIO';
 
+export interface Amenity {
+  id: string;
+  name: string;
+  icon: string | null;
+}
+
 export interface CreateHostListingPayload {
   title: string;
   description: string;
@@ -32,6 +38,8 @@ export interface CreateHostListingPayload {
   latitude?: number;
   longitude?: number;
   coverImage?: string;
+  images?: string[];
+  amenityIds?: string[];
 }
 
 export interface UpdateHostListingPayload {
@@ -56,6 +64,8 @@ export interface UpdateHostListingPayload {
   latitude?: number;
   longitude?: number;
   coverImage?: string;
+  images?: string[];
+  amenityIds?: string[];
 }
 
 export interface HostListingDetail {
@@ -86,6 +96,7 @@ export interface HostListingDetail {
   isAvailable: boolean;
   coverImage: string | null;
   images: string[];
+  amenities?: Amenity[];
   createdAt: string;
   updatedAt: string;
 }

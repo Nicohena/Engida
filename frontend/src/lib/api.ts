@@ -14,11 +14,13 @@ interface FetchOptions extends RequestInit {
   skipAuth?: boolean;
 }
 
-export async function apiFetch<T = any>(endpoint: string, options: FetchOptions = {}): Promise<T> {
+export async function apiFetch<T = unknown>(endpoint: string, options: FetchOptions = {}): Promise<T> {
   const { skipAuth = false, headers: customHeaders, ...restOptions } = options;
 
+  const isFormData = typeof FormData !== 'undefined' && restOptions.body instanceof FormData;
+
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     ...(customHeaders as Record<string, string>),
   };
 

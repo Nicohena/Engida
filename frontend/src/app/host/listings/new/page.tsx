@@ -3,13 +3,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import { apiFetch } from '../../../../lib/api';
 import type {
   CreateHostListingPayload,
   ListingType,
   PropertyType,
 } from '../../../../types/host';
+import AmenitySelector from '../../../../components/host/AmenitySelector';
+import GalleryManager from '../../../../components/host/GalleryManager';
 import {
   ArrowLeft,
   Building2,
@@ -23,6 +24,7 @@ import {
   CheckCircle2,
   X,
   Compass,
+  Sparkles,
 } from 'lucide-react';
 
 // ─────────────────────────────────────────────────────────
@@ -89,6 +91,8 @@ interface FormState {
   latitude: string;
   longitude: string;
   coverImage: string;
+  images: string[];
+  amenityIds: string[];
 }
 
 const INITIAL_FORM_STATE: FormState = {
@@ -114,6 +118,8 @@ const INITIAL_FORM_STATE: FormState = {
   latitude: '',
   longitude: '',
   coverImage: '',
+  images: [],
+  amenityIds: [],
 };
 
 export default function CreateListingPage() {
@@ -124,7 +130,6 @@ export default function CreateListingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
-  const [imagePreviewFailed, setImagePreviewFailed] = useState(false);
 
   // Unsaved changes warning
   const handleBeforeUnload = useCallback(
@@ -148,10 +153,6 @@ export default function CreateListingPage() {
     const { name, value } = e.target;
     setIsDirty(true);
     setForm((prev) => ({ ...prev, [name]: value }));
-
-    if (name === 'coverImage') {
-      setImagePreviewFailed(false);
-    }
 
     // Clear error for field
     if (errors[name]) {
@@ -290,6 +291,22 @@ export default function CreateListingPage() {
       }
     }
 
+    // Gallery Images validation (optional)
+    if (form.images && form.images.length > 0) {
+      for (const imgUrl of form.images) {
+        try {
+          const url = new URL(imgUrl.trim());
+          if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+            newErrors.gallery = 'All gallery images must start with http:// or https://';
+            break;
+          }
+        } catch {
+          newErrors.gallery = 'One or more gallery image URLs are invalid';
+          break;
+        }
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -331,6 +348,8 @@ export default function CreateListingPage() {
         ...(form.woreda?.trim() ? { woreda: form.woreda.trim() } : {}),
         ...(form.neighborhood?.trim() ? { neighborhood: form.neighborhood.trim() } : {}),
         ...(form.coverImage?.trim() ? { coverImage: form.coverImage.trim() } : {}),
+        ...(form.images && form.images.length > 0 ? { images: form.images } : {}),
+        ...(form.amenityIds && form.amenityIds.length > 0 ? { amenityIds: form.amenityIds } : {}),
       };
 
       // Pricing rules: RENTAL only gets pricePerNight, SALE only gets salePrice
@@ -1054,64 +1073,62 @@ export default function CreateListingPage() {
         </section>
 
         {/* ═══════════════════════════════════════════════════
-            SECTION 5: Cover Image
+            SECTION 5: Photos & Gallery Management
         ═══════════════════════════════════════════════════ */}
         <section className="bg-white border border-[#CBD5E1] rounded-2xl p-6 md:p-8 space-y-6">
           <div className="flex items-center gap-2.5 pb-3 border-b border-[#F1F5F9]">
             <ImageIcon className="w-5 h-5 text-[#33599E]" />
-            <h2 className="text-lg font-black text-[#000000]">Cover Image</h2>
+            <h2 className="text-lg font-black text-[#000000]">Photos &amp; Gallery</h2>
           </div>
 
-          <div className="space-y-1.5">
-            <label htmlFor="coverImage" className="block text-sm font-bold text-[#000000]">
-              Cover Image URL
-            </label>
-            <input
-              id="coverImage"
-              name="coverImage"
-              type="url"
-              value={form.coverImage}
-              onChange={handleChange}
-              placeholder="https://images.unsplash.com/photo-..."
-              className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium text-[#000000] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 transition ${
-                errors.coverImage
-                  ? 'border-red-400 focus:ring-red-200'
-                  : 'border-[#CBD5E1] focus:ring-[#33599E]/20 focus:border-[#33599E]'
-              }`}
-            />
-            {errors.coverImage ? (
-              <p className="text-xs text-red-600 font-semibold">{errors.coverImage}</p>
-            ) : (
-              <p className="text-xs text-[#94A3B8]">
-                Provide a direct URL to a high-resolution photo. Dedicated file photo upload will be
-                enabled in a future step.
-              </p>
-            )}
-          </div>
-
-          {/* Small image preview */}
-          {form.coverImage.trim() && !errors.coverImage && (
-            <div className="pt-2">
-              <span className="block text-xs font-bold text-[#64748B] mb-2">Image Preview:</span>
-              <div className="relative w-48 h-32 rounded-xl overflow-hidden border border-[#CBD5E1] bg-[#F4F7FC]">
-                {!imagePreviewFailed ? (
-                  <Image
-                    src={form.coverImage.trim()}
-                    alt="Cover preview"
-                    fill
-                    className="object-cover"
-                    unoptimized
-                    onError={() => setImagePreviewFailed(true)}
-                  />
-                ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center p-3 text-center text-xs text-[#94A3B8]">
-                    <AlertTriangle className="w-5 h-5 text-amber-500 mb-1" />
-                    <span>Unable to preview image from URL</span>
-                  </div>
-                )}
-              </div>
-            </div>
+          <GalleryManager
+            coverImage={form.coverImage}
+            images={form.images}
+            onCoverImageChange={(url) => {
+              setIsDirty(true);
+              setForm((prev) => ({ ...prev, coverImage: url }));
+              if (errors.coverImage) {
+                setErrors((prev) => {
+                  const next = { ...prev };
+                  delete next.coverImage;
+                  return next;
+                });
+              }
+            }}
+            onImagesChange={(urls) => {
+              setIsDirty(true);
+              setForm((prev) => ({ ...prev, images: urls }));
+              if (errors.gallery) {
+                setErrors((prev) => {
+                  const next = { ...prev };
+                  delete next.gallery;
+                  return next;
+                });
+              }
+            }}
+            coverError={errors.coverImage}
+          />
+          {errors.gallery && (
+            <p className="text-xs text-red-600 font-semibold">{errors.gallery}</p>
           )}
+        </section>
+
+        {/* ═══════════════════════════════════════════════════
+            SECTION 6: Features & Amenities
+        ═══════════════════════════════════════════════════ */}
+        <section className="bg-white border border-[#CBD5E1] rounded-2xl p-6 md:p-8 space-y-6">
+          <div className="flex items-center gap-2.5 pb-3 border-b border-[#F1F5F9]">
+            <Sparkles className="w-5 h-5 text-[#33599E]" />
+            <h2 className="text-lg font-black text-[#000000]">Features &amp; Amenities</h2>
+          </div>
+
+          <AmenitySelector
+            selectedIds={form.amenityIds}
+            onChange={(ids) => {
+              setIsDirty(true);
+              setForm((prev) => ({ ...prev, amenityIds: ids }));
+            }}
+          />
         </section>
 
         {/* ═══════════════════════════════════════════════════

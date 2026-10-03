@@ -3,13 +3,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import { apiFetch } from '../../../../../lib/api';
 import type {
   HostListingDetail,
   UpdateHostListingPayload,
   PropertyType,
 } from '../../../../../types/host';
+import AmenitySelector from '../../../../../components/host/AmenitySelector';
+import GalleryManager from '../../../../../components/host/GalleryManager';
 import {
   ArrowLeft,
   Building2,
@@ -23,6 +24,7 @@ import {
   RotateCcw,
   X,
   Lock,
+  Sparkles,
 } from 'lucide-react';
 
 const PROPERTY_TYPE_OPTIONS: {
@@ -85,6 +87,8 @@ interface EditFormState {
   latitude: string;
   longitude: string;
   coverImage: string;
+  images: string[];
+  amenityIds: string[];
 }
 
 export default function EditListingPage() {
@@ -104,7 +108,6 @@ export default function EditListingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
-  const [imagePreviewFailed, setImagePreviewFailed] = useState(false);
 
   // Unsaved changes listener
   const handleBeforeUnload = useCallback(
@@ -127,6 +130,7 @@ export default function EditListingPage() {
     if (!listingId) return;
 
     try {
+      setLoading(true);
       const data = await apiFetch<HostListingDetail>(`/host/listings/${listingId}`);
       setListing(data);
       setFetchError(null);
@@ -153,6 +157,8 @@ export default function EditListingPage() {
         latitude: data.latitude !== null && data.latitude !== undefined ? String(data.latitude) : '',
         longitude: data.longitude !== null && data.longitude !== undefined ? String(data.longitude) : '',
         coverImage: data.coverImage || '',
+        images: Array.isArray(data.images) ? data.images : [],
+        amenityIds: Array.isArray(data.amenities) ? data.amenities.map((a) => a.id) : [],
       });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to load listing.';
@@ -167,8 +173,57 @@ export default function EditListingPage() {
   }, [listingId]);
 
   useEffect(() => {
-    fetchListing();
-  }, [fetchListing]);
+    if (!listingId) return;
+    let ignore = false;
+    apiFetch<HostListingDetail>(`/host/listings/${listingId}`)
+      .then((data) => {
+        if (!ignore) {
+          setListing(data);
+          setFetchError(null);
+          setIs404(false);
+          setForm({
+            title: data.title || '',
+            description: data.description || '',
+            propertyType: data.propertyType || 'APARTMENT',
+            pricePerNight: data.pricePerNight ? String(data.pricePerNight) : '',
+            salePrice: data.salePrice ? String(data.salePrice) : '',
+            maxGuests: data.maxGuests ? String(data.maxGuests) : '2',
+            bedrooms: data.bedrooms !== undefined ? String(data.bedrooms) : '1',
+            bathrooms: data.bathrooms !== undefined ? String(data.bathrooms) : '1',
+            areaSqm: data.areaSqm ? String(data.areaSqm) : '',
+            parkingSpaces: data.parkingSpaces !== undefined ? String(data.parkingSpaces) : '0',
+            address: data.address || '',
+            city: data.city || '',
+            subCity: data.subCity || '',
+            region: data.region || '',
+            zone: data.zone || '',
+            woreda: data.woreda || '',
+            neighborhood: data.neighborhood || '',
+            country: data.country || 'Ethiopia',
+            latitude: data.latitude !== null && data.latitude !== undefined ? String(data.latitude) : '',
+            longitude: data.longitude !== null && data.longitude !== undefined ? String(data.longitude) : '',
+            coverImage: data.coverImage || '',
+            images: Array.isArray(data.images) ? data.images : [],
+            amenityIds: Array.isArray(data.amenities) ? data.amenities.map((a) => a.id) : [],
+          });
+          setLoading(false);
+        }
+      })
+      .catch((err: unknown) => {
+        if (!ignore) {
+          const msg = err instanceof Error ? err.message : 'Failed to load listing.';
+          if (msg.toLowerCase().includes('not found') || msg.includes('404')) {
+            setIs404(true);
+          } else {
+            setFetchError(msg);
+          }
+          setLoading(false);
+        }
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [listingId]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
@@ -177,10 +232,6 @@ export default function EditListingPage() {
     const { name, value } = e.target;
     setIsDirty(true);
     setForm((prev) => (prev ? { ...prev, [name]: value } : prev));
-
-    if (name === 'coverImage') {
-      setImagePreviewFailed(false);
-    }
 
     if (errors[name]) {
       setErrors((prev) => {
@@ -292,6 +343,22 @@ export default function EditListingPage() {
       }
     }
 
+    // Gallery Images validation (optional)
+    if (form.images && form.images.length > 0) {
+      for (const imgUrl of form.images) {
+        try {
+          const url = new URL(imgUrl.trim());
+          if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+            newErrors.gallery = 'All gallery images must start with http:// or https://';
+            break;
+          }
+        } catch {
+          newErrors.gallery = 'One or more gallery image URLs are invalid';
+          break;
+        }
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -332,7 +399,9 @@ export default function EditListingPage() {
         ...(form.subCity?.trim() ? { subCity: form.subCity.trim() } : {}),
         ...(form.woreda?.trim() ? { woreda: form.woreda.trim() } : {}),
         ...(form.neighborhood?.trim() ? { neighborhood: form.neighborhood.trim() } : {}),
-        ...(form.coverImage?.trim() ? { coverImage: form.coverImage.trim() } : {}),
+        coverImage: form.coverImage.trim() || undefined,
+        images: form.images,
+        amenityIds: form.amenityIds,
       };
 
       if (listing.listingType === 'RENTAL') {
@@ -977,59 +1046,63 @@ export default function EditListingPage() {
         </section>
 
         {/* ═══════════════════════════════════════════════════
-            SECTION 5: Cover Image
+            SECTION 5: Photos & Gallery Management
         ═══════════════════════════════════════════════════ */}
         <section className="bg-white border border-[#CBD5E1] rounded-2xl p-6 md:p-8 space-y-6">
           <div className="flex items-center gap-2.5 pb-3 border-b border-[#F1F5F9]">
             <ImageIcon className="w-5 h-5 text-[#33599E]" />
-            <h2 className="text-lg font-black text-[#000000]">Cover Image</h2>
+            <h2 className="text-lg font-black text-[#000000]">Photos &amp; Gallery</h2>
           </div>
 
-          <div className="space-y-1.5">
-            <label htmlFor="coverImage" className="block text-sm font-bold text-[#000000]">
-              Cover Image URL
-            </label>
-            <input
-              id="coverImage"
-              name="coverImage"
-              type="url"
-              value={form.coverImage}
-              onChange={handleChange}
-              placeholder="https://images.unsplash.com/photo-..."
-              className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium text-[#000000] focus:outline-none focus:ring-2 transition ${
-                errors.coverImage
-                  ? 'border-red-400 focus:ring-red-200'
-                  : 'border-[#CBD5E1] focus:ring-[#33599E]/20 focus:border-[#33599E]'
-              }`}
-            />
-            {errors.coverImage && (
-              <p className="text-xs text-red-600 font-semibold">{errors.coverImage}</p>
-            )}
-          </div>
-
-          {/* Live Preview */}
-          {form.coverImage.trim() && !errors.coverImage && (
-            <div className="pt-2">
-              <span className="block text-xs font-bold text-[#64748B] mb-2">Image Preview:</span>
-              <div className="relative w-48 h-32 rounded-xl overflow-hidden border border-[#CBD5E1] bg-[#F4F7FC]">
-                {!imagePreviewFailed ? (
-                  <Image
-                    src={form.coverImage.trim()}
-                    alt="Cover preview"
-                    fill
-                    className="object-cover"
-                    unoptimized
-                    onError={() => setImagePreviewFailed(true)}
-                  />
-                ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center p-3 text-center text-xs text-[#94A3B8]">
-                    <AlertTriangle className="w-5 h-5 text-amber-500 mb-1" />
-                    <span>Unable to preview image from URL</span>
-                  </div>
-                )}
-              </div>
-            </div>
+          <GalleryManager
+            coverImage={form.coverImage}
+            images={form.images}
+            propertyId={listing.id}
+            onCoverImageChange={(url) => {
+              setIsDirty(true);
+              setForm((prev) => (prev ? { ...prev, coverImage: url } : prev));
+              if (errors.coverImage) {
+                setErrors((prev) => {
+                  const next = { ...prev };
+                  delete next.coverImage;
+                  return next;
+                });
+              }
+            }}
+            onImagesChange={(urls) => {
+              setIsDirty(true);
+              setForm((prev) => (prev ? { ...prev, images: urls } : prev));
+              if (errors.gallery) {
+                setErrors((prev) => {
+                  const next = { ...prev };
+                  delete next.gallery;
+                  return next;
+                });
+              }
+            }}
+            coverError={errors.coverImage}
+          />
+          {errors.gallery && (
+            <p className="text-xs text-red-600 font-semibold">{errors.gallery}</p>
           )}
+        </section>
+
+        {/* ═══════════════════════════════════════════════════
+            SECTION 6: Features & Amenities
+        ═══════════════════════════════════════════════════ */}
+        <section className="bg-white border border-[#CBD5E1] rounded-2xl p-6 md:p-8 space-y-6">
+          <div className="flex items-center gap-2.5 pb-3 border-b border-[#F1F5F9]">
+            <Sparkles className="w-5 h-5 text-[#33599E]" />
+            <h2 className="text-lg font-black text-[#000000]">Features &amp; Amenities</h2>
+          </div>
+
+          <AmenitySelector
+            selectedIds={form.amenityIds}
+            onChange={(ids) => {
+              setIsDirty(true);
+              setForm((prev) => (prev ? { ...prev, amenityIds: ids } : prev));
+            }}
+          />
         </section>
 
         {/* ═══════════════════════════════════════════════════

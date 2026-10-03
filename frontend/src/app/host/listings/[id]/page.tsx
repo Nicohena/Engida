@@ -3,13 +3,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import { apiFetch } from '../../../../lib/api';
 import type {
   HostListingDetail,
   ListingStatus,
   ListingType,
 } from '../../../../types/host';
+import HostListingGallery from '../../../../components/host/HostListingGallery';
+import { getAmenityIcon } from '../../../../components/host/AmenitySelector';
 import {
   ArrowLeft,
   Building2,
@@ -31,6 +32,7 @@ import {
   Car,
   Compass,
   ExternalLink,
+  Sparkles,
 } from 'lucide-react';
 
 // ─────────────────────────────────────────────────────────
@@ -172,7 +174,6 @@ export default function ListingDetailPage() {
   // Status Action states
   const [actionLoading, setActionLoading] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-  const [imageError, setImageError] = useState(false);
 
   // Modals
   const [showArchiveModal, setShowArchiveModal] = useState(false);
@@ -182,6 +183,7 @@ export default function ListingDetailPage() {
   const fetchListing = useCallback(async () => {
     if (!listingId) return;
     try {
+      setLoading(true);
       const data = await apiFetch<HostListingDetail>(`/host/listings/${listingId}`);
       setListing(data);
       setError(null);
@@ -199,8 +201,32 @@ export default function ListingDetailPage() {
   }, [listingId]);
 
   useEffect(() => {
-    fetchListing();
-  }, [fetchListing]);
+    if (!listingId) return;
+    let ignore = false;
+    apiFetch<HostListingDetail>(`/host/listings/${listingId}`)
+      .then((data) => {
+        if (!ignore) {
+          setListing(data);
+          setError(null);
+          setIs404(false);
+          setLoading(false);
+        }
+      })
+      .catch((err: unknown) => {
+        if (!ignore) {
+          const msg = err instanceof Error ? err.message : 'Failed to load listing.';
+          if (msg.toLowerCase().includes('not found') || msg.includes('404')) {
+            setIs404(true);
+          } else {
+            setError(msg);
+          }
+          setLoading(false);
+        }
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [listingId]);
 
   const showToast = (message: string, type: 'success' | 'error') => {
     setToast({ message, type });
@@ -557,39 +583,74 @@ export default function ListingDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column (2 Cols on lg) */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Cover Image Banner */}
-          <div className="bg-white border border-[#CBD5E1] rounded-2xl overflow-hidden shadow-sm">
-            {listing.coverImage && !imageError ? (
-              <div className="relative w-full h-64 md:h-80 bg-slate-100">
-                <Image
-                  src={listing.coverImage}
-                  alt={listing.title}
-                  fill
-                  className="object-cover"
-                  unoptimized
-                  onError={() => setImageError(true)}
-                />
-              </div>
-            ) : (
-              <div className="w-full h-48 bg-[#F4F7FC] flex flex-col items-center justify-center p-6 text-center text-[#94A3B8]">
-                <Building2 className="w-12 h-12 mb-2 text-[#CBD5E1]" />
-                <span className="text-sm font-semibold">No cover image uploaded</span>
-                <Link
-                  href={`/host/listings/${listing.id}/edit`}
-                  className="text-xs font-bold text-[#33599E] mt-2 hover:underline"
-                >
-                  Add cover image URL
-                </Link>
-              </div>
-            )}
-          </div>
+          {/* Property Gallery Section */}
+          <HostListingGallery
+            listingId={listing.id}
+            title={listing.title}
+            coverImage={listing.coverImage}
+            images={listing.images || []}
+          />
 
           {/* Description Card */}
-          <div className="bg-white border border-[#CBD5E1] rounded-2xl p-6 space-y-3">
+          <div className="bg-white border border-[#CBD5E1] rounded-2xl p-6 space-y-3 shadow-sm">
             <h2 className="text-base font-black text-[#000000]">About This Property</h2>
             <p className="text-sm text-[#334155] leading-relaxed whitespace-pre-line">
               {listing.description || 'No description provided.'}
             </p>
+          </div>
+
+          {/* Features & Amenities Card */}
+          <div className="bg-white border border-[#CBD5E1] rounded-2xl p-6 space-y-4 shadow-sm">
+            <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-3">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-[#33599E]" />
+                <h2 className="text-base font-black text-[#000000]">Features &amp; Amenities</h2>
+                {listing.amenities && listing.amenities.length > 0 && (
+                  <span className="text-xs font-semibold text-[#64748B] bg-[#F4F7FC] px-2.5 py-0.5 rounded-full border border-[#CBD5E1]">
+                    {listing.amenities.length}
+                  </span>
+                )}
+              </div>
+              {!isArchived && !isSold && (
+                <Link
+                  href={`/host/listings/${listing.id}/edit`}
+                  className="text-xs font-bold text-[#33599E] hover:underline flex items-center gap-1"
+                >
+                  <Pencil className="w-3 h-3" /> Edit
+                </Link>
+              )}
+            </div>
+
+            {listing.amenities && listing.amenities.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {listing.amenities.map((amenity) => {
+                  const Icon = getAmenityIcon(amenity.name, amenity.icon);
+                  return (
+                    <div
+                      key={amenity.id}
+                      className="flex items-center gap-2.5 p-2.5 rounded-xl bg-[#F8FAFD] border border-[#CBD5E1]/70 text-xs font-bold text-[#334155]"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-[#E3EAF5] text-[#33599E] flex items-center justify-center shrink-0">
+                        <Icon className="w-3.5 h-3.5" />
+                      </div>
+                      <span className="truncate">{amenity.name}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="p-4 rounded-xl bg-[#F8FAFD] border border-[#CBD5E1]/60 text-xs text-[#64748B] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <span>No amenities specified for this listing yet. Adding amenities helps guests find and choose your property.</span>
+                {!isArchived && !isSold && (
+                  <Link
+                    href={`/host/listings/${listing.id}/edit`}
+                    className="font-bold text-[#33599E] hover:underline shrink-0"
+                  >
+                    Add Amenities
+                  </Link>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Location & Administrative Hierarchy */}
