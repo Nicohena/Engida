@@ -198,24 +198,26 @@ export default function HostLayout({ children }: { children: React.ReactNode }) 
   }
 
   // Redirect unauthenticated users
-  if (!user) {
-    if (typeof window !== 'undefined') {
+  React.useEffect(() => {
+    if (!user && !loading) {
       router.push('/login');
     }
+  }, [user, loading, router]);
+
+  if (!user) {
     return null;
   }
 
   // Redirect logic based on hostProfile
-  if (typeof window !== 'undefined') {
-    if (pathname === '/host/onboarding' && user.hostProfile) {
-      router.push('/host/dashboard');
-      return null;
+  React.useEffect(() => {
+    if (user && !loading) {
+      if (pathname === '/host/onboarding' && user.hostProfile) {
+        router.push('/host/dashboard');
+      } else if (pathname !== '/host/onboarding' && !user.hostProfile) {
+        router.push('/host/onboarding');
+      }
     }
-    if (pathname !== '/host/onboarding' && !user.hostProfile) {
-      router.push('/host/onboarding');
-      return null;
-    }
-  }
+  }, [user, loading, pathname, router]);
 
   // Render onboarding without sidebar
   if (pathname === '/host/onboarding') {

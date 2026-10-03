@@ -428,10 +428,7 @@ export default function GalleryManager({
 
         {/* Add Photo URL Input */}
         <div className="space-y-1.5">
-          <form
-            onSubmit={handleAddGalleryUrl}
-            className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2"
-          >
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
             <div className="relative flex-1">
               <input
                 type="url"
@@ -439,6 +436,12 @@ export default function GalleryManager({
                 onChange={(e) => {
                   setNewUrl(e.target.value);
                   if (urlError) setUrlError(null);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddGalleryUrl();
+                  }
                 }}
                 placeholder="Paste image URL (https://images.unsplash.com/...)"
                 className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium text-[#000000] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 transition ${
@@ -449,13 +452,14 @@ export default function GalleryManager({
               />
             </div>
             <button
-              type="submit"
+              type="button"
+              onClick={() => handleAddGalleryUrl()}
               disabled={!newUrl.trim() || images.length >= maxImages}
               className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#33599E] hover:bg-[#234079] text-white text-xs font-bold transition disabled:opacity-50 shrink-0"
             >
               <Plus className="w-4 h-4" /> Add to Gallery
             </button>
-          </form>
+          </div>
           {urlError && <p className="text-xs text-red-600 font-semibold">{urlError}</p>}
         </div>
 
