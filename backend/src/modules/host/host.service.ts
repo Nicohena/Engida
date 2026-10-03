@@ -3,6 +3,7 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
+  ConflictException,
   Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -15,8 +16,9 @@ import {
 import { AvailabilityBlock } from '../properties/entities/availability-block.entity';
 import { Amenity } from '../amenities/entities/amenity.entity';
 import { Booking, BookingStatus } from '../bookings/entities/booking.entity';
-import { HostProfile } from '../../users/entities/host-profile.entity';
+import { HostProfile, HostVerificationStatus } from '../../users/entities/host-profile.entity';
 import { User, UserRole } from '../../users/entities/user.entity';
+import { CreateHostProfileDto } from './dto/create-host-profile.dto';
 import { UpdateHostProfileDto } from './dto/update-host-profile.dto';
 import { CreateHostListingDto } from './dto/create-host-listing.dto';
 import { UpdateHostListingDto } from './dto/update-host-listing.dto';
@@ -89,6 +91,28 @@ export class HostService {
       throw new NotFoundException('Host profile not found. User is not a host.');
     }
     return profile;
+  }
+
+  /**
+   * Create a HostProfile for an authenticated user (Become a Host)
+   */
+  async createHostProfile(userId: string, dto: CreateHostProfileDto): Promise<HostProfile> {
+    const existing = await this.hostProfileRepository.findOne({ where: { userId } });
+    if (existing) {
+      throw new ConflictException('User already has a host profile.');
+    }
+
+    const newProfile = this.hostProfileRepository.create({
+      userId,
+      displayName: dto.displayName,
+      bio: dto.bio || null,
+      phone: dto.phone || null,
+      verificationStatus: HostVerificationStatus.UNVERIFIED,
+    });
+
+    const saved = await this.hostProfileRepository.save(newProfile);
+    this.logger.log(`Host profile created for user ${userId}`);
+    return saved;
   }
 
   /**

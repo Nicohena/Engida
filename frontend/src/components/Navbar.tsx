@@ -52,6 +52,21 @@ export default function Navbar() {
             <div className="h-9 w-24 bg-[#E3EAF5] animate-pulse rounded-lg"></div>
           ) : user ? (
             <div className="flex items-center gap-3">
+              {user.hostProfile ? (
+                <Link
+                  href="/host/dashboard"
+                  className="text-xs font-black bg-[#E3EAF5] hover:bg-[#33599E] hover:text-white text-[#33599E] px-4 py-2 rounded-lg transition"
+                >
+                  Host Dashboard
+                </Link>
+              ) : (
+                <Link
+                  href="/host/onboarding"
+                  className="text-xs font-black bg-white hover:bg-[#F4F7FC] text-[#33599E] border border-[#CBD5E1] px-4 py-2 rounded-lg transition shadow-sm"
+                >
+                  Become a Host
+                </Link>
+              )}
               <Link
                 href="/dashboard"
                 className="text-xs font-black bg-[#F4F7FC] hover:bg-[#E3EAF5] text-[#33599E] border border-[#CBD5E1] px-4 py-2 rounded-lg transition"
@@ -115,13 +130,32 @@ export default function Navbar() {
           <div className="pt-2 flex flex-col gap-2">
             {user ? (
               <div className="flex items-center justify-between pt-2">
-                <Link
-                  href="/dashboard"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="text-sm font-black text-[#33599E]"
-                >
-                  Dashboard ({user.name})
-                </Link>
+                <div className="flex flex-col gap-2">
+                  {user.hostProfile ? (
+                    <Link
+                      href="/host/dashboard"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="text-sm font-black text-[#33599E]"
+                    >
+                      Host Dashboard
+                    </Link>
+                  ) : (
+                    <Link
+                      href="/host/onboarding"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="text-sm font-black text-[#33599E]"
+                    >
+                      Become a Host
+                    </Link>
+                  )}
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="text-sm font-black text-[#33599E]"
+                  >
+                    Dashboard ({user.name})
+                  </Link>
+                </div>
                 <button
                   onClick={() => {
                     logout();

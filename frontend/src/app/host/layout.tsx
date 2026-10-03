@@ -182,6 +182,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
 export default function HostLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   // While auth is resolving, show a minimal loading state
@@ -202,6 +203,23 @@ export default function HostLayout({ children }: { children: React.ReactNode }) 
       router.push('/login');
     }
     return null;
+  }
+
+  // Redirect logic based on hostProfile
+  if (typeof window !== 'undefined') {
+    if (pathname === '/host/onboarding' && user.hostProfile) {
+      router.push('/host/dashboard');
+      return null;
+    }
+    if (pathname !== '/host/onboarding' && !user.hostProfile) {
+      router.push('/host/onboarding');
+      return null;
+    }
+  }
+
+  // Render onboarding without sidebar
+  if (pathname === '/host/onboarding') {
+    return <>{children}</>;
   }
 
   return (

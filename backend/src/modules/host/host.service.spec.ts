@@ -225,26 +225,39 @@ describe('HostService', () => {
   // HOST PROFILE
   // ─────────────────────────────────────────
 
-  describe('getOrCreateHostProfile', () => {
+  describe('getHostProfile', () => {
     it('[positive] returns existing host profile', async () => {
       mockHostProfileRepo.findOne.mockResolvedValue(mockHostProfile);
-      const result = await service.getOrCreateHostProfile(HOST_ID);
+      const result = await service.getHostProfile(HOST_ID);
       expect(result).toEqual(mockHostProfile);
     });
 
-    it('[positive] auto-creates host profile when absent', async () => {
+    it('[negative] throws NotFoundException when user is not a host', async () => {
       mockHostProfileRepo.findOne.mockResolvedValue(null);
-      mockUserRepo.findOne.mockResolvedValue(mockUser);
-      const result = await service.getOrCreateHostProfile(HOST_ID);
-      expect(mockHostProfileRepo.create).toHaveBeenCalledWith({ userId: HOST_ID });
+      await expect(service.getHostProfile(HOST_ID)).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('createHostProfile', () => {
+    it('[positive] creates a new host profile', async () => {
+      mockHostProfileRepo.findOne.mockResolvedValue(null);
+      const dto = { displayName: 'Test Display', bio: 'Bio', phone: '123' };
+      const result = await service.createHostProfile(HOST_ID, dto);
+      expect(mockHostProfileRepo.create).toHaveBeenCalledWith({
+        userId: HOST_ID,
+        displayName: dto.displayName,
+        bio: dto.bio,
+        phone: dto.phone,
+        verificationStatus: HostVerificationStatus.UNVERIFIED,
+      });
       expect(mockHostProfileRepo.save).toHaveBeenCalled();
       expect(result).toBeDefined();
     });
 
-    it('[negative] throws NotFoundException when user does not exist', async () => {
-      mockHostProfileRepo.findOne.mockResolvedValue(null);
-      mockUserRepo.findOne.mockResolvedValue(null);
-      await expect(service.getOrCreateHostProfile(HOST_ID)).rejects.toThrow(NotFoundException);
+    it('[negative] throws ConflictException if profile already exists', async () => {
+      mockHostProfileRepo.findOne.mockResolvedValue(mockHostProfile);
+      const dto = { displayName: 'Test Display' };
+      await expect(service.createHostProfile(HOST_ID, dto)).rejects.toThrow('User already has a host profile.');
     });
   });
 

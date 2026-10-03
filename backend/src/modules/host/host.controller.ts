@@ -14,6 +14,7 @@ import {
   ParseUUIDPipe,
 } from '@nestjs/common';
 import { HostService } from './host.service';
+import { CreateHostProfileDto } from './dto/create-host-profile.dto';
 import { UpdateHostProfileDto } from './dto/update-host-profile.dto';
 import { CreateHostListingDto } from './dto/create-host-listing.dto';
 import { UpdateHostListingDto } from './dto/update-host-listing.dto';
@@ -43,6 +44,19 @@ export class HostController {
   @Get('profile')
   async getProfile(@GetUser() user: User) {
     return this.hostService.getHostProfile(user.id);
+  }
+
+  /**
+   * POST /host/profile
+   * Create a host profile for the authenticated user (Become a Host).
+   */
+  @Post('profile')
+  @HttpCode(HttpStatus.CREATED)
+  async createProfile(
+    @GetUser() user: User,
+    @Body() dto: CreateHostProfileDto,
+  ) {
+    return this.hostService.createHostProfile(user.id, dto);
   }
 
   /**
