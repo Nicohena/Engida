@@ -3,19 +3,29 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { apiFetch, setAccessToken } from '../lib/api';
 
+export interface HostProfile {
+  id: string;
+  userId: string;
+  displayName: string;
+  bio?: string | null;
+  phone?: string | null;
+  verificationStatus: string;
+}
+
 export interface User {
   id: string;
   name: string;
   email: string;
   role: 'USER' | 'ADMIN';
   createdAt?: string;
+  hostProfile?: HostProfile | null;
 }
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string, role?: string) => Promise<void>;
+  register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -52,10 +62,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(response.user);
   };
 
-  const register = async (name: string, email: string, password: string, role?: string) => {
+  const register = async (name: string, email: string, password: string) => {
     await apiFetch('/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ name, email, password, role: role || 'USER' }),
+      body: JSON.stringify({ name, email, password }),
       skipAuth: true,
     });
     // Auto-login after registration

@@ -81,16 +81,12 @@ export class HostService {
   // ─────────────────────────────────────────
 
   /**
-   * Get or auto-create the HostProfile for the authenticated user.
+   * Get the HostProfile for the authenticated user.
    */
-  async getOrCreateHostProfile(userId: string): Promise<HostProfile> {
-    let profile = await this.hostProfileRepository.findOne({ where: { userId } });
+  async getHostProfile(userId: string): Promise<HostProfile | null> {
+    const profile = await this.hostProfileRepository.findOne({ where: { userId } });
     if (!profile) {
-      const user = await this.userRepository.findOne({ where: { id: userId } });
-      if (!user) throw new NotFoundException('User not found');
-      profile = this.hostProfileRepository.create({ userId });
-      profile = await this.hostProfileRepository.save(profile);
-      this.logger.log(`Auto-created HostProfile for user ${userId}`);
+      throw new NotFoundException('Host profile not found. User is not a host.');
     }
     return profile;
   }
@@ -100,12 +96,15 @@ export class HostService {
    * verificationStatus cannot be changed by the host.
    */
   async updateHostProfile(userId: string, dto: UpdateHostProfileDto): Promise<HostProfile> {
-    const profile = await this.getOrCreateHostProfile(userId);
+    const profile = await this.getHostProfile(userId);
     // Only allow safe fields - never assign verificationStatus from user input
-    if (dto.displayName !== undefined) profile.displayName = dto.displayName;
-    if (dto.bio !== undefined) profile.bio = dto.bio;
-    if (dto.phone !== undefined) profile.phone = dto.phone;
-    return this.hostProfileRepository.save(profile);
+    if (profile) {
+      if (dto.displayName !== undefined) profile.displayName = dto.displayName;
+      if (dto.bio !== undefined) profile.bio = dto.bio;
+      if (dto.phone !== undefined) profile.phone = dto.phone;
+      return this.hostProfileRepository.save(profile);
+    }
+    throw new NotFoundException('Host profile not found.');
   }
 
   // ─────────────────────────────────────────

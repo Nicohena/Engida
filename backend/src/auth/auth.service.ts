@@ -35,7 +35,7 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto): Promise<{ message: string; user: Partial<User> }> {
-    const { name, email, password, role } = registerDto;
+    const { name, email, password } = registerDto;
 
     const existingUser = await this.usersService.findByEmail(email);
     if (existingUser) {
@@ -49,7 +49,7 @@ export class AuthService {
       name,
       email,
       passwordHash,
-      role: role || UserRole.USER,
+      role: UserRole.USER,
     });
 
     return {

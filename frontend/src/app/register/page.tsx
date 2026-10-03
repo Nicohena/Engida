@@ -10,7 +10,6 @@ export default function RegisterPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<'USER' | 'ADMIN'>('USER');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -38,7 +37,7 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      await register(name, email, password, role);
+      await register(name, email, password);
       router.push('/dashboard');
     } catch (err: any) {
       setError(
@@ -111,20 +110,6 @@ export default function RegisterPage() {
               placeholder="••••••••"
               className="w-full px-4 py-3 bg-[#F4F7FC] border border-[#CBD5E1] rounded-xl text-[#000000] font-bold placeholder-[#64748B] focus:outline-none focus:ring-2 focus:ring-[#33599E] focus:border-transparent text-sm transition"
             />
-          </div>
-
-          <div>
-            <label className="block text-xs font-black uppercase tracking-wider text-[#33599E] mb-2 flex items-center gap-1">
-              <UserCheck className="w-3.5 h-3.5" /> Account Role
-            </label>
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value as 'USER' | 'ADMIN')}
-              className="w-full px-4 py-3 bg-[#F4F7FC] border border-[#CBD5E1] rounded-xl text-[#000000] font-bold focus:outline-none focus:ring-2 focus:ring-[#33599E] focus:border-transparent text-sm transition cursor-pointer"
-            >
-              <option value="USER">Tenant User (USER)</option>
-              <option value="ADMIN">Property Host / Admin (ADMIN)</option>
-            </select>
           </div>
 
           <button

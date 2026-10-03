@@ -42,7 +42,7 @@ export class HostController {
    */
   @Get('profile')
   async getProfile(@GetUser() user: User) {
-    return this.hostService.getOrCreateHostProfile(user.id);
+    return this.hostService.getHostProfile(user.id);
   }
 
   /**
