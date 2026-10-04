@@ -173,8 +173,8 @@ INSERT INTO amenities (name, icon) VALUES
 
 -- Seed Admin & User (Password: Admin123! hashed with bcrypt)
 INSERT INTO users (id, name, email, password_hash, role) VALUES
-('a0000000-0000-0000-0000-000000000001', 'Engida Admin', 'admin@engida.com', '$2b$10$G/X77aDq/LHQp1xW90d40eW6T8vX1zLqS9tE1zW90d40eW6T8vX1z', 'ADMIN'),
-('b0000000-0000-0000-0000-000000000002', 'Abebe Bikila', 'abebe@engida.com', '$2b$10$G/X77aDq/LHQp1xW90d40eW6T8vX1zLqS9tE1zW90d40eW6T8vX1z', 'USER');
+('a0000000-0000-0000-0000-000000000001', 'Engida Admin', 'admin@engida.com', '$2b$10$zF1uNeWfROT3HMQd7ZNGCO4qGOu5NPibgnS2VfExo/TmbAjd1nApa', 'ADMIN'),
+('b0000000-0000-0000-0000-000000000002', 'Abebe Bikila', 'abebe@engida.com', '$2b$10$zF1uNeWfROT3HMQd7ZNGCO4qGOu5NPibgnS2VfExo/TmbAjd1nApa', 'USER');
 
 -- Seed Sample Property Listing
 INSERT INTO properties (id, host_id, title, description, property_type, address, city, price_per_night, max_guests, bedrooms, bathrooms) VALUES
