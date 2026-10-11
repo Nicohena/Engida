@@ -38,7 +38,7 @@ const NAV_ITEMS = [
     href: '/host/reservations',
     label: 'Reservations',
     icon: CalendarDays,
-    active: false,   // placeholder — implemented in Step 5C
+    active: true,
   },
   {
     href: '/host/availability',
