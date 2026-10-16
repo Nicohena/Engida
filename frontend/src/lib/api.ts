@@ -1,68 +1,75 @@
-// Thin fetch wrapper for the GUZO (ENGIDA) backend.
-// Vite's dev server proxies /api to the Express backend (see vite.config.ts).
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
-const BASE_URL = "/api";
+let inMemoryToken: string | null = null;
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { "Content-Type": "application/json" },
-    ...options,
-  });
+export function setAccessToken(token: string | null) {
+  inMemoryToken = token;
+}
 
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.error || `Request failed: ${res.status}`);
+export function getAccessToken(): string | null {
+  return inMemoryToken;
+}
+
+interface FetchOptions extends RequestInit {
+  skipAuth?: boolean;
+}
+
+export async function apiFetch<T = any>(endpoint: string, options: FetchOptions = {}): Promise<T> {
+  const { skipAuth = false, headers: customHeaders, ...restOptions } = options;
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(customHeaders as Record<string, string>),
+  };
+
+  if (!skipAuth && inMemoryToken) {
+    headers['Authorization'] = `Bearer ${inMemoryToken}`;
   }
 
-  return res.json();
-}
+  const url = `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
 
-export const api = {
-  // Properties
-  getProperties: () => request<any[]>("/properties"),
-  getProperty: (id: number | string) => request<any>(`/properties/${id}`),
-  searchProperties: (params: Record<string, string>) => {
-    const qs = new URLSearchParams(params).toString();
-    return request<any[]>(`/properties/search?${qs}`);
-  },
-  getPropertyReviews: (id: number | string) => request<any[]>(`/properties/${id}/reviews`),
+  let response = await fetch(url, {
+    ...restOptions,
+    headers,
+    credentials: 'include', // Include HttpOnly cookies (for refreshToken)
+  });
 
-  // Bookings
-  getBookings: () => request<any[]>("/bookings"),
-  getBooking: (id: number | string) => request<any>(`/bookings/${id}`),
-  createBooking: (data: any) => request<any>("/bookings", { method: "POST", body: JSON.stringify(data) }),
-  cancelBooking: (id: number | string) => request<any>(`/bookings/${id}/cancel`, { method: "PUT" }),
+  // Handle 401 Unauthorized -> attempt silent refresh token call
+  if (response.status === 401 && !skipAuth && !endpoint.includes('/auth/refresh') && !endpoint.includes('/auth/login')) {
+    try {
+      const refreshResponse = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
 
-  // Payments
-  initiatePayment: (data: any) => request<any>("/payments/initiate", { method: "POST", body: JSON.stringify(data) }),
-  verifyPayment: (paymentId: number) => request<any>("/payments/verify", { method: "POST", body: JSON.stringify({ paymentId }) }),
+      if (refreshResponse.ok) {
+        const refreshData = await refreshResponse.json();
+        setAccessToken(refreshData.accessToken);
 
-  // Reviews
-  createReview: (data: any) => request<any>("/reviews", { method: "POST", body: JSON.stringify(data) }),
+        // Retry original request with new access token
+        headers['Authorization'] = `Bearer ${refreshData.accessToken}`;
+        response = await fetch(url, {
+          ...restOptions,
+          headers,
+          credentials: 'include',
+        });
+      } else {
+        setAccessToken(null);
+      }
+    } catch {
+      setAccessToken(null);
+    }
+  }
 
-  // Messages
-  getConversations: () => request<any[]>("/messages"),
-  getThread: (bookingId: number | string) => request<any[]>(`/messages/${bookingId}`),
-  sendMessage: (data: any) => request<any>("/messages/send", { method: "POST", body: JSON.stringify(data) }),
+  const data = await response.json().catch(() => ({}));
 
-  // Profile
-  getProfile: () => request<any>("/profile"),
-  updateProfile: (data: any) => request<any>("/profile", { method: "PUT", body: JSON.stringify(data) }),
+  if (!response.ok) {
+    const errorMsg = Array.isArray(data.message)
+      ? data.message.join(', ')
+      : data.message || 'An error occurred during API request';
+    throw new Error(errorMsg);
+  }
 
-  // Notifications
-  getNotifications: () => request<any[]>("/notifications"),
-  markNotificationRead: (id: number) => request<any>(`/notifications/${id}/read`, { method: "PUT" }),
-  markAllNotificationsRead: () => request<any>("/notifications/read-all", { method: "PUT" }),
-
-  // Favorites
-  getFavorites: () => request<any[]>("/favorites"),
-  toggleFavorite: (propertyId: number) => request<any>(`/favorites/${propertyId}`, { method: "POST" }),
-};
-
-export function formatETB(amount: number) {
-  return `ETB ${amount.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
-}
-
-export function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  return data as T;
 }

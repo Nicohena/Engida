@@ -1,0 +1,90 @@
+version: '3.8'
+
+services:
+  # Frontend - Next.js Application
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://backend:3000
+    depends_on:
+      - backend
+    command: npm run dev
+    networks:
+      - engida-network
+
+  # Backend - NestJS API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - /app/dist
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - AI_SERVICE_URL=http://ai-service:8000
+      - DATABASE_URL=postgresql://engida:engida@postgres:5432/engida
+      - JWT_SECRET=development-secret-change-in-production
+    depends_on:
+      - postgres
+      - ai-service
+    command: npm run start:dev
+    networks:
+      - engida-network
+
+  # AI Service - FastAPI Python Service
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./ai-service:/app
+    environment:
+      - DEBUG=true
+      - HOST=0.0.0.0
+      - PORT=8000
+      - ALLOWED_ORIGINS=["http://localhost:3001","http://localhost:3000"]
+    command: uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+    networks:
+      - engida-network
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=engida
+      - POSTGRES_PASSWORD=engida
+      - POSTGRES_DB=engida
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - engida-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U engida"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  engida-network:
+    driver: bridge
+
+volumes:
+  postgres-data:

@@ -1,107 +1,126 @@
-export type PropertyType = "HOTEL" | "APARTMENT" | "GUESTHOUSE" | "LODGE" | "RESORT";
-export type BookingStatus = "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
-export type PaymentStatus = "PENDING" | "SUCCESS" | "FAILED";
-export type PaymentMethod = "TELEBIRR" | "CHAPA" | "CBE" | "DASHEN";
+/**
+ * Shared TypeScript Type Definitions
+ * 
+ * Centralized type definitions for the ENGIDA frontend.
+ * Keep types organized by domain (user, property, listing, etc.)
+ */
 
-export interface PropertyImage {
-  id: number;
-  imageUrl: string;
+// Common types
+export interface ApiResponse<T> {
+  data: T;
+  message?: string;
+  success: boolean;
 }
 
-export interface Amenity {
-  id: number;
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+// User / Host types
+export interface User {
+  id: string;
   name: string;
-  icon: string;
+  email: string;
+  role: 'USER' | 'ADMIN';
+  phone?: string | null;
+  title?: string | null;
+  bio?: string | null;
+  avatar?: string | null;
+  officeLocation?: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
+
+export type PropertyHost = Pick<
+  User,
+  'id' | 'name' | 'email' | 'phone' | 'title' | 'bio' | 'avatar' | 'officeLocation'
+>;
+
+// Amenity
+export interface Amenity {
+  id: string;
+  name: string;
+  icon: string | null;
+}
+
+// Room
+export interface Room {
+  id: string;
+  propertyId: string;
+  title: string;
+  roomNumber: string;
+  capacity: number;
+  pricePerNight: string;
+  isAvailable: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Review
+export interface Review {
+  id: string;
+  propertyId: string;
+  userId: string;
+  user: Pick<User, 'id' | 'name'>;
+  rating: number;
+  comment: string | null;
+  createdAt: string;
+}
+
+// Property types
+export type PropertyType = 'HOUSE' | 'APARTMENT' | 'VILLA' | 'BEDROOM' | 'STUDIO';
 
 export interface Property {
-  id: number;
+  id: string;
+  hostId: string;
+  host: PropertyHost;
   title: string;
   description: string;
-  city: string;
-  region: string;
-  address: string;
-  latitude: number;
-  longitude: number;
-  price: number;
-  rating: number;
-  trustScore: number;
   propertyType: PropertyType;
-  published: boolean;
-  images: PropertyImage[];
-  amenities: { amenity: Amenity }[];
-  reviews?: Review[];
-  host?: { id: number; firstName: string; lastName: string; avatar?: string };
+  address: string;
+  city: string;
+  country: string;
+  pricePerNight: string;
+  maxGuests: number;
+  bedrooms: number;
+  bathrooms: number;
+  areaSqm: number;
+  parkingSpaces: number;
+  isAvailable: boolean;
+  coverImage: string | null;
+  images: string[];
+  amenities: Amenity[];
+  rooms: Room[];
+  reviews: Review[];
+  createdAt: string;
+  updatedAt: string;
 }
 
-export interface Review {
-  id: number;
-  rating: number;
-  comment: string;
-  createdAt: string;
-  guest?: { firstName: string; lastName: string; avatar?: string };
-}
+// Booking
+export type BookingStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED';
 
 export interface Booking {
-  id: number;
-  propertyId: number;
-  guestId: number;
-  checkIn: string;
-  checkOut: string;
-  guests: number;
-  nights: number;
-  totalPrice: number;
+  id: string;
+  propertyId: string;
+  roomId?: string | null;
+  guestId: string;
+  checkInDate: string;
+  checkOutDate: string;
+  totalPrice: string;
   status: BookingStatus;
-  property?: Property;
-  payment?: Payment | null;
-  review?: Review | null;
-}
-
-export interface Payment {
-  id: number;
-  bookingId: number;
-  amount: number;
-  method: PaymentMethod;
-  transactionId?: string;
-  status: PaymentStatus;
-  paidAt?: string;
-}
-
-export interface Profile {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  avatar?: string;
-  language: string;
-}
-
-export interface Notification {
-  id: number;
-  title: string;
-  body: string;
-  type: "BOOKING_CONFIRMED" | "PAYMENT_SUCCESSFUL" | "HOST_REPLIED" | "BOOKING_CANCELLED" | "PROMOTION";
-  isRead: boolean;
   createdAt: string;
+  updatedAt: string;
 }
 
-export interface Conversation {
-  bookingId: number;
-  propertyName: string;
-  propertyImage: string | null;
-  hostName: string;
-  hostAvatar?: string;
-  lastMessage: string;
-  lastMessageTime: string;
-}
-
-export interface Message {
-  id: number;
-  bookingId: number;
-  senderId: number;
-  receiverId: number;
-  message: string;
-  isRead: boolean;
-  sentAt: string;
+export interface CreateBookingPayload {
+  propertyId: string;
+  roomId?: string;
+  checkInDate: string;
+  checkOutDate: string;
+  totalPrice: number;
 }
