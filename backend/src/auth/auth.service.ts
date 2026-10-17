@@ -94,7 +94,7 @@ export class AuthService {
         email: user.email,
         role: user.role,
         createdAt: user.createdAt,
-        hostProfile: user.hostProfile || null,
+        hostProfile: user.hostProfile || undefined,
       },
     };
   }

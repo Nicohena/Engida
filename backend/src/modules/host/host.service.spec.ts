@@ -692,7 +692,7 @@ describe('HostService', () => {
 
       await service.getHostReservations(OTHER_HOST_ID, {});
       expect(mockQb.where).toHaveBeenCalledWith(
-        'property.host_id = :hostId',
+        'property.hostId = :hostId',
         { hostId: OTHER_HOST_ID },
       );
     });

@@ -571,17 +571,17 @@ export class HostService {
       .addSelect(['guest.id', 'guest.name', 'guest.email'])
       .leftJoin('booking.room', 'room')
       .addSelect(['room.id', 'room.title', 'room.roomNumber'])
-      .where('property.host_id = :hostId', { hostId })
-      .orderBy('booking.created_at', 'DESC');
+      .where('property.hostId = :hostId', { hostId })
+      .orderBy('booking.createdAt', 'DESC');
 
     if (query.status) {
       qb.andWhere('booking.status = :status', { status: query.status });
     }
     if (query.fromDate) {
-      qb.andWhere('booking.check_in_date >= :fromDate', { fromDate: query.fromDate });
+      qb.andWhere('booking.checkInDate >= :fromDate', { fromDate: query.fromDate });
     }
     if (query.toDate) {
-      qb.andWhere('booking.check_out_date <= :toDate', { toDate: query.toDate });
+      qb.andWhere('booking.checkOutDate <= :toDate', { toDate: query.toDate });
     }
 
     const [bookings, total] = await qb.skip(skip).take(limit).getManyAndCount();
@@ -590,16 +590,16 @@ export class HostService {
     const data: HostReservationResponse[] = bookings.map((booking) => ({
       id: booking.id,
       property: {
-        id: booking.property.id,
-        title: booking.property.title,
-        coverImage: booking.property.coverImage,
-        city: booking.property.city,
-        listingType: booking.property.listingType,
+        id: booking.property?.id || '',
+        title: booking.property?.title || 'Unknown Property',
+        coverImage: booking.property?.coverImage || null,
+        city: booking.property?.city || '',
+        listingType: booking.property?.listingType || ListingType.RENTAL,
       },
       guest: {
-        id: booking.guest.id,
-        name: booking.guest.name,
-        email: booking.guest.email,
+        id: booking.guest?.id || '',
+        name: booking.guest?.name || 'Guest',
+        email: booking.guest?.email || '',
       },
       room: booking.room ? {
         id: booking.room.id,
@@ -729,7 +729,7 @@ export class HostService {
       .innerJoin('booking.property', 'property')
       .select('booking.status', 'status')
       .addSelect('COUNT(*)', 'count')
-      .where('property.host_id = :hostId', { hostId })
+      .where('property.hostId = :hostId', { hostId })
       .groupBy('booking.status')
       .getRawMany<{ status: string; count: string }>();
 
@@ -748,17 +748,17 @@ export class HostService {
     const upcomingReservations = await this.bookingRepository
       .createQueryBuilder('booking')
       .innerJoin('booking.property', 'property')
-      .where('property.host_id = :hostId', { hostId })
+      .where('property.hostId = :hostId', { hostId })
       .andWhere('booking.status = :status', { status: BookingStatus.CONFIRMED })
-      .andWhere('booking.check_in_date >= :today', { today })
+      .andWhere('booking.checkInDate >= :today', { today })
       .getCount();
 
     // Booking revenue totals (note: not actual payouts, just booking totals)
     const revenueResult = await this.bookingRepository
       .createQueryBuilder('booking')
       .innerJoin('booking.property', 'property')
-      .select('COALESCE(SUM(CAST(booking.total_price AS DECIMAL)), 0)', 'total')
-      .where('property.host_id = :hostId', { hostId })
+      .select('COALESCE(SUM(CAST(booking.totalPrice AS DECIMAL)), 0)', 'total')
+      .where('property.hostId = :hostId', { hostId })
       .andWhere('booking.status IN (:...statuses)', {
         statuses: [BookingStatus.CONFIRMED, BookingStatus.COMPLETED],
       })
