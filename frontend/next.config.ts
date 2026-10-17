@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   // Allow network access for local testing on mobile devices
-  allowedDevOrigins: ['10.45.87.211', '10.29.239.211'],
+  allowedDevOrigins: ['localhost', '127.0.0.1', '10.45.87.211', '10.29.239.211', '10.75.144.211'],
   images: {
     remotePatterns: [
       {
