@@ -164,16 +164,16 @@ export default function HostLayout({ children }: { children: React.ReactNode }) 
 
   React.useEffect(() => {
     if (!user && !loading) {
-      router.push(`/login?next=${encodeURIComponent(pathname || '/host/dashboard')}`);
+      router.replace(`/login?next=${encodeURIComponent(pathname || '/host/dashboard')}`);
     }
-  }, [user, loading, router]);
+  }, [user, loading, pathname, router]);
 
   React.useEffect(() => {
     if (user && !loading) {
       if (pathname === '/host/onboarding' && user.hostProfile) {
-        router.push('/host/dashboard');
+        router.replace('/host/dashboard');
       } else if (pathname !== '/host/onboarding' && !user.hostProfile) {
-        router.push('/host/onboarding');
+        router.replace('/host/onboarding');
       }
     }
   }, [user, loading, pathname, router]);

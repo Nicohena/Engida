@@ -37,8 +37,12 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await login(email, password);
-      router.push(returnPath);
+      const loggedUser = await login(email, password);
+      if (returnPath.includes('/host') && loggedUser.hostProfile) {
+        router.push('/host/dashboard');
+      } else {
+        router.push(returnPath);
+      }
     } catch (err: any) {
       setError(
         err.message || 'Incorrect email or password. Please verify your credentials and try again.'
@@ -48,6 +52,8 @@ export default function LoginPage() {
     }
   };
 
+  const isHostFlow = returnPath.includes('/host');
+
   return (
     <div className="min-h-[75vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 text-[#000000]">
       <div className="max-w-md w-full bg-white border border-[#CBD5E1] p-8 rounded-3xl shadow-lg shadow-[#33599E]/5">
@@ -55,9 +61,13 @@ export default function LoginPage() {
           <div className="w-14 h-14 bg-gradient-to-br from-[#33599E] to-[#7093CD] text-white rounded-2xl flex items-center justify-center font-bold mx-auto mb-3 shadow-md shadow-[#33599E]/20">
             <Building2 className="w-7 h-7 stroke-[2.2]" />
           </div>
-          <h2 className="text-3xl font-black text-[#000000] tracking-tight">Engida Sign In</h2>
+          <h2 className="text-3xl font-black text-[#000000] tracking-tight">
+            {isHostFlow ? 'Host Sign In' : 'Engida Sign In'}
+          </h2>
           <p className="mt-2 text-sm font-semibold text-[#334155]">
-            Sign in to access your authenticated dashboard
+            {isHostFlow
+              ? 'Sign in to access your Host Portal or set up your host profile'
+              : 'Sign in to access your authenticated dashboard'}
           </p>
         </div>
 

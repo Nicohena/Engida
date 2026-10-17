@@ -14,6 +14,12 @@ export default function ProtectedRoute({ children, requiredRole }: ProtectedRout
   const router = useRouter();
   const pathname = usePathname();
 
+  React.useEffect(() => {
+    if (!loading && !user) {
+      router.push(`/login?next=${encodeURIComponent(pathname || '/dashboard')}`);
+    }
+  }, [user, loading, pathname, router]);
+
   if (loading) {
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center text-slate-300">
@@ -24,9 +30,6 @@ export default function ProtectedRoute({ children, requiredRole }: ProtectedRout
   }
 
   if (!user) {
-    if (typeof window !== 'undefined') {
-      router.push(`/login?next=${encodeURIComponent(pathname || '/dashboard')}`);
-    }
     return null;
   }
 

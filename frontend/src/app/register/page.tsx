@@ -54,6 +54,8 @@ export default function RegisterPage() {
     }
   };
 
+  const isHostFlow = returnPath.includes('/host');
+
   return (
     <div className="min-h-[80vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 text-[#000000]">
       <div className="max-w-md w-full bg-white border border-[#CBD5E1] p-8 rounded-3xl shadow-lg shadow-[#33599E]/5">
@@ -61,9 +63,13 @@ export default function RegisterPage() {
           <div className="w-14 h-14 bg-gradient-to-br from-[#33599E] to-[#7093CD] text-white rounded-2xl flex items-center justify-center font-bold mx-auto mb-3 shadow-md shadow-[#33599E]/20">
             <Building2 className="w-7 h-7 stroke-[2.2]" />
           </div>
-          <h2 className="text-3xl font-black text-[#000000] tracking-tight">Create Account</h2>
+          <h2 className="text-3xl font-black text-[#000000] tracking-tight">
+            {isHostFlow ? 'Host Registration' : 'Create Account'}
+          </h2>
           <p className="mt-2 text-sm font-semibold text-[#334155]">
-            Sign up to access Engida rental platform
+            {isHostFlow
+              ? 'Sign up to start listing and managing your properties on Engida'
+              : 'Sign up to access Engida rental platform'}
           </p>
         </div>
 
