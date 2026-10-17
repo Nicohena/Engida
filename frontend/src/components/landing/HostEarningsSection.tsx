@@ -70,7 +70,7 @@ export default function HostEarningsSection() {
       </div>
 
       <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-        <Link href="/host/onboarding" className="rounded-xl bg-[#2563eb] px-6 py-3 text-center text-sm font-semibold text-white transition hover:bg-blue-700">
+        <Link href="/become-a-host" className="rounded-xl bg-[#2563eb] px-6 py-3 text-center text-sm font-semibold text-white transition hover:bg-blue-700 shadow-sm shadow-blue-500/20">
           Start hosting
         </Link>
         <Link href="/host/dashboard" className="rounded-xl border border-slate-300 bg-white px-6 py-3 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-50">

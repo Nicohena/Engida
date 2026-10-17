@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
+import { Sparkles } from 'lucide-react';
 
 export type PartitionTab =
   | 'home'
@@ -301,14 +302,18 @@ export default function LandingHeader({ activeTab, onTabChange }: LandingHeaderP
         {/* Right Navigation Controls */}
         <div className="flex items-center gap-2 sm:gap-3.5 text-xs sm:text-sm font-medium text-slate-800 shrink-0">
           
-          {!authLoading && (
-            <Link
-              href={user?.hostProfile ? '/host/dashboard' : '/become-a-host'}
-              className="whitespace-nowrap text-slate-700 hover:text-[#2563eb] transition-colors"
-            >
-              {user?.hostProfile ? 'Host dashboard' : 'Become a host'}
-            </Link>
-          )}
+          <Link
+            href={user?.hostProfile ? '/host/dashboard' : '/become-a-host'}
+            className="group relative inline-flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-[13px] font-bold text-white bg-gradient-to-r from-[#1e40af] via-[#2563eb] to-[#3b82f6] shadow-sm shadow-blue-500/20 hover:shadow-md hover:shadow-blue-500/35 hover:scale-[1.03] active:scale-[0.98] transition-all duration-200 cursor-pointer"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-300 group-hover:rotate-12 transition-transform duration-300 shrink-0" />
+            <span className="tracking-tight whitespace-nowrap">
+              {user?.hostProfile ? 'Host Dashboard' : 'Become a Host'}
+            </span>
+            <span className="hidden lg:inline-flex items-center text-[10px] font-black uppercase tracking-wider bg-white/20 text-white px-1.5 py-0.5 rounded-full">
+              Earn
+            </span>
+          </Link>
 
           {/* Login Button */}
           <Link
