@@ -259,30 +259,30 @@ export default function BecomeAHostGatewayPage() {
       </header>
 
       {/* ── Main Split-Screen Gateway Container ── */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-10 lg:py-16">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-start">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
           
           {/* ═══════════════════════════════════════════════════════════ */}
           {/* LEFT COLUMN: Hero, Value Proposition, Earnings Simulator */}
           {/* ═══════════════════════════════════════════════════════════ */}
-          <div className="lg:col-span-7 space-y-8">
+          <div className="lg:col-span-7 space-y-6">
             
             {/* Header Badge & Title */}
             <div>
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#E3EAF5] text-[#33599E] text-xs font-black tracking-wide mb-4">
-                <Sparkles className="w-4 h-4" />
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#E3EAF5] text-[#33599E] text-xs font-black tracking-wide mb-3">
+                <Sparkles className="w-3.5 h-3.5" />
                 <span>START HOSTING ON ENGIDA</span>
               </div>
-              <h1 className="text-3xl sm:text-5xl font-black text-[#000000] tracking-tight leading-[1.15]">
+              <h1 className="text-2xl sm:text-4xl font-black text-[#000000] tracking-tight leading-[1.18]">
                 Turn your space into reliable monthly income.
               </h1>
-              <p className="mt-4 text-base sm:text-lg text-[#475569] leading-relaxed">
+              <p className="mt-2.5 text-sm sm:text-base text-[#475569] leading-relaxed">
                 List entire homes, guest rooms, or vacation retreats across Ethiopia. Set your own prices, choose your availability, and welcome verified guests on your terms.
               </p>
             </div>
 
             {/* Interactive Earnings Simulator Card */}
-            <div className="bg-white border-2 border-[#CBD5E1] rounded-3xl p-6 sm:p-8 shadow-sm">
+            <div className="bg-white border-2 border-[#CBD5E1] rounded-2xl p-5 sm:p-6 shadow-sm">
               <div className="flex items-center justify-between pb-4 border-b border-[#E2E8F0]">
                 <div className="flex items-center gap-2.5">
                   <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
@@ -418,12 +418,12 @@ export default function BecomeAHostGatewayPage() {
           {/* RIGHT COLUMN: Seamless All-in-One Host Onboarding / Auth */}
           {/* ═══════════════════════════════════════════════════════════ */}
           <div className="lg:col-span-5">
-            <div className="bg-white border-2 border-[#CBD5E1] rounded-3xl p-6 sm:p-8 shadow-md shadow-[#33599E]/5">
+            <div className="bg-white border-2 border-[#CBD5E1] rounded-2xl p-5 sm:p-6 shadow-md shadow-[#33599E]/5">
               
               {/* Error Alert */}
               {error && (
-                <div role="alert" className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs sm:text-sm font-bold flex items-start gap-2.5 animate-shake">
-                  <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+                <div role="alert" className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs sm:text-sm font-bold flex items-start gap-2.5 animate-shake">
+                  <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
                   <div className="flex-1 leading-snug">{error}</div>
                 </div>
               )}
@@ -433,11 +433,11 @@ export default function BecomeAHostGatewayPage() {
               {/* ────────────────────────────────────────────────────────── */}
               {user && !user.hostProfile ? (
                 <div>
-                  <div className="border-b border-[#E2E8F0] pb-4 mb-6">
-                    <span className="text-xs font-black uppercase tracking-wider text-[#33599E]">
+                  <div className="border-b border-[#E2E8F0] pb-3 mb-4">
+                    <span className="text-[11px] font-black uppercase tracking-wider text-[#33599E]">
                       Step 2 of 2
                     </span>
-                    <h2 className="text-2xl font-black text-[#000000] tracking-tight mt-1">
+                    <h2 className="text-xl font-black text-[#000000] tracking-tight mt-0.5">
                       Activate Your Host Profile
                     </h2>
                     <p className="text-xs text-[#64748B] mt-1">
@@ -445,9 +445,9 @@ export default function BecomeAHostGatewayPage() {
                     </p>
                   </div>
 
-                  <form onSubmit={handleActivateHostOnly} className="space-y-5">
+                  <form onSubmit={handleActivateHostOnly} className="space-y-3.5">
                     <div>
-                      <label className="block text-xs font-black uppercase tracking-wider text-[#33599E] mb-1.5 flex items-center gap-1.5">
+                      <label className="block text-xs font-black uppercase tracking-wider text-[#33599E] mb-1 flex items-center gap-1.5">
                         <User className="w-3.5 h-3.5" /> Host Display Name <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -458,12 +458,12 @@ export default function BecomeAHostGatewayPage() {
                         value={displayName}
                         onChange={(e) => setDisplayName(e.target.value)}
                         placeholder="e.g., Abebe B. or Addis Luxury Stays"
-                        className="w-full px-4 py-3 bg-[#F4F7FC] border border-[#CBD5E1] rounded-xl text-sm font-bold text-[#000000] focus:ring-2 focus:ring-[#33599E] focus:outline-none"
+                        className="w-full px-3.5 py-2 bg-[#F4F7FC] border border-[#CBD5E1] rounded-xl text-xs sm:text-sm font-bold text-[#000000] focus:ring-2 focus:ring-[#33599E] focus:outline-none"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-black uppercase tracking-wider text-[#33599E] mb-1.5 flex items-center gap-1.5">
+                      <label className="block text-xs font-black uppercase tracking-wider text-[#33599E] mb-1 flex items-center gap-1.5">
                         <Phone className="w-3.5 h-3.5" /> Contact Phone
                       </label>
                       <input
@@ -472,25 +472,25 @@ export default function BecomeAHostGatewayPage() {
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                         placeholder="+251 91 123 4567"
-                        className="w-full px-4 py-3 bg-[#F4F7FC] border border-[#CBD5E1] rounded-xl text-sm font-bold text-[#000000] focus:ring-2 focus:ring-[#33599E] focus:outline-none"
+                        className="w-full px-3.5 py-2 bg-[#F4F7FC] border border-[#CBD5E1] rounded-xl text-xs sm:text-sm font-bold text-[#000000] focus:ring-2 focus:ring-[#33599E] focus:outline-none"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-black uppercase tracking-wider text-[#33599E] mb-1.5 flex items-center gap-1.5">
+                      <label className="block text-xs font-black uppercase tracking-wider text-[#33599E] mb-1 flex items-center gap-1.5">
                         <FileText className="w-3.5 h-3.5" /> Short Bio & Style
                       </label>
                       <textarea
-                        rows={3}
+                        rows={2}
                         maxLength={500}
                         value={bio}
                         onChange={(e) => setBio(e.target.value)}
                         placeholder="Tell future guests about yourself or your hospitality style."
-                        className="w-full px-4 py-3 bg-[#F4F7FC] border border-[#CBD5E1] rounded-xl text-sm font-medium text-[#000000] focus:ring-2 focus:ring-[#33599E] focus:outline-none resize-none"
+                        className="w-full px-3.5 py-2 bg-[#F4F7FC] border border-[#CBD5E1] rounded-xl text-xs sm:text-sm font-medium text-[#000000] focus:ring-2 focus:ring-[#33599E] focus:outline-none resize-none"
                       />
                     </div>
 
-                    <div className="p-3 bg-[#F4F7FC] rounded-xl border border-[#CBD5E1] flex items-start gap-2.5">
+                    <div className="p-2.5 bg-[#F4F7FC] rounded-xl border border-[#CBD5E1] flex items-start gap-2">
                       <input
                         id="host-agree"
                         type="checkbox"
@@ -498,7 +498,7 @@ export default function BecomeAHostGatewayPage() {
                         onChange={(e) => setAgreed(e.target.checked)}
                         className="w-4 h-4 mt-0.5 text-[#33599E] rounded border-[#CBD5E1] focus:ring-[#33599E]"
                       />
-                      <label htmlFor="host-agree" className="text-xs text-[#475569] leading-relaxed cursor-pointer select-none">
+                      <label htmlFor="host-agree" className="text-[11px] text-[#475569] leading-tight cursor-pointer select-none">
                         I agree to provide accurate property information and follow Engida&apos;s Host Community Guidelines.
                       </label>
                     </div>
@@ -506,7 +506,7 @@ export default function BecomeAHostGatewayPage() {
                     <button
                       type="submit"
                       disabled={loading || !agreed}
-                      className="w-full py-3.5 px-4 rounded-xl font-black text-sm text-white bg-gradient-to-r from-[#33599E] to-[#234079] hover:from-[#234079] hover:to-[#162B54] shadow-md shadow-[#33599E]/25 transition disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                      className="w-full py-2.5 px-4 rounded-xl font-black text-xs sm:text-sm text-white bg-gradient-to-r from-[#33599E] to-[#234079] hover:from-[#234079] hover:to-[#162B54] shadow-md shadow-[#33599E]/25 transition disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
                     >
                       {loading ? (
                         <>
@@ -528,14 +528,14 @@ export default function BecomeAHostGatewayPage() {
                 /* ────────────────────────────────────────────────────────── */
                 <div>
                   {/* Tab Selector */}
-                  <div className="flex bg-[#F4F7FC] p-1 rounded-2xl border border-[#CBD5E1] mb-6">
+                  <div className="flex bg-[#F4F7FC] p-1 rounded-2xl border border-[#CBD5E1] mb-4">
                     <button
                       type="button"
                       onClick={() => {
                         setTab('register');
                         setError(null);
                       }}
-                      className={`flex-1 py-2.5 text-xs font-black rounded-xl transition cursor-pointer ${
+                      className={`flex-1 py-2 text-xs font-black rounded-xl transition cursor-pointer ${
                         tab === 'register'
                           ? 'bg-white text-[#33599E] shadow-xs'
                           : 'text-[#64748B] hover:text-[#000000]'
@@ -549,7 +549,7 @@ export default function BecomeAHostGatewayPage() {
                         setTab('login');
                         setError(null);
                       }}
-                      className={`flex-1 py-2.5 text-xs font-black rounded-xl transition cursor-pointer ${
+                      className={`flex-1 py-2 text-xs font-black rounded-xl transition cursor-pointer ${
                         tab === 'login'
                           ? 'bg-white text-[#33599E] shadow-xs'
                           : 'text-[#64748B] hover:text-[#000000]'
@@ -561,7 +561,7 @@ export default function BecomeAHostGatewayPage() {
 
                   {/* TAB 1: NEW HOST REGISTRATION */}
                   {tab === 'register' ? (
-                    <form onSubmit={handleRegisterAndBecomeHost} className="space-y-4">
+                    <form onSubmit={handleRegisterAndBecomeHost} className="space-y-3">
                       <div>
                         <label className="block text-xs font-black uppercase tracking-wider text-[#33599E] mb-1 flex items-center gap-1.5">
                           <User className="w-3.5 h-3.5" /> Full Legal Name <span className="text-red-500">*</span>
