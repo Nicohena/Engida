@@ -97,6 +97,7 @@ export interface HostListingDetail {
   coverImage: string | null;
   images: string[];
   amenities?: Amenity[];
+  rooms?: import('./index').Room[];
   createdAt: string;
   updatedAt: string;
 }
@@ -195,8 +196,10 @@ export interface HostReservationRow {
     name: string;
     email: string;
   };
+  room: { id: string; title: string; roomNumber: string } | null;
   checkInDate: string;
   checkOutDate: string;
+  guestCount: number;
   totalPrice: number;
   status: BookingStatus;
   createdAt: string;

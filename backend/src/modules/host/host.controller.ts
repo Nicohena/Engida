@@ -20,6 +20,8 @@ import { CreateHostListingDto } from './dto/create-host-listing.dto';
 import { UpdateHostListingDto } from './dto/update-host-listing.dto';
 import { QueryHostListingsDto, QueryHostReservationsDto } from './dto/query-host.dto';
 import { CreateAvailabilityBlockDto } from './dto/create-host-availability-block.dto';
+import { CreateRoomDto } from '../properties/dto/create-room.dto';
+import { UpdateHostRoomDto } from './dto/update-host-room.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { GetUser } from '../../auth/decorators/get-user.decorator';
 import { User } from '../../users/entities/user.entity';
@@ -39,7 +41,7 @@ export class HostController {
 
   /**
    * GET /host/profile
-   * Get the authenticated user's host profile (auto-creates if absent).
+   * Get the authenticated user's host profile (404 if they have not onboarded).
    */
   @Get('profile')
   async getProfile(@GetUser() user: User) {
@@ -84,7 +86,7 @@ export class HostController {
     @GetUser() user: User,
     @Query() query: QueryHostListingsDto,
   ) {
-    return this.hostService.getMyListings(user.id, query);
+    return this.hostService.getMyListings(user.id, query, user.role);
   }
 
   // ─────────────────────────────────────────
@@ -101,7 +103,7 @@ export class HostController {
     @GetUser() user: User,
     @Body() dto: CreateHostListingDto,
   ) {
-    return this.hostService.createListing(user.id, dto);
+    return this.hostService.createListing(user.id, dto, user.role);
   }
 
   // ─────────────────────────────────────────
@@ -135,6 +137,36 @@ export class HostController {
     @Body() dto: UpdateHostListingDto,
   ) {
     return this.hostService.updateListing(id, dto, user.id, user.role);
+  }
+
+  @Post('listings/:id/rooms')
+  @HttpCode(HttpStatus.CREATED)
+  async addListingRoom(
+    @Param('id', ParseUUIDPipe) id: string,
+    @GetUser() user: User,
+    @Body() dto: CreateRoomDto,
+  ) {
+    return this.hostService.addListingRoom(id, dto, user.id, user.role);
+  }
+
+  @Patch('listings/:id/rooms/:roomId')
+  async updateListingRoom(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('roomId', ParseUUIDPipe) roomId: string,
+    @GetUser() user: User,
+    @Body() dto: UpdateHostRoomDto,
+  ) {
+    return this.hostService.updateListingRoom(id, roomId, dto, user.id, user.role);
+  }
+
+  @Delete('listings/:id/rooms/:roomId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async removeListingRoom(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('roomId', ParseUUIDPipe) roomId: string,
+    @GetUser() user: User,
+  ) {
+    return this.hostService.removeListingRoom(id, roomId, user.id, user.role);
   }
 
   // ─────────────────────────────────────────
@@ -251,7 +283,7 @@ export class HostController {
     @GetUser() user: User,
     @Query() query: QueryHostReservationsDto,
   ) {
-    return this.hostService.getHostReservations(user.id, query);
+    return this.hostService.getHostReservations(user.id, query, user.role);
   }
 
   // ─────────────────────────────────────────
@@ -301,6 +333,6 @@ export class HostController {
    */
   @Get('dashboard')
   async getDashboard(@GetUser() user: User) {
-    return this.hostService.getDashboardSummary(user.id);
+    return this.hostService.getDashboardSummary(user.id, user.role);
   }
 }

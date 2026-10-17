@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { Property } from '../../types';
 import { apiFetch } from '../../lib/api';
 
@@ -12,15 +12,21 @@ export default function PropertyBookingWidget({ property }: PropertyBookingWidge
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
   const [guests, setGuests] = useState(1);
+  const [roomId, setRoomId] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const pricePerNight = parseFloat(property.pricePerNight);
+  const availableRooms = (property.rooms || []).filter((room) => room.isAvailable);
+  const selectedRoom = availableRooms.find((room) => room.id === roomId);
+  const pricePerNight = Number(selectedRoom?.pricePerNight ?? property.pricePerNight);
+  const guestCapacity = selectedRoom?.capacity ?? property.maxGuests;
+  useEffect(() => {
+    if (guests > guestCapacity) setGuests(guestCapacity);
+  }, [guestCapacity, guests]);
 
   // Calculate nights and total
   let nights = 0;
   let subtotal = 0;
-  const serviceFee = 25;
 
   if (checkIn && checkOut) {
     const start = new Date(checkIn);
@@ -29,7 +35,7 @@ export default function PropertyBookingWidget({ property }: PropertyBookingWidge
     subtotal = nights * pricePerNight;
   }
 
-  const total = subtotal + (nights > 0 ? serviceFee : 0);
+  const total = subtotal;
 
   const handleReserve = async () => {
     if (!checkIn || !checkOut || nights <= 0) {
@@ -45,12 +51,13 @@ export default function PropertyBookingWidget({ property }: PropertyBookingWidge
         method: 'POST',
         body: JSON.stringify({
           propertyId: property.id,
+          ...(selectedRoom ? { roomId: selectedRoom.id } : {}),
           checkInDate: checkIn,
           checkOutDate: checkOut,
-          totalPrice: total,
+          guestCount: guests,
         }),
       });
-      setMessage({ type: 'success', text: 'Booking request submitted! You will receive a confirmation shortly.' });
+      setMessage({ type: 'success', text: 'Reservation request submitted. Track its status in your account. Payment is not processed through ENGIDA yet.' });
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Failed to submit booking. Please log in and try again.' });
     } finally {
@@ -65,15 +72,24 @@ export default function PropertyBookingWidget({ property }: PropertyBookingWidge
       {/* Price Header */}
       <div className="flex items-baseline justify-between mb-5">
         <div>
-          <span className="text-3xl font-extrabold text-slate-900 tracking-tight">${pricePerNight.toFixed(0)}</span>
+          <span className="text-3xl font-extrabold text-slate-900 tracking-tight">ETB {pricePerNight.toLocaleString()}</span>
           <span className="text-xs font-semibold text-slate-500 ml-1.5">/ night</span>
         </div>
         <span className="text-[11px] font-bold bg-blue-50 text-[#2563eb] border border-blue-100 px-2.5 py-1 rounded-full">
-          Instant Booking
+          Request to book
         </span>
       </div>
 
       {/* Date Inputs */}
+      {availableRooms.length > 0 && (
+        <div className="mb-4">
+          <label className="block text-[11px] uppercase tracking-wider text-slate-400 font-bold font-mono mb-1.5">Room</label>
+          <select value={roomId} onChange={(e) => { setRoomId(e.target.value); setGuests(1); }} className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm bg-slate-50/50">
+            <option value="">Entire property · ETB {Number(property.pricePerNight).toLocaleString()}/night</option>
+            {availableRooms.map((room) => <option key={room.id} value={room.id}>{room.title} · Room {room.roomNumber} · ETB {Number(room.pricePerNight).toLocaleString()}/night</option>)}
+          </select>
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-3 mb-4">
         <div>
           <label className="block text-[11px] uppercase tracking-wider text-slate-400 font-bold font-mono mb-1.5">
@@ -111,7 +127,7 @@ export default function PropertyBookingWidget({ property }: PropertyBookingWidge
           onChange={(e) => setGuests(Number(e.target.value))}
           className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-slate-50/50 cursor-pointer"
         >
-          {Array.from({ length: property.maxGuests }, (_, i) => i + 1).map((n) => (
+          {Array.from({ length: guestCapacity }, (_, i) => i + 1).map((n) => (
             <option key={n} value={n}>
               {n} guest{n !== 1 ? 's' : ''}
             </option>
@@ -125,38 +141,23 @@ export default function PropertyBookingWidget({ property }: PropertyBookingWidge
         disabled={loading || nights <= 0}
         className="w-full py-3.5 bg-[#2563eb] hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-xs cursor-pointer active:scale-[0.98] mb-4"
       >
-        {loading ? 'Processing Booking...' : nights > 0 ? `Reserve for $${total.toFixed(0)}` : 'Select Dates to Book'}
+        {loading ? 'Submitting request…' : nights > 0 ? `Request reservation · ETB ${total.toLocaleString()}` : 'Select dates to request'}
       </button>
 
-      {/* Price Breakdown */}
+      {/* Reservation estimate; final booking value is calculated by the backend */}
       {nights > 0 && (
-        <div className="space-y-2.5 text-xs sm:text-sm border-t border-slate-100 pt-4">
-          <div className="flex justify-between text-slate-600">
-            <span>${pricePerNight.toFixed(0)} × {nights} night{nights !== 1 ? 's' : ''}</span>
-            <span className="font-semibold text-slate-800">${subtotal.toFixed(0)}</span>
-          </div>
-          <div className="flex justify-between text-slate-600">
-            <span>Escrow &amp; Service fee</span>
-            <span className="font-semibold text-slate-800">${serviceFee}</span>
-          </div>
-          <div className="flex justify-between font-extrabold text-slate-900 text-sm sm:text-base pt-2 border-t border-slate-100">
-            <span>Total Price</span>
-            <span className="text-[#2563eb]">${total.toFixed(0)}</span>
-          </div>
+        <div className="flex justify-between border-t border-slate-100 pt-4 text-sm font-bold text-slate-900">
+          <span>Estimated total ({nights} night{nights !== 1 ? 's' : ''})</span>
+          <span className="text-[#2563eb]">ETB {total.toLocaleString()}</span>
         </div>
       )}
 
-      {/* Trust & Escrow Guarantee strip */}
-      <div className="mt-5 pt-4 border-t border-slate-100 space-y-1.5 text-xs text-slate-500">
-        <div className="flex items-center gap-2 text-slate-800 font-bold">
-          <span className="w-2 h-2 rounded-full bg-emerald-500" />
-          <span>24-Hour Guest Escrow Protection</span>
-        </div>
-        <p className="text-[11px] text-slate-400 leading-relaxed">
-          Payment is held securely and only released 24 hours after check-in. Supports Telebirr &amp; CBE Birr.
+      <div className="mt-5 border-t border-slate-100 pt-4 text-xs text-slate-500">
+        <p className="font-bold text-slate-800">Reservation request only</p>
+        <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
+          ENGIDA records the booking request and its status. Payment is not collected or processed on the platform yet.
         </p>
       </div>
-
       {/* Message Box */}
       {message && (
         <div

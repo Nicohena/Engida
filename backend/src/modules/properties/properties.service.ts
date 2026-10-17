@@ -47,17 +47,14 @@ export class PropertiesService {
 
     const qb: SelectQueryBuilder<Property> = this.propertyRepository
       .createQueryBuilder('property')
-      .leftJoinAndSelect('property.host', 'host')
+      .leftJoin('property.host', 'host')
+      .leftJoin('host.hostProfile', 'hostProfile')
       .leftJoinAndSelect('property.amenities', 'amenities')
       .leftJoinAndSelect('property.rooms', 'rooms')
       .where('property.isAvailable = :available', { available: true });
 
-    // Status filter - default to PUBLISHED for public searches
-    if (query.status) {
-      qb.andWhere('property.status = :status', { status: query.status });
-    } else {
-      qb.andWhere('property.status = :publishedStatus', { publishedStatus: ListingStatus.PUBLISHED });
-    }
+    // Public discovery must never reveal drafts, paused, archived, or sold listings.
+    qb.andWhere('property.status = :publishedStatus', { publishedStatus: ListingStatus.PUBLISHED });
 
     // Listing type filter (RENTAL or SALE)
     if (query.listingType) {
@@ -108,7 +105,7 @@ export class PropertiesService {
     qb.orderBy(`property.${safeSortBy}`, sortOrder === 'ASC' ? 'ASC' : 'DESC');
 
     // Select host fields without password
-    qb.addSelect(['host.id', 'host.name', 'host.email']);
+    qb.addSelect(['host.id', 'host.name', 'hostProfile.id', 'hostProfile.displayName']);
 
     const [data, total] = await qb.skip(skip).take(limit).getManyAndCount();
 
@@ -122,26 +119,40 @@ export class PropertiesService {
   }
 
   async findOne(id: string): Promise<Property> {
-    const property = await this.propertyRepository
+    return this.loadPropertyDetail(id, false);
+  }
+
+  async findPublicOne(id: string): Promise<Property> {
+    return this.loadPropertyDetail(id, true);
+  }
+
+  private async loadPropertyDetail(id: string, publicOnly: boolean): Promise<Property> {
+    const qb = this.propertyRepository
       .createQueryBuilder('property')
       .leftJoinAndSelect('property.amenities', 'amenity')
       .leftJoinAndSelect('property.rooms', 'room')
-      .leftJoinAndSelect('property.reviews', 'review')
+      .leftJoin('property.reviews', 'review')
       .leftJoinAndSelect('property.availabilityBlocks', 'availabilityBlock')
-      .leftJoinAndSelect('review.user', 'reviewUser')
+      .leftJoin('review.user', 'reviewUser')
       .leftJoin('property.host', 'host')
+      .leftJoin('host.hostProfile', 'hostProfile')
       .addSelect([
-        'host.id',
-        'host.name',
-        'host.email',
-        'host.phone',
-        'host.title',
-        'host.bio',
-        'host.avatar',
-        'host.officeLocation',
+        'review.id',
+        'review.propertyId',
+        'review.rating',
+        'review.comment',
+        'review.createdAt',
       ])
-      .where('property.id = :id', { id })
-      .getOne();
+      .addSelect(['reviewUser.id', 'reviewUser.name'])
+      .addSelect(['host.id', 'host.name', 'hostProfile.id', 'hostProfile.displayName', 'hostProfile.bio', 'hostProfile.phone'])
+      .where('property.id = :id', { id });
+
+    if (publicOnly) {
+      qb.andWhere('property.status = :publishedStatus', { publishedStatus: ListingStatus.PUBLISHED })
+        .andWhere('property.isAvailable = :available', { available: true });
+    }
+
+    const property = await qb.getOne();
 
     if (!property) {
       throw new NotFoundException(`Property with ID "${id}" not found`);
@@ -151,7 +162,9 @@ export class PropertiesService {
   }
 
   async findRelated(id: string, limit = 4): Promise<Property[]> {
-    const property = await this.propertyRepository.findOne({ where: { id } });
+    const property = await this.propertyRepository.findOne({
+      where: { id, status: ListingStatus.PUBLISHED, isAvailable: true },
+    });
     if (!property) {
       throw new NotFoundException(`Property with ID "${id}" not found`);
     }
@@ -159,10 +172,12 @@ export class PropertiesService {
     const qb = this.propertyRepository
       .createQueryBuilder('property')
       .leftJoin('property.host', 'host')
-      .addSelect(['host.id', 'host.name'])
+      .leftJoin('host.hostProfile', 'hostProfile')
+      .addSelect(['host.id', 'host.name', 'hostProfile.id', 'hostProfile.displayName'])
       .leftJoinAndSelect('property.amenities', 'amenity')
       .where('property.id != :id', { id })
       .andWhere('property.status = :status', { status: ListingStatus.PUBLISHED })
+      .andWhere('property.isAvailable = :available', { available: true })
       .orderBy('property.createdAt', 'DESC')
       .take(limit);
 
@@ -205,6 +220,11 @@ export class PropertiesService {
 
     const { amenityIds, ...updateData } = updatePropertyDto;
 
+    // Listing lifecycle fields are managed only by the host workflow endpoints.
+    delete updateData.status;
+    delete updateData.listingType;
+    delete updateData.isAvailable;
+
     Object.assign(property, updateData);
 
     if (amenityIds !== undefined) {
@@ -225,6 +245,10 @@ export class PropertiesService {
 
     if (property.hostId !== userId && userRole !== UserRole.ADMIN) {
       throw new ForbiddenException('You can only delete your own properties');
+    }
+
+    if (userRole !== UserRole.ADMIN) {
+      throw new ForbiddenException('Hosts cannot permanently delete listings. Archive the listing instead.');
     }
 
     await this.propertyRepository.remove(property);
@@ -277,6 +301,7 @@ export class PropertiesService {
       throw new ForbiddenException('You can only update your own properties');
     }
 
+    const previousCover = property.coverImage;
     const uploadResult = await this.cloudinaryService.uploadImage(
       file,
       `engida/properties/${propertyId}`,
@@ -284,6 +309,9 @@ export class PropertiesService {
 
     property.coverImage = uploadResult.secureUrl;
     await this.propertyRepository.save(property);
+    if (previousCover && previousCover !== property.coverImage && !property.images?.includes(previousCover)) {
+      await this.cloudinaryService.deletePropertyImages(propertyId, [previousCover]);
+    }
     this.logger.log(`Updated cover image for property "${propertyId}"`);
 
     return this.findOne(propertyId);
@@ -350,15 +378,11 @@ export class PropertiesService {
       throw new NotFoundException('Image URL not found in property gallery');
     }
 
-    const publicId = this.cloudinaryService.extractPublicId(imageUrl);
-    if (publicId) {
-      this.cloudinaryService.deleteImage(publicId).catch((err) => {
-        this.logger.warn(`Failed to delete gallery image asset ${publicId}: ${err.message}`);
-      });
-    }
-
     property.images = currentImages.filter((url) => url !== imageUrl);
     await this.propertyRepository.save(property);
+    if (property.coverImage !== imageUrl) {
+      await this.cloudinaryService.deletePropertyImages(propertyId, [imageUrl]);
+    }
     this.logger.log(`Removed gallery image from property "${propertyId}"`);
 
     return this.findOne(propertyId);

@@ -195,6 +195,20 @@ export default function GalleryManager({
     const files = e.target.files;
     if (!files || files.length === 0 || !propertyId) return;
 
+    if (files.length > 10) {
+      setUploadFeedback({ type: 'error', message: 'Upload up to 10 photos at a time.' });
+      if (galleryFileInputRef.current) galleryFileInputRef.current.value = '';
+      return;
+    }
+    if (images.length + files.length > maxImages) {
+      setUploadFeedback({
+        type: 'error',
+        message: `This listing can have ${maxImages} gallery photos. Remove ${images.length + files.length - maxImages} selected photo${images.length + files.length - maxImages === 1 ? '' : 's'} or upload fewer.`,
+      });
+      if (galleryFileInputRef.current) galleryFileInputRef.current.value = '';
+      return;
+    }
+
     setIsUploadingGallery(true);
     setUploadFeedback(null);
 
@@ -264,11 +278,16 @@ export default function GalleryManager({
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div>
             <label htmlFor="coverImage" className="block text-sm font-bold text-[#000000]">
-              Cover Image <span className="text-red-500">*</span>
+              Cover Image
             </label>
             <p className="text-xs text-[#64748B]">
-              The main hero photo displayed in search results and at the top of your listing.
+              Required before publishing. This is the main photo shown on search results and listing pages.
             </p>
+            {!propertyId && (
+              <p className="mt-1 text-xs text-[#64748B]">
+                Save this draft first, then upload your cover photo from the listing editor.
+              </p>
+            )}
           </div>
 
           {/* Cloudinary File Upload Button for Cover (if in edit mode) */}
@@ -311,7 +330,7 @@ export default function GalleryManager({
             type="url"
             value={coverImage}
             onChange={(e) => onCoverImageChange(e.target.value)}
-            placeholder="https://images.unsplash.com/photo-... or upload above"
+            placeholder="Paste a URL for an image you have permission to use"
             className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium text-[#000000] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 transition ${
               coverError
                 ? 'border-red-400 focus:ring-red-200'
@@ -443,7 +462,7 @@ export default function GalleryManager({
                     handleAddGalleryUrl();
                   }
                 }}
-                placeholder="Paste image URL (https://images.unsplash.com/...)"
+                placeholder="Paste a URL for an image you have permission to use"
                 className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium text-[#000000] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 transition ${
                   urlError
                     ? 'border-red-400 focus:ring-red-200'
@@ -471,7 +490,9 @@ export default function GalleryManager({
             </div>
             <p className="text-sm font-bold text-[#000000]">No gallery photos yet</p>
             <p className="text-xs text-[#64748B] max-w-sm mx-auto">
-              Add image URLs above or upload images to give prospective guests a complete view of your space.
+              {propertyId
+                ? 'Add image URLs above or upload your property photos.'
+                : 'Add image URLs now, or save this draft and upload your property photos from the listing editor.'}
             </p>
           </div>
         ) : (

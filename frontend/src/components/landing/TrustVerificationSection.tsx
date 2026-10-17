@@ -5,10 +5,10 @@ import React, { useState } from 'react';
 const TRUST_PILLARS = [
   {
     id: 1,
-    title: '1. National ID / Kebele & Passport KYC',
-    srsCode: 'FR-01 & FR-02',
-    description: 'Every host and guest identity is authenticated with official Ethiopian Kebele ID, Resident Permit, or International Passport before transaction access.',
-    highlight: 'Zero Anonymous Listings',
+    title: 'Account-linked host profiles',
+    srsCode: 'Current feature',
+    description: 'Host capabilities are tied to a signed-in ENGIDA user account. Host verification status is tracked separately from account sign-in.',
+    highlight: 'Authenticated account required',
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
@@ -20,10 +20,10 @@ const TRUST_PILLARS = [
   },
   {
     id: 2,
-    title: '2. Physical On-Site & Amenity Inspection',
-    srsCode: 'FR-03 & FR-04',
-    description: 'Our team verifies GPS coordinates and physically audits essential amenities: automatic backup power generators, dedicated water reservoirs, and fiber WiFi.',
-    highlight: 'Audited 24/7 Power & Water',
+    title: 'Host-managed property details',
+    srsCode: 'Current feature',
+    description: 'Hosts provide property details, location, amenities, photos, and availability. ENGIDA does not currently claim an on-site inspection of these details.',
+    highlight: 'Details provided by hosts',
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
@@ -33,10 +33,10 @@ const TRUST_PILLARS = [
   },
   {
     id: 3,
-    title: '3. Verified-Only Reviews & Reputation',
-    srsCode: 'FR-09',
-    description: 'Strict cryptographic guarantee: reviews can only be submitted by travelers who physically checked into and completed an eligible booking.',
-    highlight: '100% Zero Fake Reviews',
+    title: 'Reviews after completed bookings',
+    srsCode: 'Current feature',
+    description: 'A signed-in guest can review a property after a completed booking. The same guest can submit only one review for that property.',
+    highlight: 'Completed booking required',
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
@@ -45,10 +45,10 @@ const TRUST_PILLARS = [
   },
   {
     id: 4,
-    title: '4. Multi-Signal Fraud & Escrow Engine',
-    srsCode: 'FR-07 & FR-10',
-    description: 'Real-time graph anomaly detection across User → Device → Payment. Guest funds are locked in secure escrow and released to the host only 24 hours after check-in.',
-    highlight: '24-Hour Settlement Guard',
+    title: 'Host reservation controls',
+    srsCode: 'Current feature',
+    description: 'Hosts can view reservations for their own properties and manage valid booking status transitions from the host portal.',
+    highlight: 'Owner-scoped actions',
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
@@ -68,13 +68,13 @@ export default function TrustVerificationSection({ onExplore }: { onExplore?: ()
       <div className="text-center max-w-2xl mx-auto mb-10">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-[#2563eb] text-xs font-bold mb-3">
           <span className="w-2 h-2 rounded-full bg-[#2563eb]" />
-          <span>SRS FR-04, FR-10 & FR-16: Trust & Verification Framework</span>
+          <span>Current account, listing, review, and reservation controls</span>
         </div>
         <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight">
-          The 4 Pillars of Engida Trust
+          How ENGIDA handles trust today
         </h2>
         <p className="mt-2.5 text-xs sm:text-sm text-slate-500 font-normal leading-relaxed">
-          We built physical and algorithmic guardrails specifically designed for the Ethiopian hospitality landscape, ensuring complete safety for both travelers and property owners.
+          These controls are implemented in the current platform. Identity document checks, physical inspections, payments, and escrow are not represented as available features.
         </p>
       </div>
 
@@ -117,7 +117,7 @@ export default function TrustVerificationSection({ onExplore }: { onExplore?: ()
                   {pillar.highlight}
                 </span>
                 <span className="text-[11px] font-semibold text-[#2563eb]">
-                  Verified Standard →
+                  Current platform control →
                 </span>
               </div>
             </div>
@@ -125,39 +125,37 @@ export default function TrustVerificationSection({ onExplore }: { onExplore?: ()
         })}
       </div>
 
-      {/* Trust Score Breakdown Box (SRS FR-04 Explainability Requirement) */}
+      {/* Current platform controls */}
       <div className="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           
           {/* Left Summary */}
           <div className="max-w-md">
             <div className="flex items-center gap-2 text-xs font-bold text-blue-400 mb-2 uppercase tracking-wider">
-              <span>Explainable AI Trust Scoring (FR-04)</span>
+              <span>Implemented platform controls</span>
             </div>
             <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">
-              How a Property Earns a 98%+ Trust Score
+              What the platform checks
             </h3>
             <p className="text-xs text-slate-300 leading-relaxed">
-              Every listing on Engida is evaluated by our multi-factor scoring model. No property can be published without meeting our baseline threshold.
+              The platform enforces account ownership, listing status rules, and booking eligibility in the backend.
             </p>
           </div>
 
           {/* Right Progress Gauges */}
           <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             {[
-              { label: 'Host Kebele / Passport KYC', weight: '25%', status: 'Audited & Verified' },
-              { label: '24/7 Backup Generator Audit', weight: '25%', status: 'Tested On-Site' },
-              { label: 'Dedicated Water Tank & Pump', weight: '20%', status: 'Functional Capacity' },
-              { label: 'Verified Guest Stay History', weight: '20%', status: 'Completed Stays' },
-              { label: 'Physical GPS Map Pinning', weight: '10%', status: 'Sub-City & Woreda' },
-            ].map((item, idx) => (
-              <div key={idx} className="bg-white/5 border border-white/10 p-3 rounded-xl flex items-center justify-between">
+              { label: 'Host listing access', status: 'Authenticated user and ownership checked' },
+              { label: 'Listing publication', status: 'Required fields checked before publishing' },
+              { label: 'Property review', status: 'Completed booking required' },
+            ].map((item) => (
+              <div key={item.label} className="bg-white/5 border border-white/10 p-3 rounded-xl flex items-center justify-between">
                 <div>
                   <div className="text-xs font-bold text-slate-200">{item.label}</div>
                   <div className="text-[10px] text-emerald-400 font-medium">✓ {item.status}</div>
                 </div>
                 <span className="text-xs font-mono font-bold text-blue-300 bg-blue-900/40 px-2 py-0.5 rounded border border-blue-500/20">
-                  +{item.weight}
+                  Active
                 </span>
               </div>
             ))}
@@ -165,17 +163,17 @@ export default function TrustVerificationSection({ onExplore }: { onExplore?: ()
 
         </div>
 
-        {/* Explore Verified Stays CTA */}
+        {/* Explore published listings CTA */}
         <div className="mt-8 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="text-xs text-slate-400">
-            Complies with Ethiopian Electronic Transactions Proclamation & Data Protection standards.
+            Explore published listings and review each listing's details before booking.
           </div>
           <button
             type="button"
             onClick={onExplore}
             className="w-full sm:w-auto px-6 py-2.5 bg-[#2563eb] hover:bg-blue-600 text-white rounded-full text-xs sm:text-sm font-bold transition-all shadow-md cursor-pointer"
           >
-            Browse Verified Accommodations
+            Browse published listings
           </button>
         </div>
 

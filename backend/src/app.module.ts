@@ -25,12 +25,14 @@ import { AvailabilityBlock } from './modules/properties/entities/availability-bl
 import { Amenity } from './modules/amenities/entities/amenity.entity';
 import { Booking } from './modules/bookings/entities/booking.entity';
 import { Review } from './modules/reviews/entities/review.entity';
+import { validate } from './config/env.validation';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
+      validate,
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],

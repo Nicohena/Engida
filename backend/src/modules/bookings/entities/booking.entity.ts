@@ -50,6 +50,9 @@ export class Booking {
   @Column({ type: 'date', name: 'check_out_date' })
   checkOutDate: string;
 
+  @Column({ type: 'int', default: 1, name: 'guest_count' })
+  guestCount: number;
+
   @Column({ type: 'decimal', precision: 10, scale: 2, name: 'total_price' })
   totalPrice: number;
 

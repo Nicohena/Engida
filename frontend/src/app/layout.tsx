@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Engida - House & Bedroom Rental Platform',
-  description: 'Effortless to the perfect tenant. Find suitable tenants directly and without mass visitation.',
+  title: 'ENGIDA | Property Listings and Rentals',
+  description: 'Browse property listings, request rental reservations, and manage hosting with ENGIDA.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

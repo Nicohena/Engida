@@ -220,6 +220,8 @@ export default function CreateListingPage() {
       const g = parseInt(form.maxGuests, 10);
       if (isNaN(g) || g < 1) {
         newErrors.maxGuests = 'Max guests must be at least 1';
+      } else if (g > 50) {
+        newErrors.maxGuests = 'Max guests cannot exceed 50';
       }
     }
 
@@ -752,6 +754,7 @@ export default function CreateListingPage() {
                 name="maxGuests"
                 type="number"
                 min="1"
+                max="50"
                 value={form.maxGuests}
                 onChange={handleChange}
                 className={`w-full px-3 py-2 rounded-xl border text-sm font-semibold text-[#000000] focus:outline-none focus:ring-2 transition ${

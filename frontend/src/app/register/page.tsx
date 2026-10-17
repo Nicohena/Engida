@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { User, Mail, Lock, Building2, UserCheck, AlertCircle } from 'lucide-react';
+import { getSafeReturnPath } from '../../lib/navigation';
 
 export default function RegisterPage() {
   const [name, setName] = useState('');
@@ -12,9 +13,14 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [returnPath, setReturnPath] = useState('/dashboard');
 
   const { register } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    setReturnPath(getSafeReturnPath(new URLSearchParams(window.location.search).get('next'), '/dashboard'));
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +44,7 @@ export default function RegisterPage() {
 
     try {
       await register(name, email, password);
-      router.push('/dashboard');
+      router.push(returnPath);
     } catch (err: any) {
       setError(
         err.message || 'Registration failed. Please check your information and try again.'
@@ -127,7 +133,7 @@ export default function RegisterPage() {
 
         <div className="mt-6 text-center text-sm font-bold text-[#334155]">
           Already have an account?{' '}
-          <Link href="/login" className="font-black text-[#33599E] hover:underline">
+          <Link href={returnPath === '/dashboard' ? '/login' : `/login?next=${encodeURIComponent(returnPath)}`} className="font-black text-[#33599E] hover:underline">
             Sign In
           </Link>
         </div>

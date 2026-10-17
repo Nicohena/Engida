@@ -7,6 +7,7 @@ import {
   IsOptional,
   IsArray,
   Min,
+  Max,
   MaxLength,
 } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -44,6 +45,7 @@ export class CreateHostListingDto {
 
   @IsInt()
   @Min(1)
+  @Max(50)
   @IsOptional()
   @Type(() => Number)
   maxGuests?: number;

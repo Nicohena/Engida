@@ -2,10 +2,11 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ConflictException,
   Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { LessThanOrEqual, Repository } from 'typeorm';
 import { Review } from './entities/review.entity';
 import { Property } from '../properties/entities/property.entity';
 import { Booking, BookingStatus } from '../bookings/entities/booking.entity';
@@ -20,8 +21,6 @@ export class ReviewsService {
     private readonly reviewRepository: Repository<Review>,
     @InjectRepository(Property)
     private readonly propertyRepository: Repository<Property>,
-    @InjectRepository(Booking)
-    private readonly bookingRepository: Repository<Booking>,
   ) {}
 
   async findByProperty(propertyId: string): Promise<{
@@ -37,18 +36,20 @@ export class ReviewsService {
       throw new NotFoundException(`Property with ID "${propertyId}" not found`);
     }
 
-    const reviews = await this.reviewRepository.find({
-      where: { propertyId },
-      relations: ['user'],
-      order: { createdAt: 'DESC' },
-    });
-
-    // Sanitize user data
-    reviews.forEach((review) => {
-      if (review.user) {
-        delete (review.user as any).passwordHash;
-      }
-    });
+    const reviews = await this.reviewRepository
+      .createQueryBuilder('review')
+      .select([
+        'review.id',
+        'review.propertyId',
+        'review.rating',
+        'review.comment',
+        'review.createdAt',
+      ])
+      .leftJoin('review.user', 'user')
+      .addSelect(['user.id', 'user.name'])
+      .where('review.property_id = :propertyId', { propertyId })
+      .orderBy('review.created_at', 'DESC')
+      .getMany();
 
     const totalReviews = reviews.length;
     const averageRating =
@@ -61,66 +62,87 @@ export class ReviewsService {
     return { reviews, averageRating, totalReviews };
   }
 
+  async hasReviewed(propertyId: string, userId: string): Promise<{ hasReviewed: boolean }> {
+    const property = await this.propertyRepository.findOne({ where: { id: propertyId }, select: ['id'] });
+    if (!property) throw new NotFoundException(`Property with ID "${propertyId}" not found`);
+    const existing = await this.reviewRepository.findOne({ where: { propertyId, userId }, select: ['id'] });
+    return { hasReviewed: Boolean(existing) };
+  }
+
   async create(
     propertyId: string,
     createReviewDto: CreateReviewDto,
     userId: string,
   ): Promise<Review> {
-    // Validate property exists
-    const property = await this.propertyRepository.findOne({
-      where: { id: propertyId },
-    });
+    try {
+      const saved = await this.reviewRepository.manager.transaction(async (manager) => {
+        const propertyRepository = manager.getRepository(Property);
+        const reviewRepository = manager.getRepository(Review);
+        const bookingRepository = manager.getRepository(Booking);
 
-    if (!property) {
-      throw new NotFoundException(`Property with ID "${propertyId}" not found`);
-    }
+        // Serialize reviews for this property; the unique index is the final concurrency guard.
+        const property = await propertyRepository.findOne({
+          where: { id: propertyId },
+          lock: { mode: 'pessimistic_write' },
+        });
+        if (!property) {
+          throw new NotFoundException(`Property with ID "${propertyId}" not found`);
+        }
+        if (property.hostId === userId) {
+          throw new BadRequestException('You cannot review your own property');
+        }
 
-    // Hosts cannot review their own property
-    if (property.hostId === userId) {
-      throw new BadRequestException('You cannot review your own property');
-    }
+        const completedBooking = await bookingRepository.findOne({
+          where: {
+            propertyId,
+            guestId: userId,
+            status: BookingStatus.COMPLETED,
+            checkOutDate: LessThanOrEqual(new Date().toISOString().slice(0, 10)),
+          },
+        });
+        if (!completedBooking) {
+          throw new BadRequestException('You can only review a property after completing a stay');
+        }
 
-    // Check that the user has a completed booking at this property
-    const completedBooking = await this.bookingRepository.findOne({
-      where: {
-        propertyId,
-        guestId: userId,
-        status: BookingStatus.COMPLETED,
-      },
-    });
+        const existingReview = await reviewRepository.findOne({ where: { propertyId, userId } });
+        if (existingReview) {
+          throw new ConflictException('You have already reviewed this property');
+        }
 
-    if (!completedBooking) {
-      throw new BadRequestException(
-        'You can only review a property after completing a stay',
+        const review = reviewRepository.create({
+          propertyId,
+          userId,
+          rating: createReviewDto.rating,
+          comment: createReviewDto.comment || null,
+        });
+        return reviewRepository.save(review);
+      });
+
+      this.logger.log(
+        `Review created by user ${userId} for property ${propertyId} (rating: ${createReviewDto.rating})`,
       );
+
+      const createdReview = await this.reviewRepository
+        .createQueryBuilder('review')
+        .select([
+          'review.id',
+          'review.propertyId',
+          'review.rating',
+          'review.comment',
+          'review.createdAt',
+        ])
+        .leftJoin('review.user', 'user')
+        .addSelect(['user.id', 'user.name'])
+        .where('review.id = :id', { id: saved.id })
+        .getOne();
+      if (!createdReview) throw new NotFoundException('The review was saved but could not be loaded');
+      return createdReview;
+    } catch (error: unknown) {
+      const databaseError = error as { driverError?: { code?: string; constraint?: string } };
+      if (databaseError?.driverError?.code === '23505' && databaseError.driverError.constraint === 'idx_reviews_property_user_unique') {
+        throw new ConflictException('You have already reviewed this property');
+      }
+      throw error;
     }
-
-    // Check for existing review by same user on same property
-    const existingReview = await this.reviewRepository.findOne({
-      where: { propertyId, userId },
-    });
-
-    if (existingReview) {
-      throw new BadRequestException(
-        'You have already reviewed this property',
-      );
-    }
-
-    const review = this.reviewRepository.create({
-      propertyId,
-      userId,
-      rating: createReviewDto.rating,
-      comment: createReviewDto.comment || null,
-    });
-
-    const saved = await this.reviewRepository.save(review);
-    this.logger.log(
-      `Review created by user ${userId} for property ${propertyId} (rating: ${createReviewDto.rating})`,
-    );
-
-    return this.reviewRepository.findOne({
-      where: { id: saved.id },
-      relations: ['user'],
-    }) as Promise<Review>;
   }
 }

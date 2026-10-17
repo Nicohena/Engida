@@ -15,10 +15,11 @@ import {
   UploadedFile,
   UploadedFiles,
   BadRequestException,
+  GoneException,
 } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { PropertiesService } from './properties.service';
-import { CreatePropertyDto } from './dto/create-property.dto';
+import { HostService } from '../host/host.service';
 import { UpdatePropertyDto } from './dto/update-property.dto';
 import { QueryPropertyDto } from './dto/query-property.dto';
 import { CreateRoomDto } from './dto/create-room.dto';
@@ -30,7 +31,10 @@ import { User } from '../../users/entities/user.entity';
 
 @Controller('properties')
 export class PropertiesController {
-  constructor(private readonly propertiesService: PropertiesService) {}
+  constructor(
+    private readonly propertiesService: PropertiesService,
+    private readonly hostService: HostService,
+  ) {}
 
   /**
    * Public: Search and filter property listings
@@ -45,7 +49,7 @@ export class PropertiesController {
    */
   @Get(':id')
   async findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.propertiesService.findOne(id);
+    return this.propertiesService.findPublicOne(id);
   }
 
   /**
@@ -65,17 +69,12 @@ export class PropertiesController {
     return this.propertiesService.findMyProperties(user.id);
   }
 
-  /**
-   * Protected: Create a new property listing
-   */
+  /** Legacy create route is retired; new listings must use the host onboarding workflow. */
   @Post()
   @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.CREATED)
-  async create(
-    @Body() createPropertyDto: CreatePropertyDto,
-    @GetUser() user: User,
-  ) {
-    return this.propertiesService.create(createPropertyDto, user.id);
+  @HttpCode(HttpStatus.GONE)
+  create() {
+    throw new GoneException('Create a host profile, then create listings through /host/listings');
   }
 
   /**
@@ -115,7 +114,7 @@ export class PropertiesController {
     @Body() createRoomDto: CreateRoomDto,
     @GetUser() user: User,
   ) {
-    return this.propertiesService.addRoom(id, createRoomDto, user.id, user.role);
+    return this.hostService.addListingRoom(id, createRoomDto, user.id, user.role);
   }
 
   /**
@@ -179,7 +178,7 @@ export class PropertiesController {
     @Body() dto: CreateAvailabilityBlockDto,
     @GetUser() user: User,
   ) {
-    return this.propertiesService.addAvailabilityBlock(
+    return this.hostService.addAvailabilityBlock(
       id,
       dto.startDate,
       dto.endDate,
@@ -208,6 +207,6 @@ export class PropertiesController {
     @Param('blockId', ParseUUIDPipe) blockId: string,
     @GetUser() user: User,
   ) {
-    return this.propertiesService.removeAvailabilityBlock(id, blockId, user.id, user.role);
+    return this.hostService.removeAvailabilityBlock(id, blockId, user.id, user.role);
   }
 }

@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
@@ -13,10 +14,12 @@ import {
   ListingStatus,
 } from '../properties/entities/property.entity';
 import { AvailabilityBlock } from '../properties/entities/availability-block.entity';
+import { Room } from '../properties/entities/room.entity';
 import { Amenity } from '../amenities/entities/amenity.entity';
 import { Booking, BookingStatus } from '../bookings/entities/booking.entity';
 import { HostProfile, HostVerificationStatus } from '../../users/entities/host-profile.entity';
 import { User, UserRole } from '../../users/entities/user.entity';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 // ─────────────────────────────────────────────────────────
 // Test fixtures
@@ -113,11 +116,11 @@ const mockPublishedListing: Property = {
 const mockBooking: Booking = {
   id: BOOKING_ID,
   propertyId: LISTING_ID,
-  property: mockPublishedListing as any,
+  property: mockPublishedListing,
   roomId: null,
   room: null,
   guestId: 'guest-uuid',
-  guest: null as any,
+  guest: { ...mockUser, id: 'guest-uuid' },
   checkInDate: '2027-01-10',
   checkOutDate: '2027-01-15',
   totalPrice: 1000,
@@ -167,8 +170,28 @@ const mockPropertyRepo = {
 const mockAvailabilityBlockRepo = {
   findOne: jest.fn(),
   find: jest.fn(),
+  createQueryBuilder: jest.fn().mockImplementation(() => createMockQb()),
   create: jest.fn().mockImplementation((dto: any) => ({ id: BLOCK_ID, ...dto })),
   save: jest.fn().mockImplementation((e: any) => Promise.resolve(e)),
+  remove: jest.fn(),
+  manager: {
+    transaction: jest.fn().mockImplementation(async (cb: (manager: any) => Promise<any>) =>
+      cb({
+        getRepository: (entity: any) => {
+          if (entity === Property) return mockPropertyRepo;
+          if (entity === AvailabilityBlock) return mockAvailabilityBlockRepo;
+          if (entity === Booking) return mockBookingRepo;
+          return {};
+        },
+      }),
+    ),
+  },
+};
+
+const mockRoomRepo = {
+  findOne: jest.fn(),
+  create: jest.fn().mockImplementation((dto: any) => ({ id: 'room-uuid', ...dto })),
+  save: jest.fn().mockImplementation((entity: any) => Promise.resolve(entity)),
   remove: jest.fn(),
 };
 
@@ -179,12 +202,14 @@ const mockAmenityRepo = {
 const mockBookingRepo = {
   findOne: jest.fn(),
   find: jest.fn(),
+  count: jest.fn().mockResolvedValue(0),
   save: jest.fn().mockImplementation((e: any) => Promise.resolve(e)),
+  update: jest.fn().mockResolvedValue({ affected: 1 }),
   createQueryBuilder: jest.fn().mockImplementation(() => createMockQb(mockBooking)),
 };
 
 const mockHostProfileRepo = {
-  findOne: jest.fn(),
+  findOne: jest.fn().mockResolvedValue(mockHostProfile),
   create: jest.fn().mockImplementation((dto: any) => ({ id: 'profile-uuid', ...dto })),
   save: jest.fn().mockImplementation((e: any) => Promise.resolve(e)),
 };
@@ -205,11 +230,13 @@ describe('HostService', () => {
       providers: [
         HostService,
         { provide: getRepositoryToken(Property), useValue: mockPropertyRepo },
+        { provide: getRepositoryToken(Room), useValue: mockRoomRepo },
         { provide: getRepositoryToken(AvailabilityBlock), useValue: mockAvailabilityBlockRepo },
         { provide: getRepositoryToken(Amenity), useValue: mockAmenityRepo },
         { provide: getRepositoryToken(Booking), useValue: mockBookingRepo },
         { provide: getRepositoryToken(HostProfile), useValue: mockHostProfileRepo },
         { provide: getRepositoryToken(User), useValue: mockUserRepo },
+        { provide: CloudinaryService, useValue: { deletePropertyImages: jest.fn().mockResolvedValue(undefined) } },
       ],
     }).compile();
 
@@ -559,12 +586,27 @@ describe('HostService', () => {
   describe('addAvailabilityBlock', () => {
     it('[positive] adds availability block to a RENTAL listing', async () => {
       mockPropertyRepo.findOne.mockResolvedValue({ ...mockPublishedListing });
+      mockAvailabilityBlockRepo.createQueryBuilder.mockImplementationOnce(() => createMockQb());
       const result = await service.addAvailabilityBlock(
         LISTING_ID, '2027-03-01', '2027-03-10', 'Maintenance', HOST_ID, UserRole.USER,
       );
       expect(mockAvailabilityBlockRepo.create).toHaveBeenCalledWith(
         expect.objectContaining({ propertyId: LISTING_ID }),
       );
+    });
+
+    it('[negative] rejects availability dates that overlap an existing block', async () => {
+      mockPropertyRepo.findOne.mockResolvedValue({ ...mockPublishedListing });
+      const queryBuilder = createMockQb();
+      queryBuilder.getCount.mockResolvedValue(1);
+      mockAvailabilityBlockRepo.createQueryBuilder.mockReturnValueOnce(queryBuilder);
+
+      await expect(
+        service.addAvailabilityBlock(
+          LISTING_ID, '2027-03-05', '2027-03-12', 'Maintenance', HOST_ID, UserRole.USER,
+        ),
+      ).rejects.toThrow(ConflictException);
+      expect(mockAvailabilityBlockRepo.create).not.toHaveBeenCalled();
     });
 
     it('[negative] SALE listing cannot receive availability blocks', async () => {
@@ -635,6 +677,12 @@ describe('HostService', () => {
       const result = await service.getHostReservations(HOST_ID, { page: 1, limit: 10 });
       expect(result.total).toBe(1);
       expect(result.data).toHaveLength(1);
+      expect(result.data[0]).toMatchObject({
+        id: BOOKING_ID,
+        property: { id: LISTING_ID, title: mockPublishedListing.title },
+        guest: { id: 'guest-uuid', name: mockUser.name },
+        totalPrice: 1000,
+      });
     });
 
     it('[security] query is always scoped to the authenticated hostId', async () => {

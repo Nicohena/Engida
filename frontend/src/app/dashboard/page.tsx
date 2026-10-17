@@ -1,107 +1,258 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
+import { CalendarDays, MapPin, RotateCcw, X } from 'lucide-react';
 import ProtectedRoute from '../../components/ProtectedRoute';
 import { useAuth } from '../../context/AuthContext';
 import { apiFetch } from '../../lib/api';
+import type { Booking, BookingStatus } from '../../types';
+
+interface GuestBooking extends Booking {
+  property: {
+    id: string;
+    title: string;
+    city: string;
+    coverImage: string | null;
+  };
+  room?: { id: string; title: string } | null;
+}
+
+const STATUS_STYLES: Record<BookingStatus, string> = {
+  PENDING: 'bg-amber-50 text-amber-800 border-amber-200',
+  CONFIRMED: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+  CANCELLED: 'bg-red-50 text-red-800 border-red-200',
+  COMPLETED: 'bg-blue-50 text-blue-800 border-blue-200',
+};
+
+function formatDate(value: string): string {
+  const date = new Date(`${value}T00:00:00`);
+  return Number.isNaN(date.getTime())
+    ? value
+    : date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function formatAmount(value: number | string): string {
+  const amount = Number(value);
+  return Number.isFinite(amount) ? `ETB ${amount.toLocaleString()}` : 'Amount unavailable';
+}
 
 export default function DashboardPage() {
-  const { user, logout } = useAuth();
-  const [profileData, setProfileData] = useState<any>(null);
-  const [loadingMe, setLoadingMe] = useState(false);
+  const { user } = useAuth();
+  const [bookings, setBookings] = useState<GuestBooking[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [reviewStatusByProperty, setReviewStatusByProperty] = useState<Record<string, boolean | null>>({});
+  const [reviewForms, setReviewForms] = useState<Record<string, { rating: number; comment: string }>>({});
+  const [reviewFeedback, setReviewFeedback] = useState<Record<string, { type: 'success' | 'error'; message: string }>>({});
+  const [reviewSavingPropertyId, setReviewSavingPropertyId] = useState<string | null>(null);
 
-  const fetchProfile = async () => {
-    setLoadingMe(true);
+  const loadBookings = useCallback(async () => {
+    setLoading(true);
     setError(null);
     try {
-      const data = await apiFetch('/auth/me');
-      setProfileData(data);
-    } catch (err: any) {
-      setError(err.message);
+      const data = await apiFetch<GuestBooking[]>('/bookings/my-bookings');
+      setBookings(data);
+      const today = new Date().toISOString().slice(0, 10);
+      const reviewablePropertyIds = [...new Set(data
+        .filter((booking) => booking.status === 'COMPLETED' && booking.checkOutDate <= today)
+        .map((booking) => booking.propertyId))];
+      const reviewStatuses = await Promise.all(reviewablePropertyIds.map(async (propertyId) => {
+        try {
+          const response = await apiFetch<{ hasReviewed: boolean }>(`/properties/${propertyId}/reviews/mine`);
+          return [propertyId, response.hasReviewed] as const;
+        } catch {
+          return [propertyId, null] as const;
+        }
+      }));
+      setReviewStatusByProperty(Object.fromEntries(reviewStatuses));
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : 'Unable to load your reservations.');
     } finally {
-      setLoadingMe(false);
+      setLoading(false);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    void loadBookings();
+  }, [loadBookings]);
+
+  const cancelBooking = async (booking: GuestBooking) => {
+    if (!window.confirm(`Cancel your reservation request for ${booking.property.title}?`)) return;
+
+    setCancellingId(booking.id);
+    setActionError(null);
+    try {
+      await apiFetch(`/bookings/${booking.id}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: 'CANCELLED' satisfies BookingStatus }),
+      });
+      setBookings((current) => current.map((item) =>
+        item.id === booking.id ? { ...item, status: 'CANCELLED' } : item,
+      ));
+    } catch (actionFailure) {
+      setActionError(actionFailure instanceof Error ? actionFailure.message : 'Unable to cancel this reservation.');
+    } finally {
+      setCancellingId(null);
     }
   };
 
+  const submitReview = async (propertyId: string) => {
+    const form = reviewForms[propertyId] || { rating: 5, comment: '' };
+    setReviewSavingPropertyId(propertyId);
+    setReviewFeedback((current) => ({ ...current, [propertyId]: { type: 'success', message: '' } }));
+    try {
+      await apiFetch(`/properties/${propertyId}/reviews`, {
+        method: 'POST',
+        body: JSON.stringify({ rating: form.rating, comment: form.comment.trim() || undefined }),
+      });
+      setReviewStatusByProperty((current) => ({ ...current, [propertyId]: true }));
+      setReviewForms((current) => ({ ...current, [propertyId]: { rating: 5, comment: '' } }));
+      setReviewFeedback((current) => ({ ...current, [propertyId]: { type: 'success', message: 'Your review was submitted.' } }));
+    } catch (failure) {
+      setReviewFeedback((current) => ({ ...current, [propertyId]: { type: 'error', message: failure instanceof Error ? failure.message : 'Unable to submit this review.' } }));
+    } finally {
+      setReviewSavingPropertyId(null);
+    }
+  };
+
+  const reviewOpportunityByProperty = new Map<string, string>();
+  const today = new Date().toISOString().slice(0, 10);
+  for (const booking of bookings) {
+    if (booking.status === 'COMPLETED' && booking.checkOutDate <= today && !reviewOpportunityByProperty.has(booking.propertyId)) {
+      reviewOpportunityByProperty.set(booking.propertyId, booking.id);
+    }
+  }
+
   return (
     <ProtectedRoute>
-      <div className="py-8 max-w-4xl mx-auto">
-        <div className="bg-[var(--card)] border border-[var(--border)] rounded-3xl p-8 shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-[var(--border)]">
-            <div>
-              <span className="inline-block bg-[#4A6B5D]/10 text-[#4A6B5D] dark:text-[#6E9885] text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider mb-2">
-                Tenant & Landlord Portal
-              </span>
-              <h1 className="text-3xl font-bold text-[var(--foreground)]">
-                Welcome, {user?.name}!
-              </h1>
-              <p className="text-[var(--muted)] text-sm mt-1">
-                Manage your house & bedroom bookings securely.
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className={`px-3.5 py-1 rounded-full text-xs font-bold ${
-                user?.role === 'ADMIN' ? 'bg-[#E07A5F]/15 text-[#E07A5F] border border-[#E07A5F]/30' : 'bg-[#4A6B5D]/15 text-[#4A6B5D] dark:text-[#6E9885] border border-[#4A6B5D]/30'
-              }`}>
-                ROLE: {user?.role}
-              </span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
-            <div className="bg-[var(--background)] p-5 rounded-2xl border border-[var(--border)]">
-              <p className="text-xs text-[var(--muted)] uppercase font-semibold tracking-wider">User Account ID</p>
-              <p className="text-sm font-mono text-[var(--foreground)] mt-1 break-all">{user?.id}</p>
-            </div>
-            <div className="bg-[var(--background)] p-5 rounded-2xl border border-[var(--border)]">
-              <p className="text-xs text-[var(--muted)] uppercase font-semibold tracking-wider">Registered Email</p>
-              <p className="text-sm font-medium text-[var(--foreground)] mt-1">{user?.email}</p>
-            </div>
-          </div>
-
-          <div className="bg-[var(--background)] border border-[var(--border)] p-6 rounded-2xl mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-[var(--foreground)]">Authenticated Rental Profile</h3>
-              <button
-                onClick={fetchProfile}
-                disabled={loadingMe}
-                className="bg-[#4A6B5D] hover:bg-[#375247] text-white text-xs font-semibold px-4 py-2 rounded-lg transition"
-              >
-                {loadingMe ? 'Loading...' : 'Fetch Profile Details'}
-              </button>
-            </div>
-
-            {error && (
-              <div className="p-3 bg-[#E07A5F]/10 border border-[#E07A5F]/30 text-[#E07A5F] text-xs rounded-xl mb-4">
-                {error}
-              </div>
-            )}
-
-            {profileData ? (
-              <pre className="bg-[var(--card)] p-4 rounded-xl text-xs font-mono text-[#4A6B5D] dark:text-[#6E9885] overflow-x-auto border border-[var(--border)]">
-                {JSON.stringify(profileData, null, 2)}
-              </pre>
-            ) : (
-              <p className="text-[var(--muted)] text-xs italic">
-                Click button above to test your authenticated user session token.
-              </p>
-            )}
-          </div>
-
-          <div className="flex justify-between items-center pt-6 border-t border-[var(--border)]">
-            <p className="text-[var(--muted)] text-xs">
-              House Rental session secured with encrypted refresh tokens.
+      <main className="mx-auto min-h-[70vh] w-full max-w-5xl px-4 py-10 sm:px-6">
+        <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold text-slate-500">Your account</p>
+            <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-slate-900">
+              Reservations{user?.name ? ` · ${user.name}` : ''}
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm text-slate-600">
+              View reservation requests and status updates from the hosts. ENGIDA does not process payments yet.
             </p>
-            <button
-              onClick={() => logout()}
-              className="bg-[#E07A5F]/10 hover:bg-[#E07A5F]/20 text-[#E07A5F] border border-[#E07A5F]/30 px-5 py-2.5 rounded-xl text-sm font-semibold transition"
-            >
-              Sign Out
-            </button>
           </div>
+          <button
+            type="button"
+            onClick={() => void loadBookings()}
+            disabled={loading}
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          >
+            <RotateCcw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
+          </button>
         </div>
-      </div>
+
+        {error && (
+          <section role="alert" className="rounded-2xl border border-red-200 bg-red-50 p-6">
+            <h2 className="font-bold text-red-900">Your reservations could not be loaded</h2>
+            <p className="mt-1 text-sm text-red-800">{error}</p>
+            <button type="button" onClick={() => void loadBookings()} className="mt-4 text-sm font-bold text-red-900 underline">
+              Try again
+            </button>
+          </section>
+        )}
+
+        {actionError && <p role="alert" className="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{actionError}</p>}
+
+        {loading && !error && (
+          <div role="status" className="space-y-3">
+            <p className="text-sm text-slate-500">Loading your reservations…</p>
+            {[0, 1].map((item) => <div key={item} className="h-36 animate-pulse rounded-2xl bg-slate-100" />)}
+          </div>
+        )}
+
+        {!loading && !error && bookings.length === 0 && (
+          <section className="rounded-2xl border border-slate-200 bg-white p-10 text-center">
+            <CalendarDays className="mx-auto h-10 w-10 text-slate-400" />
+            <h2 className="mt-4 text-lg font-bold text-slate-900">No reservations yet</h2>
+            <p className="mt-2 text-sm text-slate-600">When you request a rental, its current status will appear here.</p>
+            <Link href="/?tab=stays" className="mt-5 inline-flex rounded-xl bg-blue-700 px-5 py-2.5 text-sm font-bold text-white hover:bg-blue-800">
+              Browse published listings
+            </Link>
+          </section>
+        )}
+
+        {!loading && bookings.length > 0 && (
+          <ul className="space-y-4">
+            {bookings.map((booking) => (
+              <li key={booking.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+                <div className="flex flex-col gap-5 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="text-lg font-bold text-slate-900">{booking.property?.title || 'Listing unavailable'}</h2>
+                      <span className={`rounded-full border px-2.5 py-1 text-xs font-bold ${STATUS_STYLES[booking.status]}`}>
+                        {booking.status.charAt(0) + booking.status.slice(1).toLowerCase()}
+                      </span>
+                    </div>
+                    <p className="mt-2 flex items-center gap-1.5 text-sm text-slate-600">
+                      <MapPin className="h-4 w-4 shrink-0" />{booking.property?.city || 'Location unavailable'}
+                      {booking.room?.title ? ` · ${booking.room.title}` : ''}
+                    </p>
+                    <p className="mt-3 flex items-center gap-1.5 text-sm text-slate-700">
+                      <CalendarDays className="h-4 w-4 shrink-0 text-slate-500" />
+                      {formatDate(booking.checkInDate)} – {formatDate(booking.checkOutDate)}
+                      <span className="text-slate-500">· {booking.guestCount} {booking.guestCount === 1 ? 'guest' : 'guests'}</span>
+                    </p>
+                    <p className="mt-2 text-sm font-bold text-slate-900">{formatAmount(booking.totalPrice)}</p>
+                  </div>
+                  <div className="flex shrink-0 flex-wrap gap-2">
+                    {booking.property?.id && (
+                      <Link href={`/properties/${booking.property.id}`} className="rounded-lg border border-slate-300 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50">
+                        View listing
+                      </Link>
+                    )}
+                    {(booking.status === 'PENDING' || booking.status === 'CONFIRMED') && (
+                      <button
+                        type="button"
+                        onClick={() => void cancelBooking(booking)}
+                        disabled={cancellingId === booking.id}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-50 disabled:opacity-50"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                        {cancellingId === booking.id ? 'Cancelling…' : 'Cancel request'}
+                      </button>
+                    )}
+                  </div>
+                  {booking.status === 'COMPLETED' &&
+                    booking.checkOutDate <= today &&
+                    reviewOpportunityByProperty.get(booking.propertyId) === booking.id &&
+                    reviewStatusByProperty[booking.propertyId] !== undefined && (
+                      <div className="mt-5 w-full basis-full border-t border-slate-100 pt-4">
+                        {reviewStatusByProperty[booking.propertyId] === true ? (
+                          <p role="status" className="text-sm font-semibold text-emerald-700">You have reviewed this listing.</p>
+                        ) : reviewStatusByProperty[booking.propertyId] === null ? (
+                          <p role="alert" className="text-sm text-red-700">Review status could not be checked. Refresh your reservations to try again.</p>
+                        ) : (
+                          <form onSubmit={(event) => { event.preventDefault(); void submitReview(booking.propertyId); }} className="grid gap-3 sm:grid-cols-[150px_1fr_auto] sm:items-end">
+                            <label className="text-xs font-semibold text-slate-600">Your rating
+                              <select value={reviewForms[booking.propertyId]?.rating ?? 5} onChange={(event) => setReviewForms((current) => ({ ...current, [booking.propertyId]: { rating: Number(event.target.value), comment: current[booking.propertyId]?.comment ?? '' } }))} className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                                {[5, 4, 3, 2, 1].map((rating) => <option key={rating} value={rating}>{rating} {rating === 1 ? 'star' : 'stars'}</option>)}
+                              </select>
+                            </label>
+                            <label className="text-xs font-semibold text-slate-600">Comment (optional)
+                              <textarea maxLength={2000} rows={2} value={reviewForms[booking.propertyId]?.comment ?? ''} onChange={(event) => setReviewForms((current) => ({ ...current, [booking.propertyId]: { rating: current[booking.propertyId]?.rating ?? 5, comment: event.target.value } }))} className="mt-1 block w-full resize-y rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                            </label>
+                            <button type="submit" disabled={reviewSavingPropertyId === booking.propertyId} className="rounded-lg bg-blue-700 px-4 py-2 text-xs font-bold text-white hover:bg-blue-800 disabled:opacity-50">
+                              {reviewSavingPropertyId === booking.propertyId ? 'Submitting…' : 'Submit review'}
+                            </button>
+                          </form>
+                        )}
+                        {reviewFeedback[booking.propertyId]?.message && <p role={reviewFeedback[booking.propertyId].type === 'error' ? 'alert' : 'status'} className={`mt-2 text-sm ${reviewFeedback[booking.propertyId].type === 'error' ? 'text-red-700' : 'text-emerald-700'}`}>{reviewFeedback[booking.propertyId].message}</p>}
+                      </div>
+                    )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </main>
     </ProtectedRoute>
   );
 }

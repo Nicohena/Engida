@@ -1,4 +1,4 @@
-import { IsDateString, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsDateString, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class CreateAvailabilityBlockDto {
   @IsDateString()
@@ -11,5 +11,6 @@ export class CreateAvailabilityBlockDto {
 
   @IsString()
   @IsOptional()
+  @MaxLength(255)
   reason?: string;
 }

@@ -15,6 +15,7 @@ import PropertyFeaturesAmenities from '../../../components/property-details/Prop
 import PropertyConsultantCard from '../../../components/property-details/PropertyConsultantCard';
 import PropertyBookingWidget from '../../../components/property-details/PropertyBookingWidget';
 import PropertyRelatedGrid from '../../../components/property-details/PropertyRelatedGrid';
+import PropertyReviews from '../../../components/property-details/PropertyReviews';
 
 export default function PropertyDetailsPage() {
   const params = useParams();
@@ -91,7 +92,7 @@ export default function PropertyDetailsPage() {
                 href="/?tab=stays"
                 className="inline-block px-6 py-3 bg-[#2563eb] hover:bg-blue-700 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-xs"
               >
-                Browse Verified Stays
+                Browse published listings
               </Link>
             </div>
           </div>
@@ -100,6 +101,11 @@ export default function PropertyDetailsPage() {
       </div>
     );
   }
+
+  const reviewCount = property.reviews?.length ?? 0;
+  const averageRating = reviewCount > 0
+    ? property.reviews.reduce((sum, review) => sum + Number(review.rating), 0) / reviewCount
+    : null;
 
   return (
     <div className="min-h-screen w-full bg-white text-slate-800 flex flex-col selection:bg-blue-100 selection:text-blue-900">
@@ -116,7 +122,7 @@ export default function PropertyDetailsPage() {
             <svg className="w-4 h-4 text-slate-400 group-hover:text-[#2563eb] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
             </svg>
-            <span>Back to Verified Ethiopian Stays</span>
+            <span>Back to published listings</span>
           </Link>
         </div>
 
@@ -141,9 +147,13 @@ export default function PropertyDetailsPage() {
               </svg>
               <span>{property.address}, {property.city}, {property.country}</span>
               <span className="text-slate-300">•</span>
-              <span className="text-amber-600 font-bold flex items-center gap-1">
-                ★ 4.98 <span className="text-slate-400 font-normal">(46 reviews)</span>
-              </span>
+              {averageRating !== null ? (
+                <span className="text-amber-600 font-bold flex items-center gap-1">
+                  ★ {averageRating.toFixed(1)} <span className="text-slate-400 font-normal">({reviewCount} {reviewCount === 1 ? 'review' : 'reviews'})</span>
+                </span>
+              ) : (
+                <span className="text-slate-400 font-normal">No reviews yet</span>
+              )}
             </div>
           </div>
 
@@ -154,12 +164,21 @@ export default function PropertyDetailsPage() {
               <PropertyQuickDetails property={property} />
               <PropertyAbout description={property.description} />
               <PropertyFeaturesAmenities amenities={property.amenities} />
-              <PropertyConsultantCard host={property.host} />
+              <PropertyConsultantCard host={property.host} listingType={property.listingType} />
+              <PropertyReviews reviews={property.reviews || []} />
             </div>
 
             {/* Right Column: Booking Widget (sticky) */}
             <div className="lg:col-span-1">
-              <PropertyBookingWidget property={property} />
+              {property.listingType === 'SALE' ? (
+                <section className="sticky top-24 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Asking price</p>
+                  <p className="mt-2 text-3xl font-extrabold text-slate-900">{property.salePrice != null ? `ETB ${Number(property.salePrice).toLocaleString()}` : 'Price unavailable'}</p>
+                  <p className="mt-4 border-t border-slate-100 pt-4 text-sm leading-relaxed text-slate-600">This property is listed for sale. ENGIDA currently supports rental reservation requests only and does not process purchase inquiries or sales.</p>
+                </section>
+              ) : (
+                <PropertyBookingWidget property={property} />
+              )}
             </div>
           </div>
 

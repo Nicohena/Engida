@@ -26,31 +26,26 @@ const NAV_ITEMS = [
     href: '/host/dashboard',
     label: 'Dashboard',
     icon: LayoutDashboard,
-    active: true,
   },
   {
     href: '/host/listings',
     label: 'Listings',
     icon: ListTodo,
-    active: false,   // placeholder — implemented in Step 5B
   },
   {
     href: '/host/reservations',
     label: 'Reservations',
     icon: CalendarDays,
-    active: true,
   },
   {
     href: '/host/availability',
     label: 'Availability',
     icon: CalendarRange,
-    active: false,   // placeholder — implemented in Step 5D
   },
   {
     href: '/host/profile',
     label: 'Profile',
     icon: UserCircle,
-    active: false,   // placeholder — implemented in Step 5E
   },
 ];
 
@@ -100,24 +95,6 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
-          const isDisabled = !item.active && item.href !== '/host/dashboard';
-
-          if (isDisabled) {
-            return (
-              <div
-                key={item.href}
-                title="Coming soon"
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#94A3B8] cursor-not-allowed select-none"
-              >
-                <Icon className="w-5 h-5 flex-shrink-0" />
-                <span className="text-sm font-semibold flex-1">{item.label}</span>
-                <span className="text-[10px] font-bold bg-[#F4F7FC] text-[#94A3B8] border border-[#CBD5E1] px-1.5 py-0.5 rounded-md uppercase tracking-wide">
-                  Soon
-                </span>
-              </div>
-            );
-          }
-
           return (
             <Link
               key={item.href}
@@ -185,6 +162,22 @@ export default function HostLayout({ children }: { children: React.ReactNode }) 
   const pathname = usePathname();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
+  React.useEffect(() => {
+    if (!user && !loading) {
+      router.push(`/login?next=${encodeURIComponent(pathname || '/host/dashboard')}`);
+    }
+  }, [user, loading, router]);
+
+  React.useEffect(() => {
+    if (user && !loading) {
+      if (pathname === '/host/onboarding' && user.hostProfile) {
+        router.push('/host/dashboard');
+      } else if (pathname !== '/host/onboarding' && !user.hostProfile) {
+        router.push('/host/onboarding');
+      }
+    }
+  }, [user, loading, pathname, router]);
+
   // While auth is resolving, show a minimal loading state
   if (loading) {
     return (
@@ -197,27 +190,9 @@ export default function HostLayout({ children }: { children: React.ReactNode }) 
     );
   }
 
-  // Redirect unauthenticated users
-  React.useEffect(() => {
-    if (!user && !loading) {
-      router.push('/login');
-    }
-  }, [user, loading, router]);
-
   if (!user) {
     return null;
   }
-
-  // Redirect logic based on hostProfile
-  React.useEffect(() => {
-    if (user && !loading) {
-      if (pathname === '/host/onboarding' && user.hostProfile) {
-        router.push('/host/dashboard');
-      } else if (pathname !== '/host/onboarding' && !user.hostProfile) {
-        router.push('/host/onboarding');
-      }
-    }
-  }, [user, loading, pathname, router]);
 
   // Render onboarding without sidebar
   if (pathname === '/host/onboarding') {

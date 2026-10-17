@@ -2,15 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { apiFetch, setAccessToken } from '../lib/api';
-
-export interface HostProfile {
-  id: string;
-  userId: string;
-  displayName: string;
-  bio?: string | null;
-  phone?: string | null;
-  verificationStatus: string;
-}
+import type { HostProfile } from '../types/host';
 
 export interface User {
   id: string;

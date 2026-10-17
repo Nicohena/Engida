@@ -37,11 +37,11 @@ export default function PropertyHeroGallery({ coverImage, images, title }: Prope
               </div>
             )}
 
-            {/* Top Left Verified Stay Badge (Engida Brand Style) */}
+            {/* Public listing status badge */}
             <div className="absolute top-4 left-4 flex items-center gap-2">
               <span className="bg-white/95 backdrop-blur-md text-slate-900 text-xs font-bold px-3 py-1 rounded-full shadow-2xs flex items-center gap-1.5 border border-slate-200/60">
                 <span className="w-2 h-2 rounded-full bg-[#2563eb]" />
-                100% Verified Ethiopian Stay
+                Published listing
               </span>
             </div>
           </div>

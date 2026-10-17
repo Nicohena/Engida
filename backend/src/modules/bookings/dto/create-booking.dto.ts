@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsDateString, IsUUID } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsDateString, IsUUID, IsInt, Min, Max } from 'class-validator';
 
 export class CreateBookingDto {
   @IsUUID()
@@ -16,4 +16,10 @@ export class CreateBookingDto {
   @IsDateString()
   @IsNotEmpty()
   checkOutDate: string;
+
+  @IsInt()
+  @Min(1)
+  @Max(50)
+  @IsOptional()
+  guestCount?: number;
 }

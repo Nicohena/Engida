@@ -11,6 +11,7 @@ import type {
 } from '../../../../../types/host';
 import AmenitySelector from '../../../../../components/host/AmenitySelector';
 import GalleryManager from '../../../../../components/host/GalleryManager';
+import HostRoomsManager from '../../../../../components/host/HostRoomsManager';
 import {
   ArrowLeft,
   Building2,
@@ -281,6 +282,7 @@ export default function EditListingPage() {
     if (form.maxGuests !== '') {
       const g = parseInt(form.maxGuests, 10);
       if (isNaN(g) || g < 1) newErrors.maxGuests = 'Max guests must be at least 1';
+      else if (g > 50) newErrors.maxGuests = 'Max guests cannot exceed 50';
     }
 
     if (form.bedrooms !== '') {
@@ -766,6 +768,7 @@ export default function EditListingPage() {
                 name="maxGuests"
                 type="number"
                 min="1"
+                max="50"
                 value={form.maxGuests}
                 onChange={handleChange}
                 className="w-full px-3 py-2 rounded-xl border border-[#CBD5E1] text-sm font-semibold text-[#000000] focus:outline-none focus:ring-2 focus:ring-[#33599E]/20 focus:border-[#33599E] transition"
@@ -1138,6 +1141,9 @@ export default function EditListingPage() {
           </div>
         </div>
       </form>
+      {listing.listingType === 'RENTAL' && (
+        <HostRoomsManager listingId={listing.id} initialRooms={listing.rooms || []} />
+      )}
     </div>
   );
 }

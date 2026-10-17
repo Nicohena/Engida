@@ -195,7 +195,7 @@ DATABASE_URL=postgresql://engida:engida@localhost:5432/engida
 
 # Backend
 PORT=3000
-JWT_SECRET=your-secret-key
+JWT_ACCESS_SECRET=replace-with-a-unique-random-secret-of-at-least-32-characters
 
 # AI Service
 AI_SERVICE_URL=http://localhost:8000

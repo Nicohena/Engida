@@ -8,8 +8,8 @@ export default function BenefitsGrid() {
   const benefits = [
     {
       id: 0,
-      title: 'Verified Trust Scores',
-      description: 'Multi-signal KYC and on-site physical inspection for 100% genuine property listings.',
+      title: 'Account-linked host profiles',
+      description: 'Host access is associated with an authenticated ENGIDA user account and a host profile.',
       renderIcon: (isActive: boolean) => (
         <svg
           width="40"
@@ -29,8 +29,8 @@ export default function BenefitsGrid() {
     },
     {
       id: 1,
-      title: 'Direct ETB Payments',
-      description: 'Pay securely using Telebirr, CBE Birr, and local banks with zero foreign exchange fees.',
+      title: 'Property listing management',
+      description: 'Create and edit rental or sale listings and manage their publication status.',
       renderIcon: (isActive: boolean) => (
         <svg
           width="40"
@@ -51,8 +51,8 @@ export default function BenefitsGrid() {
     },
     {
       id: 2,
-      title: 'Guaranteed Power & Water',
-      description: 'Confirmed 24/7 backup generator and dedicated water tank capacity on all verified stays.',
+      title: 'Property photo gallery',
+      description: 'Upload cover and gallery photos for your listing from the host listing editor.',
       renderIcon: (isActive: boolean) => (
         <svg
           width="40"
@@ -74,8 +74,8 @@ export default function BenefitsGrid() {
     },
     {
       id: 3,
-      title: 'AI Search Concierge',
-      description: 'Natural language accommodation matching converts your requests into instant bookings.',
+      title: 'Rental availability controls',
+      description: 'Block dates when a rental property cannot accept a booking and manage those blocks in the host portal.',
       renderIcon: (isActive: boolean) => (
         <svg
           width="40"
@@ -97,8 +97,8 @@ export default function BenefitsGrid() {
     },
     {
       id: 4,
-      title: 'Dynamic Host Yield',
-      description: 'Automated seasonal pricing suggestions keep your property occupied with maximized revenue.',
+      title: 'Host reservation management',
+      description: 'Review reservations for your properties and manage the status transitions supported by the platform.',
       renderIcon: (isActive: boolean) => (
         <svg
           width="40"
@@ -118,8 +118,8 @@ export default function BenefitsGrid() {
     },
     {
       id: 5,
-      title: 'Escrow Settlement Lock',
-      description: 'Protected payments in escrow, releasing host payouts 24 hours after successful check-in.',
+      title: 'Host dashboard summaries',
+      description: 'See listing and reservation totals and the value of confirmed or completed bookings.',
       renderIcon: (isActive: boolean) => (
         <svg
           width="40"

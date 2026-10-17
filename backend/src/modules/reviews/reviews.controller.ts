@@ -27,6 +27,15 @@ export class ReviewsController {
     return this.reviewsService.findByProperty(propertyId);
   }
 
+  @Get('mine')
+  @UseGuards(JwtAuthGuard)
+  async hasReviewed(
+    @Param('propertyId', ParseUUIDPipe) propertyId: string,
+    @GetUser() user: User,
+  ) {
+    return this.reviewsService.hasReviewed(propertyId, user.id);
+  }
+
   /**
    * Protected: Submit a review for a property (must have a completed booking)
    */

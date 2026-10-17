@@ -36,10 +36,16 @@ export interface User {
   updatedAt: string;
 }
 
-export type PropertyHost = Pick<
-  User,
-  'id' | 'name' | 'email' | 'phone' | 'title' | 'bio' | 'avatar' | 'officeLocation'
->;
+export interface PropertyHost {
+  id: string;
+  name: string;
+  hostProfile?: {
+    id?: string;
+    displayName?: string | null;
+    bio?: string | null;
+    phone?: string | null;
+  } | null;
+}
 
 // Amenity
 export interface Amenity {
@@ -65,8 +71,7 @@ export interface Room {
 export interface Review {
   id: string;
   propertyId: string;
-  userId: string;
-  user: Pick<User, 'id' | 'name'>;
+  user: Pick<User, 'name'>;
   rating: number;
   comment: string | null;
   createdAt: string;
@@ -82,6 +87,8 @@ export interface Property {
   title: string;
   description: string;
   propertyType: PropertyType;
+  listingType?: 'RENTAL' | 'SALE';
+  salePrice?: string | number | null;
   address: string;
   city: string;
   country: string;
@@ -111,6 +118,7 @@ export interface Booking {
   guestId: string;
   checkInDate: string;
   checkOutDate: string;
+  guestCount: number;
   totalPrice: string;
   status: BookingStatus;
   createdAt: string;
@@ -122,5 +130,5 @@ export interface CreateBookingPayload {
   roomId?: string;
   checkInDate: string;
   checkOutDate: string;
-  totalPrice: number;
+  guestCount?: number;
 }

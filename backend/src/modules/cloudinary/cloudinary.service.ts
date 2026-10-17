@@ -152,4 +152,21 @@ export class CloudinaryService {
       return null;
     }
   }
+
+  /** Delete only assets owned by this property's dedicated upload folder. */
+  async deletePropertyImages(propertyId: string, imageUrls: string[]): Promise<void> {
+    const ownedFolder = `engida/properties/${propertyId}/`;
+    const publicIds = [...new Set(imageUrls
+      .map((url) => this.extractPublicId(url))
+      .filter((publicId): publicId is string => Boolean(publicId?.startsWith(ownedFolder))))];
+
+    await Promise.all(publicIds.map(async (publicId) => {
+      try {
+        await this.deleteImage(publicId);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Unknown Cloudinary deletion error';
+        this.logger.warn(`Could not delete detached property image ${publicId}: ${message}`);
+      }
+    }));
+  }
 }

@@ -8,7 +8,7 @@ export default function HeroDockedBanner() {
       <div className="bg-[#2563eb] rounded-t-2xl sm:rounded-t-3xl shadow-xl overflow-hidden">
         <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-white/20 text-white py-5 sm:py-6 px-4">
           
-          {/* Item 1: 100% Verified Stays */}
+          {/* Host-managed listings */}
           <div className="flex items-center justify-center gap-3 py-3 md:py-1 px-4 group hover:bg-white/5 transition-colors rounded-lg">
             <div className="relative w-8 h-8 flex items-center justify-center">
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -17,11 +17,11 @@ export default function HeroDockedBanner() {
               </svg>
             </div>
             <span className="text-sm sm:text-base font-medium tracking-wide">
-              100% Verified Stays
+              Host-managed listings
             </span>
           </div>
 
-          {/* Item 2: Telebirr & Local Banks */}
+          {/* Rental availability controls */}
           <div className="flex items-center justify-center gap-3 py-3 md:py-1 px-4 group hover:bg-white/5 transition-colors rounded-lg">
             <div className="relative w-8 h-8 flex items-center justify-center">
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -31,11 +31,11 @@ export default function HeroDockedBanner() {
               </svg>
             </div>
             <span className="text-sm sm:text-base font-medium tracking-wide">
-              Telebirr & Local Banks
+              Rental availability controls
             </span>
           </div>
 
-          {/* Item 3: Escrow Guest Protection */}
+          {/* Reservation management */}
           <div className="flex items-center justify-center gap-3 py-3 md:py-1 px-4 group hover:bg-white/5 transition-colors rounded-lg">
             <div className="relative w-8 h-8 flex items-center justify-center">
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -47,7 +47,7 @@ export default function HeroDockedBanner() {
               </svg>
             </div>
             <span className="text-sm sm:text-base font-medium tracking-wide">
-              Escrow Guest Protection
+              Reservation management
             </span>
           </div>
 

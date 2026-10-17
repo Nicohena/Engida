@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -12,6 +12,7 @@ interface ProtectedRouteProps {
 export default function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   if (loading) {
     return (
@@ -24,7 +25,7 @@ export default function ProtectedRoute({ children, requiredRole }: ProtectedRout
 
   if (!user) {
     if (typeof window !== 'undefined') {
-      router.push('/login');
+      router.push(`/login?next=${encodeURIComponent(pathname || '/dashboard')}`);
     }
     return null;
   }

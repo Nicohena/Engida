@@ -1,19 +1,25 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { KeyRound, Mail, Lock, Building2, AlertCircle } from 'lucide-react';
+import { getSafeReturnPath } from '../../lib/navigation';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [returnPath, setReturnPath] = useState('/dashboard');
 
   const { login } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    setReturnPath(getSafeReturnPath(new URLSearchParams(window.location.search).get('next'), '/dashboard'));
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,7 +38,7 @@ export default function LoginPage() {
 
     try {
       await login(email, password);
-      router.push('/dashboard');
+      router.push(returnPath);
     } catch (err: any) {
       setError(
         err.message || 'Incorrect email or password. Please verify your credentials and try again.'
@@ -110,7 +116,7 @@ export default function LoginPage() {
 
         <div className="mt-6 text-center text-sm font-bold text-[#334155]">
           Don't have an account?{' '}
-          <Link href="/register" className="font-black text-[#33599E] hover:underline">
+          <Link href={returnPath === '/dashboard' ? '/register' : `/register?next=${encodeURIComponent(returnPath)}`} className="font-black text-[#33599E] hover:underline">
             Register Here
           </Link>
         </div>

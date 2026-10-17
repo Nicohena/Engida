@@ -9,11 +9,13 @@ import { PropertiesController } from './properties.controller';
 
 import { AmenitiesModule } from '../amenities/amenities.module';
 import { CloudinaryModule } from '../cloudinary/cloudinary.module';
+import { HostModule } from '../host/host.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Property, Room, Amenity, AvailabilityBlock]),
     CloudinaryModule,
+    HostModule,
   ],
   controllers: [PropertiesController],
   providers: [PropertiesService],

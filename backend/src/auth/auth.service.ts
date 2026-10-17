@@ -5,7 +5,6 @@ import {
   Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
@@ -29,7 +28,6 @@ export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
-    private readonly configService: ConfigService,
     @InjectRepository(RefreshToken)
     private readonly refreshTokenRepository: Repository<RefreshToken>,
   ) {}
@@ -192,14 +190,7 @@ export class AuthService {
       role: user.role,
     };
 
-    const accessTokenSecret = this.configService.get<string>(
-      'JWT_ACCESS_SECRET',
-      'super_secret_jwt_access_key_change_in_production_12345!',
-    );
-
-    const accessToken = this.jwtService.sign(payload, {
-      secret: accessTokenSecret,
-    });
+    const accessToken = this.jwtService.sign(payload);
 
     const refreshTokenRaw = crypto.randomBytes(64).toString('hex');
     const tokenHash = await bcrypt.hash(refreshTokenRaw, 10);

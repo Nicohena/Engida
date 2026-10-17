@@ -94,7 +94,7 @@ function ReservationDetails({
   compact?: boolean;
 }) {
   return (
-    <div className={`grid gap-3 text-sm ${compact ? 'grid-cols-2' : 'sm:grid-cols-3'}`}>
+    <div className={`grid gap-3 text-sm ${compact ? 'grid-cols-2' : 'sm:grid-cols-4'}`}>
       <div>
         <p className="text-xs font-bold uppercase tracking-wide text-[#94A3B8]">Guest</p>
         <p className="mt-1 flex items-center gap-1.5 font-semibold text-[#334155]">
@@ -109,6 +109,16 @@ function ReservationDetails({
         <p className="text-xs font-bold uppercase tracking-wide text-[#94A3B8]">Stay dates</p>
         <p className="mt-1 font-semibold text-[#334155]">
           {formatDate(reservation.checkInDate)} — {formatDate(reservation.checkOutDate)}
+        </p>
+      </div>
+      {reservation.room && <div>
+        <p className="text-xs font-bold uppercase tracking-wide text-[#94A3B8]">Room</p>
+        <p className="mt-1 font-semibold text-[#334155]">{reservation.room.title} · {reservation.room.roomNumber}</p>
+      </div>}
+      <div>
+        <p className="text-xs font-bold uppercase tracking-wide text-[#94A3B8]">Guests</p>
+        <p className="mt-1 font-semibold text-[#334155]">
+          {reservation.guestCount} {reservation.guestCount === 1 ? 'guest' : 'guests'}
         </p>
       </div>
       <div>
@@ -138,7 +148,10 @@ function ReservationActions({
       className: 'bg-[#33599E] text-white hover:bg-[#234079]',
     });
   }
-  if (reservation.status === 'CONFIRMED') {
+  const today = new Date().toISOString().slice(0, 10);
+  const stayHasEnded = reservation.checkOutDate <= today;
+
+  if (reservation.status === 'CONFIRMED' && stayHasEnded) {
     actions.push({
       action: 'complete',
       label: 'Complete',
@@ -158,7 +171,10 @@ function ReservationActions({
   if (actions.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap items-center gap-2">
+      {reservation.status === 'CONFIRMED' && !stayHasEnded && (
+        <span className="text-xs text-[#64748B]">Completion is available after check-out.</span>
+      )}
       {actions.map(({ action, label, icon: Icon, className }) => (
         <button
           key={action}
@@ -286,6 +302,7 @@ export default function HostReservationsPage() {
             <input
               type="date"
               value={fromDate}
+              max={toDate || undefined}
               onChange={(event) => handleFilterChange(() => setFromDate(event.target.value))}
               className="mt-2 block w-full rounded-xl border border-[#CBD5E1] bg-white px-3 py-2.5 text-sm font-medium normal-case tracking-normal text-[#334155] outline-none focus:border-[#33599E] focus:ring-2 focus:ring-[#E3EAF5]"
             />
@@ -295,6 +312,7 @@ export default function HostReservationsPage() {
             <input
               type="date"
               value={toDate}
+              min={fromDate || undefined}
               onChange={(event) => handleFilterChange(() => setToDate(event.target.value))}
               className="mt-2 block w-full rounded-xl border border-[#CBD5E1] bg-white px-3 py-2.5 text-sm font-medium normal-case tracking-normal text-[#334155] outline-none focus:border-[#33599E] focus:ring-2 focus:ring-[#E3EAF5]"
             />
@@ -390,6 +408,7 @@ export default function HostReservationsPage() {
                             <p className="mt-0.5 text-xs text-[#64748B]">
                               {reservation.guest?.name || 'Guest details unavailable'}
                               {reservation.property?.city ? ` · ${reservation.property.city}` : ''}
+                              {reservation.room ? ` · ${reservation.room.title} (${reservation.room.roomNumber})` : ''}
                             </p>
                           </div>
                         </div>

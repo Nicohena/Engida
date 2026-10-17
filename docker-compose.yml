@@ -34,8 +34,7 @@ services:
       - AI_SERVICE_URL=http://ai-service:8000
       - DATABASE_URL=${DOCKER_DATABASE_URL:-postgresql://engida:1921@host.docker.internal:5433/engida}
       - DATABASE_SYNCHRONIZE=false
-      - JWT_SECRET=${JWT_SECRET:?Set JWT_SECRET in the root .env file}
-      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET:-${JWT_SECRET}}
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET:?Set JWT_ACCESS_SECRET in the root .env file}
       - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET:?Set JWT_REFRESH_SECRET in the root .env file}
     depends_on:
       - ai-service

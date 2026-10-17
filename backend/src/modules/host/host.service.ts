@@ -14,6 +14,7 @@ import {
   ListingType,
 } from '../properties/entities/property.entity';
 import { AvailabilityBlock } from '../properties/entities/availability-block.entity';
+import { Room } from '../properties/entities/room.entity';
 import { Amenity } from '../amenities/entities/amenity.entity';
 import { Booking, BookingStatus } from '../bookings/entities/booking.entity';
 import { HostProfile, HostVerificationStatus } from '../../users/entities/host-profile.entity';
@@ -21,8 +22,12 @@ import { User, UserRole } from '../../users/entities/user.entity';
 import { CreateHostProfileDto } from './dto/create-host-profile.dto';
 import { UpdateHostProfileDto } from './dto/update-host-profile.dto';
 import { CreateHostListingDto } from './dto/create-host-listing.dto';
+import { CreateRoomDto } from '../properties/dto/create-room.dto';
+import { UpdateHostRoomDto } from './dto/update-host-room.dto';
 import { UpdateHostListingDto } from './dto/update-host-listing.dto';
 import { QueryHostListingsDto, QueryHostReservationsDto } from './dto/query-host.dto';
+import { HostReservationResponse, HostReservationsPage } from './dto/host-reservation-response.dto';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 // ─────────────────────────────────────────────
 // Allowed status transitions for listings
@@ -66,6 +71,8 @@ export class HostService {
   constructor(
     @InjectRepository(Property)
     private readonly propertyRepository: Repository<Property>,
+    @InjectRepository(Room)
+    private readonly roomRepository: Repository<Room>,
     @InjectRepository(AvailabilityBlock)
     private readonly availabilityBlockRepository: Repository<AvailabilityBlock>,
     @InjectRepository(Amenity)
@@ -76,6 +83,7 @@ export class HostService {
     private readonly hostProfileRepository: Repository<HostProfile>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly cloudinaryService: CloudinaryService,
   ) {}
 
   // ─────────────────────────────────────────
@@ -138,6 +146,7 @@ export class HostService {
   async getMyListings(
     hostId: string,
     query: QueryHostListingsDto,
+    userRole: UserRole = UserRole.USER,
   ): Promise<{
     data: Partial<Property>[];
     total: number;
@@ -145,6 +154,7 @@ export class HostService {
     limit: number;
     totalPages: number;
   }> {
+    await this.assertHostProfile(hostId, userRole);
     const page = query.page || 1;
     const limit = Math.min(query.limit || 20, 100);
     const skip = (page - 1) * limit;
@@ -200,7 +210,13 @@ export class HostService {
   // 3. CREATE LISTING
   // ─────────────────────────────────────────
 
-  async createListing(hostId: string, dto: CreateHostListingDto): Promise<Property> {
+  async createListing(
+    hostId: string,
+    dto: CreateHostListingDto,
+    userRole: UserRole = UserRole.USER,
+  ): Promise<Property> {
+    await this.assertHostProfile(hostId, userRole);
+
     // Validate pricing rules
     this.validateListingPricing(dto.listingType, dto.pricePerNight, dto.salePrice, true);
 
@@ -228,6 +244,7 @@ export class HostService {
   // ─────────────────────────────────────────
 
   async getListingDetail(listingId: string, userId: string, userRole: UserRole): Promise<Property> {
+    await this.assertHostProfile(userId, userRole);
     const property = await this.propertyRepository
       .createQueryBuilder('property')
       .leftJoinAndSelect('property.amenities', 'amenity')
@@ -257,6 +274,7 @@ export class HostService {
     userId: string,
     userRole: UserRole,
   ): Promise<Property> {
+    await this.assertHostProfile(userId, userRole);
     const property = await this.propertyRepository.findOne({ where: { id: listingId } });
 
     if (!property) {
@@ -265,6 +283,9 @@ export class HostService {
     if (property.hostId !== userId && userRole !== UserRole.ADMIN) {
       throw new ForbiddenException('You can only update your own listings');
     }
+
+    const previousImages = new Set([property.coverImage, ...(property.images || [])]
+      .filter((url): url is string => Boolean(url)));
 
     // listingType cannot be changed after creation
     const { amenityIds, ...updateData } = dto;
@@ -276,7 +297,86 @@ export class HostService {
     }
 
     await this.propertyRepository.save(property);
+
+    const retainedImages = new Set([property.coverImage, ...(property.images || [])]
+      .filter((url): url is string => Boolean(url)));
+    const detachedImages = [...previousImages].filter((url) => !retainedImages.has(url));
+    if (detachedImages.length > 0) {
+      await this.cloudinaryService.deletePropertyImages(listingId, detachedImages);
+    }
     return this.findOwnedListingOrThrow(listingId, userId, userRole);
+  }
+
+  async addListingRoom(
+    listingId: string,
+    dto: CreateRoomDto,
+    userId: string,
+    userRole: UserRole,
+  ): Promise<Room> {
+    await this.assertHostProfile(userId, userRole);
+    const property = await this.getAndAuthorize(listingId, userId, userRole);
+    if (property.listingType !== ListingType.RENTAL) {
+      throw new BadRequestException('Rooms can only be added to rental listings');
+    }
+
+    const roomNumber = dto.roomNumber.trim();
+    const existingRoom = await this.roomRepository.findOne({ where: { propertyId: listingId, roomNumber } });
+    if (existingRoom) throw new ConflictException('A room with this number already exists for the listing');
+
+    const room = this.roomRepository.create({
+      ...dto,
+      title: dto.title.trim(),
+      roomNumber,
+      capacity: dto.capacity ?? 1,
+      propertyId: listingId,
+      isAvailable: true,
+    });
+    return this.roomRepository.save(room);
+  }
+
+  async updateListingRoom(
+    listingId: string,
+    roomId: string,
+    dto: UpdateHostRoomDto,
+    userId: string,
+    userRole: UserRole,
+  ): Promise<Room> {
+    await this.assertHostProfile(userId, userRole);
+    await this.getAndAuthorize(listingId, userId, userRole);
+    const room = await this.roomRepository.findOne({ where: { id: roomId, propertyId: listingId } });
+    if (!room) throw new NotFoundException(`Room "${roomId}" not found`);
+
+    if (dto.roomNumber !== undefined) {
+      const roomNumber = dto.roomNumber.trim();
+      const duplicate = await this.roomRepository.findOne({ where: { propertyId: listingId, roomNumber } });
+      if (duplicate && duplicate.id !== room.id) {
+        throw new ConflictException('A room with this number already exists for the listing');
+      }
+      room.roomNumber = roomNumber;
+    }
+    if (dto.title !== undefined) room.title = dto.title.trim();
+    if (dto.capacity !== undefined) room.capacity = dto.capacity;
+    if (dto.pricePerNight !== undefined) room.pricePerNight = dto.pricePerNight;
+    if (dto.isAvailable !== undefined) room.isAvailable = dto.isAvailable;
+    return this.roomRepository.save(room);
+  }
+
+  async removeListingRoom(
+    listingId: string,
+    roomId: string,
+    userId: string,
+    userRole: UserRole,
+  ): Promise<void> {
+    await this.assertHostProfile(userId, userRole);
+    await this.getAndAuthorize(listingId, userId, userRole);
+    const room = await this.roomRepository.findOne({ where: { id: roomId, propertyId: listingId } });
+    if (!room) throw new NotFoundException(`Room "${roomId}" not found`);
+
+    const bookingCount = await this.bookingRepository.count({ where: { roomId } });
+    if (bookingCount > 0) {
+      throw new ConflictException('This room has reservation history. Mark it unavailable instead of deleting it.');
+    }
+    await this.roomRepository.remove(room);
   }
 
   // ─────────────────────────────────────────
@@ -353,29 +453,72 @@ export class HostService {
     userId: string,
     userRole: UserRole,
   ): Promise<AvailabilityBlock> {
-    const property = await this.getAndAuthorize(listingId, userId, userRole);
-
-    if (property.listingType !== ListingType.RENTAL) {
-      throw new BadRequestException(
-        'Availability blocks can only be added to RENTAL listings',
-      );
-    }
-
+    await this.assertHostProfile(userId, userRole);
     const start = new Date(startDate);
     const end = new Date(endDate);
 
+    const today = new Date().toISOString().slice(0, 10);
+    if (startDate.slice(0, 10) < today) {
+      throw new BadRequestException('Availability blocks cannot start in the past');
+    }
     if (end <= start) {
       throw new BadRequestException('End date must be strictly after start date');
     }
 
-    const block = this.availabilityBlockRepository.create({
-      propertyId: listingId,
-      startDate,
-      endDate,
-      reason: reason || null,
-    });
+    return this.availabilityBlockRepository.manager.transaction(async (manager) => {
+      const propertyRepository = manager.getRepository(Property);
+      const blockRepository = manager.getRepository(AvailabilityBlock);
+      const bookingRepository = manager.getRepository(Booking);
 
-    return this.availabilityBlockRepository.save(block);
+      const property = await propertyRepository.findOne({
+        where: { id: listingId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!property) throw new NotFoundException(`Listing with ID "${listingId}" not found`);
+      if (property.hostId !== userId && userRole !== UserRole.ADMIN) {
+        throw new ForbiddenException('You do not have permission to manage this listing');
+      }
+      if (property.listingType !== ListingType.RENTAL) {
+        throw new BadRequestException('Availability blocks can only be added to RENTAL listings');
+      }
+
+      const overlappingBlock = await blockRepository
+        .createQueryBuilder('block')
+        .where('block.property_id = :listingId', { listingId })
+        .andWhere('(block.start_date < :endDate AND block.end_date > :startDate)', {
+          startDate,
+          endDate,
+        })
+        .getCount();
+      if (overlappingBlock > 0) {
+        throw new ConflictException('These dates overlap an existing availability block');
+      }
+
+      const overlappingReservation = await bookingRepository
+        .createQueryBuilder('booking')
+        .where('booking.property_id = :listingId', { listingId })
+        .andWhere('booking.status IN (:...statuses)', {
+          statuses: [BookingStatus.PENDING, BookingStatus.CONFIRMED],
+        })
+        .andWhere('(booking.check_in_date < :endDate AND booking.check_out_date > :startDate)', {
+          startDate,
+          endDate,
+        })
+        .getCount();
+      if (overlappingReservation > 0) {
+        throw new ConflictException(
+          'These dates overlap a pending or confirmed reservation and cannot be blocked',
+        );
+      }
+
+      const block = blockRepository.create({
+        propertyId: listingId,
+        startDate,
+        endDate,
+        reason: reason || null,
+      });
+      return blockRepository.save(block);
+    });
   }
 
   async removeAvailabilityBlock(
@@ -404,13 +547,12 @@ export class HostService {
   async getHostReservations(
     hostId: string,
     query: QueryHostReservationsDto,
-  ): Promise<{
-    data: any[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  }> {
+    userRole: UserRole = UserRole.USER,
+  ): Promise<HostReservationsPage> {
+    await this.assertHostProfile(hostId, userRole);
+    if (query.fromDate && query.toDate && query.toDate < query.fromDate) {
+      throw new BadRequestException('Check-out through date must be on or after check-in from date');
+    }
     const page = query.page || 1;
     const limit = Math.min(query.limit || 20, 100);
     const skip = (page - 1) * limit;
@@ -427,6 +569,8 @@ export class HostService {
       ])
       .leftJoin('booking.guest', 'guest')
       .addSelect(['guest.id', 'guest.name', 'guest.email'])
+      .leftJoin('booking.room', 'room')
+      .addSelect(['room.id', 'room.title', 'room.roomNumber'])
       .where('property.host_id = :hostId', { hostId })
       .orderBy('booking.created_at', 'DESC');
 
@@ -443,25 +587,31 @@ export class HostService {
     const [bookings, total] = await qb.skip(skip).take(limit).getManyAndCount();
 
     // Return safe fields - never expose guest password or sensitive data
-    const data = bookings.map((b) => ({
-      id: b.id,
+    const data: HostReservationResponse[] = bookings.map((booking) => ({
+      id: booking.id,
       property: {
-        id: (b as any).property?.id,
-        title: (b as any).property?.title,
-        coverImage: (b as any).property?.coverImage,
-        city: (b as any).property?.city,
-        listingType: (b as any).property?.listingType,
+        id: booking.property.id,
+        title: booking.property.title,
+        coverImage: booking.property.coverImage,
+        city: booking.property.city,
+        listingType: booking.property.listingType,
       },
       guest: {
-        id: (b as any).guest?.id,
-        name: (b as any).guest?.name,
-        email: (b as any).guest?.email,
+        id: booking.guest.id,
+        name: booking.guest.name,
+        email: booking.guest.email,
       },
-      checkInDate: b.checkInDate,
-      checkOutDate: b.checkOutDate,
-      totalPrice: b.totalPrice,
-      status: b.status,
-      createdAt: b.createdAt,
+      room: booking.room ? {
+        id: booking.room.id,
+        title: booking.room.title,
+        roomNumber: booking.room.roomNumber,
+      } : null,
+      checkInDate: booking.checkInDate,
+      checkOutDate: booking.checkOutDate,
+      guestCount: booking.guestCount,
+      totalPrice: Number(booking.totalPrice),
+      status: booking.status,
+      createdAt: booking.createdAt,
     }));
 
     return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
@@ -488,6 +638,7 @@ export class HostService {
     hostId: string,
     newStatus: BookingStatus,
   ): Promise<Booking> {
+    await this.assertHostProfile(hostId, UserRole.USER);
     const booking = await this.bookingRepository.findOne({
       where: { id: bookingId },
       relations: ['property'],
@@ -498,7 +649,7 @@ export class HostService {
     }
 
     // Ownership check: host must own the property
-    if ((booking as any).property?.hostId !== hostId) {
+    if (!booking.property || booking.property.hostId !== hostId) {
       throw new ForbiddenException('You can only manage reservations for your own properties');
     }
 
@@ -516,17 +667,34 @@ export class HostService {
       );
     }
 
+    if (newStatus === BookingStatus.COMPLETED) {
+      const today = new Date().toISOString().slice(0, 10);
+      if (booking.checkOutDate > today) {
+        throw new BadRequestException('A reservation can only be completed on or after its check-out date');
+      }
+    }
+
+    const updateResult = await this.bookingRepository.update(
+      { id: bookingId, status: booking.status },
+      { status: newStatus },
+    );
+    if (updateResult.affected !== 1) {
+      throw new ConflictException('This reservation changed while you were acting. Reload it and try again.');
+    }
     booking.status = newStatus;
-    const saved = await this.bookingRepository.save(booking);
     this.logger.log(`Host ${hostId} changed booking ${bookingId} status to ${newStatus}`);
-    return saved;
+    return booking;
   }
 
   // ─────────────────────────────────────────
   // 10. DASHBOARD SUMMARY
   // ─────────────────────────────────────────
 
-  async getDashboardSummary(hostId: string): Promise<Record<string, number>> {
+  async getDashboardSummary(
+    hostId: string,
+    userRole: UserRole = UserRole.USER,
+  ): Promise<Record<string, number>> {
+    await this.assertHostProfile(hostId, userRole);
     // Listing counts
     const listingCounts = await this.propertyRepository
       .createQueryBuilder('property')
@@ -626,6 +794,7 @@ export class HostService {
     userId: string,
     userRole: UserRole,
   ): Promise<Property> {
+    await this.assertHostProfile(userId, userRole);
     const property = await this.propertyRepository.findOne({ where: { id: listingId } });
     if (!property) {
       throw new NotFoundException(`Listing with ID "${listingId}" not found`);
@@ -634,6 +803,14 @@ export class HostService {
       throw new ForbiddenException('You do not have permission to manage this listing');
     }
     return property;
+  }
+
+  private async assertHostProfile(userId: string, userRole: UserRole): Promise<void> {
+    if (userRole === UserRole.ADMIN) return;
+    const profile = await this.hostProfileRepository.findOne({ where: { userId } });
+    if (!profile) {
+      throw new ForbiddenException('Create a host profile before accessing host workflows');
+    }
   }
 
   /**

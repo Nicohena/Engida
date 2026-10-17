@@ -3,16 +3,21 @@ import {
   IsOptional,
   MaxLength,
   Matches,
+  MinLength,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class UpdateHostProfileDto {
   @IsString()
   @IsOptional()
-  @MaxLength(255)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @MinLength(2)
+  @MaxLength(100)
   displayName?: string;
 
   @IsString()
   @IsOptional()
+  @MaxLength(500)
   bio?: string;
 
   @IsString()

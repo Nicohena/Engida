@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import { useAuth } from '../../context/AuthContext';
 
 export type PartitionTab =
   | 'home'
@@ -34,27 +35,12 @@ const MORE_DROPDOWN_ITEMS: MoreDropdownItem[] = [
     id: 'how-it-works',
     title: 'How It Works',
     amharicTitle: 'አሰራር',
-    subtitle: 'Step-by-step guide for guests, verification & arrival',
+    subtitle: 'Browse listings and manage reservation requests',
     amharicSubtitle: 'የምዝገባ፣ ማረጋገጫና የመግቢያ መመሪያ',
     icon: (active) => (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={active ? '#2563eb' : '#64748b'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M9 11l3 3L22 4" />
         <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-      </svg>
-    ),
-  },
-  {
-    id: 'payments-escrow',
-    title: 'Payments & Escrow',
-    amharicTitle: 'ክፍያዎችና ዋስትና',
-    subtitle: 'Telebirr, CBE Birr & 24-hour guest escrow protection',
-    amharicSubtitle: 'ቴሌብር፣ ንግድ ባንክና የ24-ሰዓት አስተማማኝ አሰራር',
-    badge: 'ETB',
-    icon: (active) => (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={active ? '#2563eb' : '#64748b'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="2" y="5" width="20" height="14" rx="2" />
-        <line x1="2" y1="10" x2="22" y2="10" />
-        <circle cx="12" cy="15" r="2" />
       </svg>
     ),
   },
@@ -73,10 +59,10 @@ const MORE_DROPDOWN_ITEMS: MoreDropdownItem[] = [
   },
   {
     id: 'benefits',
-    title: 'Benefits & Guarantees',
-    amharicTitle: 'ጥቅሞችና ዋስትናዎች',
-    subtitle: '24/7 power & water guarantee, verified reviews',
-    amharicSubtitle: 'የ24/7 መብራትና ውሃ ዋስትና እና አስተማማኝ ግምገማዎች',
+    title: 'Host tools',
+    amharicTitle: 'Host tools',
+    subtitle: 'Listings, availability, and reservation management',
+    amharicSubtitle: 'Listings, availability, and reservation management',
     icon: (active) => (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={active ? '#2563eb' : '#64748b'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
@@ -86,15 +72,13 @@ const MORE_DROPDOWN_ITEMS: MoreDropdownItem[] = [
 ];
 
 export default function LandingHeader({ activeTab, onTabChange }: LandingHeaderProps) {
-  const [role, setRole] = useState<'Guest' | 'Host'>('Guest');
-  const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
+  const { user, loading: authLoading } = useAuth();
   const [language, setLanguage] = useState<'English' | 'Amharic'>('English');
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const [moreDropdownOpen, setMoreDropdownOpen] = useState(false);
 
   const moreRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
-  const roleRef = useRef<HTMLDivElement>(null);
   const langRef = useRef<HTMLDivElement>(null);
 
   // Close dropdowns on outside click
@@ -103,9 +87,6 @@ export default function LandingHeader({ activeTab, onTabChange }: LandingHeaderP
       const target = e.target as Node;
       if (moreRef.current && !moreRef.current.contains(target) && mobileMenuRef.current && !mobileMenuRef.current.contains(target)) {
         setMoreDropdownOpen(false);
-      }
-      if (roleRef.current && !roleRef.current.contains(target)) {
-        setRoleDropdownOpen(false);
       }
       if (langRef.current && !langRef.current.contains(target)) {
         setLangDropdownOpen(false);
@@ -117,7 +98,6 @@ export default function LandingHeader({ activeTab, onTabChange }: LandingHeaderP
 
   const isMoreActive =
     activeTab === 'how-it-works' ||
-    activeTab === 'payments-escrow' ||
     activeTab === 'destinations' ||
     activeTab === 'benefits';
 
@@ -206,11 +186,11 @@ export default function LandingHeader({ activeTab, onTabChange }: LandingHeaderP
                 : 'text-slate-600 hover:text-[#2563eb] hover:bg-white/60'
             }`}
           >
-            <span>{language === 'Amharic' ? 'ማረጋገጫ' : '100% Verified'}</span>
+            <span>{language === 'Amharic' ? 'ማረጋገጫ' : 'Trust controls'}</span>
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
           </button>
 
-          {/* 5. Host & Earn (Supply Growth Driver) */}
+          {/* 5. Host tools overview */}
           <button
             type="button"
             onClick={() => {
@@ -223,9 +203,9 @@ export default function LandingHeader({ activeTab, onTabChange }: LandingHeaderP
                 : 'text-slate-600 hover:text-[#2563eb] hover:bg-white/60'
             }`}
           >
-            <span>{language === 'Amharic' ? 'አስተናግደው ያግኙ' : 'Host & Earn'}</span>
+            <span>{language === 'Amharic' ? 'አስተናግደው ያግኙ' : 'Host tools'}</span>
             <span className="text-[9px] font-bold bg-amber-100 text-amber-900 border border-amber-200/80 px-1.5 py-0.2 rounded">
-              0% Fee
+              Overview
             </span>
           </button>
 
@@ -321,70 +301,21 @@ export default function LandingHeader({ activeTab, onTabChange }: LandingHeaderP
         {/* Right Navigation Controls */}
         <div className="flex items-center gap-2 sm:gap-3.5 text-xs sm:text-sm font-medium text-slate-800 shrink-0">
           
-          {/* Role Dropdown */}
-          <div className="relative" ref={roleRef}>
-            <button
-              type="button"
-              onClick={() => {
-                setRoleDropdownOpen(!roleDropdownOpen);
-                setLangDropdownOpen(false);
-                setMoreDropdownOpen(false);
-              }}
-              className="flex items-center gap-1.5 text-slate-700 hover:text-slate-950 transition-colors cursor-pointer py-1"
+          {!authLoading && (
+            <Link
+              href={user?.hostProfile ? '/host/dashboard' : user ? '/host/onboarding' : '/login?next=%2Fhost%2Fonboarding'}
+              className="whitespace-nowrap text-slate-700 hover:text-[#2563eb] transition-colors"
             >
-              <span>I am a {role}</span>
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className={`transition-transform duration-200 ${roleDropdownOpen ? 'rotate-180' : ''}`}
-              >
-                <polyline points="6 9 12 15 18 9" />
-              </svg>
-            </button>
-
-            {roleDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-40 bg-white border border-slate-200 rounded-xl shadow-lg py-1.5 z-50 animate-partition">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setRole('Guest');
-                    setRoleDropdownOpen(false);
-                  }}
-                  className={`w-full text-left px-4 py-2 text-xs sm:text-sm hover:bg-slate-50 transition-colors cursor-pointer ${
-                    role === 'Guest' ? 'text-[#2563eb] font-semibold' : 'text-slate-700'
-                  }`}
-                >
-                  I am a Guest
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setRole('Host');
-                    setRoleDropdownOpen(false);
-                    onTabChange('host-calculator');
-                  }}
-                  className={`w-full text-left px-4 py-2 text-xs sm:text-sm hover:bg-slate-50 transition-colors cursor-pointer ${
-                    role === 'Host' ? 'text-[#2563eb] font-semibold' : 'text-slate-700'
-                  }`}
-                >
-                  I am a Host
-                </button>
-              </div>
-            )}
-          </div>
+              {user?.hostProfile ? 'Host dashboard' : 'Become a host'}
+            </Link>
+          )}
 
           {/* Login Button */}
           <Link
-            href="/login"
+            href={user ? '/dashboard' : '/login'}
             className="border border-slate-300 hover:border-slate-400 text-slate-800 hover:text-slate-950 px-3.5 sm:px-4.5 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all duration-200 hover:bg-slate-50/80 cursor-pointer shadow-2xs"
           >
-            Login
+            {user ? 'Dashboard' : 'Login'}
           </Link>
 
           {/* Language Dropdown */}
@@ -393,7 +324,6 @@ export default function LandingHeader({ activeTab, onTabChange }: LandingHeaderP
               type="button"
               onClick={() => {
                 setLangDropdownOpen(!langDropdownOpen);
-                setRoleDropdownOpen(false);
                 setMoreDropdownOpen(false);
               }}
               className="flex items-center gap-1 text-slate-700 hover:text-slate-950 transition-colors cursor-pointer py-1"
@@ -500,7 +430,7 @@ export default function LandingHeader({ activeTab, onTabChange }: LandingHeaderP
               activeTab === 'trust-verification' ? 'bg-[#2563eb] text-white' : 'text-slate-600'
             }`}
           >
-            {language === 'Amharic' ? 'ማረጋገጫ' : 'Verified'}
+            {language === 'Amharic' ? 'ማረጋገጫ' : 'Trust'}
           </button>
 
           <button
@@ -513,7 +443,7 @@ export default function LandingHeader({ activeTab, onTabChange }: LandingHeaderP
               activeTab === 'host-calculator' ? 'bg-[#2563eb] text-white' : 'text-slate-600'
             }`}
           >
-            {language === 'Amharic' ? 'አስተናግድ' : 'Host & Earn'}
+            {language === 'Amharic' ? 'አስተናግድ' : 'Host tools'}
           </button>
 
           <button

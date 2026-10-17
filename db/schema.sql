@@ -132,6 +132,7 @@ CREATE TABLE bookings (
     guest_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     check_in_date DATE NOT NULL,
     check_out_date DATE NOT NULL,
+    guest_count INTEGER NOT NULL DEFAULT 1 CHECK (guest_count BETWEEN 1 AND 50),
     total_price DECIMAL(10, 2) NOT NULL,
     status booking_status_enum DEFAULT 'PENDING' NOT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -155,6 +156,7 @@ CREATE TABLE reviews (
 );
 
 CREATE INDEX idx_reviews_property_id ON reviews(property_id);
+CREATE UNIQUE INDEX idx_reviews_property_user_unique ON reviews(property_id, user_id);
 
 -- ================================================================
 -- INITIAL SEED DATA
@@ -171,19 +173,6 @@ INSERT INTO amenities (name, icon) VALUES
 ('TV', 'tv'),
 ('Hot Water', 'hot_tub');
 
--- Seed Admin & User (Password: Admin123! hashed with bcrypt)
+-- Seed the controlled administrator account only (Password: Admin123! hashed with bcrypt)
 INSERT INTO users (id, name, email, password_hash, role) VALUES
-('a0000000-0000-0000-0000-000000000001', 'Engida Admin', 'admin@engida.com', '$2b$10$zF1uNeWfROT3HMQd7ZNGCO4qGOu5NPibgnS2VfExo/TmbAjd1nApa', 'ADMIN'),
-('b0000000-0000-0000-0000-000000000002', 'Abebe Bikila', 'abebe@engida.com', '$2b$10$zF1uNeWfROT3HMQd7ZNGCO4qGOu5NPibgnS2VfExo/TmbAjd1nApa', 'USER');
-
--- Seed Sample Property Listing
-INSERT INTO properties (id, host_id, title, description, property_type, address, city, price_per_night, max_guests, bedrooms, bathrooms) VALUES
-('c0000000-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000002', 'Modern Cozy Villa in Bole', 'Spacious 3-bedroom villa with private garden, fully equipped kitchen, high-speed Wi-Fi, and 24/7 security.', 'VILLA', 'Bole Atlas, Near Edna Mall', 'Addis Ababa', 120.00, 6, 3, 2);
-
--- Seed Sample Room
-INSERT INTO rooms (property_id, title, room_number, capacity, price_per_night) VALUES
-('c0000000-0000-0000-0000-000000000001', 'Master Bedroom Suite', 'Room 101', 2, 50.00);
-
--- Link Amenities to Property
-INSERT INTO property_amenities (property_id, amenity_id)
-SELECT 'c0000000-0000-0000-0000-000000000001', id FROM amenities WHERE name IN ('Wi-Fi', 'Free Parking', 'Kitchen', 'Hot Water');
+('a0000000-0000-0000-0000-000000000001', 'Engida Admin', 'admin@engida.com', '$2b$10$zF1uNeWfROT3HMQd7ZNGCO4qGOu5NPibgnS2VfExo/TmbAjd1nApa', 'ADMIN');
