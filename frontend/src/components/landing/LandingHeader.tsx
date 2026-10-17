@@ -303,7 +303,7 @@ export default function LandingHeader({ activeTab, onTabChange }: LandingHeaderP
           
           {!authLoading && (
             <Link
-              href={user?.hostProfile ? '/host/dashboard' : user ? '/host/onboarding' : '/login?next=%2Fhost%2Fonboarding'}
+              href={user?.hostProfile ? '/host/dashboard' : '/become-a-host'}
               className="whitespace-nowrap text-slate-700 hover:text-[#2563eb] transition-colors"
             >
               {user?.hostProfile ? 'Host dashboard' : 'Become a host'}
