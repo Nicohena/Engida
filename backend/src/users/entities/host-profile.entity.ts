@@ -17,6 +17,18 @@ export enum HostVerificationStatus {
   REJECTED = 'REJECTED',
 }
 
+export enum PayoutProvider {
+  TELEBIRR = 'TELEBIRR',
+  CBE = 'CBE',
+  AWASH = 'AWASH',
+  DASHEN = 'DASHEN',
+  ABYSSINIA = 'ABYSSINIA',
+  CHAPA = 'CHAPA',
+  INTERNATIONAL_SWIFT = 'INTERNATIONAL_SWIFT',
+  PAYPAL = 'PAYPAL',
+  WISE = 'WISE',
+}
+
 @Entity('host_profiles')
 export class HostProfile {
   @PrimaryGeneratedColumn('uuid')
@@ -46,6 +58,38 @@ export class HostProfile {
     name: 'verification_status',
   })
   verificationStatus: HostVerificationStatus;
+
+  // ─────────────────────────────────────────
+  // Payout & Banking Configuration
+  // ─────────────────────────────────────────
+  @Column({
+    type: 'varchar',
+    length: 50,
+    nullable: true,
+    name: 'payout_provider',
+  })
+  payoutProvider: PayoutProvider | null;
+
+  @Column({ type: 'varchar', length: 255, nullable: true, name: 'payout_account_name' })
+  payoutAccountName: string | null;
+
+  @Column({ type: 'varchar', length: 255, nullable: true, name: 'payout_account_number' })
+  payoutAccountNumber: string | null;
+
+  @Column({ type: 'varchar', length: 50, nullable: true, name: 'payout_phone' })
+  payoutPhone: string | null;
+
+  @Column({ type: 'varchar', length: 255, nullable: true, name: 'payout_bank_branch' })
+  payoutBankBranch: string | null;
+
+  @Column({ type: 'varchar', length: 50, nullable: true, name: 'payout_swift_bic' })
+  payoutSwiftBic: string | null;
+
+  @Column({ type: 'varchar', length: 255, nullable: true, name: 'payout_email' })
+  payoutEmail: string | null;
+
+  @Column({ type: 'varchar', length: 10, default: 'ETB', name: 'payout_currency' })
+  payoutCurrency: string;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

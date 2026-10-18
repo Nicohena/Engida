@@ -103,8 +103,19 @@ export interface HostListingDetail {
 }
 
 // ──────────────────────────────────────
-// Host Profile
+// Host Profile & Payout Settings
 // ──────────────────────────────────────
+
+export type PayoutProvider =
+  | 'TELEBIRR'
+  | 'CBE'
+  | 'AWASH'
+  | 'DASHEN'
+  | 'ABYSSINIA'
+  | 'CHAPA'
+  | 'INTERNATIONAL_SWIFT'
+  | 'PAYPAL'
+  | 'WISE';
 
 export interface HostProfile {
   id: string;
@@ -113,6 +124,14 @@ export interface HostProfile {
   bio: string | null;
   phone: string | null;
   verificationStatus: HostVerificationStatus;
+  payoutProvider?: PayoutProvider | null;
+  payoutAccountName?: string | null;
+  payoutAccountNumber?: string | null;
+  payoutPhone?: string | null;
+  payoutBankBranch?: string | null;
+  payoutSwiftBic?: string | null;
+  payoutEmail?: string | null;
+  payoutCurrency?: string;
   createdAt: string;
   updatedAt: string;
 }

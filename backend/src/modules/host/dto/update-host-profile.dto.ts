@@ -4,8 +4,11 @@ import {
   MaxLength,
   Matches,
   MinLength,
+  IsEnum,
+  IsEmail,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { PayoutProvider } from '../../../users/entities/host-profile.entity';
 
 export class UpdateHostProfileDto {
   @IsString()
@@ -27,4 +30,47 @@ export class UpdateHostProfileDto {
     message: 'Phone number must be a valid format',
   })
   phone?: string;
+
+  // ─────────────────────────────────────────
+  // Payout & Banking
+  // ─────────────────────────────────────────
+  @IsOptional()
+  @IsEnum(PayoutProvider)
+  payoutProvider?: PayoutProvider | null;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(255)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  payoutAccountName?: string | null;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(255)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  payoutAccountNumber?: string | null;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(50)
+  payoutPhone?: string | null;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(255)
+  payoutBankBranch?: string | null;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(50)
+  payoutSwiftBic?: string | null;
+
+  @IsOptional()
+  @IsEmail({}, { message: 'Must be a valid email for PayPal or Wise' })
+  payoutEmail?: string | null;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(10)
+  payoutCurrency?: string;
 }

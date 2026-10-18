@@ -134,6 +134,17 @@ export class HostService {
       if (dto.displayName !== undefined) profile.displayName = dto.displayName;
       if (dto.bio !== undefined) profile.bio = dto.bio;
       if (dto.phone !== undefined) profile.phone = dto.phone;
+
+      // Payout & Banking
+      if (dto.payoutProvider !== undefined) profile.payoutProvider = dto.payoutProvider;
+      if (dto.payoutAccountName !== undefined) profile.payoutAccountName = dto.payoutAccountName;
+      if (dto.payoutAccountNumber !== undefined) profile.payoutAccountNumber = dto.payoutAccountNumber;
+      if (dto.payoutPhone !== undefined) profile.payoutPhone = dto.payoutPhone;
+      if (dto.payoutBankBranch !== undefined) profile.payoutBankBranch = dto.payoutBankBranch;
+      if (dto.payoutSwiftBic !== undefined) profile.payoutSwiftBic = dto.payoutSwiftBic;
+      if (dto.payoutEmail !== undefined) profile.payoutEmail = dto.payoutEmail;
+      if (dto.payoutCurrency !== undefined) profile.payoutCurrency = dto.payoutCurrency;
+
       return this.hostProfileRepository.save(profile);
     }
     throw new NotFoundException('Host profile not found.');
