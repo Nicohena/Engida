@@ -84,10 +84,10 @@ import { validate } from './config/env.validation';
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: () => [
+      useFactory: (configService: ConfigService) => [
         {
-          ttl: 60000, // 1 minute
-          limit: 10,  // max 10 requests per minute per IP for sensitive routes
+          ttl: configService.get<number>('THROTTLE_TTL', 60000), // 1 minute window
+          limit: configService.get<number>('THROTTLE_LIMIT', 300), // up to 300 req/min for seamless SPA browsing
         },
       ],
     }),
