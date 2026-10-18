@@ -699,11 +699,11 @@ export class HostService {
     const listingCounts = await this.propertyRepository
       .createQueryBuilder('property')
       .select('property.status', 'status')
-      .addSelect('property.listing_type', 'listingType')
+      .addSelect('property.listingType', 'listingType')
       .addSelect('COUNT(*)', 'count')
-      .where('property.host_id = :hostId', { hostId })
+      .where('property.hostId = :hostId', { hostId })
       .groupBy('property.status')
-      .addGroupBy('property.listing_type')
+      .addGroupBy('property.listingType')
       .getRawMany<{ status: string; listingType: string; count: string }>();
 
     const totalListings = listingCounts.reduce((sum, r) => sum + parseInt(r.count, 10), 0);

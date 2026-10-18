@@ -331,7 +331,7 @@ export class HostController {
    * GET /host/dashboard
    * Returns lightweight summary metrics for the host's dashboard.
    */
-  @Get('dashboard')
+  @Get(['dashboard', 'dashboard/summary'])
   async getDashboard(@GetUser() user: User) {
     return this.hostService.getDashboardSummary(user.id, user.role);
   }
