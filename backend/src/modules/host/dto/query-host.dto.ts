@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsEnum, IsInt, IsDateString, Min } from 'class-validator';
+import { IsOptional, IsString, IsEnum, IsInt, IsDateString, IsUUID, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ListingType, ListingStatus } from '../../properties/entities/property.entity';
 import { BookingStatus } from '../../bookings/entities/booking.entity';
@@ -38,6 +38,10 @@ export class QueryHostListingsDto {
 }
 
 export class QueryHostReservationsDto {
+  @IsOptional()
+  @IsUUID()
+  propertyId?: string;
+
   @IsOptional()
   @IsEnum(BookingStatus)
   status?: BookingStatus;

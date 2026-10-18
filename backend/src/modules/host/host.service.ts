@@ -577,6 +577,9 @@ export class HostService {
     if (query.status) {
       qb.andWhere('booking.status = :status', { status: query.status });
     }
+    if (query.propertyId) {
+      qb.andWhere('property.id = :propertyId', { propertyId: query.propertyId });
+    }
     if (query.fromDate) {
       qb.andWhere('booking.checkInDate >= :fromDate', { fromDate: query.fromDate });
     }
