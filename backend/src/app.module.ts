@@ -19,6 +19,7 @@ import { BookingsModule } from './modules/bookings/bookings.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
 import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
 import { HostModule } from './modules/host/host.module';
+import { PaymentsModule } from './modules/payments/payments.module';
 import { Property } from './modules/properties/entities/property.entity';
 import { Room } from './modules/properties/entities/room.entity';
 import { AvailabilityBlock } from './modules/properties/entities/availability-block.entity';
@@ -102,6 +103,7 @@ import { validate } from './config/env.validation';
     ReviewsModule,
     CloudinaryModule,
     HostModule,
+    PaymentsModule,
   ],
   controllers: [AppController],
   providers: [

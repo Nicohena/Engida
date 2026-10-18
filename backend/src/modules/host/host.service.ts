@@ -625,8 +625,14 @@ export class HostService {
       guestCount: booking.guestCount,
       totalPrice: Number(booking.totalPrice),
       status: booking.status,
+      paymentMethod: booking.paymentMethod,
+      paymentStatus: booking.paymentStatus,
+      paymentReference: booking.paymentReference,
+      paymentCurrency: booking.paymentCurrency,
+      paidAt: booking.paidAt,
       createdAt: booking.createdAt,
     }));
+
 
     return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }

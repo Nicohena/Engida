@@ -94,7 +94,7 @@ function ReservationDetails({
   compact?: boolean;
 }) {
   return (
-    <div className={`grid gap-3 text-sm ${compact ? 'grid-cols-2' : 'sm:grid-cols-4'}`}>
+    <div className={`grid gap-3 text-sm ${compact ? 'grid-cols-2' : 'sm:grid-cols-5'}`}>
       <div>
         <p className="text-xs font-bold uppercase tracking-wide text-[#94A3B8]">Guest</p>
         <p className="mt-1 flex items-center gap-1.5 font-semibold text-[#334155]">
@@ -111,10 +111,12 @@ function ReservationDetails({
           {formatDate(reservation.checkInDate)} — {formatDate(reservation.checkOutDate)}
         </p>
       </div>
-      {reservation.room && <div>
-        <p className="text-xs font-bold uppercase tracking-wide text-[#94A3B8]">Room</p>
-        <p className="mt-1 font-semibold text-[#334155]">{reservation.room.title} · {reservation.room.roomNumber}</p>
-      </div>}
+      {reservation.room && (
+        <div>
+          <p className="text-xs font-bold uppercase tracking-wide text-[#94A3B8]">Room</p>
+          <p className="mt-1 font-semibold text-[#334155]">{reservation.room.title} · {reservation.room.roomNumber}</p>
+        </div>
+      )}
       <div>
         <p className="text-xs font-bold uppercase tracking-wide text-[#94A3B8]">Guests</p>
         <p className="mt-1 font-semibold text-[#334155]">
@@ -122,10 +124,23 @@ function ReservationDetails({
         </p>
       </div>
       <div>
-        <p className="text-xs font-bold uppercase tracking-wide text-[#94A3B8]">Booking amount</p>
+        <p className="text-xs font-bold uppercase tracking-wide text-[#94A3B8]">Payment & Total</p>
         <p className="mt-1 font-bold text-[#000000]">{formatAmount(reservation.totalPrice)}</p>
+        <div className="mt-1 flex items-center gap-1 flex-wrap">
+          <span className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-100">
+            {reservation.paymentMethod?.replace(/_/g, ' ') || 'Cash on Arrival'}
+          </span>
+          <span className={`inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded ${
+            reservation.paymentStatus === 'PAID'
+              ? 'bg-emerald-50 text-emerald-700'
+              : 'bg-amber-50 text-amber-700'
+          }`}>
+            {reservation.paymentStatus || 'PENDING'}
+          </span>
+        </div>
       </div>
     </div>
+
   );
 }
 

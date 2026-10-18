@@ -18,6 +18,24 @@ export enum BookingStatus {
   COMPLETED = 'COMPLETED',
 }
 
+export enum PaymentMethod {
+  CHAPA = 'CHAPA',
+  TELEBIRR = 'TELEBIRR',
+  CBE_BIRR = 'CBE_BIRR',
+  INTERNATIONAL_CARD = 'INTERNATIONAL_CARD',
+  PAYPAL = 'PAYPAL',
+  WISE = 'WISE',
+  CASH_ON_ARRIVAL = 'CASH_ON_ARRIVAL',
+}
+
+export enum PaymentStatus {
+  PENDING = 'PENDING',
+  PAID = 'PAID',
+  ON_ARRIVAL = 'ON_ARRIVAL',
+  REFUNDED = 'REFUNDED',
+  FAILED = 'FAILED',
+}
+
 @Entity('bookings')
 export class Booking {
   @PrimaryGeneratedColumn('uuid')
@@ -63,9 +81,35 @@ export class Booking {
   })
   status: BookingStatus;
 
+  @Column({
+    type: 'varchar',
+    length: 50,
+    default: PaymentMethod.CASH_ON_ARRIVAL,
+    name: 'payment_method',
+  })
+  paymentMethod: PaymentMethod;
+
+  @Column({
+    type: 'varchar',
+    length: 50,
+    default: PaymentStatus.PENDING,
+    name: 'payment_status',
+  })
+  paymentStatus: PaymentStatus;
+
+  @Column({ type: 'varchar', length: 100, nullable: true, name: 'payment_reference' })
+  paymentReference: string | null;
+
+  @Column({ type: 'varchar', length: 10, default: 'ETB', name: 'payment_currency' })
+  paymentCurrency: string;
+
+  @Column({ type: 'timestamptz', nullable: true, name: 'paid_at' })
+  paidAt: Date | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 }
+

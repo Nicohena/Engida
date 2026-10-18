@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not, In } from 'typeorm';
-import { Booking, BookingStatus } from './entities/booking.entity';
+import { Booking, BookingStatus, PaymentMethod, PaymentStatus } from './entities/booking.entity';
 import { Property, ListingType, ListingStatus } from '../properties/entities/property.entity';
 import { Room } from '../properties/entities/room.entity';
 import { AvailabilityBlock } from '../properties/entities/availability-block.entity';
@@ -131,6 +131,23 @@ export class BookingsService {
       }
 
       const totalPrice = nights * pricePerNight;
+      const method = createBookingDto.paymentMethod || PaymentMethod.CASH_ON_ARRIVAL;
+      const isOnlinePaid =
+        [
+          PaymentMethod.CHAPA,
+          PaymentMethod.TELEBIRR,
+          PaymentMethod.CBE_BIRR,
+          PaymentMethod.INTERNATIONAL_CARD,
+          PaymentMethod.PAYPAL,
+          PaymentMethod.WISE,
+        ].includes(method) && Boolean(createBookingDto.paymentReference);
+
+      const paymentStatus = isOnlinePaid
+        ? PaymentStatus.PAID
+        : method === PaymentMethod.CASH_ON_ARRIVAL
+        ? PaymentStatus.ON_ARRIVAL
+        : PaymentStatus.PENDING;
+
       const booking = bookingRepository.create({
         propertyId,
         roomId: roomId || null,
@@ -140,6 +157,11 @@ export class BookingsService {
         guestCount,
         totalPrice,
         status: BookingStatus.PENDING,
+        paymentMethod: method,
+        paymentStatus,
+        paymentReference: createBookingDto.paymentReference || null,
+        paymentCurrency: createBookingDto.paymentCurrency || 'ETB',
+        paidAt: isOnlinePaid ? new Date() : null,
       });
       const saved = await bookingRepository.save(booking);
       return { id: saved.id, totalPrice };

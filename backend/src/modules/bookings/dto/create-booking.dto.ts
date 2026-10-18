@@ -1,4 +1,5 @@
-import { IsNotEmpty, IsOptional, IsDateString, IsUUID, IsInt, Min, Max } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsDateString, IsUUID, IsInt, Min, Max, IsEnum, IsString } from 'class-validator';
+import { PaymentMethod } from '../entities/booking.entity';
 
 export class CreateBookingDto {
   @IsUUID()
@@ -22,4 +23,17 @@ export class CreateBookingDto {
   @Max(50)
   @IsOptional()
   guestCount?: number;
+
+  @IsEnum(PaymentMethod)
+  @IsOptional()
+  paymentMethod?: PaymentMethod;
+
+  @IsString()
+  @IsOptional()
+  paymentReference?: string;
+
+  @IsString()
+  @IsOptional()
+  paymentCurrency?: string;
 }
+

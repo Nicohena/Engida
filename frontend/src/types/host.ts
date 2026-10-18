@@ -221,8 +221,14 @@ export interface HostReservationRow {
   guestCount: number;
   totalPrice: number;
   status: BookingStatus;
+  paymentMethod?: string;
+  paymentStatus?: string;
+  paymentReference?: string | null;
+  paymentCurrency?: string;
+  paidAt?: string | null;
   createdAt: string;
 }
+
 
 export interface HostReservationsResponse {
   data: HostReservationRow[];

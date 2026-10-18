@@ -111,6 +111,22 @@ export interface Property {
 // Booking
 export type BookingStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED';
 
+export type PaymentMethod =
+  | 'CHAPA'
+  | 'TELEBIRR'
+  | 'CBE_BIRR'
+  | 'INTERNATIONAL_CARD'
+  | 'PAYPAL'
+  | 'WISE'
+  | 'CASH_ON_ARRIVAL';
+
+export type PaymentStatus =
+  | 'PENDING'
+  | 'PAID'
+  | 'ON_ARRIVAL'
+  | 'REFUNDED'
+  | 'FAILED';
+
 export interface Booking {
   id: string;
   propertyId: string;
@@ -121,6 +137,11 @@ export interface Booking {
   guestCount: number;
   totalPrice: string;
   status: BookingStatus;
+  paymentMethod?: PaymentMethod;
+  paymentStatus?: PaymentStatus;
+  paymentReference?: string | null;
+  paymentCurrency?: string;
+  paidAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -131,4 +152,8 @@ export interface CreateBookingPayload {
   checkInDate: string;
   checkOutDate: string;
   guestCount?: number;
+  paymentMethod?: PaymentMethod;
+  paymentReference?: string;
+  paymentCurrency?: string;
 }
+

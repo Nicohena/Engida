@@ -224,7 +224,24 @@ export default function DashboardPage() {
                       {formatDate(booking.checkInDate)} – {formatDate(booking.checkOutDate)}
                       <span className="text-slate-500">· {booking.guestCount} {booking.guestCount === 1 ? 'guest' : 'guests'}</span>
                     </p>
-                    <p className="mt-2 text-sm font-bold text-slate-900">{formatAmount(booking.totalPrice)}</p>
+                    <div className="mt-2 flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-bold text-slate-900">{formatAmount(booking.totalPrice)}</span>
+                      {booking.paymentMethod && (
+                        <span className="inline-flex items-center text-xs font-semibold px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-100">
+                          {booking.paymentMethod.replace(/_/g, ' ')}
+                        </span>
+                      )}
+                      <span className={`inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                        booking.paymentStatus === 'PAID'
+                          ? 'bg-emerald-50 text-emerald-700'
+                          : 'bg-amber-50 text-amber-700'
+                      }`}>
+                        {booking.paymentStatus || 'PENDING'}
+                      </span>
+                      {booking.paymentReference && (
+                        <span className="text-[11px] text-slate-400 font-mono">Ref: {booking.paymentReference}</span>
+                      )}
+                    </div>
                   </div>
                   <div className="flex shrink-0 flex-wrap gap-2">
                     {booking.property?.id && (

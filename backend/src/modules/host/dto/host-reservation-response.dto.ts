@@ -1,4 +1,4 @@
-import { BookingStatus } from '../../bookings/entities/booking.entity';
+import { BookingStatus, PaymentMethod, PaymentStatus } from '../../bookings/entities/booking.entity';
 import { ListingType } from '../../properties/entities/property.entity';
 
 export interface HostReservationPropertySummary {
@@ -31,8 +31,14 @@ export interface HostReservationResponse {
   guestCount: number;
   totalPrice: number;
   status: BookingStatus;
+  paymentMethod: PaymentMethod;
+  paymentStatus: PaymentStatus;
+  paymentReference: string | null;
+  paymentCurrency: string;
+  paidAt: Date | null;
   createdAt: Date;
 }
+
 
 export interface HostReservationsPage {
   data: HostReservationResponse[];
