@@ -23,13 +23,13 @@ export default function PropertyRelatedGrid({ properties }: PropertyRelatedGridP
     <section className="py-10 border-t border-slate-100 mt-6">
       <div className="mb-6">
         <span className="text-xs font-bold tracking-widest text-[#2563eb] uppercase font-mono">
-          MORE ETHIOPIAN STAYS
+          MORE LISTINGS
         </span>
         <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-[-0.03em] mt-0.5">
-          Explore Other Verified Properties
+          Explore Other Published Properties
         </h2>
         <p className="text-xs sm:text-sm text-slate-500 mt-1">
-          Explore other verified homes with similar features, locations, or price ranges.
+          Other published properties available on ENGIDA.
         </p>
       </div>
 
@@ -56,9 +56,6 @@ export default function PropertyRelatedGrid({ properties }: PropertyRelatedGridP
               <span className="absolute top-2.5 left-2.5 bg-white/95 backdrop-blur-xs text-slate-900 text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-2xs">
                 {typeLabels[property.propertyType] || property.propertyType}
               </span>
-              <span className="absolute bottom-2.5 right-2.5 bg-[#2563eb] text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-2xs">
-                ★ 98% Trust
-              </span>
             </div>
             <div className="p-3.5 flex-1 flex flex-col justify-between">
               <div>
@@ -70,7 +67,12 @@ export default function PropertyRelatedGrid({ properties }: PropertyRelatedGridP
                 </p>
               </div>
               <div className="flex items-center justify-between text-xs font-bold text-slate-900 pt-2 border-t border-slate-100">
-                <span>${parseFloat(property.pricePerNight).toLocaleString()} <span className="text-[10px] text-slate-400 font-normal">/ night</span></span>
+                <span>
+                  ETB {property.listingType === 'SALE'
+                    ? Number(property.salePrice ?? 0).toLocaleString()
+                    : Number(property.pricePerNight).toLocaleString()}
+                  {property.listingType !== 'SALE' && <span className="text-[10px] text-slate-400 font-normal"> / night</span>}
+                </span>
                 <span className="text-slate-400 font-medium text-[11px]">
                   {property.bedrooms} Bed{property.bedrooms !== 1 ? 's' : ''} • {property.bathrooms} Bath{property.bathrooms !== 1 ? 's' : ''}
                 </span>

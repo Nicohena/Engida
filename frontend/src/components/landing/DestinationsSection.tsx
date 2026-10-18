@@ -1,18 +1,13 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { apiFetch } from '../../lib/api';
 
 interface DestinationItem {
   id: string;
   name: string;
-  amharicName: string;
-  region: string;
-  distance: string;
-  description: string;
-  staysCount: number;
-  startingPrice: string;
+  city: string;
   gradient: string;
-  tag: string;
   renderArtwork: () => React.ReactNode;
 }
 
@@ -20,14 +15,8 @@ const DESTINATIONS: DestinationItem[] = [
   {
     id: 'addis',
     name: 'Addis Ababa',
-    amharicName: 'አዲስ አበባ',
-    region: 'Capital & Diplomatic Center',
-    distance: 'Bole Intl. Airport Hub',
-    description: 'Premier serviced suites in Bole Atlas, Kazanchis diplomatic quarter, and historic residential enclaves in Bisrate Gabriel.',
-    staysCount: 142,
-    startingPrice: '2,800',
+    city: 'Addis Ababa',
     gradient: 'from-blue-700 via-indigo-800 to-slate-950',
-    tag: 'Business & Transit',
     renderArtwork: () => (
       <svg width="120" height="90" viewBox="0 0 120 90" fill="none">
         <rect x="25" y="20" width="30" height="60" rx="2" fill="#ffffff" opacity="0.9" />
@@ -43,14 +32,8 @@ const DESTINATIONS: DestinationItem[] = [
   {
     id: 'bishoftu',
     name: 'Bishoftu (Debre Zeyit)',
-    amharicName: 'ቢሾፍቱ',
-    region: 'Oromia • Crater Lakes',
-    distance: '45 mins via Expressway',
-    description: 'Waterfront lodges overlooking Lake Babogaya, Lake Kuriftu, and Lake Bishoftu. Serene weekend getaways and resort spas.',
-    staysCount: 78,
-    startingPrice: '3,500',
+    city: 'Bishoftu',
     gradient: 'from-teal-600 via-cyan-800 to-emerald-950',
-    tag: 'Crater Lake Getaways',
     renderArtwork: () => (
       <svg width="120" height="90" viewBox="0 0 120 90" fill="none">
         <path d="M10 75 C30 70, 50 80, 70 72 C90 68, 110 78, 120 72 L120 85 L10 85 Z" fill="#06b6d4" opacity="0.8" />
@@ -63,14 +46,8 @@ const DESTINATIONS: DestinationItem[] = [
   {
     id: 'hawassa',
     name: 'Hawassa',
-    amharicName: 'ሀዋሳ',
-    region: 'Sidama • Great Rift Valley',
-    distance: '3.5 hrs via Expressway',
-    description: 'Tranquil accommodations along Lake Hawassa shoreline, famous fish markets, Mount Tabor hiking, and authentic Sidama coffee culture.',
-    staysCount: 65,
-    startingPrice: '2,400',
+    city: 'Hawassa',
     gradient: 'from-amber-600 via-orange-800 to-stone-900',
-    tag: 'Lakeside Leisure',
     renderArtwork: () => (
       <svg width="120" height="90" viewBox="0 0 120 90" fill="none">
         <circle cx="35" cy="62" r="14" fill="#16a34a" opacity="0.85" />
@@ -83,14 +60,8 @@ const DESTINATIONS: DestinationItem[] = [
   {
     id: 'bahirdar',
     name: 'Bahir Dar & Lake Tana',
-    amharicName: 'ባሕር ዳር',
-    region: 'Amhara • Source of the Nile',
-    distance: 'Daily 45-min flights',
-    description: 'Scenic palm-lined avenues, direct access to the Blue Nile Falls (Tis Abay), and ancient island monastery boat tours.',
-    staysCount: 52,
-    startingPrice: '2,600',
+    city: 'Bahir Dar',
     gradient: 'from-blue-600 via-sky-800 to-indigo-950',
-    tag: 'Nile & Monasteries',
     renderArtwork: () => (
       <svg width="120" height="90" viewBox="0 0 120 90" fill="none">
         <path d="M20 75 C45 70, 75 78, 100 70 L105 85 L15 85 Z" fill="#38bdf8" opacity="0.8" />
@@ -102,14 +73,8 @@ const DESTINATIONS: DestinationItem[] = [
   {
     id: 'lalibela',
     name: 'Lalibela',
-    amharicName: 'ላሊበላ',
-    region: 'Lasta • UNESCO World Heritage',
-    distance: 'Direct flights from Addis',
-    description: 'Mountain escarpment lodges minutes away from the 11 medieval rock-hewn monolithic churches, including Biete Giyorgis.',
-    staysCount: 44,
-    startingPrice: '3,200',
+    city: 'Lalibela',
     gradient: 'from-amber-700 via-red-900 to-stone-950',
-    tag: 'UNESCO Wonder',
     renderArtwork: () => (
       <svg width="120" height="90" viewBox="0 0 120 90" fill="none">
         <rect x="45" y="20" width="30" height="55" fill="#ffffff" opacity="0.95" rx="2" />
@@ -122,14 +87,8 @@ const DESTINATIONS: DestinationItem[] = [
   {
     id: 'gondar',
     name: 'Gondar',
-    amharicName: 'ጎንደር',
-    region: 'Camelot of Africa',
-    distance: 'Simien Mountains Gateway',
-    description: 'Historic guesthouses adjacent to Fasil Ghebbi royal compound and Fasilides’ Bath. Gateway to Simien Mountains trekking.',
-    staysCount: 39,
-    startingPrice: '2,500',
+    city: 'Gondar',
     gradient: 'from-stone-700 via-slate-800 to-stone-950',
-    tag: 'Royal Castles',
     renderArtwork: () => (
       <svg width="120" height="90" viewBox="0 0 120 90" fill="none">
         <rect x="30" y="30" width="60" height="50" fill="#ffffff" opacity="0.95" rx="2" />
@@ -142,7 +101,54 @@ const DESTINATIONS: DestinationItem[] = [
   },
 ];
 
+interface DestinationListingsResponse {
+  data: { pricePerNight: string | number }[];
+  total: number;
+}
+
 export default function DestinationsSection({ onSelectDestination }: { onSelectDestination?: () => void }) {
+  const [listingStats, setListingStats] = useState<Record<string, { count: number; startingPrice: number }>>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    Promise.all(DESTINATIONS.map(async (destination) => {
+      const params = new URLSearchParams({
+        city: destination.city,
+        listingType: 'RENTAL',
+        limit: '1',
+        sortBy: 'pricePerNight',
+        sortOrder: 'ASC',
+      });
+      const response = await apiFetch<DestinationListingsResponse>(`/properties?${params.toString()}`, { skipAuth: true });
+      return {
+        city: destination.city,
+        count: response.total,
+        startingPrice: Number(response.data[0]?.pricePerNight ?? 0),
+      };
+    }))
+      .then((stats) => {
+        if (!active) return;
+        setListingStats(Object.fromEntries(stats.map((item) => [item.city, {
+          count: item.count,
+          startingPrice: item.startingPrice,
+        }])));
+      })
+      .catch((loadError: unknown) => {
+        if (active) setError(loadError instanceof Error ? loadError.message : 'Unable to load destination listings.');
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => { active = false; };
+  }, []);
+
+  const availableDestinations = useMemo(
+    () => DESTINATIONS.filter((destination) => (listingStats[destination.city]?.count ?? 0) > 0),
+    [listingStats],
+  );
+
   return (
     <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
       
@@ -150,19 +156,29 @@ export default function DestinationsSection({ onSelectDestination }: { onSelectD
       <div className="text-center max-w-2xl mx-auto mb-10">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-[#2563eb] text-xs font-bold mb-3">
           <span className="w-2 h-2 rounded-full bg-[#2563eb]" />
-          <span>SRS FR-05, FR-14 & FR-18: Regional Tourism Hubs</span>
+          <span>Published rental listings by city</span>
         </div>
         <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight">
-          Explore Ethiopia’s Most Beloved Destinations
+          Find a rental by destination
         </h2>
         <p className="mt-2.5 text-xs sm:text-sm text-slate-500 font-normal leading-relaxed">
-          From the vibrant diplomatic corridors of Addis Ababa to serene rift valley lakes and ancient northern heritage corridors.
+          Browse current host listings and compare the starting nightly price in each destination.
         </p>
       </div>
 
-      {/* Destinations Cards Grid */}
+      {loading ? (
+        <div role="status" className="py-12 text-center text-sm text-slate-500">Loading available destinations…</div>
+      ) : error ? (
+        <div role="alert" className="py-8 text-center text-sm text-red-700">{error}</div>
+      ) : availableDestinations.length === 0 ? (
+        <div className="py-12 text-center">
+          <h3 className="font-semibold text-slate-900">No published rental listings in these destinations yet.</h3>
+          <p className="mt-1 text-sm text-slate-600">New destinations will appear here when hosts publish available rentals.</p>
+        </div>
+      ) : (
+      /* Destinations Cards Grid */
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-        {DESTINATIONS.map((dest) => (
+        {availableDestinations.map((dest) => (
           <div
             key={dest.id}
             onClick={onSelectDestination}
@@ -177,22 +193,15 @@ export default function DestinationsSection({ onSelectDestination }: { onSelectD
               </div>
 
               {/* Top Badges */}
-              <div className="relative z-10 flex items-center justify-between">
-                <span className="bg-white/95 text-slate-900 text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-xs">
-                  {dest.tag}
-                </span>
+              <div className="relative z-10 flex items-center justify-end">
                 <span className="text-[10px] font-bold text-white/95 bg-black/30 backdrop-blur-xs px-2 py-0.5 rounded-md">
-                  {dest.staysCount} verified stays
+                  {listingStats[dest.city]?.count ?? 0} published rental{listingStats[dest.city]?.count === 1 ? '' : 's'}
                 </span>
               </div>
 
-              {/* Bottom Details */}
-              <div className="relative z-10 flex items-center justify-between">
-                <span className="text-xs font-semibold text-white/90">
-                  {dest.distance}
-                </span>
+              <div className="relative z-10 flex items-center justify-end">
                 <span className="text-xs font-bold text-blue-200">
-                  From {dest.startingPrice} ETB
+                  From ETB {listingStats[dest.city]?.startingPrice.toLocaleString()}/night
                 </span>
               </div>
             </div>
@@ -200,19 +209,13 @@ export default function DestinationsSection({ onSelectDestination }: { onSelectD
             {/* Card Body */}
             <div className="p-4 flex-1 flex flex-col justify-between">
               <div>
-                <div className="flex items-baseline justify-between mb-1">
+                <div className="mb-1">
                   <h3 className="text-base font-bold text-slate-900 group-hover:text-[#2563eb] transition-colors">
                     {dest.name}
                   </h3>
-                  <span className="text-xs font-semibold text-[#2563eb] bg-blue-50 px-1.5 py-0.5 rounded">
-                    {dest.amharicName}
-                  </span>
                 </div>
-                <div className="text-xs text-slate-500 font-medium mb-2.5">
-                  {dest.region}
-                </div>
-                <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">
-                  {dest.description}
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  {listingStats[dest.city]?.count ?? 0} published rental listing{listingStats[dest.city]?.count === 1 ? '' : 's'} in {dest.city}.
                 </p>
               </div>
 
@@ -221,7 +224,7 @@ export default function DestinationsSection({ onSelectDestination }: { onSelectD
                   View Accommodations →
                 </span>
                 <span className="text-[10px] text-slate-400 font-medium">
-                  24/7 Power & Water Verified
+                  Host-listed rentals
                 </span>
               </div>
             </div>
@@ -229,6 +232,7 @@ export default function DestinationsSection({ onSelectDestination }: { onSelectD
           </div>
         ))}
       </div>
+      )}
 
     </div>
   );

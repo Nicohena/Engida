@@ -1,4 +1,20 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+export function getApiBaseUrl(): string {
+  if (typeof window !== 'undefined') {
+    // When accessing via localhost/127.0.0.1, always target localhost:3000
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return 'http://localhost:3000';
+    }
+    // When accessing via LAN IP or hostname on port 3001, dynamically match port 3000
+    if (window.location.hostname) {
+      const configured = process.env.NEXT_PUBLIC_API_URL;
+      if (!configured || (!configured.includes('localhost') && !configured.includes(window.location.hostname))) {
+        return `http://${window.location.hostname}:3000`;
+      }
+    }
+  }
+  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+}
+
 
 let inMemoryToken: string | null = null;
 
@@ -14,11 +30,13 @@ interface FetchOptions extends RequestInit {
   skipAuth?: boolean;
 }
 
-export async function apiFetch<T = any>(endpoint: string, options: FetchOptions = {}): Promise<T> {
+export async function apiFetch<T = unknown>(endpoint: string, options: FetchOptions = {}): Promise<T> {
   const { skipAuth = false, headers: customHeaders, ...restOptions } = options;
 
+  const isFormData = typeof FormData !== 'undefined' && restOptions.body instanceof FormData;
+
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     ...(customHeaders as Record<string, string>),
   };
 
@@ -26,7 +44,8 @@ export async function apiFetch<T = any>(endpoint: string, options: FetchOptions 
     headers['Authorization'] = `Bearer ${inMemoryToken}`;
   }
 
-  const url = `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+  const baseUrl = getApiBaseUrl();
+  const url = `${baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
 
   let response = await fetch(url, {
     ...restOptions,
@@ -37,7 +56,7 @@ export async function apiFetch<T = any>(endpoint: string, options: FetchOptions 
   // Handle 401 Unauthorized -> attempt silent refresh token call
   if (response.status === 401 && !skipAuth && !endpoint.includes('/auth/refresh') && !endpoint.includes('/auth/login')) {
     try {
-      const refreshResponse = await fetch(`${API_BASE_URL}/auth/refresh`, {
+      const refreshResponse = await fetch(`${baseUrl}/auth/refresh`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

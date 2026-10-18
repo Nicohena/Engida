@@ -1,6 +1,5 @@
 import {
   IsString,
-  IsNotEmpty,
   IsEnum,
   IsNumber,
   IsInt,
@@ -11,7 +10,7 @@ import {
   MaxLength,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { PropertyType } from '../entities/property.entity';
+import { PropertyType, ListingType, ListingStatus } from '../entities/property.entity';
 
 export class UpdatePropertyDto {
   @IsString()
@@ -26,6 +25,14 @@ export class UpdatePropertyDto {
   @IsEnum(PropertyType)
   @IsOptional()
   propertyType?: PropertyType;
+
+  @IsEnum(ListingType)
+  @IsOptional()
+  listingType?: ListingType;
+
+  @IsEnum(ListingStatus)
+  @IsOptional()
+  status?: ListingStatus;
 
   @IsString()
   @IsOptional()
@@ -42,11 +49,52 @@ export class UpdatePropertyDto {
   @MaxLength(100)
   country?: string;
 
+  @IsString()
+  @IsOptional()
+  @MaxLength(100)
+  region?: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(100)
+  zone?: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(100)
+  subCity?: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(100)
+  woreda?: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(150)
+  neighborhood?: string;
+
+  @IsNumber()
+  @IsOptional()
+  @Type(() => Number)
+  latitude?: number;
+
+  @IsNumber()
+  @IsOptional()
+  @Type(() => Number)
+  longitude?: number;
+
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   @IsOptional()
   @Type(() => Number)
   pricePerNight?: number;
+
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  @IsOptional()
+  @Type(() => Number)
+  salePrice?: number;
 
   @IsInt()
   @Min(1)

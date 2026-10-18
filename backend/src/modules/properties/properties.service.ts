@@ -2,13 +2,15 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
   Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, SelectQueryBuilder } from 'typeorm';
-import { Property } from './entities/property.entity';
+import { Property, ListingStatus } from './entities/property.entity';
 import { Room } from './entities/room.entity';
 import { Amenity } from '../amenities/entities/amenity.entity';
+import { AvailabilityBlock } from './entities/availability-block.entity';
 import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
 import { QueryPropertyDto } from './dto/query-property.dto';
@@ -27,6 +29,8 @@ export class PropertiesService {
     private readonly roomRepository: Repository<Room>,
     @InjectRepository(Amenity)
     private readonly amenityRepository: Repository<Amenity>,
+    @InjectRepository(AvailabilityBlock)
+    private readonly availabilityBlockRepository: Repository<AvailabilityBlock>,
     private readonly cloudinaryService: CloudinaryService,
   ) {}
 
@@ -43,14 +47,27 @@ export class PropertiesService {
 
     const qb: SelectQueryBuilder<Property> = this.propertyRepository
       .createQueryBuilder('property')
-      .leftJoinAndSelect('property.host', 'host')
+      .leftJoin('property.host', 'host')
+      .leftJoin('host.hostProfile', 'hostProfile')
       .leftJoinAndSelect('property.amenities', 'amenities')
       .leftJoinAndSelect('property.rooms', 'rooms')
       .where('property.isAvailable = :available', { available: true });
 
-    // Filters
+    // Public discovery must never reveal drafts, paused, archived, or sold listings.
+    qb.andWhere('property.status = :publishedStatus', { publishedStatus: ListingStatus.PUBLISHED });
+
+    // Listing type filter (RENTAL or SALE)
+    if (query.listingType) {
+      qb.andWhere('property.listingType = :listingType', { listingType: query.listingType });
+    }
+
+    // Location filters
     if (query.city) {
       qb.andWhere('LOWER(property.city) = LOWER(:city)', { city: query.city });
+    }
+
+    if (query.subCity) {
+      qb.andWhere('LOWER(property.subCity) = LOWER(:subCity)', { subCity: query.subCity });
     }
 
     if (query.propertyType) {
@@ -75,7 +92,7 @@ export class PropertiesService {
 
     if (query.search) {
       qb.andWhere(
-        '(LOWER(property.title) LIKE LOWER(:search) OR LOWER(property.description) LIKE LOWER(:search) OR LOWER(property.address) LIKE LOWER(:search))',
+        '(LOWER(property.title) LIKE LOWER(:search) OR LOWER(property.description) LIKE LOWER(:search) OR LOWER(property.address) LIKE LOWER(:search) OR LOWER(property.subCity) LIKE LOWER(:search))',
         { search: `%${query.search}%` },
       );
     }
@@ -83,12 +100,12 @@ export class PropertiesService {
     // Sorting
     const sortBy = query.sortBy || 'createdAt';
     const sortOrder = query.sortOrder || 'DESC';
-    const allowedSortFields = ['pricePerNight', 'createdAt', 'bedrooms', 'maxGuests', 'city'];
+    const allowedSortFields = ['pricePerNight', 'salePrice', 'createdAt', 'bedrooms', 'maxGuests', 'city', 'subCity'];
     const safeSortBy = allowedSortFields.includes(sortBy) ? sortBy : 'createdAt';
     qb.orderBy(`property.${safeSortBy}`, sortOrder === 'ASC' ? 'ASC' : 'DESC');
 
     // Select host fields without password
-    qb.addSelect(['host.id', 'host.name', 'host.email']);
+    qb.addSelect(['host.id', 'host.name', 'hostProfile.id', 'hostProfile.displayName']);
 
     const [data, total] = await qb.skip(skip).take(limit).getManyAndCount();
 
@@ -102,25 +119,40 @@ export class PropertiesService {
   }
 
   async findOne(id: string): Promise<Property> {
-    const property = await this.propertyRepository
+    return this.loadPropertyDetail(id, false);
+  }
+
+  async findPublicOne(id: string): Promise<Property> {
+    return this.loadPropertyDetail(id, true);
+  }
+
+  private async loadPropertyDetail(id: string, publicOnly: boolean): Promise<Property> {
+    const qb = this.propertyRepository
       .createQueryBuilder('property')
       .leftJoinAndSelect('property.amenities', 'amenity')
       .leftJoinAndSelect('property.rooms', 'room')
-      .leftJoinAndSelect('property.reviews', 'review')
-      .leftJoinAndSelect('review.user', 'reviewUser')
+      .leftJoin('property.reviews', 'review')
+      .leftJoinAndSelect('property.availabilityBlocks', 'availabilityBlock')
+      .leftJoin('review.user', 'reviewUser')
       .leftJoin('property.host', 'host')
+      .leftJoin('host.hostProfile', 'hostProfile')
       .addSelect([
-        'host.id',
-        'host.name',
-        'host.email',
-        'host.phone',
-        'host.title',
-        'host.bio',
-        'host.avatar',
-        'host.officeLocation',
+        'review.id',
+        'review.propertyId',
+        'review.rating',
+        'review.comment',
+        'review.createdAt',
       ])
-      .where('property.id = :id', { id })
-      .getOne();
+      .addSelect(['reviewUser.id', 'reviewUser.name'])
+      .addSelect(['host.id', 'host.name', 'hostProfile.id', 'hostProfile.displayName', 'hostProfile.bio', 'hostProfile.phone'])
+      .where('property.id = :id', { id });
+
+    if (publicOnly) {
+      qb.andWhere('property.status = :publishedStatus', { publishedStatus: ListingStatus.PUBLISHED })
+        .andWhere('property.isAvailable = :available', { available: true });
+    }
+
+    const property = await qb.getOne();
 
     if (!property) {
       throw new NotFoundException(`Property with ID "${id}" not found`);
@@ -130,7 +162,9 @@ export class PropertiesService {
   }
 
   async findRelated(id: string, limit = 4): Promise<Property[]> {
-    const property = await this.propertyRepository.findOne({ where: { id } });
+    const property = await this.propertyRepository.findOne({
+      where: { id, status: ListingStatus.PUBLISHED, isAvailable: true },
+    });
     if (!property) {
       throw new NotFoundException(`Property with ID "${id}" not found`);
     }
@@ -138,9 +172,12 @@ export class PropertiesService {
     const qb = this.propertyRepository
       .createQueryBuilder('property')
       .leftJoin('property.host', 'host')
-      .addSelect(['host.id', 'host.name'])
+      .leftJoin('host.hostProfile', 'hostProfile')
+      .addSelect(['host.id', 'host.name', 'hostProfile.id', 'hostProfile.displayName'])
       .leftJoinAndSelect('property.amenities', 'amenity')
       .where('property.id != :id', { id })
+      .andWhere('property.status = :status', { status: ListingStatus.PUBLISHED })
+      .andWhere('property.isAvailable = :available', { available: true })
       .orderBy('property.createdAt', 'DESC')
       .take(limit);
 
@@ -183,6 +220,11 @@ export class PropertiesService {
 
     const { amenityIds, ...updateData } = updatePropertyDto;
 
+    // Listing lifecycle fields are managed only by the host workflow endpoints.
+    delete updateData.status;
+    delete updateData.listingType;
+    delete updateData.isAvailable;
+
     Object.assign(property, updateData);
 
     if (amenityIds !== undefined) {
@@ -203,6 +245,10 @@ export class PropertiesService {
 
     if (property.hostId !== userId && userRole !== UserRole.ADMIN) {
       throw new ForbiddenException('You can only delete your own properties');
+    }
+
+    if (userRole !== UserRole.ADMIN) {
+      throw new ForbiddenException('Hosts cannot permanently delete listings. Archive the listing instead.');
     }
 
     await this.propertyRepository.remove(property);
@@ -231,7 +277,7 @@ export class PropertiesService {
   async findMyProperties(hostId: string): Promise<Property[]> {
     return this.propertyRepository.find({
       where: { hostId },
-      relations: ['amenities', 'rooms'],
+      relations: ['amenities', 'rooms', 'availabilityBlocks'],
       order: { createdAt: 'DESC' },
     });
   }
@@ -255,31 +301,24 @@ export class PropertiesService {
       throw new ForbiddenException('You can only update your own properties');
     }
 
-    // Upload to Cloudinary under property folder
+    const previousCover = property.coverImage;
     const uploadResult = await this.cloudinaryService.uploadImage(
       file,
-      `engida/properties/${propertyId}/cover`,
+      `engida/properties/${propertyId}`,
     );
-
-    // If there was an existing cover image from Cloudinary, optionally cleanup
-    if (property.coverImage) {
-      const oldPublicId = this.cloudinaryService.extractPublicId(property.coverImage);
-      if (oldPublicId) {
-        this.cloudinaryService.deleteImage(oldPublicId).catch((err) => {
-          this.logger.warn(`Failed to clean up old cover image ${oldPublicId}: ${err.message}`);
-        });
-      }
-    }
 
     property.coverImage = uploadResult.secureUrl;
     await this.propertyRepository.save(property);
+    if (previousCover && previousCover !== property.coverImage && !property.images?.includes(previousCover)) {
+      await this.cloudinaryService.deletePropertyImages(propertyId, [previousCover]);
+    }
     this.logger.log(`Updated cover image for property "${propertyId}"`);
 
     return this.findOne(propertyId);
   }
 
   /**
-   * Upload multiple images to property gallery
+   * Upload multiple gallery images and append to existing property images
    */
   async uploadGalleryImages(
     propertyId: string,
@@ -297,22 +336,26 @@ export class PropertiesService {
       throw new ForbiddenException('You can only update your own properties');
     }
 
+    const currentImages = property.images || [];
+    if (currentImages.length + files.length > 20) {
+      throw new BadRequestException('A property can have a maximum of 20 gallery images');
+    }
+
     const uploadResults = await this.cloudinaryService.uploadImages(
       files,
-      `engida/properties/${propertyId}/gallery`,
+      `engida/properties/${propertyId}`,
     );
 
-    const newImageUrls = uploadResults.map((result) => result.secureUrl);
-    property.images = [...(property.images || []), ...newImageUrls];
-
+    const newUrls = uploadResults.map((res) => res.secureUrl);
+    property.images = [...currentImages, ...newUrls];
     await this.propertyRepository.save(property);
-    this.logger.log(`Added ${newImageUrls.length} gallery images to property "${propertyId}"`);
+    this.logger.log(`Added ${newUrls.length} gallery images to property "${propertyId}"`);
 
     return this.findOne(propertyId);
   }
 
   /**
-   * Remove a specific image URL from property gallery
+   * Remove a single image from a property gallery
    */
   async removeGalleryImage(
     propertyId: string,
@@ -331,25 +374,101 @@ export class PropertiesService {
     }
 
     const currentImages = property.images || [];
-    const imageIndex = currentImages.indexOf(imageUrl);
-
-    if (imageIndex === -1) {
+    if (!currentImages.includes(imageUrl)) {
       throw new NotFoundException('Image URL not found in property gallery');
-    }
-
-    // Try deleting from Cloudinary if it's hosted there
-    const publicId = this.cloudinaryService.extractPublicId(imageUrl);
-    if (publicId) {
-      this.cloudinaryService.deleteImage(publicId).catch((err) => {
-        this.logger.warn(`Failed to delete gallery image asset ${publicId}: ${err.message}`);
-      });
     }
 
     property.images = currentImages.filter((url) => url !== imageUrl);
     await this.propertyRepository.save(property);
+    if (property.coverImage !== imageUrl) {
+      await this.cloudinaryService.deletePropertyImages(propertyId, [imageUrl]);
+    }
     this.logger.log(`Removed gallery image from property "${propertyId}"`);
 
     return this.findOne(propertyId);
   }
-}
 
+  /**
+   * Add an availability block to a property
+   */
+  async addAvailabilityBlock(
+    propertyId: string,
+    startDate: string,
+    endDate: string,
+    reason: string | null,
+    userId: string,
+    userRole: UserRole,
+  ): Promise<AvailabilityBlock> {
+    const property = await this.propertyRepository.findOne({ where: { id: propertyId } });
+
+    if (!property) {
+      throw new NotFoundException(`Property with ID "${propertyId}" not found`);
+    }
+
+    if (property.hostId !== userId && userRole !== UserRole.ADMIN) {
+      throw new ForbiddenException('You can only manage availability for your own properties');
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (end <= start) {
+      throw new BadRequestException('End date must be strictly after start date');
+    }
+
+    const block = this.availabilityBlockRepository.create({
+      propertyId,
+      startDate,
+      endDate,
+      reason,
+    });
+
+    return this.availabilityBlockRepository.save(block);
+  }
+
+  /**
+   * Remove an availability block from a property
+   */
+  async removeAvailabilityBlock(
+    propertyId: string,
+    blockId: string,
+    userId: string,
+    userRole: UserRole,
+  ): Promise<void> {
+    const property = await this.propertyRepository.findOne({ where: { id: propertyId } });
+
+    if (!property) {
+      throw new NotFoundException(`Property with ID "${propertyId}" not found`);
+    }
+
+    if (property.hostId !== userId && userRole !== UserRole.ADMIN) {
+      throw new ForbiddenException('You can only manage availability for your own properties');
+    }
+
+    const block = await this.availabilityBlockRepository.findOne({
+      where: { id: blockId, propertyId },
+    });
+
+    if (!block) {
+      throw new NotFoundException(`Availability block with ID "${blockId}" not found`);
+    }
+
+    await this.availabilityBlockRepository.remove(block);
+  }
+
+  /**
+   * Get all availability blocks for a property
+   */
+  async getAvailabilityBlocks(propertyId: string): Promise<AvailabilityBlock[]> {
+    const property = await this.propertyRepository.findOne({ where: { id: propertyId } });
+
+    if (!property) {
+      throw new NotFoundException(`Property with ID "${propertyId}" not found`);
+    }
+
+    return this.availabilityBlockRepository.find({
+      where: { propertyId },
+      order: { startDate: 'ASC' },
+    });
+  }
+}

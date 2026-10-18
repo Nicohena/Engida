@@ -2,6 +2,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import { useAuth } from '../../context/AuthContext';
+import { Sparkles, Building2, Luggage, LogOut, ChevronDown, User as UserIcon } from 'lucide-react';
 
 export type PartitionTab =
   | 'home'
@@ -34,27 +36,12 @@ const MORE_DROPDOWN_ITEMS: MoreDropdownItem[] = [
     id: 'how-it-works',
     title: 'How It Works',
     amharicTitle: 'አሰራር',
-    subtitle: 'Step-by-step guide for guests, verification & arrival',
+    subtitle: 'Browse listings and manage reservation requests',
     amharicSubtitle: 'የምዝገባ፣ ማረጋገጫና የመግቢያ መመሪያ',
     icon: (active) => (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={active ? '#2563eb' : '#64748b'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M9 11l3 3L22 4" />
         <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-      </svg>
-    ),
-  },
-  {
-    id: 'payments-escrow',
-    title: 'Payments & Escrow',
-    amharicTitle: 'ክፍያዎችና ዋስትና',
-    subtitle: 'Telebirr, CBE Birr & 24-hour guest escrow protection',
-    amharicSubtitle: 'ቴሌብር፣ ንግድ ባንክና የ24-ሰዓት አስተማማኝ አሰራር',
-    badge: 'ETB',
-    icon: (active) => (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={active ? '#2563eb' : '#64748b'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="2" y="5" width="20" height="14" rx="2" />
-        <line x1="2" y1="10" x2="22" y2="10" />
-        <circle cx="12" cy="15" r="2" />
       </svg>
     ),
   },
@@ -73,10 +60,10 @@ const MORE_DROPDOWN_ITEMS: MoreDropdownItem[] = [
   },
   {
     id: 'benefits',
-    title: 'Benefits & Guarantees',
-    amharicTitle: 'ጥቅሞችና ዋስትናዎች',
-    subtitle: '24/7 power & water guarantee, verified reviews',
-    amharicSubtitle: 'የ24/7 መብራትና ውሃ ዋስትና እና አስተማማኝ ግምገማዎች',
+    title: 'Host tools',
+    amharicTitle: 'Host tools',
+    subtitle: 'Listings, availability, and reservation management',
+    amharicSubtitle: 'Listings, availability, and reservation management',
     icon: (active) => (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={active ? '#2563eb' : '#64748b'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
@@ -86,16 +73,16 @@ const MORE_DROPDOWN_ITEMS: MoreDropdownItem[] = [
 ];
 
 export default function LandingHeader({ activeTab, onTabChange }: LandingHeaderProps) {
-  const [role, setRole] = useState<'Guest' | 'Host'>('Guest');
-  const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
+  const { user, logout, loading: authLoading } = useAuth();
   const [language, setLanguage] = useState<'English' | 'Amharic'>('English');
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const [moreDropdownOpen, setMoreDropdownOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const moreRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
-  const roleRef = useRef<HTMLDivElement>(null);
   const langRef = useRef<HTMLDivElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -104,11 +91,11 @@ export default function LandingHeader({ activeTab, onTabChange }: LandingHeaderP
       if (moreRef.current && !moreRef.current.contains(target) && mobileMenuRef.current && !mobileMenuRef.current.contains(target)) {
         setMoreDropdownOpen(false);
       }
-      if (roleRef.current && !roleRef.current.contains(target)) {
-        setRoleDropdownOpen(false);
-      }
       if (langRef.current && !langRef.current.contains(target)) {
         setLangDropdownOpen(false);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(target)) {
+        setUserMenuOpen(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -117,7 +104,6 @@ export default function LandingHeader({ activeTab, onTabChange }: LandingHeaderP
 
   const isMoreActive =
     activeTab === 'how-it-works' ||
-    activeTab === 'payments-escrow' ||
     activeTab === 'destinations' ||
     activeTab === 'benefits';
 
@@ -206,11 +192,11 @@ export default function LandingHeader({ activeTab, onTabChange }: LandingHeaderP
                 : 'text-slate-600 hover:text-[#2563eb] hover:bg-white/60'
             }`}
           >
-            <span>{language === 'Amharic' ? 'ማረጋገጫ' : '100% Verified'}</span>
+            <span>{language === 'Amharic' ? 'ማረጋገጫ' : 'Trust controls'}</span>
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
           </button>
 
-          {/* 5. Host & Earn (Supply Growth Driver) */}
+          {/* 5. Host tools overview */}
           <button
             type="button"
             onClick={() => {
@@ -223,9 +209,9 @@ export default function LandingHeader({ activeTab, onTabChange }: LandingHeaderP
                 : 'text-slate-600 hover:text-[#2563eb] hover:bg-white/60'
             }`}
           >
-            <span>{language === 'Amharic' ? 'አስተናግደው ያግኙ' : 'Host & Earn'}</span>
+            <span>{language === 'Amharic' ? 'አስተናግደው ያግኙ' : 'Host tools'}</span>
             <span className="text-[9px] font-bold bg-amber-100 text-amber-900 border border-amber-200/80 px-1.5 py-0.2 rounded">
-              0% Fee
+              Overview
             </span>
           </button>
 
@@ -321,71 +307,132 @@ export default function LandingHeader({ activeTab, onTabChange }: LandingHeaderP
         {/* Right Navigation Controls */}
         <div className="flex items-center gap-2 sm:gap-3.5 text-xs sm:text-sm font-medium text-slate-800 shrink-0">
           
-          {/* Role Dropdown */}
-          <div className="relative" ref={roleRef}>
-            <button
-              type="button"
-              onClick={() => {
-                setRoleDropdownOpen(!roleDropdownOpen);
-                setLangDropdownOpen(false);
-                setMoreDropdownOpen(false);
-              }}
-              className="flex items-center gap-1.5 text-slate-700 hover:text-slate-950 transition-colors cursor-pointer py-1"
-            >
-              <span>I am a {role}</span>
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className={`transition-transform duration-200 ${roleDropdownOpen ? 'rotate-180' : ''}`}
-              >
-                <polyline points="6 9 12 15 18 9" />
-              </svg>
-            </button>
-
-            {roleDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-40 bg-white border border-slate-200 rounded-xl shadow-lg py-1.5 z-50 animate-partition">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setRole('Guest');
-                    setRoleDropdownOpen(false);
-                  }}
-                  className={`w-full text-left px-4 py-2 text-xs sm:text-sm hover:bg-slate-50 transition-colors cursor-pointer ${
-                    role === 'Guest' ? 'text-[#2563eb] font-semibold' : 'text-slate-700'
-                  }`}
-                >
-                  I am a Guest
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setRole('Host');
-                    setRoleDropdownOpen(false);
-                    onTabChange('host-calculator');
-                  }}
-                  className={`w-full text-left px-4 py-2 text-xs sm:text-sm hover:bg-slate-50 transition-colors cursor-pointer ${
-                    role === 'Host' ? 'text-[#2563eb] font-semibold' : 'text-slate-700'
-                  }`}
-                >
-                  I am a Host
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Login Button */}
+          {/* Host Portal / Become a Host CTA */}
           <Link
-            href="/login"
-            className="border border-slate-300 hover:border-slate-400 text-slate-800 hover:text-slate-950 px-3.5 sm:px-4.5 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all duration-200 hover:bg-slate-50/80 cursor-pointer shadow-2xs"
+            href={user?.hostProfile ? '/host/dashboard' : '/become-a-host'}
+            className="group relative inline-flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-[13px] font-bold text-white bg-gradient-to-r from-[#1e40af] via-[#2563eb] to-[#3b82f6] shadow-sm shadow-blue-500/20 hover:shadow-md hover:shadow-blue-500/35 hover:scale-[1.03] active:scale-[0.98] transition-all duration-200 cursor-pointer"
           >
-            Login
+            <Sparkles className="w-3.5 h-3.5 text-amber-300 group-hover:rotate-12 transition-transform duration-300 shrink-0" />
+            <span className="tracking-tight whitespace-nowrap">
+              {user?.hostProfile ? 'Host Portal' : 'Become a Host'}
+            </span>
+            <span className="hidden lg:inline-flex items-center text-[10px] font-black uppercase tracking-wider bg-white/20 text-white px-1.5 py-0.5 rounded-full">
+              Earn
+            </span>
           </Link>
+
+          {/* Auth State: User Profile Menu if logged in, or Login button if guest */}
+          {user ? (
+            <div className="relative" ref={userMenuRef}>
+              <button
+                type="button"
+                onClick={() => {
+                  setUserMenuOpen(!userMenuOpen);
+                  setLangDropdownOpen(false);
+                  setMoreDropdownOpen(false);
+                }}
+                className="flex items-center gap-2 pl-1.5 pr-2.5 sm:pr-3 py-1 rounded-full border border-slate-200 hover:border-slate-300 hover:shadow-xs bg-white text-slate-800 transition cursor-pointer"
+              >
+                <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-[#1e40af] to-[#3b82f6] text-white text-xs font-black flex items-center justify-center uppercase shadow-2xs">
+                  {user.name ? user.name.charAt(0) : 'U'}
+                </div>
+                <span className="hidden sm:inline-block text-xs font-bold text-slate-800 max-w-[90px] truncate">
+                  {user.name ? user.name.split(' ')[0] : 'Account'}
+                </span>
+                <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${userMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {userMenuOpen && (
+                <div className="absolute right-0 mt-2 w-64 bg-white border border-slate-200/90 rounded-2xl shadow-xl py-2 z-50 animate-partition">
+                  {/* User Profile Summary */}
+                  <div className="px-4 py-3 border-b border-slate-100">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#1e40af] to-[#3b82f6] text-white text-sm font-black flex items-center justify-center uppercase shadow-xs shrink-0">
+                        {user.name ? user.name.charAt(0) : 'U'}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-black text-slate-900 truncate leading-snug">
+                          {user.name}
+                        </p>
+                        <p className="text-[11px] font-medium text-slate-500 truncate">
+                          {user.email}
+                        </p>
+                      </div>
+                    </div>
+                    {user.hostProfile && (
+                      <div className="mt-2.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 border border-blue-100 text-[10px] font-black uppercase tracking-wider text-[#1e40af]">
+                        <Building2 className="w-3 h-3" />
+                        <span>Host Partner</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Navigation Links with clear distinction */}
+                  <div className="py-1">
+                    {/* 1. Host Portal */}
+                    <Link
+                      href={user.hostProfile ? '/host/dashboard' : '/become-a-host'}
+                      onClick={() => setUserMenuOpen(false)}
+                      className="flex items-start gap-3 px-4 py-2.5 text-xs text-slate-800 hover:bg-slate-50 hover:text-[#1e40af] transition"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-blue-50 text-[#1e40af] flex items-center justify-center shrink-0 mt-0.5">
+                        <Building2 className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="font-extrabold text-slate-900 leading-none">
+                          {user.hostProfile ? 'Host Portal' : 'Become a Host'}
+                        </p>
+                        <p className="text-[10px] font-medium text-slate-500 mt-1">
+                          {user.hostProfile ? 'Manage listings, calendar & rates' : 'Earn income by hosting guests'}
+                        </p>
+                      </div>
+                    </Link>
+
+                    {/* 2. My Trips & Bookings (Guest Trips) */}
+                    <Link
+                      href="/dashboard"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="flex items-start gap-3 px-4 py-2.5 text-xs text-slate-800 hover:bg-slate-50 hover:text-[#1e40af] transition"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center shrink-0 mt-0.5">
+                        <Luggage className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="font-extrabold text-slate-900 leading-none">
+                          My Trips & Stays
+                        </p>
+                        <p className="text-[10px] font-medium text-slate-500 mt-1">
+                          Reservations you booked as a guest
+                        </p>
+                      </div>
+                    </Link>
+                  </div>
+
+                  {/* Sign Out */}
+                  <div className="border-t border-slate-100 pt-1 mt-1">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        setUserMenuOpen(false);
+                        await logout();
+                      }}
+                      className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-red-600 hover:bg-red-50/70 transition cursor-pointer text-left"
+                    >
+                      <LogOut className="w-4 h-4 text-red-500" />
+                      <span>Sign Out</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link
+              href="/login"
+              className="border border-slate-300 hover:border-slate-400 text-slate-800 hover:text-slate-950 px-3.5 sm:px-4.5 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all duration-200 hover:bg-slate-50/80 cursor-pointer shadow-2xs"
+            >
+              Login
+            </Link>
+          )}
 
           {/* Language Dropdown */}
           <div className="relative" ref={langRef}>
@@ -393,7 +440,6 @@ export default function LandingHeader({ activeTab, onTabChange }: LandingHeaderP
               type="button"
               onClick={() => {
                 setLangDropdownOpen(!langDropdownOpen);
-                setRoleDropdownOpen(false);
                 setMoreDropdownOpen(false);
               }}
               className="flex items-center gap-1 text-slate-700 hover:text-slate-950 transition-colors cursor-pointer py-1"
@@ -500,7 +546,7 @@ export default function LandingHeader({ activeTab, onTabChange }: LandingHeaderP
               activeTab === 'trust-verification' ? 'bg-[#2563eb] text-white' : 'text-slate-600'
             }`}
           >
-            {language === 'Amharic' ? 'ማረጋገጫ' : 'Verified'}
+            {language === 'Amharic' ? 'ማረጋገጫ' : 'Trust'}
           </button>
 
           <button
@@ -513,7 +559,7 @@ export default function LandingHeader({ activeTab, onTabChange }: LandingHeaderP
               activeTab === 'host-calculator' ? 'bg-[#2563eb] text-white' : 'text-slate-600'
             }`}
           >
-            {language === 'Amharic' ? 'አስተናግድ' : 'Host & Earn'}
+            {language === 'Amharic' ? 'አስተናግድ' : 'Host tools'}
           </button>
 
           <button

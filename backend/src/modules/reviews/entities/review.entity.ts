@@ -5,11 +5,13 @@ import {
   CreateDateColumn,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { Property } from '../../properties/entities/property.entity';
 import { User } from '../../../users/entities/user.entity';
 
 @Entity('reviews')
+@Index('idx_reviews_property_user_unique', ['propertyId', 'userId'], { unique: true })
 export class Review {
   @PrimaryGeneratedColumn('uuid')
   id: string;

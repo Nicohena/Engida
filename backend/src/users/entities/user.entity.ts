@@ -5,8 +5,11 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  OneToOne,
 } from 'typeorm';
 import { RefreshToken } from '../../auth/entities/refresh-token.entity';
+import { HostProfile } from './host-profile.entity';
+import { Property } from '../../modules/properties/entities/property.entity';
 
 export enum UserRole {
   USER = 'USER',
@@ -60,4 +63,10 @@ export class User {
 
   @OneToMany(() => RefreshToken, (refreshToken) => refreshToken.user)
   refreshTokens: RefreshToken[];
+
+  @OneToOne(() => HostProfile, (hostProfile) => hostProfile.user)
+  hostProfile?: HostProfile;
+
+  @OneToMany(() => Property, (property) => property.host)
+  properties?: Property[];
 }

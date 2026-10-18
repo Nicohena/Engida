@@ -8,6 +8,7 @@ import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { User } from './users/entities/user.entity';
+import { HostProfile } from './users/entities/host-profile.entity';
 import { RefreshToken } from './auth/entities/refresh-token.entity';
 import { HealthModule } from './health/health.module';
 import { DatabaseModule } from './database/database.module';
@@ -17,43 +18,77 @@ import { AmenitiesModule } from './modules/amenities/amenities.module';
 import { BookingsModule } from './modules/bookings/bookings.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
 import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
+import { HostModule } from './modules/host/host.module';
+import { PaymentsModule } from './modules/payments/payments.module';
 import { Property } from './modules/properties/entities/property.entity';
 import { Room } from './modules/properties/entities/room.entity';
+import { AvailabilityBlock } from './modules/properties/entities/availability-block.entity';
 import { Amenity } from './modules/amenities/entities/amenity.entity';
 import { Booking } from './modules/bookings/entities/booking.entity';
 import { Review } from './modules/reviews/entities/review.entity';
+import { validate } from './config/env.validation';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
+      validate,
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        host: configService.get<string>('DATABASE_HOST', 'localhost'),
-        port: configService.get<number>('DATABASE_PORT', 5432),
-        username: configService.get<string>('DATABASE_USER', 'postgres'),
-        password: configService.get<string>('DATABASE_PASSWORD', 'postgres'),
-        database: configService.get<string>('DATABASE_NAME', 'engida_db'),
-        entities: [User, RefreshToken, Property, Room, Amenity, Booking, Review],
-        synchronize: configService.get<boolean>('DATABASE_SYNCHRONIZE', true),
-        logging:
+      useFactory: (configService: ConfigService) => {
+        const databaseUrl = configService.get<string>('DATABASE_URL');
+        const syncEnv = configService.get<string | boolean>('DATABASE_SYNCHRONIZE');
+        const synchronize =
+          syncEnv === true || syncEnv === 'true';
+        const logging =
           configService.get<string>('DEBUG_SQL') === 'true'
             ? true
-            : ['error', 'warn'],
-      }),
+            : (['error', 'warn'] as ('error' | 'warn')[]);
+        const entities = [
+          User,
+          HostProfile,
+          RefreshToken,
+          Property,
+          Room,
+          AvailabilityBlock,
+          Amenity,
+          Booking,
+          Review,
+        ];
+
+        if (databaseUrl) {
+          return {
+            type: 'postgres',
+            url: databaseUrl,
+            entities,
+            synchronize,
+            logging,
+          };
+        }
+
+        return {
+          type: 'postgres',
+          host: configService.get<string>('DATABASE_HOST', 'localhost'),
+          port: configService.get<number>('DATABASE_PORT', 5432),
+          username: configService.get<string>('DATABASE_USER', 'postgres'),
+          password: configService.get<string>('DATABASE_PASSWORD', 'postgres'),
+          database: configService.get<string>('DATABASE_NAME', 'engida_db'),
+          entities,
+          synchronize,
+          logging,
+        };
+      },
     }),
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: () => [
+      useFactory: (configService: ConfigService) => [
         {
-          ttl: 60000, // 1 minute
-          limit: 10,  // max 10 requests per minute per IP for sensitive routes
+          ttl: configService.get<number>('THROTTLE_TTL', 60000), // 1 minute window
+          limit: configService.get<number>('THROTTLE_LIMIT', 300), // up to 300 req/min for seamless SPA browsing
         },
       ],
     }),
@@ -67,6 +102,8 @@ import { Review } from './modules/reviews/entities/review.entity';
     BookingsModule,
     ReviewsModule,
     CloudinaryModule,
+    HostModule,
+    PaymentsModule,
   ],
   controllers: [AppController],
   providers: [

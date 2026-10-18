@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { apiFetch, setAccessToken } from '../lib/api';
+import type { HostProfile } from '../types/host';
 
 export interface User {
   id: string;
@@ -9,15 +10,17 @@ export interface User {
   email: string;
   role: 'USER' | 'ADMIN';
   createdAt?: string;
+  hostProfile?: HostProfile | null;
 }
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string, role?: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
+  register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  setHostProfile: (profile: HostProfile | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -42,7 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshUser();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<User> => {
     const response = await apiFetch<{ accessToken: string; user: User }>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
@@ -50,12 +53,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
     setAccessToken(response.accessToken);
     setUser(response.user);
+    return response.user;
   };
 
-  const register = async (name: string, email: string, password: string, role?: string) => {
+  const register = async (name: string, email: string, password: string) => {
     await apiFetch('/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ name, email, password, role: role || 'USER' }),
+      body: JSON.stringify({ name, email, password }),
       skipAuth: true,
     });
     // Auto-login after registration
@@ -73,8 +77,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const setHostProfile = (profile: HostProfile | null) => {
+    setUser((prev) => (prev ? { ...prev, hostProfile: profile } : null));
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, refreshUser, setHostProfile }}>
       {children}
     </AuthContext.Provider>
   );

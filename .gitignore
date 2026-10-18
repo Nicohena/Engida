@@ -48,6 +48,9 @@ Thumbs.db
 *.sqlite
 *.sqlite3
 
+# Scratch
+scratch/
+
 # Python
 *.py[cod]
 *$py.class

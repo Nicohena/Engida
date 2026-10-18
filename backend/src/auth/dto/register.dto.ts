@@ -4,10 +4,7 @@ import {
   IsString,
   MinLength,
   Matches,
-  IsOptional,
-  IsEnum,
 } from 'class-validator';
-import { UserRole } from '../../users/entities/user.entity';
 
 export class RegisterDto {
   @IsNotEmpty({ message: 'Name is required' })
@@ -26,8 +23,4 @@ export class RegisterDto {
       'Password must contain at least 1 uppercase letter, 1 lowercase letter, and 1 number or special character',
   })
   password: string;
-
-  @IsOptional()
-  @IsEnum(UserRole, { message: 'Invalid user role' })
-  role?: UserRole;
 }

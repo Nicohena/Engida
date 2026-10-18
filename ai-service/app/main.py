@@ -58,3 +58,12 @@ async def root():
         "version": "0.1.0",
         "status": "operational",
     }
+
+
+@app.get("/health")
+async def health():
+    return {
+        "status": "healthy",
+        "service": "ENGIDA AI Service",
+    }
+

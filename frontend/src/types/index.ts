@@ -36,10 +36,16 @@ export interface User {
   updatedAt: string;
 }
 
-export type PropertyHost = Pick<
-  User,
-  'id' | 'name' | 'email' | 'phone' | 'title' | 'bio' | 'avatar' | 'officeLocation'
->;
+export interface PropertyHost {
+  id: string;
+  name: string;
+  hostProfile?: {
+    id?: string;
+    displayName?: string | null;
+    bio?: string | null;
+    phone?: string | null;
+  } | null;
+}
 
 // Amenity
 export interface Amenity {
@@ -65,8 +71,7 @@ export interface Room {
 export interface Review {
   id: string;
   propertyId: string;
-  userId: string;
-  user: Pick<User, 'id' | 'name'>;
+  user: Pick<User, 'name'>;
   rating: number;
   comment: string | null;
   createdAt: string;
@@ -82,6 +87,8 @@ export interface Property {
   title: string;
   description: string;
   propertyType: PropertyType;
+  listingType?: 'RENTAL' | 'SALE';
+  salePrice?: string | number | null;
   address: string;
   city: string;
   country: string;
@@ -104,6 +111,22 @@ export interface Property {
 // Booking
 export type BookingStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED';
 
+export type PaymentMethod =
+  | 'CHAPA'
+  | 'TELEBIRR'
+  | 'CBE_BIRR'
+  | 'INTERNATIONAL_CARD'
+  | 'PAYPAL'
+  | 'WISE'
+  | 'CASH_ON_ARRIVAL';
+
+export type PaymentStatus =
+  | 'PENDING'
+  | 'PAID'
+  | 'ON_ARRIVAL'
+  | 'REFUNDED'
+  | 'FAILED';
+
 export interface Booking {
   id: string;
   propertyId: string;
@@ -111,8 +134,14 @@ export interface Booking {
   guestId: string;
   checkInDate: string;
   checkOutDate: string;
+  guestCount: number;
   totalPrice: string;
   status: BookingStatus;
+  paymentMethod?: PaymentMethod;
+  paymentStatus?: PaymentStatus;
+  paymentReference?: string | null;
+  paymentCurrency?: string;
+  paidAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -122,5 +151,9 @@ export interface CreateBookingPayload {
   roomId?: string;
   checkInDate: string;
   checkOutDate: string;
-  totalPrice: number;
+  guestCount?: number;
+  paymentMethod?: PaymentMethod;
+  paymentReference?: string;
+  paymentCurrency?: string;
 }
+

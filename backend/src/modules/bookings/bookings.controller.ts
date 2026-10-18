@@ -54,8 +54,8 @@ export class BookingsController {
    * Get a single booking by ID
    */
   @Get(':id')
-  async findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.bookingsService.findOne(id);
+  async findOne(@Param('id', ParseUUIDPipe) id: string, @GetUser() user: User) {
+    return this.bookingsService.findOne(id, user.id, user.role);
   }
 
   /**

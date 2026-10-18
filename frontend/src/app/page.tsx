@@ -14,7 +14,6 @@ import BenefitsGrid from '../components/landing/BenefitsGrid';
 import LandingFooter from '../components/landing/LandingFooter';
 import HostEarningsSection from '../components/landing/HostEarningsSection';
 import TrustVerificationSection from '../components/landing/TrustVerificationSection';
-import PaymentEscrowSection from '../components/landing/PaymentEscrowSection';
 import DestinationsSection from '../components/landing/DestinationsSection';
 
 function MainLandingPage() {
@@ -47,7 +46,7 @@ function MainLandingPage() {
       <main className="flex-1 w-full pt-[98px] md:pt-[65px] flex flex-col">
         
         {/* ============================================================ */}
-        {/* PARTITION 1: HOME (HERO + SKYLINE + FEATURED STAYS) */}
+        {/* PARTITION 1: HOME (HERO, SKYLINE, AND AVAILABLE RENTALS) */}
         {/* ============================================================ */}
         {activeTab === 'home' && (
           <div key="home" className="animate-partition flex-1 flex flex-col w-full">
@@ -62,12 +61,12 @@ function MainLandingPage() {
                 </h1>
 
                 <p className="mt-2.5 sm:mt-3 text-xs sm:text-sm md:text-base text-slate-500 font-normal max-w-xl mx-auto leading-relaxed">
-                  Find verified accommodations across Ethiopia directly and without stress.
+                  Explore published accommodations across Ethiopia and connect with hosts.
                 </p>
 
                 <div className="mt-5 sm:mt-7">
                   <HeroSearchBar onSearchClick={() => {
-                    const el = document.getElementById('featured-stays-section');
+                    const el = document.getElementById('available-rentals-section');
                     if (el) {
                       el.scrollIntoView({ behavior: 'smooth' });
                     } else {
@@ -88,11 +87,11 @@ function MainLandingPage() {
               </div>
             </section>
 
-            {/* Featured Stays directly on Home Page */}
-            <div id="featured-stays-section" className="w-full bg-slate-50/50 border-t border-slate-200/80">
+            {/* Available rental listings on the home page */}
+            <div id="available-rentals-section" className="w-full bg-slate-50/50 border-t border-slate-200/80">
               <CategoryListingsSection
-                title="Featured Ethiopian Stays & Homes"
-                subtitle="Browse handpicked luxury villas, penthouses, and heritage lodges verified with 24/7 power, water reservoirs, and fast internet."
+                title="Available Ethiopian Rentals"
+                subtitle="Browse available rentals using current listing details provided by hosts."
                 badge="EXPLORE DIRECTLY ON ENGIDA"
                 showViewAllButton={true}
                 onViewAllClick={() => navigateToTab('stays')}
@@ -106,13 +105,13 @@ function MainLandingPage() {
                 <div className="bg-gradient-to-r from-blue-50 to-indigo-50/50 border border-blue-100/80 rounded-2xl p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
                   <div className="max-w-xl">
                     <span className="text-xs font-bold tracking-widest text-[#2563eb] uppercase font-mono">
-                      ENGIDA ASSURANCE GUARANTEE
+                      LISTING TRANSPARENCY
                     </span>
                     <h3 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-[-0.03em] mt-1">
-                      Every Stay Physically Inspected
+                      Review listing details before you book
                     </h3>
                     <p className="text-xs sm:text-sm text-slate-600 mt-2 leading-relaxed">
-                      Say goodbye to unexpected blackouts, water cuts, or mismatched photos. All Engida hosts are strictly identity-verified with guaranteed power and water backups.
+                      Hosts manage their property descriptions, photos, amenities, prices, and availability. Review those details carefully; ENGIDA does not currently claim identity checks or on-site property inspections.
                     </p>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
@@ -128,7 +127,7 @@ function MainLandingPage() {
                       onClick={() => navigateToTab('trust-verification')}
                       className="px-4 py-2.5 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 rounded-xl text-xs sm:text-sm font-medium transition-all cursor-pointer"
                     >
-                      Learn Verification
+                      About trust controls
                     </button>
                   </div>
                 </div>
@@ -188,14 +187,14 @@ function MainLandingPage() {
         )}
 
         {/* ============================================================ */}
-        {/* PARTITION 5: HOST EARNINGS CALCULATOR (SRS FR-02, FR-12, FR-17) */}
+        {/* PARTITION 5: HOST TOOLS OVERVIEW */}
         {/* ============================================================ */}
         {activeTab === 'host-calculator' && (
           <section
             key="host-calculator"
             className="animate-partition flex-1 w-full bg-white flex flex-col justify-center items-center min-h-[calc(100vh-65px)]"
           >
-            <HostEarningsSection onExploreStays={() => navigateToTab('stays')} />
+            <HostEarningsSection />
           </section>
         )}
 
@@ -212,14 +211,22 @@ function MainLandingPage() {
         )}
 
         {/* ============================================================ */}
-        {/* PARTITION 7: PAYMENTS & ESCROW (SRS FR-07) */}
+        {/* PARTITION 7: PAYMENT PROCESSING STATUS */}
         {/* ============================================================ */}
         {activeTab === 'payments-escrow' && (
           <section
             key="payments-escrow"
-            className="animate-partition flex-1 w-full bg-white flex flex-col justify-center items-center min-h-[calc(100vh-65px)]"
+            className="animate-partition flex-1 w-full bg-white flex flex-col justify-center items-center min-h-[calc(100vh-65px)] px-6"
           >
-            <PaymentEscrowSection onExploreStays={() => navigateToTab('stays')} />
+            <div className="max-w-xl text-center">
+              <h2 className="text-2xl font-bold text-slate-900">Payment processing is not available yet</h2>
+              <p className="mt-3 text-sm leading-relaxed text-slate-600">
+                ENGIDA currently supports listing and reservation management. It does not collect guest payments, hold funds in escrow, or process host payouts.
+              </p>
+              <button type="button" onClick={() => navigateToTab('stays')} className="mt-6 rounded-xl bg-[#2563eb] px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">
+                Browse published listings
+              </button>
+            </div>
           </section>
         )}
 

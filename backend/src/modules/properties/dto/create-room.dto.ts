@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsInt, IsNumber, IsOptional, Min, MaxLength } from 'class-validator';
+import { IsString, IsNotEmpty, IsInt, IsNumber, IsOptional, Min, Max, MaxLength } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateRoomDto {
@@ -14,12 +14,13 @@ export class CreateRoomDto {
 
   @IsInt()
   @Min(1)
+  @Max(50)
   @IsOptional()
   @Type(() => Number)
   capacity?: number;
 
   @IsNumber({ maxDecimalPlaces: 2 })
-  @Min(0)
+  @Min(0.01)
   @Type(() => Number)
   pricePerNight: number;
 }

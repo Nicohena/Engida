@@ -4,12 +4,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useLanding } from '../../context/LandingContext';
 
 const POPULAR_DESTINATIONS = [
-  { name: 'Bole, Addis Ababa', sub: 'Edna Mall, Atlas, Airport', stays: '142 stays' },
-  { name: 'Kazanchis, Kirkos', sub: 'UNECA, Intercontinental, Meskel Sq', stays: '89 stays' },
-  { name: 'Bishoftu (Debre Zeyit)', sub: 'Crater Lakes, Resorts & Spas', stays: '78 stays' },
-  { name: 'Hawassa Lakefront', sub: 'Lakeside Leisure & Tabor', stays: '65 stays' },
-  { name: 'Old Airport / Sarbet', sub: 'Bisrate Gabriel, Residential', stays: '51 stays' },
-  { name: 'Lalibela & Gondar', sub: 'Historic UNESCO Heritage', stays: '60 stays' },
+  { name: 'Bole, Addis Ababa', sub: 'Edna Mall, Atlas, Airport' },
+  { name: 'Kazanchis, Kirkos', sub: 'UNECA, Intercontinental, Meskel Sq' },
+  { name: 'Bishoftu (Debre Zeyit)', sub: 'Crater Lakes and local stays' },
+  { name: 'Hawassa Lakefront', sub: 'Lakeside and Tabor' },
+  { name: 'Old Airport / Sarbet', sub: 'Bisrate Gabriel and nearby areas' },
+  { name: 'Lalibela & Gondar', sub: 'Historic destinations' },
 ];
 
 export default function HeroSearchBar({ onSearchClick }: { onSearchClick?: () => void }) {
@@ -20,8 +20,8 @@ export default function HeroSearchBar({ onSearchClick }: { onSearchClick?: () =>
   const [guestsOpen, setGuestsOpen] = useState(false);
 
   const [adults, setAdults] = useState(2);
-  const [checkIn, setCheckIn] = useState(calendarType === 'ethiopian' ? 'መስከረም 18' : 'Sep 28');
-  const [checkOut, setCheckOut] = useState(calendarType === 'ethiopian' ? 'መስከረም 24' : 'Oct 04');
+  const [checkIn, setCheckIn] = useState('');
+  const [checkOut, setCheckOut] = useState('');
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -39,13 +39,8 @@ export default function HeroSearchBar({ onSearchClick }: { onSearchClick?: () =>
   }, []);
 
   useEffect(() => {
-    if (calendarType === 'ethiopian') {
-      setCheckIn('መስከረም 18');
-      setCheckOut('መስከረም 24');
-    } else {
-      setCheckIn('Sep 28');
-      setCheckOut('Oct 04');
-    }
+    setCheckIn('');
+    setCheckOut('');
   }, [calendarType]);
 
   const handleSearch = () => {
@@ -107,9 +102,6 @@ export default function HeroSearchBar({ onSearchClick }: { onSearchClick?: () =>
                         </div>
                         <div className="text-[10px] text-slate-400">{dest.sub}</div>
                       </div>
-                      <span className="text-[10px] text-slate-500 font-medium bg-slate-100 px-2 py-0.5 rounded-full">
-                        {dest.stays}
-                      </span>
                     </button>
                   ))}
                 </div>
@@ -135,7 +127,7 @@ export default function HeroSearchBar({ onSearchClick }: { onSearchClick?: () =>
                 
               </div>
               <span className="block text-xs sm:text-sm font-semibold text-slate-800 truncate">
-                {checkIn} — {checkOut}
+                {checkIn && checkOut ? `${checkIn} — ${checkOut}` : 'Select dates'}
               </span>
             </button>
 
@@ -147,11 +139,11 @@ export default function HeroSearchBar({ onSearchClick }: { onSearchClick?: () =>
                 <div className="grid grid-cols-2 gap-2 text-xs mb-3">
                   <div className="border border-slate-200 p-2 rounded-xl">
                     <span className="text-[9px] text-slate-400 block font-bold">Check-in</span>
-                    <span className="font-bold text-slate-800">{checkIn}</span>
+                    <span className="font-bold text-slate-800">{checkIn || 'Not selected'}</span>
                   </div>
                   <div className="border border-slate-200 p-2 rounded-xl">
                     <span className="text-[9px] text-slate-400 block font-bold">Check-out</span>
-                    <span className="font-bold text-slate-800">{checkOut}</span>
+                    <span className="font-bold text-slate-800">{checkOut || 'Not selected'}</span>
                   </div>
                 </div>
                 <button

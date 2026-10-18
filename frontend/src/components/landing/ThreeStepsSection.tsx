@@ -8,9 +8,9 @@ export default function ThreeStepsSection({ onCtaClick }: { onCtaClick?: () => v
   const steps = [
     {
       id: 0,
-      title: 'Establish Criteria',
+      title: 'Explore published listings',
       description:
-        'Select your Ethiopian destination, dates, and must-have backup power & water. Our AI matches your exact stay.',
+        'Browse published rental and sale listings and review the details, price, photos, and amenities supplied by each host.',
       renderIllustration: () => (
         <div className="w-28 h-28 mx-auto flex items-center justify-center relative">
           <svg width="100" height="90" viewBox="0 0 100 90" fill="none">
@@ -39,9 +39,9 @@ export default function ThreeStepsSection({ onCtaClick }: { onCtaClick?: () => v
     },
     {
       id: 1,
-      title: 'Select Verified Stay',
+      title: 'Submit a reservation request',
       description:
-        'Choose comfortably from verified homes, serviced apartments, and lodges with confirmed 24/7 generator and WiFi.',
+        'Choose an available rental and submit a booking request for the dates you need.',
       renderIllustration: () => (
         <div className="w-28 h-28 mx-auto flex items-center justify-center relative">
           <svg width="100" height="90" viewBox="0 0 100 90" fill="none">
@@ -52,18 +52,19 @@ export default function ThreeStepsSection({ onCtaClick }: { onCtaClick?: () => v
             {/* User Head & Body */}
             <circle cx="50" cy="38" r="9" fill="#ffffff" />
             <path d="M34 58 C34 49, 41 47, 50 47 C59 47, 66 49, 66 58 Z" fill="#ffffff" />
-            {/* Verified Badge Checkmark in Bright Cyan / Blue */}
-            <circle cx="68" cy="30" r="10" fill="#06b6d4" stroke="#ffffff" strokeWidth="2" />
-            <path d="M64.5 30 L67 32.5 L72 27.5" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            {/* Reservation calendar marker; host identity is not verified by this platform. */}
+            <circle cx="68" cy="30" r="10" fill="#2563eb" stroke="#ffffff" strokeWidth="2" />
+            <rect x="64" y="26.5" width="8" height="7" rx="1" stroke="#ffffff" strokeWidth="1.2" />
+            <path d="M66 25.5v2M70 25.5v2M64 29h8" stroke="#ffffff" strokeWidth="1.2" strokeLinecap="round" />
           </svg>
         </div>
       ),
     },
     {
       id: 2,
-      title: 'Instant Escrow Booking',
+      title: 'Manage your reservation',
       description:
-        'Pay effortlessly in ETB with Telebirr, CBE, or card. Funds are held in escrow until 24 hours after your successful check-in.',
+        'Track the booking status in your account. ENGIDA does not currently collect payments or provide escrow.',
       renderIllustration: () => (
         <div className="w-28 h-28 mx-auto flex items-center justify-center relative">
           <svg width="100" height="90" viewBox="0 0 100 90" fill="none">
@@ -107,7 +108,7 @@ export default function ThreeStepsSection({ onCtaClick }: { onCtaClick?: () => v
             3 EASY STEPS
           </h2>
           <p className="text-xs sm:text-sm md:text-base text-slate-500 leading-relaxed">
-            Establish your requirements, find your perfect verified stay, and book securely with ease. We streamline the entire journey from search to guaranteed check-in.
+            Browse published listings, submit a reservation request, and track its status in ENGIDA.
           </p>
         </div>
 
