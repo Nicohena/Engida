@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Building2, Luggage, LogOut, ChevronDown, User as UserIcon } from 'lucide-react';
 
 export type PartitionTab =
   | 'home'
@@ -73,14 +73,16 @@ const MORE_DROPDOWN_ITEMS: MoreDropdownItem[] = [
 ];
 
 export default function LandingHeader({ activeTab, onTabChange }: LandingHeaderProps) {
-  const { user, loading: authLoading } = useAuth();
+  const { user, logout, loading: authLoading } = useAuth();
   const [language, setLanguage] = useState<'English' | 'Amharic'>('English');
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const [moreDropdownOpen, setMoreDropdownOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const moreRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const langRef = useRef<HTMLDivElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -91,6 +93,9 @@ export default function LandingHeader({ activeTab, onTabChange }: LandingHeaderP
       }
       if (langRef.current && !langRef.current.contains(target)) {
         setLangDropdownOpen(false);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(target)) {
+        setUserMenuOpen(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -302,26 +307,132 @@ export default function LandingHeader({ activeTab, onTabChange }: LandingHeaderP
         {/* Right Navigation Controls */}
         <div className="flex items-center gap-2 sm:gap-3.5 text-xs sm:text-sm font-medium text-slate-800 shrink-0">
           
+          {/* Host Portal / Become a Host CTA */}
           <Link
             href={user?.hostProfile ? '/host/dashboard' : '/become-a-host'}
             className="group relative inline-flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-[13px] font-bold text-white bg-gradient-to-r from-[#1e40af] via-[#2563eb] to-[#3b82f6] shadow-sm shadow-blue-500/20 hover:shadow-md hover:shadow-blue-500/35 hover:scale-[1.03] active:scale-[0.98] transition-all duration-200 cursor-pointer"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-300 group-hover:rotate-12 transition-transform duration-300 shrink-0" />
             <span className="tracking-tight whitespace-nowrap">
-              {user?.hostProfile ? 'Host Dashboard' : 'Become a Host'}
+              {user?.hostProfile ? 'Host Portal' : 'Become a Host'}
             </span>
             <span className="hidden lg:inline-flex items-center text-[10px] font-black uppercase tracking-wider bg-white/20 text-white px-1.5 py-0.5 rounded-full">
               Earn
             </span>
           </Link>
 
-          {/* Login Button */}
-          <Link
-            href={user ? '/dashboard' : '/login'}
-            className="border border-slate-300 hover:border-slate-400 text-slate-800 hover:text-slate-950 px-3.5 sm:px-4.5 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all duration-200 hover:bg-slate-50/80 cursor-pointer shadow-2xs"
-          >
-            {user ? 'Dashboard' : 'Login'}
-          </Link>
+          {/* Auth State: User Profile Menu if logged in, or Login button if guest */}
+          {user ? (
+            <div className="relative" ref={userMenuRef}>
+              <button
+                type="button"
+                onClick={() => {
+                  setUserMenuOpen(!userMenuOpen);
+                  setLangDropdownOpen(false);
+                  setMoreDropdownOpen(false);
+                }}
+                className="flex items-center gap-2 pl-1.5 pr-2.5 sm:pr-3 py-1 rounded-full border border-slate-200 hover:border-slate-300 hover:shadow-xs bg-white text-slate-800 transition cursor-pointer"
+              >
+                <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-[#1e40af] to-[#3b82f6] text-white text-xs font-black flex items-center justify-center uppercase shadow-2xs">
+                  {user.name ? user.name.charAt(0) : 'U'}
+                </div>
+                <span className="hidden sm:inline-block text-xs font-bold text-slate-800 max-w-[90px] truncate">
+                  {user.name ? user.name.split(' ')[0] : 'Account'}
+                </span>
+                <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${userMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {userMenuOpen && (
+                <div className="absolute right-0 mt-2 w-64 bg-white border border-slate-200/90 rounded-2xl shadow-xl py-2 z-50 animate-partition">
+                  {/* User Profile Summary */}
+                  <div className="px-4 py-3 border-b border-slate-100">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#1e40af] to-[#3b82f6] text-white text-sm font-black flex items-center justify-center uppercase shadow-xs shrink-0">
+                        {user.name ? user.name.charAt(0) : 'U'}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-black text-slate-900 truncate leading-snug">
+                          {user.name}
+                        </p>
+                        <p className="text-[11px] font-medium text-slate-500 truncate">
+                          {user.email}
+                        </p>
+                      </div>
+                    </div>
+                    {user.hostProfile && (
+                      <div className="mt-2.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 border border-blue-100 text-[10px] font-black uppercase tracking-wider text-[#1e40af]">
+                        <Building2 className="w-3 h-3" />
+                        <span>Host Partner</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Navigation Links with clear distinction */}
+                  <div className="py-1">
+                    {/* 1. Host Portal */}
+                    <Link
+                      href={user.hostProfile ? '/host/dashboard' : '/become-a-host'}
+                      onClick={() => setUserMenuOpen(false)}
+                      className="flex items-start gap-3 px-4 py-2.5 text-xs text-slate-800 hover:bg-slate-50 hover:text-[#1e40af] transition"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-blue-50 text-[#1e40af] flex items-center justify-center shrink-0 mt-0.5">
+                        <Building2 className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="font-extrabold text-slate-900 leading-none">
+                          {user.hostProfile ? 'Host Portal' : 'Become a Host'}
+                        </p>
+                        <p className="text-[10px] font-medium text-slate-500 mt-1">
+                          {user.hostProfile ? 'Manage listings, calendar & rates' : 'Earn income by hosting guests'}
+                        </p>
+                      </div>
+                    </Link>
+
+                    {/* 2. My Trips & Bookings (Guest Trips) */}
+                    <Link
+                      href="/dashboard"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="flex items-start gap-3 px-4 py-2.5 text-xs text-slate-800 hover:bg-slate-50 hover:text-[#1e40af] transition"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center shrink-0 mt-0.5">
+                        <Luggage className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="font-extrabold text-slate-900 leading-none">
+                          My Trips & Stays
+                        </p>
+                        <p className="text-[10px] font-medium text-slate-500 mt-1">
+                          Reservations you booked as a guest
+                        </p>
+                      </div>
+                    </Link>
+                  </div>
+
+                  {/* Sign Out */}
+                  <div className="border-t border-slate-100 pt-1 mt-1">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        setUserMenuOpen(false);
+                        await logout();
+                      }}
+                      className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-red-600 hover:bg-red-50/70 transition cursor-pointer text-left"
+                    >
+                      <LogOut className="w-4 h-4 text-red-500" />
+                      <span>Sign Out</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link
+              href="/login"
+              className="border border-slate-300 hover:border-slate-400 text-slate-800 hover:text-slate-950 px-3.5 sm:px-4.5 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all duration-200 hover:bg-slate-50/80 cursor-pointer shadow-2xs"
+            >
+              Login
+            </Link>
+          )}
 
           {/* Language Dropdown */}
           <div className="relative" ref={langRef}>

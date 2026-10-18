@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { CalendarDays, MapPin, RotateCcw, X } from 'lucide-react';
+import { CalendarDays, MapPin, RotateCcw, X, Luggage, Building2 } from 'lucide-react';
 import ProtectedRoute from '../../components/ProtectedRoute';
 import { useAuth } from '../../context/AuthContext';
 import { apiFetch } from '../../lib/api';
@@ -131,19 +131,33 @@ export default function DashboardPage() {
       <main className="mx-auto min-h-[70vh] w-full max-w-5xl px-4 py-10 sm:px-6">
         <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-sm font-semibold text-slate-500">Your account</p>
-            <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-slate-900">
-              Reservations{user?.name ? ` · ${user.name}` : ''}
+            <div className="flex items-center gap-2 mb-2.5">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-700 text-xs font-black uppercase tracking-wider">
+                <Luggage className="w-3.5 h-3.5 text-slate-600" />
+                Guest Traveler Account
+              </span>
+              {user?.hostProfile && (
+                <Link
+                  href="/host/dashboard"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-[#1e40af] text-xs font-black uppercase tracking-wider hover:bg-blue-100 transition"
+                >
+                  <Building2 className="w-3.5 h-3.5" />
+                  <span>Switch to Host Portal →</span>
+                </Link>
+              )}
+            </div>
+            <h1 className="text-3xl font-black tracking-tight text-slate-900">
+              My Trips & Stays{user?.name ? ` · ${user.name}` : ''}
             </h1>
-            <p className="mt-2 max-w-2xl text-sm text-slate-600">
-              View reservation requests and status updates from the hosts. ENGIDA does not process payments yet.
+            <p className="mt-1.5 max-w-2xl text-sm text-slate-600">
+              Stays and property reservations you&apos;ve requested as a guest. Track host confirmation status and stay details.
             </p>
           </div>
           <button
             type="button"
             onClick={() => void loadBookings()}
             disabled={loading}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 transition cursor-pointer shadow-xs disabled:opacity-50"
           >
             <RotateCcw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
           </button>
@@ -169,13 +183,23 @@ export default function DashboardPage() {
         )}
 
         {!loading && !error && bookings.length === 0 && (
-          <section className="rounded-2xl border border-slate-200 bg-white p-10 text-center">
-            <CalendarDays className="mx-auto h-10 w-10 text-slate-400" />
-            <h2 className="mt-4 text-lg font-bold text-slate-900">No reservations yet</h2>
-            <p className="mt-2 text-sm text-slate-600">When you request a rental, its current status will appear here.</p>
-            <Link href="/?tab=stays" className="mt-5 inline-flex rounded-xl bg-blue-700 px-5 py-2.5 text-sm font-bold text-white hover:bg-blue-800">
-              Browse published listings
-            </Link>
+          <section className="rounded-2xl border border-slate-200 bg-white p-10 text-center shadow-xs">
+            <Luggage className="mx-auto h-12 w-12 text-slate-400" />
+            <h2 className="mt-4 text-xl font-bold text-slate-900">No trips booked yet</h2>
+            <p className="mt-2 text-sm text-slate-600 max-w-md mx-auto">
+              When you browse accommodations across Ethiopia and request a stay, your booking details and host status will appear here.
+            </p>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+              <Link href="/?tab=stays" className="inline-flex items-center gap-2 rounded-xl bg-[#1e40af] hover:bg-[#1e3a8a] px-5 py-2.5 text-sm font-bold text-white transition shadow-xs">
+                Browse Stays & Rentals
+              </Link>
+              {user?.hostProfile && (
+                <Link href="/host/dashboard" className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 px-5 py-2.5 text-sm font-bold text-slate-700 transition">
+                  <Building2 className="w-4 h-4 text-[#1e40af]" />
+                  <span>Go to Host Portal</span>
+                </Link>
+              )}
+            </div>
           </section>
         )}
 
