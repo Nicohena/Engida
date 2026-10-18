@@ -409,9 +409,11 @@ export default function HostReservationsPage() {
                               alt=""
                               width={48}
                               height={48}
+                              unoptimized
                               className="h-12 w-12 rounded-xl object-cover"
                             />
                           ) : (
+
                             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#E3EAF5]">
                               <CalendarDays className="h-5 w-5 text-[#33599E]" />
                             </div>
@@ -467,9 +469,11 @@ export default function HostReservationsPage() {
                         alt=""
                         width={56}
                         height={56}
+                        unoptimized
                         className="h-14 w-14 rounded-xl object-cover"
                       />
                     ) : (
+
                       <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-[#E3EAF5]">
                         <CalendarDays className="h-5 w-5 text-[#33599E]" />
                       </div>

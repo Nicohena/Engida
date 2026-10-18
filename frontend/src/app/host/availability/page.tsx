@@ -434,10 +434,12 @@ export default function HostAvailabilityPage() {
                     src={selectedListing.coverImage}
                     alt={selectedListing.title}
                     fill
+                    unoptimized
                     className="object-cover"
                     sizes="56px"
                   />
                 ) : (
+
                   <div className="w-full h-full flex items-center justify-center text-slate-400">
                     <Building2 className="w-6 h-6" />
                   </div>

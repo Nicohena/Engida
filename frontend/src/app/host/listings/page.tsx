@@ -116,8 +116,9 @@ function CoverThumb({ src, alt }: { src: string | null; alt: string }) {
   }
   return (
     <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 border border-[#E2E8F0] relative">
-      <Image src={src} alt={alt} fill className="object-cover" sizes="56px" />
+      <Image src={src} alt={alt} fill unoptimized className="object-cover" sizes="56px" />
     </div>
+
   );
 }
 
