@@ -92,3 +92,11 @@ export async function apiFetch<T = unknown>(endpoint: string, options: FetchOpti
 
   return data as T;
 }
+
+export function formatETB(amount: number): string {
+  return `ETB ${amount.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+}
+
+export function formatDate(dateStr: string): string {
+  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
