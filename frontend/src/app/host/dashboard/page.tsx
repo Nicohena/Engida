@@ -14,7 +14,6 @@ import {
   FileEdit,
   XCircle,
   BadgeDollarSign,
-  Sparkles,
   MapPin,
   CalendarRange,
   CreditCard,
@@ -115,61 +114,49 @@ export default function HostDashboardPage() {
   return (
     <div className="p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8 max-w-7xl mx-auto">
       
-      {/* ── 1. WELCOME HERO BANNER (REFINED) ── */}
-      <section className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#1e3a8a] text-white p-5 sm:p-6 md:p-7 shadow-sm border border-slate-700/50">
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-72 h-72 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
-          {/* Left Greeting & Streamlined Badges */}
-          <div className="space-y-2 max-w-2xl">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-500/20 text-blue-200 border border-blue-400/25">
-                <Sparkles className="w-3 h-3 text-amber-300" />
-                Host Executive Suite
-              </span>
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-400/25">
-                <ShieldCheck className="w-3 h-3 text-emerald-400" />
-                Verified Partner
-              </span>
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-white/10 text-slate-300 border border-white/10">
-                Ethiopia Marketplace
-              </span>
-            </div>
-
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-white leading-snug">
-              Welcome back, {hostDisplayName}
+      {/* ── 1. CLEAN NATIVE SAAS HEADER ── */}
+      <section className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-1 pb-2">
+        {/* Left: Title & Host Status */}
+        <div className="space-y-1">
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+              Host Dashboard
             </h1>
-            <p className="text-xs sm:text-sm text-slate-300 max-w-xl leading-relaxed">
-              Manage your active portfolio across Addis Ababa and Ethiopian regional centers. Track traveler bookings, monitor occupancy, and oversee financial settlements.
-            </p>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              Verified Host
+            </span>
           </div>
+          <p className="text-xs sm:text-sm text-slate-500">
+            Welcome back, <span className="font-semibold text-slate-700">{hostDisplayName}</span> • Managing {totalListings} active properties across Ethiopia
+          </p>
+        </div>
 
-          {/* Right Action Buttons */}
-          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-            <Link
-              href="/host/listings/new"
-              className="inline-flex items-center gap-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs sm:text-sm font-bold px-4 py-2.5 rounded-xl shadow-xs hover:shadow-sm transition cursor-pointer"
-            >
-              <Plus className="w-4 h-4 stroke-[2.5]" />
-              <span>Add New Property</span>
-            </Link>
+        {/* Right: Clean Action Controls */}
+        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+          <Link
+            href="/host/listings/new"
+            className="inline-flex items-center gap-1.5 bg-[#1e40af] hover:bg-[#1e3a8a] text-white text-xs sm:text-sm font-bold px-4 py-2.5 rounded-xl shadow-xs hover:shadow-sm transition cursor-pointer"
+          >
+            <Plus className="w-4 h-4 stroke-[2.5]" />
+            <span>Add New Property</span>
+          </Link>
 
-            <Link
-              href="/host/availability"
-              className="inline-flex items-center gap-1.5 bg-white/10 hover:bg-white/15 text-white border border-white/20 text-xs sm:text-sm font-semibold px-3.5 py-2.5 rounded-xl backdrop-blur-xs transition cursor-pointer"
-            >
-              <CalendarRange className="w-3.5 h-3.5 text-blue-300" />
-              <span>Calendar & Rates</span>
-            </Link>
+          <Link
+            href="/host/availability"
+            className="inline-flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/90 text-xs sm:text-sm font-semibold px-3.5 py-2.5 rounded-xl shadow-2xs hover:border-slate-300 transition cursor-pointer"
+          >
+            <CalendarRange className="w-3.5 h-3.5 text-blue-600" />
+            <span>Calendar & Rates</span>
+          </Link>
 
-            <Link
-              href="/dashboard?view=guest"
-              className="inline-flex items-center gap-1.5 bg-slate-800/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80 text-xs sm:text-sm font-semibold px-3.5 py-2.5 rounded-xl transition cursor-pointer"
-            >
-              <ExternalLink className="w-3.5 h-3.5" />
-              <span>Guest Mode</span>
-            </Link>
-          </div>
+          <Link
+            href="/dashboard?view=guest"
+            className="inline-flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200/90 text-xs sm:text-sm font-medium px-3.5 py-2.5 rounded-xl shadow-2xs hover:border-slate-300 transition cursor-pointer"
+          >
+            <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+            <span>Guest Mode</span>
+          </Link>
         </div>
       </section>
 

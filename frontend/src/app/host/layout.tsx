@@ -10,7 +10,6 @@ import {
   ListTodo,
   CalendarDays,
   CalendarRange,
-  UserCircle,
   LogOut,
   Menu,
   X,
@@ -42,11 +41,6 @@ const NAV_ITEMS = [
     label: 'Availability',
     icon: CalendarRange,
   },
-  {
-    href: '/host/profile',
-    label: 'Profile',
-    icon: UserCircle,
-  },
 ];
 
 // ──────────────────────────────────────────────────
@@ -63,18 +57,18 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white border-r border-[#CBD5E1]">
+    <div className="flex flex-col h-full bg-[#0F172A] border-r border-slate-800 text-slate-200">
       {/* Logo */}
-      <div className="flex items-center justify-between px-5 py-5 border-b border-[#CBD5E1]">
+      <div className="flex items-center justify-between px-5 py-5 border-b border-slate-800">
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-9 h-9 rounded-xl bg-[#33599E] flex items-center justify-center text-white shadow-sm group-hover:bg-[#234079] transition">
+          <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-xs group-hover:bg-blue-500 transition">
             <Building2 className="w-4.5 h-4.5 stroke-[2.2]" />
           </div>
           <div>
-            <span className="font-black text-lg tracking-tight text-[#000000] leading-none block">
+            <span className="font-black text-lg tracking-tight text-white leading-none block">
               Engida
             </span>
-            <span className="text-[10px] font-semibold text-[#33599E] uppercase tracking-widest leading-none">
+            <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest leading-none">
               Host Portal
             </span>
           </div>
@@ -82,7 +76,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
         {onClose && (
           <button
             onClick={onClose}
-            className="md:hidden p-1.5 rounded-lg text-slate-500 hover:bg-[#F4F7FC] transition"
+            className="md:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
             aria-label="Close menu"
           >
             <X className="w-5 h-5" />
@@ -94,7 +88,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+          const isActive = pathname === item.href || (item.href !== '/host/dashboard' && pathname.startsWith(item.href + '/'));
           return (
             <Link
               key={item.href}
@@ -102,16 +96,16 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
               onClick={onClose}
               className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all ${
                 isActive
-                  ? 'bg-blue-50 text-[#1e40af] font-bold border border-blue-200/70 shadow-2xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-semibold'
+                  ? 'bg-blue-600/20 text-blue-400 font-bold border border-blue-500/30 shadow-xs'
+                  : 'text-slate-400 hover:text-slate-100 hover:bg-white/5 font-semibold'
               }`}
             >
               <Icon
-                className={`w-4.5 h-4.5 flex-shrink-0 ${isActive ? 'text-[#1e40af]' : 'text-slate-500'}`}
+                className={`w-4.5 h-4.5 flex-shrink-0 ${isActive ? 'text-blue-400' : 'text-slate-400'}`}
               />
               <span className="text-sm flex-1">{item.label}</span>
               {isActive && (
-                <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#1e40af] text-white">
+                <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30">
                   active
                 </span>
               )}
@@ -121,31 +115,43 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
       </nav>
 
       {/* Divider + User + Links */}
-      <div className="px-3 py-4 border-t border-slate-200/80 space-y-2.5">
+      <div className="px-3 py-4 border-t border-slate-800 space-y-2.5">
         {/* Public site link */}
         <Link
           href="/"
-          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition text-xs font-semibold"
+          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition text-xs font-semibold"
           onClick={onClose}
         >
           <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
           <span>View Public Site</span>
         </Link>
 
-        {/* User info + logout */}
+        {/* User profile card & account hub */}
         {user && (
-          <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-2.5 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#1e40af] to-[#3b82f6] flex items-center justify-center text-white text-xs font-black shadow-2xs shrink-0 uppercase">
-              {user.name ? user.name.charAt(0) : 'H'}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-slate-900 truncate leading-snug">{user.name}</p>
-              <p className="text-[11px] font-medium text-slate-500 truncate" title={user.email}>{user.email}</p>
-            </div>
+          <div className="bg-slate-900 border border-slate-800/90 hover:border-slate-700/80 rounded-2xl p-2.5 flex items-center gap-2.5 group transition">
+            <Link
+              href="/host/profile"
+              onClick={onClose}
+              className="flex items-center gap-2.5 flex-1 min-w-0"
+              title="Host Account & Profile Settings"
+            >
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white text-xs font-black shadow-xs shrink-0 uppercase group-hover:scale-105 transition-transform">
+                {user.name ? user.name.charAt(0) : 'H'}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold text-white truncate leading-snug group-hover:text-blue-400 transition-colors">
+                  {user.name}
+                </p>
+                <p className="text-[11px] font-medium text-slate-400 truncate">
+                  Account & Settings
+                </p>
+              </div>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-500 group-hover:text-blue-400 transition shrink-0" />
+            </Link>
             <button
               onClick={handleLogout}
               title="Sign out"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition shrink-0 cursor-pointer"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition shrink-0 cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
             </button>
@@ -228,19 +234,19 @@ export default function HostLayout({ children }: { children: React.ReactNode }) 
       {/* ── Main Content Area ── */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Mobile top bar */}
-        <header className="md:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-[#CBD5E1] flex-shrink-0">
+        <header className="md:hidden flex items-center justify-between px-4 py-3 bg-[#0F172A] border-b border-slate-800 text-white flex-shrink-0">
           <button
             onClick={() => setMobileSidebarOpen(true)}
-            className="p-2 rounded-xl text-[#334155] hover:bg-[#F4F7FC] transition"
+            className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition"
             aria-label="Open navigation menu"
           >
             <Menu className="w-5 h-5" />
           </button>
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-[#33599E] flex items-center justify-center text-white">
+            <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center text-white">
               <Building2 className="w-3.5 h-3.5 stroke-[2.2]" />
             </div>
-            <span className="font-black text-base tracking-tight text-[#000000]">Engida</span>
+            <span className="font-black text-base tracking-tight text-white">Engida</span>
           </div>
           <div className="w-9" /> {/* spacer for centering */}
         </header>
