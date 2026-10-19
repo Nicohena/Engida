@@ -2,89 +2,31 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '../../../context/AuthContext';
 import { apiFetch } from '../../../lib/api';
-import type { HostDashboardSummary } from '../../../types/host';
+import type { HostDashboardSummary, HostListingRow, HostListingsResponse, HostReservationRow, HostReservationsResponse } from '../../../types/host';
 import {
   Building2,
   TrendingUp,
   CalendarCheck,
-  Clock,
   RotateCcw,
-  ArrowRight,
-  CheckCircle2,
-  PauseCircle,
   FileEdit,
-  Archive,
   XCircle,
   BadgeDollarSign,
-  Home,
-  Tag,
+  MapPin,
+  CalendarRange,
+  CreditCard,
+  ExternalLink,
+  ShieldCheck,
+  Plus,
+  Eye,
+  Sliders,
+  ChevronRight,
+  BedDouble,
+  Bath,
 } from 'lucide-react';
 
-// ──────────────────────────────────────────────────
-// Skeleton card — stable layout during loading
-// ──────────────────────────────────────────────────
-function SkeletonCard() {
-  return (
-    <div className="bg-white border border-[#CBD5E1] rounded-2xl p-5 animate-pulse">
-      <div className="flex items-center gap-3 mb-3">
-        <div className="w-10 h-10 rounded-xl bg-[#E3EAF5]" />
-        <div className="h-4 w-24 rounded-md bg-[#E3EAF5]" />
-      </div>
-      <div className="h-8 w-16 rounded-md bg-[#E3EAF5] mb-1" />
-      <div className="h-3 w-20 rounded-md bg-[#F4F7FC]" />
-    </div>
-  );
-}
-
-// ──────────────────────────────────────────────────
-// Stat card component
-// ──────────────────────────────────────────────────
-interface StatCardProps {
-  label: string;
-  value: number | string;
-  icon: React.ElementType;
-  iconBg: string;
-  iconColor: string;
-  subtitle?: string;
-}
-
-function StatCard({ label, value, icon: Icon, iconBg, iconColor, subtitle }: StatCardProps) {
-  return (
-    <div className="bg-white border border-[#CBD5E1] rounded-2xl p-5 flex flex-col gap-3">
-      <div className="flex items-center gap-3">
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${iconBg}`}>
-          <Icon className={`w-5 h-5 ${iconColor}`} />
-        </div>
-        <span className="text-xs font-bold text-[#64748B] uppercase tracking-wide leading-tight">
-          {label}
-        </span>
-      </div>
-      <div>
-        <p className="text-3xl font-black text-[#000000] tabular-nums leading-none">{value}</p>
-        {subtitle && (
-          <p className="text-xs text-[#94A3B8] mt-1 font-medium">{subtitle}</p>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ──────────────────────────────────────────────────
-// Section header
-// ──────────────────────────────────────────────────
-function SectionHeader({ title }: { title: string }) {
-  return (
-    <h2 className="text-xs font-black text-[#94A3B8] uppercase tracking-widest mb-3">
-      {title}
-    </h2>
-  );
-}
-
-// ──────────────────────────────────────────────────
-// Format ETB (Ethiopian Birr)
-// ──────────────────────────────────────────────────
 function formatETB(value: number): string {
   if (value === 0) return 'ETB 0';
   if (value >= 1_000_000) return `ETB ${(value / 1_000_000).toFixed(1)}M`;
@@ -92,52 +34,32 @@ function formatETB(value: number): string {
   return `ETB ${value.toLocaleString()}`;
 }
 
-// ──────────────────────────────────────────────────
-// Empty state (new host with zero data)
-// ──────────────────────────────────────────────────
-function EmptyState() {
-  return (
-    <div className="bg-white border border-[#CBD5E1] rounded-2xl p-10 text-center max-w-md mx-auto">
-      <div className="w-16 h-16 rounded-2xl bg-[#E3EAF5] flex items-center justify-center mx-auto mb-5">
-        <Building2 className="w-8 h-8 text-[#33599E]" />
-      </div>
-      <h3 className="text-lg font-black text-[#000000] mb-2">Welcome to your Host Portal</h3>
-      <p className="text-sm text-[#64748B] mb-6 leading-relaxed">
-        You haven't listed any properties yet. Create your first listing to start
-        attracting guests and buyers on Engida.
-      </p>
-      <Link
-        href="/host/listings"
-        className="inline-flex items-center gap-2 bg-[#33599E] hover:bg-[#234079] text-white text-sm font-bold px-6 py-3 rounded-xl transition"
-      >
-        <Building2 className="w-4 h-4" />
-        Create your first listing
-        <ArrowRight className="w-4 h-4" />
-      </Link>
-    </div>
-  );
-}
-
-// ──────────────────────────────────────────────────
-// Dashboard page
-// ──────────────────────────────────────────────────
 export default function HostDashboardPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [summary, setSummary] = useState<HostDashboardSummary | null>(null);
+  const [recentListings, setRecentListings] = useState<HostListingRow[]>([]);
+  const [recentReservations, setRecentReservations] = useState<HostReservationRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchDashboard = useCallback(async () => {
+  const fetchDashboardData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await apiFetch<HostDashboardSummary>('/host/dashboard');
-      setSummary(data);
+      const [summaryData, listingsData, reservationsData] = await Promise.all([
+        apiFetch<HostDashboardSummary>('/host/dashboard'),
+        apiFetch<HostListingsResponse>('/host/listings?limit=6').catch(() => ({ data: [], total: 0, page: 1, limit: 6, totalPages: 0 })),
+        apiFetch<HostReservationsResponse>('/host/reservations?limit=4').catch(() => ({ data: [], total: 0, page: 1, limit: 4, totalPages: 0 })),
+      ]);
+
+      setSummary(summaryData);
+      setRecentListings(listingsData.data || []);
+      setRecentReservations(reservationsData.data || []);
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError('Failed to load dashboard data. Please try again.');
+        setError('Failed to load host dashboard. Please try again.');
       }
     } finally {
       setLoading(false);
@@ -145,257 +67,509 @@ export default function HostDashboardPage() {
   }, []);
 
   useEffect(() => {
-    fetchDashboard();
-  }, [fetchDashboard]);
+    if (!authLoading && user) {
+      fetchDashboardData();
+    }
+  }, [authLoading, user, fetchDashboardData]);
 
-  const isNewHost = summary !== null && summary.totalListings === 0;
-
-  // ─────────── Error state ───────────
   if (error) {
     return (
-      <div className="p-6 md:p-10">
-        <div className="max-w-md">
-          <h1 className="text-2xl font-black text-[#000000] mb-6">Dashboard</h1>
-          <div className="bg-white border border-red-200 rounded-2xl p-8 text-center">
-            <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-4">
-              <XCircle className="w-6 h-6 text-red-500" />
-            </div>
-            <h3 className="text-base font-bold text-[#000000] mb-2">Could not load dashboard</h3>
-            <p className="text-sm text-[#64748B] mb-6">{error}</p>
-            <button
-              onClick={fetchDashboard}
-              className="inline-flex items-center gap-2 bg-[#33599E] hover:bg-[#234079] text-white text-sm font-bold px-5 py-2.5 rounded-xl transition"
-            >
-              <RotateCcw className="w-4 h-4" />
-              Retry
-            </button>
+      <div className="p-6 md:p-8 max-w-4xl mx-auto">
+        <div className="bg-white border border-red-200 rounded-2xl p-8 text-center shadow-xs">
+          <div className="w-12 h-12 rounded-xl bg-red-50 text-red-600 flex items-center justify-center mx-auto mb-3">
+            <XCircle className="w-6 h-6" />
           </div>
+          <h2 className="text-lg font-bold text-slate-900 mb-1">Could not load Host Dashboard</h2>
+          <p className="text-xs text-slate-600 mb-5 max-w-md mx-auto">{error}</p>
+          <button
+            onClick={fetchDashboardData}
+            className="inline-flex items-center gap-2 bg-[#1e40af] hover:bg-[#1e3a8a] text-white text-xs font-bold px-5 py-2.5 rounded-xl transition cursor-pointer"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            Retry Connection
+          </button>
         </div>
       </div>
     );
   }
 
-  // ─────────── Loading state ───────────
-  if (loading) {
+  if (authLoading || loading) {
     return (
-      <div className="p-6 md:p-10 space-y-8">
-        {/* Page header skeleton */}
-        <div>
-          <div className="h-8 w-48 rounded-lg bg-[#E3EAF5] animate-pulse mb-2" />
-          <div className="h-4 w-64 rounded-lg bg-[#F4F7FC] animate-pulse" />
+      <div className="p-4 sm:p-6 md:p-8 space-y-6 max-w-7xl mx-auto animate-pulse">
+        <div className="h-16 rounded-2xl bg-slate-200" />
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-32 rounded-2xl bg-slate-200" />
+          ))}
         </div>
-        {/* Listing summary skeletons */}
-        <div>
-          <div className="h-3 w-28 rounded bg-[#F4F7FC] animate-pulse mb-3" />
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
-          </div>
-        </div>
-        {/* Reservation skeletons */}
-        <div>
-          <div className="h-3 w-28 rounded bg-[#F4F7FC] animate-pulse mb-3" />
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)}
-          </div>
-        </div>
+        <div className="h-72 rounded-2xl bg-slate-200" />
       </div>
     );
   }
 
-  // ─────────── Empty state ───────────
-  if (isNewHost) {
-    return (
-      <div className="p-6 md:p-10">
-        <div className="mb-8">
-          <h1 className="text-2xl font-black text-[#000000] mb-1">
-            Welcome, {user?.name?.split(' ')[0]}!
-          </h1>
-          <p className="text-sm text-[#64748B]">
-            Your host portal is ready — let's get your first listing live.
-          </p>
-        </div>
-        <EmptyState />
-      </div>
-    );
-  }
+  const hostDisplayName = user?.hostProfile?.displayName || user?.name || 'Host Partner';
+  const totalListings = summary?.totalListings || 0;
+  const totalBookingValue = summary?.totalBookingValue || 0;
+  const pendingReservations = summary?.pendingReservations || 0;
+  const confirmedReservations = summary?.confirmedReservations || 0;
 
-  // ─────────── Dashboard ───────────
   return (
-    <div className="p-6 md:p-10 space-y-8 max-w-5xl">
-
-      {/* Page header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-black text-[#000000] leading-tight">
-            Dashboard
-          </h1>
-          <p className="text-sm text-[#64748B] mt-0.5">
-            Your host activity at a glance
+    <div className="p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8 max-w-7xl mx-auto">
+      
+      {/* ── 1. CLEAN NATIVE SAAS HEADER ── */}
+      <section className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-1 pb-2">
+        {/* Left: Title & Host Status */}
+        <div className="space-y-1">
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+              Host Dashboard
+            </h1>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              Verified Host
+            </span>
+          </div>
+          <p className="text-xs sm:text-sm text-slate-500">
+            Welcome back, <span className="font-semibold text-slate-700">{hostDisplayName}</span> • Managing {totalListings} active properties across Ethiopia
           </p>
         </div>
-        <Link
-          href="/host/listings"
-          className="inline-flex items-center gap-2 bg-[#33599E] hover:bg-[#234079] text-white text-sm font-bold px-5 py-2.5 rounded-xl transition flex-shrink-0"
-        >
-          <Building2 className="w-4 h-4" />
-          My Listings
-          <ArrowRight className="w-4 h-4" />
-        </Link>
-      </div>
 
-      {/* ── LISTINGS SUMMARY ── */}
-      <section aria-label="Listings summary">
-        <SectionHeader title="Listings" />
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          <StatCard
-            label="Total Listings"
-            value={summary!.totalListings}
-            icon={Building2}
-            iconBg="bg-[#E3EAF5]"
-            iconColor="text-[#33599E]"
-          />
-          <StatCard
-            label="Published"
-            value={summary!.publishedListings}
-            icon={CheckCircle2}
-            iconBg="bg-emerald-50"
-            iconColor="text-emerald-600"
-            subtitle="Live on Engida"
-          />
-          <StatCard
-            label="Drafts"
-            value={summary!.draftListings}
-            icon={FileEdit}
-            iconBg="bg-amber-50"
-            iconColor="text-amber-600"
-            subtitle="Not yet published"
-          />
-          <StatCard
-            label="Paused"
-            value={summary!.pausedListings}
-            icon={PauseCircle}
-            iconBg="bg-slate-100"
-            iconColor="text-slate-500"
-            subtitle="Temporarily hidden"
-          />
+        {/* Right: Clean Action Controls */}
+        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+          <Link
+            href="/host/listings/new"
+            className="inline-flex items-center gap-1.5 bg-[#1e40af] hover:bg-[#1e3a8a] text-white text-xs sm:text-sm font-bold px-4 py-2.5 rounded-xl shadow-xs hover:shadow-sm transition cursor-pointer"
+          >
+            <Plus className="w-4 h-4 stroke-[2.5]" />
+            <span>Add New Property</span>
+          </Link>
+
+          <Link
+            href="/host/availability"
+            className="inline-flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/90 text-xs sm:text-sm font-semibold px-3.5 py-2.5 rounded-xl shadow-2xs hover:border-slate-300 transition cursor-pointer"
+          >
+            <CalendarRange className="w-3.5 h-3.5 text-blue-600" />
+            <span>Calendar & Rates</span>
+          </Link>
+
+          <Link
+            href="/dashboard?view=guest"
+            className="inline-flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200/90 text-xs sm:text-sm font-medium px-3.5 py-2.5 rounded-xl shadow-2xs hover:border-slate-300 transition cursor-pointer"
+          >
+            <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+            <span>Guest Mode</span>
+          </Link>
         </div>
       </section>
 
-      {/* ── LISTING TYPE SUMMARY ── */}
-      <section aria-label="Listing types">
-        <SectionHeader title="By Type" />
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          <StatCard
-            label="Rental"
-            value={summary!.rentalListings}
-            icon={Home}
-            iconBg="bg-[#E3EAF5]"
-            iconColor="text-[#33599E]"
-            subtitle="Short-term rentals"
-          />
-          <StatCard
-            label="For Sale"
-            value={summary!.saleListings}
-            icon={Tag}
-            iconBg="bg-violet-50"
-            iconColor="text-violet-600"
-            subtitle="Sale listings"
-          />
-          {summary!.totalListings - summary!.publishedListings - summary!.draftListings - summary!.pausedListings > 0 && (
-            <StatCard
-              label="Archived / Sold"
-              value={summary!.totalListings - summary!.publishedListings - summary!.draftListings - summary!.pausedListings}
-              icon={Archive}
-              iconBg="bg-slate-100"
-              iconColor="text-slate-400"
-            />
-          )}
-        </div>
-      </section>
-
-      {/* ── RESERVATION SUMMARY ── */}
-      <section aria-label="Reservation summary">
-        <SectionHeader title="Reservations" />
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          <StatCard
-            label="Pending"
-            value={summary!.pendingReservations}
-            icon={Clock}
-            iconBg="bg-amber-50"
-            iconColor="text-amber-600"
-            subtitle="Awaiting confirmation"
-          />
-          <StatCard
-            label="Confirmed"
-            value={summary!.confirmedReservations}
-            icon={CalendarCheck}
-            iconBg="bg-emerald-50"
-            iconColor="text-emerald-600"
-            subtitle="Accepted bookings"
-          />
-          <StatCard
-            label="Upcoming"
-            value={summary!.upcomingReservations}
-            icon={TrendingUp}
-            iconBg="bg-[#E3EAF5]"
-            iconColor="text-[#33599E]"
-            subtitle="Check-in ≥ today"
-          />
-          <StatCard
-            label="Completed"
-            value={summary!.completedReservations}
-            icon={CheckCircle2}
-            iconBg="bg-slate-100"
-            iconColor="text-slate-500"
-            subtitle="Finished stays"
-          />
-        </div>
-      </section>
-
-      {/* ── BOOKING VALUE SUMMARY ── */}
-      <section aria-label="Booking value summary">
-        <SectionHeader title="Booking Totals" />
-        <div className="bg-white border border-[#CBD5E1] rounded-2xl p-6">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-[#E3EAF5] flex items-center justify-center flex-shrink-0">
-              <BadgeDollarSign className="w-6 h-6 text-[#33599E]" />
+      {/* ── 2. RESTRUCTURED 4-COLUMN METRIC CARDS ── */}
+      <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5" aria-label="Key performance indicators">
+        
+        {/* KPI 1: Active Portfolio */}
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-6 shadow-xs hover:shadow-sm transition-shadow">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#1e40af] flex items-center justify-center font-bold">
+              <Building2 className="w-5 h-5 stroke-[2.2]" />
             </div>
-            <div>
-              <p className="text-xs font-bold text-[#94A3B8] uppercase tracking-wide mb-1">
-                Total Booking Value
-              </p>
-              <p className="text-3xl font-black text-[#000000] tabular-nums leading-none mb-2">
-                {formatETB(summary!.totalBookingValue)}
-              </p>
-              <p className="text-xs text-[#94A3B8] leading-relaxed max-w-sm">
-                Sum of confirmed and completed booking totals. This represents booking value only — 
-                not actual settled or paid revenue.
-              </p>
-            </div>
+            <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+              100% Active
+            </span>
           </div>
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            Total Properties
+          </p>
+          <div className="mt-1 flex items-baseline gap-1.5">
+            <span className="text-3xl font-black text-slate-900 tracking-tight tabular-nums">
+              {totalListings}
+            </span>
+            <span className="text-xs text-slate-500 font-medium">units online</span>
+          </div>
+          <p className="mt-2 text-xs text-slate-600 font-medium pt-2 border-t border-slate-100">
+            {summary?.rentalListings || 0} Rentals • {summary?.saleListings || 0} For Sale
+          </p>
         </div>
+
+        {/* KPI 2: Gross Booking Value */}
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-6 shadow-xs hover:shadow-sm transition-shadow">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+              <BadgeDollarSign className="w-5 h-5 stroke-[2.2]" />
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+              Escrow Protected
+            </span>
+          </div>
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            Gross Booking Value
+          </p>
+          <div className="mt-1 flex items-baseline">
+            <span className="text-3xl font-black text-slate-900 tracking-tight tabular-nums">
+              {formatETB(totalBookingValue)}
+            </span>
+          </div>
+          <p className="mt-2 text-xs text-slate-600 font-medium pt-2 border-t border-slate-100">
+            Direct Chapa & CBE Settlement
+          </p>
+        </div>
+
+        {/* KPI 3: Reservations Pipeline */}
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-6 shadow-xs hover:shadow-sm transition-shadow">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+              <CalendarCheck className="w-5 h-5 stroke-[2.2]" />
+            </div>
+            <Link
+              href="/host/reservations"
+              className="text-xs font-bold text-[#1e40af] hover:underline"
+            >
+              View All →
+            </Link>
+          </div>
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            Active Reservations
+          </p>
+          <div className="mt-1 flex items-baseline gap-1.5">
+            <span className="text-3xl font-black text-slate-900 tracking-tight tabular-nums">
+              {pendingReservations + confirmedReservations}
+            </span>
+            <span className="text-xs text-slate-500 font-medium">active stays</span>
+          </div>
+          <p className="mt-2 text-xs text-slate-600 font-medium pt-2 border-t border-slate-100">
+            {pendingReservations} Pending Approval • {confirmedReservations} Confirmed
+          </p>
+        </div>
+
+        {/* KPI 4: Market Demand Level */}
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-6 shadow-xs hover:shadow-sm transition-shadow">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
+              <TrendingUp className="w-5 h-5 stroke-[2.2]" />
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-100">
+              High Demand
+            </span>
+          </div>
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            Market Demand Level
+          </p>
+          <div className="mt-1 flex items-baseline">
+            <span className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+              Peak Season
+            </span>
+          </div>
+          <p className="mt-2 text-xs text-slate-600 font-medium pt-2 border-t border-slate-100">
+            Addis Ababa, Kuriftu & Lake Tana
+          </p>
+        </div>
+
       </section>
 
-      {/* ── QUICK ACTIONS ── */}
-      <section aria-label="Quick actions">
-        <SectionHeader title="Quick Actions" />
-        <div className="flex flex-wrap gap-3">
+      {/* ── 3. LIVE PROPERTY PORTFOLIO SHOWCASE (CLEANED HIERARCHY) ── */}
+      <section className="bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-7 shadow-xs space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <h2 className="text-lg font-bold text-slate-900 tracking-tight">
+                Live Property Portfolio
+              </h2>
+            </div>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Properties published under your host account across Ethiopian sites. Available for instant booking and buyer inquiry.
+            </p>
+          </div>
+
           <Link
             href="/host/listings"
-            className="inline-flex items-center gap-2 bg-white border border-[#CBD5E1] hover:border-[#33599E] hover:text-[#33599E] text-[#334155] text-sm font-semibold px-4 py-2.5 rounded-xl transition"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-[#1e40af] hover:text-[#1e3a8a] bg-blue-50/70 hover:bg-blue-100 border border-blue-200/60 px-3.5 py-2 rounded-xl transition self-start sm:self-auto"
           >
-            <Building2 className="w-4 h-4" />
-            View All Listings
-          </Link>
-          <Link
-            href="/host/reservations"
-            className="inline-flex items-center gap-2 bg-white border border-[#CBD5E1] hover:border-[#33599E] hover:text-[#33599E] text-[#334155] text-sm font-semibold px-4 py-2.5 rounded-xl transition"
-          >
-            <CalendarCheck className="w-4 h-4" />
-            View Reservations
+            <span>View All {totalListings} Properties</span>
+            <ChevronRight className="w-3.5 h-3.5" />
           </Link>
         </div>
+
+        {recentListings.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {recentListings.map((property) => (
+              <div
+                key={property.id}
+                className="group flex flex-col bg-white border border-slate-200/80 hover:border-slate-300 rounded-2xl overflow-hidden shadow-2xs hover:shadow-sm transition-all duration-200"
+              >
+                {/* Property Cover Image with Clean Floating Badges */}
+                <div className="relative aspect-16/10 w-full overflow-hidden bg-slate-100">
+                  {property.coverImage ? (
+                    <Image
+                      src={property.coverImage}
+                      alt={property.title}
+                      fill
+                      unoptimized
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      className="object-cover group-hover:scale-102 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-slate-400">
+                      <Building2 className="w-10 h-10 stroke-[1.5]" />
+                    </div>
+                  )}
+
+                  {/* Top Overlay Badges */}
+                  <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between pointer-events-none">
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-xs ${
+                      property.listingType === 'SALE'
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-[#1e40af] text-white'
+                    }`}>
+                      {property.listingType === 'SALE' ? 'For Sale' : 'Rental'}
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/95 text-emerald-800 shadow-xs backdrop-blur-xs">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      {property.status}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Property Card Body */}
+                <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
+                  <div>
+                    {/* Location */}
+                    <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium mb-1">
+                      <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <span className="truncate">{property.city}{property.subCity ? `, ${property.subCity}` : ''}</span>
+                    </div>
+
+                    {/* Title */}
+                    <h3 className="font-bold text-slate-900 text-sm line-clamp-1 group-hover:text-[#1e40af] transition-colors" title={property.title}>
+                      {property.title}
+                    </h3>
+
+                    {/* Bedrooms / Specs */}
+                    <div className="mt-1.5 flex items-center gap-3 text-xs text-slate-500">
+                      {property.bedrooms !== undefined && property.bedrooms !== null && (
+                        <span className="inline-flex items-center gap-1">
+                          <BedDouble className="w-3.5 h-3.5 text-slate-400" />
+                          <span>{property.bedrooms} Beds</span>
+                        </span>
+                      )}
+                      {property.bathrooms !== undefined && property.bathrooms !== null && (
+                        <span className="inline-flex items-center gap-1">
+                          <Bath className="w-3.5 h-3.5 text-slate-400" />
+                          <span>{property.bathrooms} Baths</span>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Pricing Row */}
+                  <div className="pt-2 border-t border-slate-100 flex items-baseline justify-between">
+                    <div className="flex items-baseline gap-1 text-slate-900">
+                      <span className="text-base font-bold tabular-nums">
+                        {property.listingType === 'SALE'
+                          ? formatETB(Number(property.salePrice || 0))
+                          : formatETB(Number(property.pricePerNight || 0))}
+                      </span>
+                      {property.listingType === 'RENTAL' && (
+                        <span className="text-[11px] font-normal text-slate-500">/ night</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Actions Toolbar */}
+                  <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs font-semibold">
+                    <Link
+                      href={`/host/listings/${property.id}/edit`}
+                      className="text-slate-600 hover:text-[#1e40af] flex items-center gap-1 transition"
+                    >
+                      <FileEdit className="w-3.5 h-3.5" />
+                      <span>Edit</span>
+                    </Link>
+
+                    {property.listingType === 'RENTAL' && (
+                      <Link
+                        href={`/host/availability?propertyId=${property.id}`}
+                        className="text-slate-600 hover:text-[#1e40af] flex items-center gap-1 transition"
+                      >
+                        <CalendarRange className="w-3.5 h-3.5" />
+                        <span>Calendar</span>
+                      </Link>
+                    )}
+
+                    <Link
+                      href={`/properties/${property.id}`}
+                      target="_blank"
+                      className="text-[#1e40af] hover:text-[#1e3a8a] flex items-center gap-1 transition"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>Live View</span>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-10 px-4 bg-slate-50/70 rounded-2xl border border-dashed border-slate-200">
+            <Building2 className="w-10 h-10 text-slate-400 mx-auto mb-2" />
+            <h3 className="text-sm font-bold text-slate-800">No properties available</h3>
+            <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+              Create your first property listing to begin receiving reservation requests.
+            </p>
+            <Link
+              href="/host/listings/new"
+              className="mt-3 inline-flex items-center gap-1.5 bg-[#1e40af] text-white text-xs font-bold px-3.5 py-2 rounded-xl"
+            >
+              <Plus className="w-3.5 h-3.5" /> Add Property
+            </Link>
+          </div>
+        )}
       </section>
+
+      {/* ── 4. RESERVATIONS PIPELINE & ETHIOPIAN FINANCIAL SETTLEMENT ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        
+        {/* Recent Reservations Feed (2 cols) */}
+        <section className="lg:col-span-2 bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-7 shadow-xs space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div>
+              <h2 className="text-base font-bold text-slate-900 tracking-tight">
+                Recent Guest Reservations
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Incoming booking requests and confirmed traveler stays.
+              </p>
+            </div>
+            <Link
+              href="/host/reservations"
+              className="text-xs font-bold text-[#1e40af] hover:underline"
+            >
+              Manage Bookings →
+            </Link>
+          </div>
+
+          {recentReservations.length > 0 ? (
+            <div className="divide-y divide-slate-100">
+              {recentReservations.map((reservation) => (
+                <div key={reservation.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-xs uppercase shrink-0">
+                      {reservation.guest?.name?.charAt(0) || 'G'}
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-900">
+                        {reservation.guest?.name || 'Guest Traveler'}
+                      </p>
+                      <p className="text-[11px] text-slate-500">
+                        {reservation.property?.title} • {reservation.checkInDate} to {reservation.checkOutDate}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 self-end sm:self-auto">
+                    <span className="text-xs font-bold text-slate-900 tabular-nums">
+                      {formatETB(reservation.totalPrice)}
+                    </span>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                      reservation.status === 'CONFIRMED'
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        : reservation.status === 'PENDING'
+                        ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                        : 'bg-slate-100 text-slate-600'
+                    }`}>
+                      {reservation.status}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="py-8 text-center bg-slate-50/60 rounded-xl border border-dashed border-slate-200 p-5">
+              <CalendarCheck className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+              <h3 className="text-xs font-bold text-slate-800">
+                All {totalListings} Properties Are Live & Ready for Stays
+              </h3>
+              <p className="text-[11px] text-slate-500 mt-1 max-w-md mx-auto leading-relaxed">
+                Your listings are published across Addis Ababa, Bahir Dar, Hawassa, and Bishoftu. When domestic travelers or international diaspora guests request a reservation, instant notifications and booking actions will appear here.
+              </p>
+              <div className="mt-3.5 flex items-center justify-center gap-2">
+                <Link
+                  href="/host/availability"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 transition"
+                >
+                  <CalendarRange className="w-3 h-3 text-blue-600" />
+                  <span>Calendar Blackouts</span>
+                </Link>
+                <Link
+                  href="/"
+                  target="_blank"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-blue-50 border border-blue-200 text-[#1e40af] hover:bg-blue-100 transition"
+                >
+                  <Eye className="w-3 h-3" />
+                  <span>Marketplace</span>
+                </Link>
+              </div>
+            </div>
+          )}
+        </section>
+
+        {/* Payout & Banking Settlement Card (1 col) */}
+        <section className="bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-7 shadow-xs flex flex-col justify-between space-y-5">
+          <div className="space-y-3.5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+                <CreditCard className="w-5 h-5 stroke-[2.2]" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 leading-tight">
+                  Financial Payouts
+                </h3>
+                <p className="text-[11px] text-slate-500">
+                  Escrow settlement & disbursement
+                </p>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/70 space-y-2.5">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-500 font-medium">Provider:</span>
+                <span className="font-bold text-slate-900">
+                  {user?.hostProfile?.payoutProvider || 'Chapa & CBE Direct'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-500 font-medium">Beneficiary:</span>
+                <span className="font-bold text-slate-900 truncate max-w-[140px]">
+                  {user?.hostProfile?.payoutAccountName || hostDisplayName}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-500 font-medium">Account ID:</span>
+                <span className="font-mono text-[11px] font-bold text-slate-700">
+                  {user?.hostProfile?.payoutAccountNumber || 'SUB_ACCT_HABTAMU_01'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-500 font-medium">Currency:</span>
+                <span className="font-bold text-emerald-700">ETB (Ethiopian Birr)</span>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-2 text-[11px] text-slate-500 leading-relaxed bg-blue-50/50 border border-blue-100 rounded-xl p-2.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#1e40af] shrink-0 mt-0.5" />
+              <span>
+                Funds are protected in escrow and disbursed upon guest check-in.
+              </span>
+            </div>
+          </div>
+
+          <Link
+            href="/host/profile"
+            className="w-full text-center inline-flex items-center justify-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold py-2.5 px-3 rounded-xl transition cursor-pointer"
+          >
+            <Sliders className="w-3.5 h-3.5" />
+            <span>Manage Banking & Payouts</span>
+          </Link>
+        </section>
+
+      </div>
 
     </div>
   );

@@ -30,5 +30,17 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "src/guest-pages",
+    "src/App.tsx",
+    "src/main.tsx",
+    "vite.config.ts",
+    "src/context",
+    "src/components/PropertyCard.tsx",
+    "src/components/layout",
+    "src/components/profile",
+    "src/components/search",
+    "src/components/ui"
+  ]
 }
