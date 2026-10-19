@@ -38,10 +38,12 @@ export default function LoginPage() {
 
     try {
       const loggedUser = await login(email, password);
-      if (returnPath.includes('/host') && loggedUser.hostProfile) {
+      if (returnPath && returnPath !== '/dashboard') {
+        router.push(returnPath);
+      } else if (loggedUser.hostProfile) {
         router.push('/host/dashboard');
       } else {
-        router.push(returnPath);
+        router.push('/dashboard');
       }
     } catch (err: any) {
       setError(

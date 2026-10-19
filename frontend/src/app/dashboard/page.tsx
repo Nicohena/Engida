@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { CalendarDays, MapPin, RotateCcw, X, Luggage, Building2 } from 'lucide-react';
 import ProtectedRoute from '../../components/ProtectedRoute';
 import { useAuth } from '../../context/AuthContext';
@@ -39,7 +40,17 @@ function formatAmount(value: number | string): string {
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const router = useRouter();
   const [bookings, setBookings] = useState<GuestBooking[]>([]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && user?.hostProfile) {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('view') !== 'guest') {
+        router.replace('/host/dashboard');
+      }
+    }
+  }, [user, router]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
