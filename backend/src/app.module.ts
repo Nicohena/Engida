@@ -32,7 +32,7 @@ import { validate } from './config/env.validation';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env',
+      envFilePath: ['.env', '../.env'],
       validate,
     }),
     TypeOrmModule.forRootAsync({
