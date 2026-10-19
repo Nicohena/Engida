@@ -35,7 +35,7 @@ function formatETB(value: number): string {
 }
 
 export default function HostDashboardPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [summary, setSummary] = useState<HostDashboardSummary | null>(null);
   const [recentListings, setRecentListings] = useState<HostListingRow[]>([]);
   const [recentReservations, setRecentReservations] = useState<HostReservationRow[]>([]);
@@ -67,8 +67,10 @@ export default function HostDashboardPage() {
   }, []);
 
   useEffect(() => {
-    fetchDashboardData();
-  }, [fetchDashboardData]);
+    if (!authLoading && user) {
+      fetchDashboardData();
+    }
+  }, [authLoading, user, fetchDashboardData]);
 
   if (error) {
     return (
@@ -91,10 +93,10 @@ export default function HostDashboardPage() {
     );
   }
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="p-4 sm:p-6 md:p-8 space-y-6 max-w-7xl mx-auto animate-pulse">
-        <div className="h-36 rounded-2xl bg-slate-200" />
+        <div className="h-16 rounded-2xl bg-slate-200" />
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="h-32 rounded-2xl bg-slate-200" />
