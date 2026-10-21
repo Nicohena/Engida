@@ -57,7 +57,57 @@ const STATUS_STYLES: Record<ListingStatus, { bg: string; text: string; dot: stri
   SOLD:      { bg: 'bg-violet-50',  text: 'text-violet-700', dot: 'bg-violet-500' },
 };
 
-function StatusBadge({ status }: { status: ListingStatus }) {
+function StatusBadge({
+  status,
+  adminHidden,
+  hasPendingReview,
+  pendingReviewType,
+  rejectionReason,
+}: {
+  status: ListingStatus;
+  adminHidden?: boolean;
+  hasPendingReview?: boolean;
+  pendingReviewType?: 'INITIAL_PUBLISH' | 'IMPORTANT_EDIT' | null;
+  rejectionReason?: string | null;
+}) {
+  if (adminHidden) {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wide bg-rose-50 text-rose-700 border border-rose-200">
+        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse flex-shrink-0" />
+        Admin Hidden
+      </span>
+    );
+  }
+
+  if (hasPendingReview) {
+    if (pendingReviewType === 'INITIAL_PUBLISH' || status === 'DRAFT') {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wide bg-amber-50 text-amber-700 border border-amber-200">
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse flex-shrink-0" />
+          Pending Review
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wide bg-blue-50 text-blue-700 border border-blue-200">
+        <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse flex-shrink-0" />
+        Changes Pending
+      </span>
+    );
+  }
+
+  if (rejectionReason) {
+    return (
+      <span
+        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wide bg-rose-50 text-rose-700 border border-rose-200"
+        title={rejectionReason}
+      >
+        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 flex-shrink-0" />
+        Needs Correction
+      </span>
+    );
+  }
+
   const styles = STATUS_STYLES[status] ?? STATUS_STYLES.DRAFT;
   return (
     <span
@@ -338,7 +388,13 @@ function TableRow({
       </td>
       {/* Status */}
       <td className="py-3 px-4">
-        <StatusBadge status={listing.status} />
+        <StatusBadge
+          status={listing.status}
+          adminHidden={listing.adminHidden}
+          hasPendingReview={listing.hasPendingReview}
+          pendingReviewType={listing.pendingReviewType}
+          rejectionReason={listing.rejectionReason}
+        />
       </td>
       {/* Updated */}
       <td className="py-3 px-4">
@@ -377,7 +433,13 @@ function MobileCard({
             <p className="text-sm font-bold text-[#000000] leading-tight truncate">
               {listing.title}
             </p>
-            <StatusBadge status={listing.status} />
+            <StatusBadge
+              status={listing.status}
+              adminHidden={listing.adminHidden}
+              hasPendingReview={listing.hasPendingReview}
+              pendingReviewType={listing.pendingReviewType}
+              rejectionReason={listing.rejectionReason}
+            />
           </div>
           <div className="flex items-center gap-2 mt-1">
             <TypeBadge type={listing.listingType} />

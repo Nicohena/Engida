@@ -33,6 +33,7 @@ import {
   Compass,
   ExternalLink,
   Sparkles,
+  Clock,
 } from 'lucide-react';
 
 // ─────────────────────────────────────────────────────────
@@ -71,7 +72,55 @@ const STATUS_STYLES: Record<ListingStatus, { bg: string; text: string; dot: stri
   },
 };
 
-function StatusBadge({ status }: { status: ListingStatus }) {
+function StatusBadge({
+  status,
+  adminHidden,
+  activeReview,
+}: {
+  status: ListingStatus;
+  adminHidden?: boolean;
+  activeReview?: import('../../../../types/host').ListingReviewItem | null;
+}) {
+  if (adminHidden) {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border bg-rose-50 border-rose-200 text-rose-700">
+        <span className="w-2 h-2 rounded-full flex-shrink-0 bg-rose-500 animate-pulse" />
+        Temporarily Hidden by Admin
+      </span>
+    );
+  }
+  if (activeReview?.status === 'PENDING') {
+    if (activeReview.submissionType === 'INITIAL_PUBLISH' || status === 'DRAFT') {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border bg-amber-50 border-amber-200 text-amber-700">
+          <span className="w-2 h-2 rounded-full flex-shrink-0 bg-amber-500 animate-pulse" />
+          Pending Initial Review
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border bg-blue-50 border-blue-200 text-blue-700">
+        <span className="w-2 h-2 rounded-full flex-shrink-0 bg-blue-500 animate-pulse" />
+        Changes Awaiting Review
+      </span>
+    );
+  }
+  if (activeReview?.status === 'REJECTED') {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border bg-rose-50 border-rose-200 text-rose-700">
+        <span className="w-2 h-2 rounded-full flex-shrink-0 bg-rose-500" />
+        Changes Rejected — Correction Required
+      </span>
+    );
+  }
+  if (activeReview?.status === 'WITHDRAWN' && status === 'DRAFT') {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border bg-slate-50 border-slate-200 text-slate-700">
+        <span className="w-2 h-2 rounded-full flex-shrink-0 bg-slate-400" />
+        Review Withdrawn
+      </span>
+    );
+  }
   const s = STATUS_STYLES[status] ?? STATUS_STYLES.DRAFT;
   return (
     <span
@@ -234,17 +283,34 @@ export default function ListingDetailPage() {
   };
 
   // ─────────────────────────────────────────────────────────
-  // Status Mutations
+  // Status Mutations & Review Actions
   // ─────────────────────────────────────────────────────────
   const handlePublish = async () => {
     if (!listing) return;
     setActionLoading(true);
     try {
-      await apiFetch(`/host/listings/${listing.id}/publish`, { method: 'PATCH' });
-      showToast('Listing published successfully! It is now visible to guests.', 'success');
+      const res: any = await apiFetch(`/host/listings/${listing.id}/publish`, { method: 'PATCH' });
+      showToast(
+        res?.message || 'Listing submitted for review successfully! An administrator will review it shortly.',
+        'success',
+      );
       await fetchListing();
     } catch (err: unknown) {
-      showToast(err instanceof Error ? err.message : 'Failed to publish listing.', 'error');
+      showToast(err instanceof Error ? err.message : 'Failed to submit listing for review.', 'error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleWithdrawReview = async () => {
+    if (!listing) return;
+    setActionLoading(true);
+    try {
+      await apiFetch(`/host/listings/${listing.id}/withdraw-review`, { method: 'POST' });
+      showToast('Review proposal withdrawn. Your live listing remains unchanged.', 'success');
+      await fetchListing();
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'Failed to withdraw review proposal.', 'error');
     } finally {
       setActionLoading(false);
     }
@@ -469,7 +535,11 @@ export default function ListingDetailPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-[#F1F5F9]">
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2.5">
-            <StatusBadge status={listing.status} />
+            <StatusBadge
+              status={listing.status}
+              adminHidden={listing.adminHidden}
+              activeReview={listing.activeReview}
+            />
             <TypeBadge type={listing.listingType} />
             <span className="text-xs text-[#94A3B8] font-mono">ID: {listing.id.slice(0, 8)}…</span>
           </div>
@@ -498,6 +568,94 @@ export default function ListingDetailPage() {
         </div>
       </div>
 
+      {/* ── Moderation Alerts ── */}
+      {listing.adminHidden && (
+        <div className="bg-rose-50 border border-rose-200 rounded-2xl p-5 flex items-start gap-4">
+          <div className="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center flex-shrink-0 text-rose-600">
+            <AlertTriangle className="w-5 h-5" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-sm font-bold text-rose-900">Temporarily Hidden by Administrator</h3>
+            <p className="text-xs text-rose-800 mt-1">
+              <strong>Reason:</strong> {listing.adminHiddenReason || 'Administrative review required.'}
+            </p>
+            <p className="text-xs text-rose-700 mt-1">
+              This listing is hidden from search and is not accepting bookings. Please review the explanation above, edit your listing to correct the identified concerns, and contact support to restore visibility.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {listing.activeReview?.status === 'PENDING' && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0 text-amber-600">
+                <Clock className="w-5 h-5 animate-pulse" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-amber-900">
+                  {listing.activeReview.submissionType === 'INITIAL_PUBLISH'
+                    ? 'Pending Initial Admin Review'
+                    : 'Important Changes Awaiting Admin Review'}
+                </h3>
+                <p className="text-xs text-amber-800 mt-0.5">
+                  {listing.activeReview.submissionType === 'INITIAL_PUBLISH'
+                    ? 'Your listing was submitted for review. It will become publicly visible once an administrator reviews and approves it.'
+                    : 'Your proposed modifications are being reviewed. Your live approved listing remains online and unchanged.'}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleWithdrawReview}
+              disabled={actionLoading}
+              className="px-4 py-2 rounded-xl text-xs font-bold text-amber-800 bg-white border border-amber-300 hover:bg-amber-100 transition disabled:opacity-50 flex-shrink-0"
+            >
+              Withdraw Proposal
+            </button>
+          </div>
+
+          {listing.activeReview.proposedChanges && Object.keys(listing.activeReview.proposedChanges).length > 0 && (
+            <div className="pt-2 border-t border-amber-200/60">
+              <p className="text-xs font-bold text-amber-900 mb-2">Proposed Modifications Under Review:</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-amber-900">
+                {Object.entries(listing.activeReview.proposedChanges).map(([k, v]) => (
+                  <div key={k} className="bg-white/90 rounded-lg p-2.5 border border-amber-200 shadow-2xs">
+                    <span className="font-bold capitalize text-amber-950">{k}: </span>
+                    <span className="text-[#334155]">{typeof v === 'object' ? JSON.stringify(v) : String(v)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {listing.activeReview?.status === 'REJECTED' && (
+        <div className="bg-rose-50 border border-rose-200 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center flex-shrink-0 text-rose-600">
+              <AlertTriangle className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-rose-900">Review Rejected — Correction Required</h3>
+              <p className="text-xs text-rose-800 mt-1">
+                <strong>Admin Feedback:</strong> {listing.activeReview.rejectionReason}
+              </p>
+              <p className="text-xs text-rose-700 mt-0.5">
+                Please edit your listing to resolve the issues above, then resubmit for review.
+              </p>
+            </div>
+          </div>
+          <Link
+            href={`/host/listings/${listing.id}/edit`}
+            className="px-4 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white transition flex-shrink-0"
+          >
+            Edit &amp; Resubmit
+          </Link>
+        </div>
+      )}
+
       {/* ── Status Workflow Action Bar ── */}
       <div className="bg-white border border-[#CBD5E1] rounded-2xl p-5 shadow-sm space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -509,31 +667,53 @@ export default function ListingDetailPage() {
               </span>
             </h2>
             <p className="text-xs text-[#64748B] mt-0.5">
-              {isDraft &&
-                'This listing is currently in Draft status. Complete details and publish when ready to receive inquiries.'}
-              {isPublished && 'This listing is live, visible in search, and ready for bookings/buyers.'}
-              {isPaused && 'This listing is temporarily paused and hidden from search.'}
-              {isSold && 'This property has been marked as sold. The transaction is complete.'}
-              {isArchived && 'This listing is archived and cannot be published or edited.'}
+              {listing.adminHidden
+                ? 'This listing is temporarily hidden by an administrator. Please resolve the hold reasons above.'
+                : isDraft
+                ? listing.activeReview?.status === 'PENDING'
+                  ? 'Your draft listing is in the admin review queue. You will be notified once reviewed.'
+                  : 'This listing is in Draft status. Submit for admin review when ready to publish.'
+                : isPublished
+                ? 'This listing is live, visible in search, and ready for bookings/buyers.'
+                : isPaused
+                ? 'This listing is temporarily paused and hidden from search.'
+                : isSold
+                ? 'This property has been marked as sold. The transaction is complete.'
+                : 'This listing is archived and cannot be published or edited.'}
             </p>
           </div>
 
           {/* Workflow Buttons */}
           <div className="flex flex-wrap items-center gap-2">
-            {/* DRAFT -> PUBLISH */}
-            {isDraft && (
-              <button
-                onClick={handlePublish}
-                disabled={actionLoading}
-                className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm transition disabled:opacity-50"
-              >
-                <Play className="w-3.5 h-3.5 fill-current" />
-                {actionLoading ? 'Publishing…' : 'Publish Listing'}
-              </button>
+            {/* DRAFT -> SUBMIT FOR REVIEW */}
+            {isDraft && !listing.adminHidden && (
+              listing.activeReview?.status === 'PENDING' ? (
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                    <Clock className="w-3.5 h-3.5 animate-spin" /> In Review Queue
+                  </span>
+                  <button
+                    onClick={handleWithdrawReview}
+                    disabled={actionLoading}
+                    className="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 transition"
+                  >
+                    Withdraw
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={handlePublish}
+                  disabled={actionLoading}
+                  className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm transition disabled:opacity-50"
+                >
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  {actionLoading ? 'Submitting…' : 'Submit for Review'}
+                </button>
+              )
             )}
 
             {/* PUBLISHED -> PAUSE */}
-            {isPublished && (
+            {isPublished && !listing.adminHidden && (
               <button
                 onClick={() => setShowPauseModal(true)}
                 disabled={actionLoading}
@@ -544,7 +724,7 @@ export default function ListingDetailPage() {
             )}
 
             {/* PAUSED -> RESUME / PUBLISH */}
-            {isPaused && (
+            {isPaused && !listing.adminHidden && (
               <button
                 onClick={handlePublish}
                 disabled={actionLoading}
@@ -555,7 +735,7 @@ export default function ListingDetailPage() {
             )}
 
             {/* SALE LISTINGS -> MARK SOLD */}
-            {isSale && (isPublished || isPaused) && (
+            {isSale && (isPublished || isPaused) && !listing.adminHidden && (
               <button
                 onClick={() => setShowSoldModal(true)}
                 disabled={actionLoading}
@@ -566,7 +746,7 @@ export default function ListingDetailPage() {
             )}
 
             {/* PUBLISHED / PAUSED -> ARCHIVE */}
-            {(isPublished || isPaused) && (
+            {(isPublished || isPaused) && !listing.adminHidden && (
               <button
                 onClick={() => setShowArchiveModal(true)}
                 disabled={actionLoading}

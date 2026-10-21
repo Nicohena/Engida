@@ -53,8 +53,9 @@ export class PropertiesService {
       .leftJoinAndSelect('property.rooms', 'rooms')
       .where('property.isAvailable = :available', { available: true });
 
-    // Public discovery must never reveal drafts, paused, archived, or sold listings.
+    // Public discovery must never reveal drafts, paused, archived, or sold listings, or listings hidden by admin.
     qb.andWhere('property.status = :publishedStatus', { publishedStatus: ListingStatus.PUBLISHED });
+    qb.andWhere('property.adminHidden = false');
 
     // Listing type filter (RENTAL or SALE)
     if (query.listingType) {
@@ -149,7 +150,8 @@ export class PropertiesService {
 
     if (publicOnly) {
       qb.andWhere('property.status = :publishedStatus', { publishedStatus: ListingStatus.PUBLISHED })
-        .andWhere('property.isAvailable = :available', { available: true });
+        .andWhere('property.isAvailable = :available', { available: true })
+        .andWhere('property.adminHidden = false');
     }
 
     const property = await qb.getOne();
@@ -163,7 +165,7 @@ export class PropertiesService {
 
   async findRelated(id: string, limit = 4): Promise<Property[]> {
     const property = await this.propertyRepository.findOne({
-      where: { id, status: ListingStatus.PUBLISHED, isAvailable: true },
+      where: { id, status: ListingStatus.PUBLISHED, isAvailable: true, adminHidden: false },
     });
     if (!property) {
       throw new NotFoundException(`Property with ID "${id}" not found`);
@@ -178,6 +180,7 @@ export class PropertiesService {
       .where('property.id != :id', { id })
       .andWhere('property.status = :status', { status: ListingStatus.PUBLISHED })
       .andWhere('property.isAvailable = :available', { available: true })
+      .andWhere('property.adminHidden = false')
       .orderBy('property.createdAt', 'DESC')
       .take(limit);
 

@@ -26,6 +26,7 @@ import {
   X,
   Lock,
   Sparkles,
+  Info,
 } from 'lucide-react';
 
 const PROPERTY_TYPE_OPTIONS: {
@@ -548,6 +549,25 @@ export default function EditListingPage() {
           </button>
         </div>
       </div>
+
+      {/* ── Important Edits Moderation Notice ── */}
+      {(listing.status === 'PUBLISHED' || listing.status === 'PAUSED') && (
+        <div className="bg-sky-50 border border-sky-200/90 rounded-2xl p-4 flex items-start gap-3.5 text-sky-950">
+          <div className="w-8 h-8 rounded-xl bg-sky-100 flex items-center justify-center flex-shrink-0 text-sky-600 mt-0.5">
+            <Info className="w-4 h-4" />
+          </div>
+          <div className="text-xs md:text-sm leading-relaxed">
+            <p className="font-bold text-sky-900 mb-0.5">
+              Live Listing Moderation Policy
+            </p>
+            <p className="text-sky-800">
+              This listing is currently <strong className="uppercase font-semibold">{listing.status}</strong>. Significant modifications to
+              pricing, location, property type, or photos will be submitted as an <strong>edit proposal for administrative review</strong>.
+              Your public listing stays active and bookable with its existing details until the changes are reviewed and approved.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* ── Server Error Banner ── */}
       {serverError && (

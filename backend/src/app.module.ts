@@ -20,12 +20,15 @@ import { ReviewsModule } from './modules/reviews/reviews.module';
 import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
 import { HostModule } from './modules/host/host.module';
 import { PaymentsModule } from './modules/payments/payments.module';
+import { ListingModerationModule } from './modules/properties/listing-moderation.module';
+import { AdminModule } from './modules/admin/admin.module';
 import { Property } from './modules/properties/entities/property.entity';
 import { Room } from './modules/properties/entities/room.entity';
 import { AvailabilityBlock } from './modules/properties/entities/availability-block.entity';
 import { Amenity } from './modules/amenities/entities/amenity.entity';
 import { Booking } from './modules/bookings/entities/booking.entity';
 import { Review } from './modules/reviews/entities/review.entity';
+import { ListingReview } from './modules/properties/entities/listing-review.entity';
 import { validate } from './config/env.validation';
 
 @Module({
@@ -57,6 +60,7 @@ import { validate } from './config/env.validation';
           Amenity,
           Booking,
           Review,
+          ListingReview,
         ];
 
         if (databaseUrl) {
@@ -104,6 +108,8 @@ import { validate } from './config/env.validation';
     CloudinaryModule,
     HostModule,
     PaymentsModule,
+    ListingModerationModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [

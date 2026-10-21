@@ -17,6 +17,7 @@ import { Amenity } from '../../amenities/entities/amenity.entity';
 import { Booking } from '../../bookings/entities/booking.entity';
 import { Review } from '../../reviews/entities/review.entity';
 import { AvailabilityBlock } from './availability-block.entity';
+import { ListingReview } from './listing-review.entity';
 
 export enum PropertyType {
   HOUSE = 'HOUSE',
@@ -46,6 +47,7 @@ export enum ListingStatus {
 @Index('idx_properties_listing_type', ['listingType'])
 @Index('idx_properties_status', ['status'])
 @Index('idx_properties_sub_city', ['subCity'])
+@Index('idx_properties_admin_hidden', ['adminHidden'])
 export class Property {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -147,6 +149,18 @@ export class Property {
   @Column('text', { array: true, default: '{}' })
   images: string[];
 
+  @Column({ type: 'boolean', default: false, name: 'admin_hidden' })
+  adminHidden: boolean;
+
+  @Column({ type: 'text', nullable: true, name: 'admin_hidden_reason' })
+  adminHiddenReason: string | null;
+
+  @Column({ type: 'timestamp with time zone', nullable: true, name: 'admin_hidden_at' })
+  adminHiddenAt: Date | null;
+
+  @Column({ type: 'uuid', nullable: true, name: 'admin_hidden_by_id' })
+  adminHiddenById: string | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
@@ -172,4 +186,7 @@ export class Property {
 
   @OneToMany(() => AvailabilityBlock, (block) => block.property)
   availabilityBlocks?: AvailabilityBlock[];
+
+  @OneToMany(() => ListingReview, (review) => review.property)
+  moderationReviews?: ListingReview[];
 }

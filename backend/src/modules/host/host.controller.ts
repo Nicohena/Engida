@@ -22,6 +22,7 @@ import { QueryHostListingsDto, QueryHostReservationsDto } from './dto/query-host
 import { CreateAvailabilityBlockDto } from './dto/create-host-availability-block.dto';
 import { CreateRoomDto } from '../properties/dto/create-room.dto';
 import { UpdateHostRoomDto } from './dto/update-host-room.dto';
+import { SubmitReviewDto } from '../properties/dto/moderation-review.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { GetUser } from '../../auth/decorators/get-user.decorator';
 import { User } from '../../users/entities/user.entity';
@@ -174,8 +175,45 @@ export class HostController {
   // ─────────────────────────────────────────
 
   /**
+   * POST /host/listings/:id/submit-review
+   * Submits a draft or changes for admin review after automated validation checks.
+   */
+  @Post('listings/:id/submit-review')
+  async submitForReview(
+    @Param('id', ParseUUIDPipe) id: string,
+    @GetUser() user: User,
+    @Body() dto?: SubmitReviewDto,
+  ) {
+    return this.hostService.submitListingForReview(id, user.id, user.role, dto?.notes);
+  }
+
+  /**
+   * POST /host/listings/:id/withdraw-review
+   * Withdraws a pending review proposal; live listing stays unchanged.
+   */
+  @Post('listings/:id/withdraw-review')
+  async withdrawReview(
+    @Param('id', ParseUUIDPipe) id: string,
+    @GetUser() user: User,
+  ) {
+    return this.hostService.withdrawListingReview(id, user.id, user.role);
+  }
+
+  /**
+   * GET /host/listings/:id/reviews
+   * View active review status and history for this listing.
+   */
+  @Get('listings/:id/reviews')
+  async getListingReviews(
+    @Param('id', ParseUUIDPipe) id: string,
+    @GetUser() user: User,
+  ) {
+    return this.hostService.getListingReviews(id, user.id, user.role);
+  }
+
+  /**
    * PATCH /host/listings/:id/publish
-   * DRAFT → PUBLISHED. Validates minimum required fields first.
+   * Submits listing for admin review under the mandatory moderation policy.
    */
   @Patch('listings/:id/publish')
   async publishListing(

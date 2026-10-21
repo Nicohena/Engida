@@ -78,6 +78,9 @@ export class BookingsService {
       if (property.status !== ListingStatus.PUBLISHED) {
         throw new BadRequestException('This property is not currently published for booking');
       }
+      if (property.adminHidden) {
+        throw new BadRequestException('This property is temporarily unavailable for booking');
+      }
       if (!roomId && guestCount > property.maxGuests) {
         throw new BadRequestException(`This property allows up to ${property.maxGuests} guests`);
       }

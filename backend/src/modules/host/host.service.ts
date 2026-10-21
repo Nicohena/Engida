@@ -7,7 +7,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, SelectQueryBuilder } from 'typeorm';
+import { Repository, SelectQueryBuilder, In } from 'typeorm';
 import {
   Property,
   ListingStatus,
@@ -19,6 +19,8 @@ import { Amenity } from '../amenities/entities/amenity.entity';
 import { Booking, BookingStatus } from '../bookings/entities/booking.entity';
 import { HostProfile, HostVerificationStatus } from '../../users/entities/host-profile.entity';
 import { User, UserRole } from '../../users/entities/user.entity';
+import { ListingReview, ReviewStatus, ReviewSubmissionType } from '../properties/entities/listing-review.entity';
+import { ListingModerationService } from '../properties/listing-moderation.service';
 import { CreateHostProfileDto } from './dto/create-host-profile.dto';
 import { UpdateHostProfileDto } from './dto/update-host-profile.dto';
 import { CreateHostListingDto } from './dto/create-host-listing.dto';
@@ -83,7 +85,10 @@ export class HostService {
     private readonly hostProfileRepository: Repository<HostProfile>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(ListingReview)
+    private readonly reviewRepository: Repository<ListingReview>,
     private readonly cloudinaryService: CloudinaryService,
+    private readonly listingModerationService: ListingModerationService,
   ) {}
 
   // ─────────────────────────────────────────
@@ -196,23 +201,51 @@ export class HostService {
 
     const [rawData, total] = await qb.skip(skip).take(limit).getManyAndCount();
 
-    // Return only the fields the host needs for their dashboard list
-    const data = rawData.map((p) => ({
-      id: p.id,
-      title: p.title,
-      coverImage: p.coverImage,
-      listingType: p.listingType,
-      status: p.status,
-      pricePerNight: p.pricePerNight,
-      salePrice: p.salePrice,
-      city: p.city,
-      subCity: p.subCity,
-      bedrooms: p.bedrooms,
-      bathrooms: p.bathrooms,
-      isAvailable: p.isAvailable,
-      createdAt: p.createdAt,
-      updatedAt: p.updatedAt,
-    }));
+    const propertyIds = rawData.map((p) => p.id);
+    const reviews = propertyIds.length > 0
+      ? await this.reviewRepository.find({
+          where: { propertyId: In(propertyIds) },
+          order: { createdAt: 'DESC' },
+        })
+      : [];
+
+    const activeMap = new Map<string, ListingReview>();
+    const latestRejectedMap = new Map<string, ListingReview>();
+    for (const r of reviews) {
+      if (r.status === ReviewStatus.PENDING && !activeMap.has(r.propertyId)) {
+        activeMap.set(r.propertyId, r);
+      }
+      if (r.status === ReviewStatus.REJECTED && !latestRejectedMap.has(r.propertyId)) {
+        latestRejectedMap.set(r.propertyId, r);
+      }
+    }
+
+    // Return fields the host needs for their dashboard list including review & moderation status
+    const data = rawData.map((p) => {
+      const activeReview = activeMap.get(p.id) || null;
+      const latestRejected = latestRejectedMap.get(p.id) || null;
+      return {
+        id: p.id,
+        title: p.title,
+        coverImage: p.coverImage,
+        listingType: p.listingType,
+        status: p.status,
+        adminHidden: p.adminHidden,
+        adminHiddenReason: p.adminHiddenReason,
+        hasPendingReview: Boolean(activeReview),
+        pendingReviewType: activeReview?.submissionType || null,
+        rejectionReason: !activeReview && latestRejected ? latestRejected.rejectionReason : null,
+        pricePerNight: p.pricePerNight,
+        salePrice: p.salePrice,
+        city: p.city,
+        subCity: p.subCity,
+        bedrooms: p.bedrooms,
+        bathrooms: p.bathrooms,
+        isAvailable: p.isAvailable,
+        createdAt: p.createdAt,
+        updatedAt: p.updatedAt,
+      };
+    });
 
     return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
@@ -272,7 +305,17 @@ export class HostService {
       throw new ForbiddenException('You do not have access to this listing');
     }
 
-    return property;
+    const reviews = await this.reviewRepository.find({
+      where: { propertyId: listingId },
+      order: { createdAt: 'DESC' },
+    });
+    const pendingReview = reviews.find((r) => r.status === ReviewStatus.PENDING) || null;
+    const latestReview = reviews[0] || null;
+
+    return Object.assign(property, {
+      activeReview: pendingReview || latestReview,
+      reviewHistory: reviews,
+    });
   }
 
   // ─────────────────────────────────────────
@@ -284,9 +327,12 @@ export class HostService {
     dto: UpdateHostListingDto,
     userId: string,
     userRole: UserRole,
-  ): Promise<Property> {
+  ): Promise<any> {
     await this.assertHostProfile(userId, userRole);
-    const property = await this.propertyRepository.findOne({ where: { id: listingId } });
+    const property = await this.propertyRepository.findOne({
+      where: { id: listingId },
+      relations: ['amenities'],
+    });
 
     if (!property) {
       throw new NotFoundException(`Listing with ID "${listingId}" not found`);
@@ -295,6 +341,23 @@ export class HostService {
       throw new ForbiddenException('You can only update your own listings');
     }
 
+    // For PUBLISHED / PAUSED listings, important edits require moderation review
+    if (property.status === ListingStatus.PUBLISHED || property.status === ListingStatus.PAUSED) {
+      const result = await this.listingModerationService.processListingUpdate(
+        listingId,
+        dto,
+        userId,
+        userRole,
+      );
+      const owned = await this.findOwnedListingOrThrow(listingId, userId, userRole);
+      return Object.assign(owned, {
+        activeReview: result.review,
+        moderationMessage: result.message,
+        isPendingReview: result.isPendingReview,
+      });
+    }
+
+    // For DRAFT listings, updates are directly saved
     const previousImages = new Set([property.coverImage, ...(property.images || [])]
       .filter((url): url is string => Boolean(url)));
 
@@ -394,27 +457,63 @@ export class HostService {
   // 6. STATUS WORKFLOW
   // ─────────────────────────────────────────
 
-  async publishListing(listingId: string, userId: string, userRole: UserRole): Promise<Property> {
+  async publishListing(listingId: string, userId: string, userRole: UserRole): Promise<any> {
     const property = await this.getAndAuthorize(listingId, userId, userRole);
 
-    this.assertTransition(property.status, ListingStatus.PUBLISHED);
-
-    // Validate readiness before publishing
-    const missing = validatePublishReadiness(property);
-    if (missing.length > 0) {
-      throw new BadRequestException(
-        `Cannot publish listing - missing required fields: ${missing.join(', ')}`,
+    if (property.adminHidden) {
+      throw new ForbiddenException(
+        `Cannot publish listing while under administrative hold: ${property.adminHiddenReason || 'Contact support'}`,
       );
     }
 
-    property.status = ListingStatus.PUBLISHED;
-    await this.propertyRepository.save(property);
-    this.logger.log(`Listing ${listingId} published by host ${userId}`);
-    return property;
+    // If listing was previously approved and merely paused, unpausing is allowed without new review
+    if (property.status === ListingStatus.PAUSED) {
+      this.assertTransition(property.status, ListingStatus.PUBLISHED);
+      property.status = ListingStatus.PUBLISHED;
+      await this.propertyRepository.save(property);
+      this.logger.log(`Listing ${listingId} unpaused by host ${userId}`);
+      return property;
+    }
+
+    // For new listings (DRAFT), entering publication requires manual admin review
+    return this.submitListingForReview(listingId, userId, userRole);
+  }
+
+  async submitListingForReview(
+    listingId: string,
+    userId: string,
+    userRole: UserRole,
+    notes?: string,
+  ) {
+    await this.assertHostProfile(userId, userRole);
+    return this.listingModerationService.submitForReview(listingId, userId, userRole, notes);
+  }
+
+  async withdrawListingReview(
+    listingId: string,
+    userId: string,
+    userRole: UserRole,
+  ) {
+    await this.assertHostProfile(userId, userRole);
+    return this.listingModerationService.withdrawReview(listingId, userId, userRole);
+  }
+
+  async getListingReviews(
+    listingId: string,
+    userId: string,
+    userRole: UserRole,
+  ) {
+    await this.assertHostProfile(userId, userRole);
+    return this.listingModerationService.getHostListingReviews(listingId, userId, userRole);
   }
 
   async pauseListing(listingId: string, userId: string, userRole: UserRole): Promise<Property> {
     const property = await this.getAndAuthorize(listingId, userId, userRole);
+    if (property.adminHidden) {
+      throw new ForbiddenException(
+        'Cannot modify the status of a listing that has been temporarily hidden by an administrator',
+      );
+    }
     this.assertTransition(property.status, ListingStatus.PAUSED);
     property.status = ListingStatus.PAUSED;
     await this.propertyRepository.save(property);
