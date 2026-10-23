@@ -1087,6 +1087,7 @@ export default function CreateListingPage() {
           <GalleryManager
             coverImage={form.coverImage}
             images={form.images}
+            listingStatus="DRAFT"
             onCoverImageChange={(url) => {
               setIsDirty(true);
               setForm((prev) => ({ ...prev, coverImage: url }));

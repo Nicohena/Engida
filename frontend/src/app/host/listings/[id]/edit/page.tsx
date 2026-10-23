@@ -27,7 +27,93 @@ import {
   Lock,
   Sparkles,
   Info,
+  Shield,
+  Clock,
 } from 'lucide-react';
+
+function initFormFromListing(data: HostListingDetail): EditFormState {
+  const activeReview = data.activeReview?.status === 'PENDING' ? data.activeReview : null;
+  const proposed = activeReview?.proposedChanges || {};
+
+  return {
+    title: (proposed.title as string) ?? data.title ?? '',
+    description: (proposed.description as string) ?? data.description ?? '',
+    propertyType: (proposed.propertyType as PropertyType) ?? data.propertyType ?? 'APARTMENT',
+    pricePerNight:
+      proposed.pricePerNight !== undefined
+        ? String(proposed.pricePerNight)
+        : data.pricePerNight
+        ? String(data.pricePerNight)
+        : '',
+    salePrice:
+      proposed.salePrice !== undefined
+        ? String(proposed.salePrice)
+        : data.salePrice
+        ? String(data.salePrice)
+        : '',
+    maxGuests:
+      proposed.maxGuests !== undefined
+        ? String(proposed.maxGuests)
+        : data.maxGuests !== undefined
+        ? String(data.maxGuests)
+        : '2',
+    bedrooms:
+      proposed.bedrooms !== undefined
+        ? String(proposed.bedrooms)
+        : data.bedrooms !== undefined
+        ? String(data.bedrooms)
+        : '1',
+    bathrooms:
+      proposed.bathrooms !== undefined
+        ? String(proposed.bathrooms)
+        : data.bathrooms !== undefined
+        ? String(data.bathrooms)
+        : '1',
+    areaSqm:
+      proposed.areaSqm !== undefined
+        ? String(proposed.areaSqm)
+        : data.areaSqm !== undefined
+        ? String(data.areaSqm)
+        : '',
+    parkingSpaces:
+      proposed.parkingSpaces !== undefined
+        ? String(proposed.parkingSpaces)
+        : data.parkingSpaces !== undefined
+        ? String(data.parkingSpaces)
+        : '0',
+    address: (proposed.address as string) ?? data.address ?? '',
+    city: (proposed.city as string) ?? data.city ?? '',
+    subCity: (proposed.subCity as string) ?? data.subCity ?? '',
+    region: (proposed.region as string) ?? data.region ?? '',
+    zone: (proposed.zone as string) ?? data.zone ?? '',
+    woreda: (proposed.woreda as string) ?? data.woreda ?? '',
+    neighborhood: (proposed.neighborhood as string) ?? data.neighborhood ?? '',
+    country: (proposed.country as string) ?? data.country ?? 'Ethiopia',
+    latitude:
+      proposed.latitude !== undefined
+        ? String(proposed.latitude)
+        : data.latitude !== null && data.latitude !== undefined
+        ? String(data.latitude)
+        : '',
+    longitude:
+      proposed.longitude !== undefined
+        ? String(proposed.longitude)
+        : data.longitude !== null && data.longitude !== undefined
+        ? String(data.longitude)
+        : '',
+    coverImage: (proposed.coverImage as string) ?? data.coverImage ?? '',
+    images: Array.isArray(proposed.images)
+      ? (proposed.images as string[])
+      : Array.isArray(data.images)
+      ? data.images
+      : [],
+    amenityIds: Array.isArray(proposed.amenityIds)
+      ? (proposed.amenityIds as string[])
+      : Array.isArray(data.amenities)
+      ? data.amenities.map((a) => a.id)
+      : [],
+  };
+}
 
 const PROPERTY_TYPE_OPTIONS: {
   value: PropertyType;
@@ -137,31 +223,7 @@ export default function EditListingPage() {
       setListing(data);
       setFetchError(null);
       setIs404(false);
-      setForm({
-        title: data.title || '',
-        description: data.description || '',
-        propertyType: data.propertyType || 'APARTMENT',
-        pricePerNight: data.pricePerNight ? String(data.pricePerNight) : '',
-        salePrice: data.salePrice ? String(data.salePrice) : '',
-        maxGuests: data.maxGuests ? String(data.maxGuests) : '2',
-        bedrooms: data.bedrooms !== undefined ? String(data.bedrooms) : '1',
-        bathrooms: data.bathrooms !== undefined ? String(data.bathrooms) : '1',
-        areaSqm: data.areaSqm ? String(data.areaSqm) : '',
-        parkingSpaces: data.parkingSpaces !== undefined ? String(data.parkingSpaces) : '0',
-        address: data.address || '',
-        city: data.city || '',
-        subCity: data.subCity || '',
-        region: data.region || '',
-        zone: data.zone || '',
-        woreda: data.woreda || '',
-        neighborhood: data.neighborhood || '',
-        country: data.country || 'Ethiopia',
-        latitude: data.latitude !== null && data.latitude !== undefined ? String(data.latitude) : '',
-        longitude: data.longitude !== null && data.longitude !== undefined ? String(data.longitude) : '',
-        coverImage: data.coverImage || '',
-        images: Array.isArray(data.images) ? data.images : [],
-        amenityIds: Array.isArray(data.amenities) ? data.amenities.map((a) => a.id) : [],
-      });
+      setForm(initFormFromListing(data));
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to load listing.';
       if (msg.toLowerCase().includes('not found') || msg.includes('404')) {
@@ -183,31 +245,7 @@ export default function EditListingPage() {
           setListing(data);
           setFetchError(null);
           setIs404(false);
-          setForm({
-            title: data.title || '',
-            description: data.description || '',
-            propertyType: data.propertyType || 'APARTMENT',
-            pricePerNight: data.pricePerNight ? String(data.pricePerNight) : '',
-            salePrice: data.salePrice ? String(data.salePrice) : '',
-            maxGuests: data.maxGuests ? String(data.maxGuests) : '2',
-            bedrooms: data.bedrooms !== undefined ? String(data.bedrooms) : '1',
-            bathrooms: data.bathrooms !== undefined ? String(data.bathrooms) : '1',
-            areaSqm: data.areaSqm ? String(data.areaSqm) : '',
-            parkingSpaces: data.parkingSpaces !== undefined ? String(data.parkingSpaces) : '0',
-            address: data.address || '',
-            city: data.city || '',
-            subCity: data.subCity || '',
-            region: data.region || '',
-            zone: data.zone || '',
-            woreda: data.woreda || '',
-            neighborhood: data.neighborhood || '',
-            country: data.country || 'Ethiopia',
-            latitude: data.latitude !== null && data.latitude !== undefined ? String(data.latitude) : '',
-            longitude: data.longitude !== null && data.longitude !== undefined ? String(data.longitude) : '',
-            coverImage: data.coverImage || '',
-            images: Array.isArray(data.images) ? data.images : [],
-            amenityIds: Array.isArray(data.amenities) ? data.amenities.map((a) => a.id) : [],
-          });
+          setForm(initFormFromListing(data));
           setLoading(false);
         }
       })
@@ -1081,6 +1119,8 @@ export default function EditListingPage() {
             coverImage={form.coverImage}
             images={form.images}
             propertyId={listing.id}
+            listingStatus={listing.status}
+            isPendingReview={listing.activeReview?.status === 'PENDING'}
             onCoverImageChange={(url) => {
               setIsDirty(true);
               setForm((prev) => (prev ? { ...prev, coverImage: url } : prev));

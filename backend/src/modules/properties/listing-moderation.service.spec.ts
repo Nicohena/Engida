@@ -21,6 +21,7 @@ import {
 } from './entities/listing-review.entity';
 import { Amenity } from '../amenities/entities/amenity.entity';
 import { User, UserRole } from '../../users/entities/user.entity';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import {
   validatePublishReadiness,
   classifyListingChanges,
@@ -137,6 +138,7 @@ describe('ListingModerationService & Moderation Policies', () => {
   let mockTxAmenityRepo: any;
   let mockEntityManager: any;
   let mockDataSource: any;
+  let mockCloudinaryService: any;
 
   beforeEach(async () => {
     mockTxReviewRepo = {
@@ -192,6 +194,10 @@ describe('ListingModerationService & Moderation Policies', () => {
       ]),
     };
 
+    mockCloudinaryService = {
+      deletePropertyImages: jest.fn().mockResolvedValue(undefined),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ListingModerationService,
@@ -199,6 +205,7 @@ describe('ListingModerationService & Moderation Policies', () => {
         { provide: getRepositoryToken(Property), useValue: mockPropertyRepo },
         { provide: getRepositoryToken(Amenity), useValue: mockAmenityRepo },
         { provide: DataSource, useValue: mockDataSource },
+        { provide: CloudinaryService, useValue: mockCloudinaryService },
       ],
     }).compile();
 
@@ -613,6 +620,121 @@ describe('ListingModerationService & Moderation Policies', () => {
         where: { id: REVIEW_ID },
         lock: { mode: 'pessimistic_write' },
       });
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────
+  // 10. Image Moderation, Staging, and Orphan Cleanup
+  // ─────────────────────────────────────────────────────────────
+  describe('Image Moderation, Staging, and Orphan Cleanup', () => {
+    const liveCover = 'https://cloudinary.com/live-cover.jpg';
+    const liveGallery1 = 'https://cloudinary.com/live-gallery-1.jpg';
+    const liveGallery2 = 'https://cloudinary.com/live-gallery-2.jpg';
+    const otherReviewCover = 'https://cloudinary.com/other-review-cover.jpg';
+    const orphanImage = 'https://cloudinary.com/orphan-image.jpg';
+
+    it('should never delete images referenced by the live listing or another pending review', async () => {
+      mockPropertyRepo.findOne.mockResolvedValue({
+        ...mockPublishedProperty,
+        coverImage: liveCover,
+        images: [liveGallery1, liveGallery2],
+      });
+
+      mockReviewRepo.find.mockResolvedValue([
+        {
+          id: 'other-review-id',
+          status: ReviewStatus.PENDING,
+          proposedChanges: { coverImage: otherReviewCover },
+        },
+      ]);
+
+      await service.cleanOrphanImages(
+        PROPERTY_ID,
+        [liveCover, liveGallery1, otherReviewCover, orphanImage],
+      );
+
+      // Only orphanImage should be deleted
+      expect(mockCloudinaryService.deletePropertyImages).toHaveBeenCalledWith(
+        PROPERTY_ID,
+        [orphanImage],
+      );
+    });
+
+    it('should apply proposed image changes on approval and clean up replaced live images', async () => {
+      const oldLiveCover = 'https://cloudinary.com/old-live-cover.jpg';
+      const oldLiveGallery = 'https://cloudinary.com/old-live-gallery.jpg';
+      const proposedCover = 'https://cloudinary.com/new-proposed-cover.jpg';
+      const proposedGallery = ['https://cloudinary.com/new-proposed-gallery.jpg'];
+
+      const liveProp = {
+        ...mockPublishedProperty,
+        coverImage: oldLiveCover,
+        images: [oldLiveGallery],
+      };
+
+      const importantEditReview = {
+        ...mockPendingReview,
+        submissionType: ReviewSubmissionType.IMPORTANT_EDIT,
+        proposedChanges: {
+          coverImage: proposedCover,
+          images: proposedGallery,
+        },
+      };
+
+      mockTxReviewRepo.findOne.mockResolvedValue(importantEditReview);
+      mockTxPropertyRepo.findOne.mockResolvedValue({ ...liveProp });
+      // When cleanOrphanImages runs after transaction:
+      mockPropertyRepo.findOne.mockResolvedValue({
+        ...liveProp,
+        coverImage: proposedCover,
+        images: proposedGallery,
+      });
+      mockReviewRepo.find.mockResolvedValue([]);
+
+      const result = await service.approveReview(REVIEW_ID, mockAdminUser);
+
+      expect(result.property.coverImage).toBe(proposedCover);
+      expect(result.property.images).toEqual(proposedGallery);
+      expect(mockCloudinaryService.deletePropertyImages).toHaveBeenCalledWith(
+        PROPERTY_ID,
+        expect.arrayContaining([oldLiveCover, oldLiveGallery]),
+      );
+    });
+
+    it('should preserve approved live images and clean up staged images on rejection', async () => {
+      const stagedCover = 'https://cloudinary.com/rejected-staged-cover.jpg';
+      const stagedGallery = 'https://cloudinary.com/rejected-staged-gallery.jpg';
+
+      const liveProp = {
+        ...mockPublishedProperty,
+        coverImage: liveCover,
+        images: [liveGallery1],
+      };
+
+      const importantEditReview = {
+        ...mockPendingReview,
+        submissionType: ReviewSubmissionType.IMPORTANT_EDIT,
+        proposedChanges: {
+          coverImage: stagedCover,
+          images: [stagedGallery],
+        },
+      };
+
+      mockTxReviewRepo.findOne.mockResolvedValue(importantEditReview);
+      mockPropertyRepo.findOne.mockResolvedValue(liveProp);
+      mockReviewRepo.find.mockResolvedValue([]);
+
+      await service.rejectReview(
+        REVIEW_ID,
+        'Photos do not meet quality guidelines',
+        mockAdminUser,
+      );
+
+      // Approved live images remain untouched; staged-only images cleaned up
+      expect(mockCloudinaryService.deletePropertyImages).toHaveBeenCalledWith(
+        PROPERTY_ID,
+        expect.arrayContaining([stagedCover, stagedGallery]),
+      );
     });
   });
 });

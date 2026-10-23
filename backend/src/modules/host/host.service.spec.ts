@@ -521,6 +521,68 @@ describe('HostService', () => {
         service.updateListing('fake-id', { title: 'X' }, HOST_ID, UserRole.USER),
       ).rejects.toThrow(NotFoundException);
     });
+
+    it('[positive] updating published listing routes through listingModerationService.processListingUpdate', async () => {
+      mockPropertyRepo.findOne.mockResolvedValue({ ...mockPublishedListing });
+      mockPropertyRepo.createQueryBuilder.mockImplementation(() =>
+        createMockQb(mockPublishedListing),
+      );
+      mockListingModerationService.processListingUpdate.mockResolvedValueOnce({
+        property: mockPublishedListing,
+        review: {
+          id: 'rev-edit-1',
+          status: 'PENDING',
+          submissionType: 'IMPORTANT_EDIT',
+          proposedChanges: { pricePerNight: 3500 },
+        },
+        isPendingReview: true,
+        message: 'Important changes submitted for review.',
+      });
+
+      const result = await service.updateListing(
+        LISTING_ID,
+        { pricePerNight: 3500 },
+        HOST_ID,
+        UserRole.USER,
+      );
+
+      expect(mockListingModerationService.processListingUpdate).toHaveBeenCalledWith(
+        LISTING_ID,
+        expect.objectContaining({ pricePerNight: 3500 }),
+        HOST_ID,
+        UserRole.USER,
+      );
+      expect(result.isPendingReview).toBe(true);
+      expect(result.activeReview).toBeDefined();
+    });
+
+    it('[security] strips mass-assigned protected fields (status, adminHidden, hostId) when updating draft listing', async () => {
+      const draft = { ...mockRentalListing, status: ListingStatus.DRAFT, adminHidden: false };
+      mockPropertyRepo.findOne.mockResolvedValue({ ...draft });
+      mockPropertyRepo.createQueryBuilder.mockImplementation(() => createMockQb(draft));
+      mockPropertyRepo.save.mockImplementation(async (entity) => entity);
+
+      await service.updateListing(
+        LISTING_ID,
+        {
+          title: 'Clean Title',
+          status: ListingStatus.PUBLISHED,
+          adminHidden: true,
+          hostId: 'malicious-host-id',
+        } as any,
+        HOST_ID,
+        UserRole.USER,
+      );
+
+      expect(mockPropertyRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'Clean Title',
+          status: ListingStatus.DRAFT, // MUST NOT be overridden
+          adminHidden: false, // MUST NOT be overridden
+          hostId: HOST_ID, // MUST NOT be overridden
+        }),
+      );
+    });
   });
 
   // ─────────────────────────────────────────

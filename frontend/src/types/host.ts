@@ -17,7 +17,7 @@ export interface ListingReviewItem {
   propertyId: string;
   submissionType: ReviewSubmissionType;
   status: ReviewStatus;
-  proposedChanges: Record<string, any> | null;
+  proposedChanges: Record<string, unknown> | null;
   submittedByHostId: string;
   submittedAt: string;
   reviewedByAdminId: string | null;
@@ -121,6 +121,8 @@ export interface HostListingDetail {
   adminHiddenAt?: string | null;
   activeReview?: ListingReviewItem | null;
   reviewHistory?: ListingReviewItem[];
+  moderationMessage?: string | null;
+  isPendingReview?: boolean;
   createdAt: string;
   updatedAt: string;
 }

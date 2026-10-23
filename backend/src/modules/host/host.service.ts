@@ -30,6 +30,7 @@ import { UpdateHostListingDto } from './dto/update-host-listing.dto';
 import { QueryHostListingsDto, QueryHostReservationsDto } from './dto/query-host.dto';
 import { HostReservationResponse, HostReservationsPage } from './dto/host-reservation-response.dto';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { sanitizeListingUpdatePayload } from '../properties/constants/moderation.constants';
 
 // ─────────────────────────────────────────────
 // Allowed status transitions for listings
@@ -341,11 +342,14 @@ export class HostService {
       throw new ForbiddenException('You can only update your own listings');
     }
 
+    // Sanitize incoming payload to prevent mass-assignment of protected/server-controlled fields
+    const sanitizedDto = sanitizeListingUpdatePayload(dto);
+
     // For PUBLISHED / PAUSED listings, important edits require moderation review
     if (property.status === ListingStatus.PUBLISHED || property.status === ListingStatus.PAUSED) {
       const result = await this.listingModerationService.processListingUpdate(
         listingId,
-        dto,
+        sanitizedDto,
         userId,
         userRole,
       );
@@ -362,7 +366,7 @@ export class HostService {
       .filter((url): url is string => Boolean(url)));
 
     // listingType cannot be changed after creation
-    const { amenityIds, ...updateData } = dto;
+    const { amenityIds, ...updateData } = sanitizedDto;
     Object.assign(property, updateData);
 
     if (amenityIds !== undefined) {

@@ -3,7 +3,7 @@
 import React, { useState, useRef } from 'react';
 import Image from 'next/image';
 import { apiFetch } from '../../lib/api';
-import type { Property } from '../../types';
+import type { ListingStatus } from '../../types/host';
 import {
   Image as ImageIcon,
   Plus,
@@ -16,16 +16,34 @@ import {
   X,
   CheckCircle2,
   ExternalLink,
+  Shield,
+  Clock,
+  Loader2,
 } from 'lucide-react';
+
+interface MediaActionResponse {
+  coverImage?: string;
+  images?: string[];
+  activeReview?: {
+    proposedChanges?: {
+      coverImage?: string;
+      images?: string[];
+    };
+  } | null;
+  moderationMessage?: string;
+  isPendingReview?: boolean;
+}
 
 interface GalleryManagerProps {
   coverImage: string;
   images: string[];
   onCoverImageChange: (url: string) => void;
   onImagesChange: (urls: string[]) => void;
-  propertyId?: string; // Optional: enables Cloudinary direct file uploads if editing existing property
+  propertyId?: string; // Optional: enables Cloudinary direct file uploads & server deletion if editing existing property
   coverError?: string;
   maxImages?: number;
+  listingStatus?: ListingStatus;
+  isPendingReview?: boolean;
 }
 
 export default function GalleryManager({
@@ -36,6 +54,8 @@ export default function GalleryManager({
   propertyId,
   coverError,
   maxImages = 20,
+  listingStatus,
+  isPendingReview,
 }: GalleryManagerProps) {
   // Direct URL Input State
   const [newUrl, setNewUrl] = useState('');
@@ -44,8 +64,9 @@ export default function GalleryManager({
   // File Upload State (for Cloudinary)
   const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
+  const [deletingIndex, setDeletingIndex] = useState<number | null>(null);
   const [uploadFeedback, setUploadFeedback] = useState<{
-    type: 'success' | 'error';
+    type: 'success' | 'error' | 'moderation';
     message: string;
   } | null>(null);
 
@@ -60,7 +81,7 @@ export default function GalleryManager({
   };
 
   // ─────────────────────────────────────────────────────────
-  // URL Validation & Addition
+  // URL Validation & Addition (Supports single or multiple URLs)
   // ─────────────────────────────────────────────────────────
   const validateUrl = (url: string): string | null => {
     const trimmed = url.trim();
@@ -80,44 +101,110 @@ export default function GalleryManager({
     if (e) e.preventDefault();
     setUrlError(null);
 
-    const trimmed = newUrl.trim();
-    const error = validateUrl(trimmed);
-    if (error) {
-      setUrlError(error);
+    const raw = newUrl.trim();
+    if (!raw) {
+      setUrlError('Please enter an image URL');
       return;
     }
 
-    if (images.includes(trimmed)) {
-      setUrlError('This image URL is already in your gallery');
+    // Split tokens by comma, newline, or whitespace to support multiple URLs
+    const tokens = raw.split(/[\n,\s]+/).map((t) => t.trim()).filter(Boolean);
+    if (tokens.length === 0) {
+      setUrlError('Please enter a valid image URL');
       return;
     }
 
-    if (coverImage === trimmed) {
-      setUrlError('This image is already set as your cover image');
+    const validated: string[] = [];
+    for (const token of tokens) {
+      const error = validateUrl(token);
+      if (error) {
+        setUrlError(`${error}: "${token.length > 30 ? token.slice(0, 30) + '…' : token}"`);
+        return;
+      }
+      if (images.includes(token) || (coverImage.trim() === token && !validated.includes(token))) {
+        continue;
+      }
+      if (!validated.includes(token)) {
+        validated.push(token);
+      }
+    }
+
+    if (validated.length === 0) {
+      setUrlError('All entered image URLs are already in your listing');
       return;
     }
 
-    if (images.length >= maxImages) {
-      setUrlError(`Maximum limit of ${maxImages} gallery photos reached`);
+    if (images.length + validated.length > maxImages) {
+      setUrlError(
+        `Limit of ${maxImages} gallery photos reached (can only add ${Math.max(0, maxImages - images.length)} more)`,
+      );
       return;
     }
 
-    // If there is no cover image set yet, suggest or set as cover if user wants
-    if (!coverImage.trim()) {
-      onCoverImageChange(trimmed);
-      setNewUrl('');
-      return;
+    const toAdd = [...validated];
+    // If cover image is not set yet, use the first added URL as cover
+    if (!coverImage.trim() && toAdd.length > 0) {
+      const first = toAdd.shift()!;
+      onCoverImageChange(first);
     }
 
-    onImagesChange([...images, trimmed]);
+    if (toAdd.length > 0) {
+      onImagesChange([...images, ...toAdd]);
+    }
+
     setNewUrl('');
   };
 
   // ─────────────────────────────────────────────────────────
   // Gallery Manipulation: Reorder, Remove, Set Cover
   // ─────────────────────────────────────────────────────────
-  const handleRemoveImage = (indexToRemove: number) => {
-    onImagesChange(images.filter((_, i) => i !== indexToRemove));
+  const handleRemoveImage = async (indexToRemove: number) => {
+    const urlToRemove = images[indexToRemove];
+    if (!urlToRemove) return;
+
+    if (propertyId) {
+      setDeletingIndex(indexToRemove);
+      setUploadFeedback(null);
+      try {
+        const res = await apiFetch<MediaActionResponse>(`/properties/${propertyId}/images`, {
+          method: 'DELETE',
+          body: JSON.stringify({ imageUrl: urlToRemove }),
+        });
+
+        if (res?.isPendingReview) {
+          const stagedImages =
+            res.activeReview?.proposedChanges?.images ||
+            images.filter((_, i) => i !== indexToRemove);
+          onImagesChange(stagedImages);
+          setUploadFeedback({
+            type: 'moderation',
+            message:
+              res.moderationMessage ||
+              'Photo removal staged for moderation review. Public listing remains unchanged until approved.',
+          });
+        } else if (Array.isArray(res?.images)) {
+          onImagesChange(res.images);
+          setUploadFeedback({
+            type: 'success',
+            message: 'Photo removed from gallery.',
+          });
+        } else {
+          onImagesChange(images.filter((_, i) => i !== indexToRemove));
+          setUploadFeedback({
+            type: 'success',
+            message: 'Photo removed.',
+          });
+        }
+      } catch {
+        // Fallback to local array removal if image was not stored on the server yet
+        onImagesChange(images.filter((_, i) => i !== indexToRemove));
+      } finally {
+        setDeletingIndex(null);
+      }
+    } else {
+      // Direct local removal for draft creation
+      onImagesChange(images.filter((_, i) => i !== indexToRemove));
+    }
   };
 
   const handleMoveImage = (fromIndex: number, toIndex: number) => {
@@ -135,7 +222,7 @@ export default function GalleryManager({
     // Remove selected image from gallery
     const remainingGallery = images.filter((_, i) => i !== index);
 
-    // If previous cover existed and isn't already in gallery, push it into gallery
+    // If previous cover existed and isn't already in gallery, retain it in gallery
     if (oldCover && !remainingGallery.includes(oldCover)) {
       onImagesChange([oldCover, ...remainingGallery]);
     } else {
@@ -167,12 +254,23 @@ export default function GalleryManager({
       const formData = new FormData();
       formData.append('file', file);
 
-      const updated = await apiFetch<Property>(`/properties/${propertyId}/cover-image`, {
+      const updated = await apiFetch<MediaActionResponse>(`/properties/${propertyId}/cover-image`, {
         method: 'POST',
         body: formData,
       });
 
-      if (updated.coverImage) {
+      if (updated?.isPendingReview) {
+        const stagedCover = updated.activeReview?.proposedChanges?.coverImage || updated.coverImage;
+        if (stagedCover) {
+          onCoverImageChange(stagedCover);
+        }
+        setUploadFeedback({
+          type: 'moderation',
+          message:
+            updated.moderationMessage ||
+            'Cover photo uploaded and staged for moderation review. Public listing remains unchanged until approved.',
+        });
+      } else if (updated?.coverImage) {
         onCoverImageChange(updated.coverImage);
         setUploadFeedback({
           type: 'success',
@@ -203,7 +301,9 @@ export default function GalleryManager({
     if (images.length + files.length > maxImages) {
       setUploadFeedback({
         type: 'error',
-        message: `This listing can have ${maxImages} gallery photos. Remove ${images.length + files.length - maxImages} selected photo${images.length + files.length - maxImages === 1 ? '' : 's'} or upload fewer.`,
+        message: `This listing can have up to ${maxImages} gallery photos. Remove ${
+          images.length + files.length - maxImages
+        } photo${images.length + files.length - maxImages === 1 ? '' : 's'} or upload fewer.`,
       });
       if (galleryFileInputRef.current) galleryFileInputRef.current.value = '';
       return;
@@ -218,16 +318,29 @@ export default function GalleryManager({
         formData.append('files', file);
       });
 
-      const updated = await apiFetch<Property>(`/properties/${propertyId}/images`, {
+      const updated = await apiFetch<MediaActionResponse>(`/properties/${propertyId}/images`, {
         method: 'POST',
         body: formData,
       });
 
-      if (updated.images) {
+      if (updated?.isPendingReview) {
+        const stagedImages = updated.activeReview?.proposedChanges?.images || updated.images;
+        if (Array.isArray(stagedImages)) {
+          onImagesChange(stagedImages);
+        }
+        setUploadFeedback({
+          type: 'moderation',
+          message:
+            updated.moderationMessage ||
+            `${files.length} gallery photo${
+              files.length > 1 ? 's' : ''
+            } uploaded and staged for moderation review. Public listing remains unchanged until approved.`,
+        });
+      } else if (Array.isArray(updated?.images)) {
         onImagesChange(updated.images);
         setUploadFeedback({
           type: 'success',
-          message: `${files.length} gallery image${files.length > 1 ? 's' : ''} uploaded successfully!`,
+          message: `${files.length} gallery photo${files.length > 1 ? 's' : ''} uploaded successfully!`,
         });
       }
     } catch (err: unknown) {
@@ -242,19 +355,42 @@ export default function GalleryManager({
     }
   };
 
+  const isLiveListing = listingStatus === 'PUBLISHED' || listingStatus === 'PAUSED';
+
   return (
     <div className="space-y-6">
+      {/* ── Live Listing Moderation Notice ── */}
+      {isLiveListing && (
+        <div className="p-3.5 rounded-xl bg-blue-50 border border-blue-200 flex items-start gap-3 text-xs text-blue-900">
+          <Shield className="w-4 h-4 text-[#33599E] shrink-0 mt-0.5" />
+          <div className="space-y-0.5">
+            <span className="font-bold">
+              {isPendingReview ? 'Media Changes Pending Review:' : 'Live Listing Moderation:'}
+            </span>
+            <p className="text-blue-800 leading-relaxed">
+              {isPendingReview
+                ? 'You currently have media updates submitted for administrative approval. Additional changes will update your pending review proposal.'
+                : 'Updates to cover and gallery images are staged for administrative review to protect guests. Your approved live photos remain online until new changes are approved.'}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* ── Feedback Banner ── */}
       {uploadFeedback && (
         <div
           className={`p-4 rounded-xl border flex items-start justify-between gap-3 text-xs font-semibold ${
-            uploadFeedback.type === 'success'
+            uploadFeedback.type === 'moderation'
+              ? 'bg-blue-50 border-blue-200 text-blue-900'
+              : uploadFeedback.type === 'success'
               ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
               : 'bg-red-50 border-red-200 text-red-800'
           }`}
         >
           <div className="flex items-center gap-2">
-            {uploadFeedback.type === 'success' ? (
+            {uploadFeedback.type === 'moderation' ? (
+              <Clock className="w-4 h-4 text-[#33599E] shrink-0 animate-pulse" />
+            ) : uploadFeedback.type === 'success' ? (
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
             ) : (
               <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
@@ -265,6 +401,7 @@ export default function GalleryManager({
             type="button"
             onClick={() => setUploadFeedback(null)}
             className="text-slate-400 hover:text-slate-700"
+            aria-label="Dismiss feedback message"
           >
             <X className="w-4 h-4" />
           </button>
@@ -285,7 +422,7 @@ export default function GalleryManager({
             </p>
             {!propertyId && (
               <p className="mt-1 text-xs text-[#64748B]">
-                Save this draft first, then upload your cover photo from the listing editor.
+                Enter a direct URL now, or save this draft first to enable Cloudinary file uploads.
               </p>
             )}
           </div>
@@ -309,7 +446,7 @@ export default function GalleryManager({
               >
                 {isUploadingCover ? (
                   <>
-                    <span className="w-3.5 h-3.5 border-2 border-[#33599E]/40 border-t-[#33599E] rounded-full animate-spin" />
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-[#33599E]" />
                     Uploading Cover…
                   </>
                 ) : (
@@ -330,7 +467,7 @@ export default function GalleryManager({
             type="url"
             value={coverImage}
             onChange={(e) => onCoverImageChange(e.target.value)}
-            placeholder="Paste a URL for an image you have permission to use"
+            placeholder="Paste a direct image URL (https://...)"
             className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium text-[#000000] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 transition ${
               coverError
                 ? 'border-red-400 focus:ring-red-200'
@@ -341,7 +478,7 @@ export default function GalleryManager({
             <button
               type="button"
               onClick={handleDemoteCoverToGallery}
-              title="Move to gallery"
+              title="Move cover image to gallery"
               className="px-3 py-2 rounded-xl border border-[#CBD5E1] bg-white hover:bg-[#F4F7FC] text-xs font-semibold text-[#64748B] shrink-0"
             >
               Move to Gallery
@@ -408,7 +545,7 @@ export default function GalleryManager({
               Photo Gallery ({images.length} / {maxImages})
             </label>
             <p className="text-xs text-[#64748B]">
-              Add additional interior, exterior, and neighborhood images. Reorder and promote any image to cover.
+              Add interior, exterior, and neighborhood photos. You can paste multiple URLs or upload files.
             </p>
           </div>
 
@@ -432,7 +569,7 @@ export default function GalleryManager({
               >
                 {isUploadingGallery ? (
                   <>
-                    <span className="w-3.5 h-3.5 border-2 border-[#33599E]/40 border-t-[#33599E] rounded-full animate-spin" />
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-[#33599E]" />
                     Uploading to Gallery…
                   </>
                 ) : (
@@ -462,7 +599,7 @@ export default function GalleryManager({
                     handleAddGalleryUrl();
                   }
                 }}
-                placeholder="Paste a URL for an image you have permission to use"
+                placeholder="Paste an image URL, or multiple separated by comma or spaces"
                 className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium text-[#000000] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 transition ${
                   urlError
                     ? 'border-red-400 focus:ring-red-200'
@@ -491,14 +628,15 @@ export default function GalleryManager({
             <p className="text-sm font-bold text-[#000000]">No gallery photos yet</p>
             <p className="text-xs text-[#64748B] max-w-sm mx-auto">
               {propertyId
-                ? 'Add image URLs above or upload your property photos.'
-                : 'Add image URLs now, or save this draft and upload your property photos from the listing editor.'}
+                ? 'Add image URLs above or upload your property photos via Cloudinary.'
+                : 'Add image URLs now, or save this draft and upload property photos from the listing editor.'}
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {images.map((imgUrl, idx) => {
               const isBroken = brokenUrls[imgUrl];
+              const isDeletingThis = deletingIndex === idx;
 
               return (
                 <div
@@ -527,6 +665,14 @@ export default function GalleryManager({
                     #{idx + 1}
                   </div>
 
+                  {/* Deleting overlay */}
+                  {isDeletingThis && (
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center text-white text-xs font-bold gap-1.5 z-10">
+                      <Loader2 className="w-4 h-4 animate-spin text-white" />
+                      <span>Removing…</span>
+                    </div>
+                  )}
+
                   {/* Action Toolbar on Hover / Focus */}
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-2 flex items-center justify-between gap-1 opacity-95 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                     {/* Reorder Buttons */}
@@ -534,8 +680,9 @@ export default function GalleryManager({
                       <button
                         type="button"
                         onClick={() => handleMoveImage(idx, idx - 1)}
-                        disabled={idx === 0}
-                        title="Move photo left"
+                        disabled={idx === 0 || isDeletingThis}
+                        title="Move photo earlier in gallery"
+                        aria-label={`Move photo ${idx + 1} earlier`}
                         className="w-6 h-6 rounded bg-white/20 hover:bg-white text-white hover:text-black flex items-center justify-center disabled:opacity-30 disabled:pointer-events-none transition"
                       >
                         <ArrowLeft className="w-3.5 h-3.5" />
@@ -543,20 +690,22 @@ export default function GalleryManager({
                       <button
                         type="button"
                         onClick={() => handleMoveImage(idx, idx + 1)}
-                        disabled={idx === images.length - 1}
-                        title="Move photo right"
+                        disabled={idx === images.length - 1 || isDeletingThis}
+                        title="Move photo later in gallery"
+                        aria-label={`Move photo ${idx + 1} later`}
                         className="w-6 h-6 rounded bg-white/20 hover:bg-white text-white hover:text-black flex items-center justify-center disabled:opacity-30 disabled:pointer-events-none transition"
                       >
                         <ArrowRight className="w-3.5 h-3.5" />
                       </button>
                     </div>
 
-                    {/* Promote & Remove */}
+                    {/* Promote to Cover & Remove */}
                     <div className="flex items-center gap-1">
                       <button
                         type="button"
                         onClick={() => handlePromoteToCover(idx)}
-                        title="Set as Cover Photo"
+                        disabled={isDeletingThis}
+                        title="Set this photo as Cover Photo"
                         className="px-1.5 py-1 rounded bg-amber-500/80 hover:bg-amber-500 text-white text-[10px] font-bold flex items-center gap-1 transition"
                       >
                         <Star className="w-3 h-3 fill-current" /> Cover
@@ -564,10 +713,12 @@ export default function GalleryManager({
                       <button
                         type="button"
                         onClick={() => handleRemoveImage(idx)}
-                        title="Remove photo"
-                        className="w-6 h-6 rounded bg-red-600/80 hover:bg-red-600 text-white flex items-center justify-center transition"
+                        disabled={isDeletingThis}
+                        title="Remove photo from gallery"
+                        aria-label={`Remove photo ${idx + 1}`}
+                        className="w-6 h-6 rounded bg-red-600/80 hover:bg-red-600 text-white flex items-center justify-center transition disabled:opacity-50"
                       >
-                        <Trash2 className="w-3 h-3" />
+                        <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   </div>

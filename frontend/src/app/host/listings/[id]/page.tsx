@@ -619,12 +619,66 @@ export default function ListingDetailPage() {
             <div className="pt-2 border-t border-amber-200/60">
               <p className="text-xs font-bold text-amber-900 mb-2">Proposed Modifications Under Review:</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-amber-900">
-                {Object.entries(listing.activeReview.proposedChanges).map(([k, v]) => (
-                  <div key={k} className="bg-white/90 rounded-lg p-2.5 border border-amber-200 shadow-2xs">
-                    <span className="font-bold capitalize text-amber-950">{k}: </span>
-                    <span className="text-[#334155]">{typeof v === 'object' ? JSON.stringify(v) : String(v)}</span>
-                  </div>
-                ))}
+                {Object.entries(listing.activeReview.proposedChanges).map(([k, v]) => {
+                  if (k === 'coverImage' && typeof v === 'string') {
+                    return (
+                      <div
+                        key={k}
+                        className="bg-white/90 rounded-xl p-3 border border-amber-200 shadow-2xs col-span-1 sm:col-span-2 flex items-center justify-between gap-3"
+                      >
+                        <div className="min-w-0">
+                          <span className="font-bold text-amber-950 block">Proposed Cover Photo</span>
+                          <span className="text-slate-500 text-[11px] truncate block max-w-sm">{v}</span>
+                        </div>
+                        <div className="relative w-14 h-14 rounded-lg overflow-hidden border border-slate-200 shrink-0 bg-slate-100">
+                          <img src={v} alt="Proposed cover preview" className="w-full h-full object-cover" />
+                        </div>
+                      </div>
+                    );
+                  }
+                  if (k === 'images' && Array.isArray(v)) {
+                    return (
+                      <div
+                        key={k}
+                        className="bg-white/90 rounded-xl p-3 border border-amber-200 shadow-2xs col-span-1 sm:col-span-2 space-y-2"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-amber-950">Proposed Photo Gallery</span>
+                          <span className="text-slate-500 font-semibold text-[11px]">{v.length} photos</span>
+                        </div>
+                        <div className="flex items-center gap-2 overflow-x-auto py-1">
+                          {v.slice(0, 6).map((imgUrl, i) => (
+                            <div
+                              key={i}
+                              className="relative w-12 h-12 rounded-lg overflow-hidden border border-slate-200 shrink-0 bg-slate-100"
+                            >
+                              <img src={imgUrl} alt={`Proposed ${i + 1}`} className="w-full h-full object-cover" />
+                            </div>
+                          ))}
+                          {v.length > 6 && (
+                            <span className="text-[11px] font-bold text-slate-500 px-2">
+                              +{v.length - 6} more
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  }
+                  if (k === 'amenityIds' && Array.isArray(v)) {
+                    return (
+                      <div key={k} className="bg-white/90 rounded-lg p-2.5 border border-amber-200 shadow-2xs">
+                        <span className="font-bold capitalize text-amber-950">Proposed Amenities: </span>
+                        <span className="text-[#334155]">{v.length} selected</span>
+                      </div>
+                    );
+                  }
+                  return (
+                    <div key={k} className="bg-white/90 rounded-lg p-2.5 border border-amber-200 shadow-2xs">
+                      <span className="font-bold capitalize text-amber-950">{k}: </span>
+                      <span className="text-[#334155]">{typeof v === 'object' ? JSON.stringify(v) : String(v)}</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -769,6 +823,19 @@ export default function ListingDetailPage() {
             title={listing.title}
             coverImage={listing.coverImage}
             images={listing.images || []}
+            proposedCoverImage={
+              listing.activeReview?.status === 'PENDING' &&
+              typeof listing.activeReview.proposedChanges?.coverImage === 'string'
+                ? listing.activeReview.proposedChanges.coverImage
+                : undefined
+            }
+            proposedImages={
+              listing.activeReview?.status === 'PENDING' &&
+              Array.isArray(listing.activeReview.proposedChanges?.images)
+                ? (listing.activeReview.proposedChanges.images as string[])
+                : undefined
+            }
+            isPendingReview={listing.activeReview?.status === 'PENDING'}
           />
 
           {/* Description Card */}
@@ -790,6 +857,12 @@ export default function ListingDetailPage() {
                     {listing.amenities.length}
                   </span>
                 )}
+                {listing.activeReview?.status === 'PENDING' &&
+                  Array.isArray(listing.activeReview.proposedChanges?.amenityIds) && (
+                    <span className="text-[11px] font-bold text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-300">
+                      Proposed: {listing.activeReview.proposedChanges.amenityIds.length}
+                    </span>
+                  )}
               </div>
               {!isArchived && !isSold && (
                 <Link

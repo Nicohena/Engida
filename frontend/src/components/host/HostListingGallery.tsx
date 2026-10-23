@@ -13,6 +13,7 @@ import {
   Maximize2,
   AlertTriangle,
   Plus,
+  Clock,
 } from 'lucide-react';
 
 interface HostListingGalleryProps {
@@ -20,6 +21,9 @@ interface HostListingGalleryProps {
   title: string;
   coverImage: string | null;
   images: string[];
+  proposedCoverImage?: string | null;
+  proposedImages?: string[] | null;
+  isPendingReview?: boolean;
 }
 
 export default function HostListingGallery({
@@ -27,17 +31,36 @@ export default function HostListingGallery({
   title,
   coverImage,
   images = [],
+  proposedCoverImage,
+  proposedImages,
+  isPendingReview = false,
 }: HostListingGalleryProps) {
+  const hasStagedMedia =
+    isPendingReview &&
+    (proposedCoverImage !== undefined || proposedImages !== undefined);
+
+  const [viewMode, setViewMode] = useState<'live' | 'staged'>('live');
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [brokenImages, setBrokenImages] = useState<Record<string, boolean>>({});
 
+  // Active cover and gallery based on selected view mode
+  const currentCover =
+    viewMode === 'staged' && proposedCoverImage !== undefined
+      ? proposedCoverImage
+      : coverImage;
+
+  const currentGallery =
+    viewMode === 'staged' && proposedImages !== undefined && Array.isArray(proposedImages)
+      ? proposedImages
+      : images;
+
   // Compile combined photos: cover photo first (if exists), then remaining gallery images
   const allPhotos: string[] = [];
-  if (coverImage && coverImage.trim()) {
-    allPhotos.push(coverImage.trim());
+  if (currentCover && currentCover.trim()) {
+    allPhotos.push(currentCover.trim());
   }
-  images.forEach((img) => {
+  (currentGallery || []).forEach((img) => {
     if (img && img.trim() && !allPhotos.includes(img.trim())) {
       allPhotos.push(img.trim());
     }
@@ -72,14 +95,16 @@ export default function HostListingGallery({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [lightboxOpen, handlePrev, handleNext]);
 
-  // Empty state: No images at all
+  // Empty state: No images at all in current view
   if (totalPhotos === 0) {
     return (
       <div className="bg-white border border-[#CBD5E1] rounded-2xl p-8 shadow-sm text-center">
         <div className="w-16 h-16 rounded-2xl bg-[#F4F7FC] border border-[#CBD5E1] text-[#94A3B8] flex items-center justify-center mx-auto mb-3">
           <Building2 className="w-8 h-8 text-[#CBD5E1]" />
         </div>
-        <h3 className="text-base font-black text-[#000000]">No photos uploaded yet</h3>
+        <h3 className="text-base font-black text-[#000000]">
+          {viewMode === 'staged' ? 'No staged photos in proposal' : 'No photos uploaded yet'}
+        </h3>
         <p className="text-xs text-[#64748B] max-w-sm mx-auto mt-1 mb-4">
           Visuals are the most important part of attracting guests or buyers. Add photos to get your listing ready.
         </p>
@@ -101,22 +126,59 @@ export default function HostListingGallery({
     <>
       <div className="bg-white border border-[#CBD5E1] rounded-2xl overflow-hidden shadow-sm space-y-3 p-4 md:p-6">
         {/* Header toolbar */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-2 flex-wrap">
             <ImageIcon className="w-4 h-4 text-[#33599E]" />
             <h2 className="text-sm font-black text-[#000000]">Listing Gallery</h2>
             <span className="text-xs font-semibold text-[#64748B] bg-[#F4F7FC] px-2.5 py-0.5 rounded-full border border-[#CBD5E1]">
               {totalPhotos} photo{totalPhotos !== 1 ? 's' : ''}
             </span>
+
+            {/* Staged photos indicator */}
+            {viewMode === 'staged' && (
+              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-300 px-2.5 py-0.5 rounded-full">
+                <Clock className="w-3 h-3 text-amber-600 animate-pulse" /> Staged Proposal (Pending Approval)
+              </span>
+            )}
           </div>
 
-          <button
-            type="button"
-            onClick={() => handleOpenLightbox(0)}
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-[#33599E] hover:text-[#234079] transition"
-          >
-            <Maximize2 className="w-3.5 h-3.5" /> View Fullscreen
-          </button>
+          <div className="flex items-center gap-3">
+            {/* View Mode Toggle when changes are staged */}
+            {hasStagedMedia && (
+              <div className="flex items-center rounded-xl bg-[#F4F7FC] p-1 border border-[#CBD5E1] text-xs font-bold">
+                <button
+                  type="button"
+                  onClick={() => setViewMode('live')}
+                  className={`px-3 py-1 rounded-lg transition ${
+                    viewMode === 'live'
+                      ? 'bg-white text-[#33599E] shadow-2xs'
+                      : 'text-[#64748B] hover:text-[#000000]'
+                  }`}
+                >
+                  Live Approved
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('staged')}
+                  className={`px-3 py-1 rounded-lg transition flex items-center gap-1 ${
+                    viewMode === 'staged'
+                      ? 'bg-amber-500 text-white shadow-2xs'
+                      : 'text-amber-700 hover:text-amber-900'
+                  }`}
+                >
+                  <Clock className="w-3 h-3" /> Staged Changes
+                </button>
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={() => handleOpenLightbox(0)}
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#33599E] hover:text-[#234079] transition shrink-0"
+            >
+              <Maximize2 className="w-3.5 h-3.5" /> Fullscreen
+            </button>
+          </div>
         </div>
 
         {/* Gallery Grid */}
@@ -147,7 +209,7 @@ export default function HostListingGallery({
             {/* Cover Badge */}
             <div className="absolute top-3 left-3 bg-[#33599E]/90 backdrop-blur-xs text-white text-[11px] font-bold px-3 py-1 rounded-full shadow-sm flex items-center gap-1.5 border border-white/20">
               <Star className="w-3 h-3 fill-current text-amber-300" />
-              <span>Cover Photo</span>
+              <span>{viewMode === 'staged' ? 'Proposed Cover Photo' : 'Cover Photo'}</span>
             </div>
 
             {/* Hover expand hint */}
@@ -220,9 +282,14 @@ export default function HostListingGallery({
               <span className="text-xs font-mono font-bold bg-white/10 px-3 py-1 rounded-full backdrop-blur-xs">
                 {activePhotoIndex + 1} / {totalPhotos}
               </span>
-              {activePhotoIndex === 0 && coverImage && (
+              {activePhotoIndex === 0 && currentCover && (
                 <span className="text-xs font-bold text-amber-300 bg-amber-500/20 px-2.5 py-0.5 rounded-full flex items-center gap-1 border border-amber-500/40">
                   <Star className="w-3 h-3 fill-current" /> Cover Photo
+                </span>
+              )}
+              {viewMode === 'staged' && (
+                <span className="text-xs font-bold text-amber-200 bg-amber-600/30 px-2 py-0.5 rounded-full border border-amber-400/30">
+                  Staged Proposal
                 </span>
               )}
             </div>

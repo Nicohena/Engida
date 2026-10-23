@@ -19,9 +19,11 @@ import { User, UserRole } from '../../users/entities/user.entity';
 import {
   classifyListingChanges,
   validatePublishReadiness,
+  sanitizeListingUpdatePayload,
 } from './constants/moderation.constants';
 import { UpdateHostListingDto } from '../host/dto/update-host-listing.dto';
 import { QueryReviewsDto } from './dto/moderation-review.dto';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @Injectable()
 export class ListingModerationService {
@@ -35,7 +37,64 @@ export class ListingModerationService {
     @InjectRepository(Amenity)
     private readonly amenityRepository: Repository<Amenity>,
     private readonly dataSource: DataSource,
+    private readonly cloudinaryService: CloudinaryService,
   ) {}
+
+  /**
+   * Finds active pending review proposal for a listing.
+   */
+  async findPendingReview(propertyId: string): Promise<ListingReview | null> {
+    return this.reviewRepository.findOne({
+      where: { propertyId, status: ReviewStatus.PENDING },
+    });
+  }
+
+  /**
+   * Safely deletes orphaned images from Cloudinary.
+   * NEVER deletes any image referenced by the live listing or another pending proposal.
+   */
+  async cleanOrphanImages(
+    propertyId: string,
+    candidateUrls: string[],
+    excludeReviewId?: string,
+  ): Promise<void> {
+    if (!candidateUrls || candidateUrls.length === 0) return;
+
+    const property = await this.propertyRepository.findOne({ where: { id: propertyId } });
+    if (!property) return;
+
+    // Collect all URLs actively retained by the live listing
+    const retained = new Set<string>(
+      [property.coverImage, ...(property.images || [])].filter((url): url is string => Boolean(url)),
+    );
+
+    // Collect all URLs actively retained by any OTHER pending review for this property
+    const pendingReviews = await this.reviewRepository.find({
+      where: { propertyId, status: ReviewStatus.PENDING },
+    });
+
+    for (const pending of pendingReviews) {
+      if (excludeReviewId && pending.id === excludeReviewId) continue;
+      if (pending.proposedChanges?.coverImage) {
+        retained.add(pending.proposedChanges.coverImage);
+      }
+      if (Array.isArray(pending.proposedChanges?.images)) {
+        for (const img of pending.proposedChanges.images) {
+          if (img) retained.add(img);
+        }
+      }
+    }
+
+    const orphans = candidateUrls.filter((url) => Boolean(url) && !retained.has(url));
+    if (orphans.length > 0) {
+      try {
+        await this.cloudinaryService.deletePropertyImages(propertyId, orphans);
+        this.logger.log(`Cleaned up ${orphans.length} orphan images for property ${propertyId}`);
+      } catch (err: any) {
+        this.logger.warn(`Failed to clean orphan images for property ${propertyId}: ${err?.message}`);
+      }
+    }
+  }
 
   /**
    * Submits a listing for manual admin review.
@@ -140,7 +199,8 @@ export class ListingModerationService {
       throw new ForbiddenException('You can only update your own listings');
     }
 
-    const { amenityIds, ...updateData } = dto;
+    const sanitizedDto = sanitizeListingUpdatePayload(dto);
+    const { amenityIds, ...updateData } = sanitizedDto;
 
     // 1. DRAFT Listings: Host may edit all fields freely without creating an edit review proposal
     if (property.status === ListingStatus.DRAFT) {
@@ -165,6 +225,60 @@ export class ListingModerationService {
       ...updateData,
       ...(amenityIds !== undefined ? { amenityIds } : {}),
     });
+
+    const existingPending = await this.reviewRepository.findOne({
+      where: { propertyId, status: ReviewStatus.PENDING },
+    });
+
+    // If an existing pending proposal exists, handle proposal merges and field reversions
+    if (existingPending) {
+      const mergedChanges = { ...(existingPending.proposedChanges || {}) };
+      let changedInProposal = false;
+
+      // Apply incoming important changes
+      for (const [key, val] of Object.entries(classification.rawChanges)) {
+        mergedChanges[key] = val;
+        changedInProposal = true;
+      }
+
+      // If any field in updateData now matches the live property, remove it from proposedChanges
+      for (const key of Object.keys(updateData)) {
+        if (!(key in classification.rawChanges) && key in mergedChanges) {
+          delete mergedChanges[key];
+          changedInProposal = true;
+        }
+      }
+      if (amenityIds !== undefined && !('amenityIds' in classification.minorChanges) && 'amenityIds' in mergedChanges) {
+        delete mergedChanges['amenityIds'];
+        changedInProposal = true;
+      }
+
+      if (changedInProposal) {
+        const remainingKeys = Object.keys(mergedChanges).filter((k) => k !== 'notes');
+        if (remainingKeys.length === 0) {
+          existingPending.status = ReviewStatus.WITHDRAWN;
+          existingPending.proposedChanges = null;
+          const savedReview = await this.reviewRepository.save(existingPending);
+          return {
+            property,
+            review: savedReview,
+            isPendingReview: false,
+            message: 'All proposed changes reverted to live listing state. Review proposal withdrawn.',
+          };
+        }
+
+        existingPending.proposedChanges = mergedChanges;
+        existingPending.submittedAt = new Date();
+        const savedReview = await this.reviewRepository.save(existingPending);
+        return {
+          property,
+          review: savedReview,
+          isPendingReview: true,
+          message:
+            'Important changes submitted for review. The public listing remains online and unchanged until approved.',
+        };
+      }
+    }
 
     // If NO important changes: apply minor changes directly
     if (!classification.hasImportantChanges) {
@@ -195,32 +309,17 @@ export class ListingModerationService {
       };
     }
 
-    // 3. IMPORTANT changes proposed on an approved/published listing:
-    // Approved public version remains UNCHANGED. Create or update an IMPORTANT_EDIT proposal.
-    const existingPending = await this.reviewRepository.findOne({
-      where: { propertyId, status: ReviewStatus.PENDING },
+    // 3. IMPORTANT changes proposed on an approved/published listing with no prior pending proposal:
+    // Approved public version remains UNCHANGED. Create an IMPORTANT_EDIT proposal.
+    const review = this.reviewRepository.create({
+      propertyId,
+      submissionType: ReviewSubmissionType.IMPORTANT_EDIT,
+      status: ReviewStatus.PENDING,
+      submittedByHostId: hostId,
+      proposedChanges: classification.rawChanges,
+      submittedAt: new Date(),
     });
-
-    let review: ListingReview;
-    if (existingPending) {
-      // Merge updates into the active pending proposal
-      existingPending.proposedChanges = {
-        ...(existingPending.proposedChanges || {}),
-        ...classification.rawChanges,
-      };
-      existingPending.submittedAt = new Date();
-      review = await this.reviewRepository.save(existingPending);
-    } else {
-      review = this.reviewRepository.create({
-        propertyId,
-        submissionType: ReviewSubmissionType.IMPORTANT_EDIT,
-        status: ReviewStatus.PENDING,
-        submittedByHostId: hostId,
-        proposedChanges: classification.rawChanges,
-        submittedAt: new Date(),
-      });
-      review = await this.reviewRepository.save(review);
-    }
+    const savedReview = await this.reviewRepository.save(review);
 
     this.logger.log(
       `Important edit proposal created for published listing ${propertyId} by host ${hostId}`,
@@ -228,7 +327,7 @@ export class ListingModerationService {
 
     return {
       property, // Unchanged approved public version
-      review,
+      review: savedReview,
       isPendingReview: true,
       message:
         'Important changes submitted for review. The public listing remains online and unchanged until approved.',
@@ -264,6 +363,15 @@ export class ListingModerationService {
     pendingReview.status = ReviewStatus.WITHDRAWN;
     const saved = await this.reviewRepository.save(pendingReview);
     this.logger.log(`Review ${saved.id} withdrawn by host ${hostId}`);
+
+    // Clean up staged images that are not used by the live listing or another pending proposal
+    const stagedImages = [
+      pendingReview.proposedChanges?.coverImage,
+      ...(pendingReview.proposedChanges?.images || []),
+    ].filter((url): url is string => Boolean(url));
+    if (stagedImages.length > 0) {
+      await this.cleanOrphanImages(propertyId, stagedImages, pendingReview.id);
+    }
 
     return {
       message: 'Pending review proposal withdrawn successfully.',
@@ -429,12 +537,19 @@ export class ListingModerationService {
         throw new NotFoundException(`Property with ID "${review.propertyId}" not found`);
       }
 
+      let previousLiveImages: string[] = [];
       if (review.submissionType === ReviewSubmissionType.INITIAL_PUBLISH) {
         property.status = ListingStatus.PUBLISHED;
         property.adminHidden = false;
         property.adminHiddenReason = null;
         await propertyRepo.save(property);
       } else if (review.submissionType === ReviewSubmissionType.IMPORTANT_EDIT) {
+        // Record previous live images before applying approved changes
+        previousLiveImages = [
+          property.coverImage,
+          ...(property.images || []),
+        ].filter((url): url is string => Boolean(url));
+
         // Apply proposed edits to the live property
         if (review.proposedChanges) {
           const { amenityIds, ...directChanges } = review.proposedChanges;
@@ -454,6 +569,11 @@ export class ListingModerationService {
       review.reviewedAt = new Date();
       review.rejectionReason = null;
       const savedReview = await reviewRepo.save(review);
+
+      // Clean up previous live images that were replaced and are no longer referenced
+      if (previousLiveImages.length > 0) {
+        await this.cleanOrphanImages(property.id, previousLiveImages, review.id);
+      }
 
       this.logger.log(
         `Review ${reviewId} approved by admin ${adminUser.id} for property ${property.id}`,
@@ -506,6 +626,15 @@ export class ListingModerationService {
       review.reviewedByAdminId = adminUser.id;
       review.reviewedAt = new Date();
       const savedReview = await reviewRepo.save(review);
+
+      // Clean up staged images that are not used by the live listing or another pending proposal
+      const stagedImages = [
+        review.proposedChanges?.coverImage,
+        ...(review.proposedChanges?.images || []),
+      ].filter((url): url is string => Boolean(url));
+      if (stagedImages.length > 0) {
+        await this.cleanOrphanImages(review.propertyId, stagedImages, review.id);
+      }
 
       this.logger.log(
         `Review ${reviewId} rejected by admin ${adminUser.id}. Reason: ${rejectionReason.trim()}`,

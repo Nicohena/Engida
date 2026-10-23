@@ -68,6 +68,44 @@ export const MINOR_LISTING_FIELDS = [
 
 export type MinorListingField = (typeof MINOR_LISTING_FIELDS)[number];
 
+/**
+ * Server-controlled, immutable, or lifecycle fields that MUST NOT be modified via
+ * listing update DTOs or endpoints. Attempts to mass-assign these fields are stripped or rejected.
+ */
+export const PROTECTED_PROPERTY_FIELDS = [
+  'id',
+  'hostId',
+  'host',
+  'status',
+  'listingType',
+  'adminHidden',
+  'adminHiddenReason',
+  'adminHiddenAt',
+  'adminHiddenById',
+  'createdAt',
+  'updatedAt',
+  'rooms',
+  'amenities',
+  'bookings',
+  'reviews',
+  'availabilityBlocks',
+  'moderationReviews',
+] as const;
+
+export type ProtectedPropertyField = (typeof PROTECTED_PROPERTY_FIELDS)[number];
+
+/**
+ * Strips all protected and server-controlled fields from incoming property update payloads.
+ */
+export function sanitizeListingUpdatePayload<T extends Record<string, any>>(payload: T): Partial<T> {
+  if (!payload || typeof payload !== 'object') return {};
+  const clean = { ...payload };
+  for (const field of PROTECTED_PROPERTY_FIELDS) {
+    delete (clean as any)[field];
+  }
+  return clean;
+}
+
 export interface FieldChange {
   from: any;
   to: any;
@@ -95,6 +133,7 @@ export function classifyListingChanges(
 
   for (const [key, val] of Object.entries(updates)) {
     if (val === undefined) continue;
+    if ((PROTECTED_PROPERTY_FIELDS as readonly string[]).includes(key)) continue;
 
     // Check amenity IDs comparison
     if (key === 'amenityIds') {
