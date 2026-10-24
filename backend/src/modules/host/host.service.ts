@@ -5,6 +5,7 @@ import {
   BadRequestException,
   ConflictException,
   Logger,
+  Optional,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, SelectQueryBuilder, In } from 'typeorm';
@@ -28,6 +29,8 @@ import { CreateRoomDto } from '../properties/dto/create-room.dto';
 import { UpdateHostRoomDto } from './dto/update-host-room.dto';
 import { UpdateHostListingDto } from './dto/update-host-listing.dto';
 import { QueryHostListingsDto, QueryHostReservationsDto } from './dto/query-host.dto';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '../notifications/entities/notification.entity';
 import { HostReservationResponse, HostReservationsPage } from './dto/host-reservation-response.dto';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { sanitizeListingUpdatePayload } from '../properties/constants/moderation.constants';
@@ -90,6 +93,8 @@ export class HostService {
     private readonly reviewRepository: Repository<ListingReview>,
     private readonly cloudinaryService: CloudinaryService,
     private readonly listingModerationService: ListingModerationService,
+    @Optional()
+    private readonly notificationsService?: NotificationsService,
   ) {}
 
   // ─────────────────────────────────────────
@@ -805,6 +810,46 @@ export class HostService {
       throw new ConflictException('This reservation changed while you were acting. Reload it and try again.');
     }
     booking.status = newStatus;
+
+    if (this.notificationsService) {
+      try {
+        const propTitle = booking.property?.title || 'your property';
+        if (newStatus === BookingStatus.CONFIRMED) {
+          await this.notificationsService.createNotification({
+            userId: hostId,
+            type: NotificationType.BOOKING_CONFIRMED,
+            title: 'Reservation Confirmed',
+            message: `Reservation #${booking.id.slice(0, 8)} for "${propTitle}" has been confirmed.`,
+            link: '/host/reservations',
+            metadata: { bookingId: booking.id, propertyId: booking.property?.id },
+            idempotencyKey: `booking_${booking.id}_CONFIRMED`,
+          });
+        } else if (newStatus === BookingStatus.CANCELLED) {
+          await this.notificationsService.createNotification({
+            userId: hostId,
+            type: NotificationType.BOOKING_CANCELLED,
+            title: 'Reservation Cancelled',
+            message: `Reservation #${booking.id.slice(0, 8)} for "${propTitle}" has been cancelled.`,
+            link: '/host/reservations',
+            metadata: { bookingId: booking.id, propertyId: booking.property?.id },
+            idempotencyKey: `booking_${booking.id}_CANCELLED`,
+          });
+        } else if (newStatus === BookingStatus.COMPLETED) {
+          await this.notificationsService.createNotification({
+            userId: hostId,
+            type: NotificationType.BOOKING_COMPLETED,
+            title: 'Stay Completed',
+            message: `Stay for reservation #${booking.id.slice(0, 8)} at "${propTitle}" has concluded.`,
+            link: '/host/reservations',
+            metadata: { bookingId: booking.id, propertyId: booking.property?.id },
+            idempotencyKey: `booking_${booking.id}_COMPLETED`,
+          });
+        }
+      } catch (err: unknown) {
+        this.logger.warn(`Failed to dispatch reservation notification: ${err}`);
+      }
+    }
+
     this.logger.log(`Host ${hostId} changed booking ${bookingId} status to ${newStatus}`);
     return booking;
   }

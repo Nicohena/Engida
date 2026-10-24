@@ -29,6 +29,8 @@ import { Amenity } from './modules/amenities/entities/amenity.entity';
 import { Booking } from './modules/bookings/entities/booking.entity';
 import { Review } from './modules/reviews/entities/review.entity';
 import { ListingReview } from './modules/properties/entities/listing-review.entity';
+import { Notification } from './modules/notifications/entities/notification.entity';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 import { validate } from './config/env.validation';
 
 @Module({
@@ -61,6 +63,7 @@ import { validate } from './config/env.validation';
           Booking,
           Review,
           ListingReview,
+          Notification,
         ];
 
         if (databaseUrl) {
@@ -110,6 +113,7 @@ import { validate } from './config/env.validation';
     PaymentsModule,
     ListingModerationModule,
     AdminModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [

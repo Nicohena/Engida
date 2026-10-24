@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { apiFetch } from '../../../../lib/api';
 import type {
   HostListingDetail,
@@ -289,7 +290,7 @@ export default function ListingDetailPage() {
     if (!listing) return;
     setActionLoading(true);
     try {
-      const res: any = await apiFetch(`/host/listings/${listing.id}/publish`, { method: 'PATCH' });
+      const res = await apiFetch<{ message?: string }>(`/host/listings/${listing.id}/publish`, { method: 'PATCH' });
       showToast(
         res?.message || 'Listing submitted for review successfully! An administrator will review it shortly.',
         'success',
@@ -631,7 +632,7 @@ export default function ListingDetailPage() {
                           <span className="text-slate-500 text-[11px] truncate block max-w-sm">{v}</span>
                         </div>
                         <div className="relative w-14 h-14 rounded-lg overflow-hidden border border-slate-200 shrink-0 bg-slate-100">
-                          <img src={v} alt="Proposed cover preview" className="w-full h-full object-cover" />
+                          <Image src={v} alt="Proposed cover preview" fill sizes="56px" className="object-cover" />
                         </div>
                       </div>
                     );
@@ -652,7 +653,7 @@ export default function ListingDetailPage() {
                               key={i}
                               className="relative w-12 h-12 rounded-lg overflow-hidden border border-slate-200 shrink-0 bg-slate-100"
                             >
-                              <img src={imgUrl} alt={`Proposed ${i + 1}`} className="w-full h-full object-cover" />
+                              <Image src={imgUrl} alt={`Proposed ${i + 1}`} fill sizes="48px" className="object-cover" />
                             </div>
                           ))}
                           {v.length > 6 && (

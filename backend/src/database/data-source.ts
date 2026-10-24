@@ -15,6 +15,7 @@ import { Amenity } from '../modules/amenities/entities/amenity.entity';
 import { Booking } from '../modules/bookings/entities/booking.entity';
 import { Review } from '../modules/reviews/entities/review.entity';
 import { ListingReview } from '../modules/properties/entities/listing-review.entity';
+import { Notification } from '../modules/notifications/entities/notification.entity';
 
 const databaseUrl = process.env.DATABASE_URL;
 
@@ -34,6 +35,7 @@ const AppDataSource = new DataSource(
           Booking,
           Review,
           ListingReview,
+          Notification,
         ],
         migrations: [path.join(__dirname, 'migrations/*{.ts,.js}')],
         synchronize: false,
@@ -57,6 +59,7 @@ const AppDataSource = new DataSource(
           Booking,
           Review,
           ListingReview,
+          Notification,
         ],
         migrations: [path.join(__dirname, 'migrations/*{.ts,.js}')],
         synchronize: false,

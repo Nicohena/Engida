@@ -5,6 +5,7 @@ import {
   BadRequestException,
   ConflictException,
   Logger,
+  Optional,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, SelectQueryBuilder } from 'typeorm';
@@ -24,6 +25,8 @@ import {
 import { UpdateHostListingDto } from '../host/dto/update-host-listing.dto';
 import { QueryReviewsDto } from './dto/moderation-review.dto';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '../notifications/entities/notification.entity';
 
 @Injectable()
 export class ListingModerationService {
@@ -38,6 +41,8 @@ export class ListingModerationService {
     private readonly amenityRepository: Repository<Amenity>,
     private readonly dataSource: DataSource,
     private readonly cloudinaryService: CloudinaryService,
+    @Optional()
+    private readonly notificationsService?: NotificationsService,
   ) {}
 
   /**
@@ -579,6 +584,26 @@ export class ListingModerationService {
         `Review ${reviewId} approved by admin ${adminUser.id} for property ${property.id}`,
       );
 
+      if (this.notificationsService && property.hostId) {
+        try {
+          await this.notificationsService.createNotification({
+            userId: property.hostId,
+            type: NotificationType.LISTING_APPROVED,
+            title: 'Listing Approved',
+            message: `Your listing "${property.title}" has been approved and published.`,
+            link: `/host/listings/${property.id}`,
+            metadata: {
+              propertyId: property.id,
+              reviewId: savedReview.id,
+              submissionType: savedReview.submissionType,
+            },
+            idempotencyKey: `review_${savedReview.id}_APPROVED`,
+          });
+        } catch (notifErr: any) {
+          this.logger.warn(`Failed to create listing approval notification: ${notifErr?.message}`);
+        }
+      }
+
       return {
         message: 'Review approved successfully. Listing is now updated and published.',
         review: savedReview,
@@ -639,6 +664,36 @@ export class ListingModerationService {
       this.logger.log(
         `Review ${reviewId} rejected by admin ${adminUser.id}. Reason: ${rejectionReason.trim()}`,
       );
+
+      if (this.notificationsService) {
+        try {
+          const propertyRepo = manager.getRepository(Property);
+          const property = await propertyRepo.findOne({
+            where: { id: review.propertyId },
+            select: ['id', 'title', 'hostId'],
+          });
+          const targetUserId = property?.hostId || review.submittedByHostId;
+          const listingTitle = property?.title || 'Your listing';
+
+          if (targetUserId) {
+            await this.notificationsService.createNotification({
+              userId: targetUserId,
+              type: NotificationType.LISTING_REJECTED,
+              title: 'Listing Review Update',
+              message: `Changes to "${listingTitle}" were not approved: ${rejectionReason.trim()}`,
+              link: `/host/listings/${review.propertyId}`,
+              metadata: {
+                propertyId: review.propertyId,
+                reviewId: savedReview.id,
+                rejectionReason: rejectionReason.trim(),
+              },
+              idempotencyKey: `review_${savedReview.id}_REJECTED`,
+            });
+          }
+        } catch (notifErr: any) {
+          this.logger.warn(`Failed to create listing rejection notification: ${notifErr?.message}`);
+        }
+      }
 
       return {
         message: 'Review proposal rejected with explanation.',

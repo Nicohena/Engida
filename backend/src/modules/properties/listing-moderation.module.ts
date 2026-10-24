@@ -5,11 +5,13 @@ import { ListingReview } from './entities/listing-review.entity';
 import { Amenity } from '../amenities/entities/amenity.entity';
 import { ListingModerationService } from './listing-moderation.service';
 import { CloudinaryModule } from '../cloudinary/cloudinary.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Property, ListingReview, Amenity]),
     CloudinaryModule,
+    NotificationsModule,
   ],
   providers: [ListingModerationService],
   exports: [ListingModerationService, TypeOrmModule],

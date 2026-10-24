@@ -5,6 +5,7 @@ import {
   ForbiddenException,
   ConflictException,
   Logger,
+  Optional,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not, In } from 'typeorm';
@@ -16,6 +17,8 @@ import { HostProfile } from '../../users/entities/host-profile.entity';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingStatusDto } from './dto/update-booking-status.dto';
 import { UserRole } from '../../users/entities/user.entity';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '../notifications/entities/notification.entity';
 
 @Injectable()
 export class BookingsService {
@@ -32,6 +35,8 @@ export class BookingsService {
     private readonly availabilityBlockRepository: Repository<AvailabilityBlock>,
     @InjectRepository(HostProfile)
     private readonly hostProfileRepository: Repository<HostProfile>,
+    @Optional()
+    private readonly notificationsService?: NotificationsService,
   ) {}
 
   async create(createBookingDto: CreateBookingDto, guestId: string): Promise<Booking> {
@@ -58,7 +63,8 @@ export class BookingsService {
 
     // Booking creation and host date blocks share a lock on the property row.
     // The lock keeps overlap checks and writes in one serialized transaction.
-    const { id, totalPrice } = await this.bookingRepository.manager.transaction(async (manager) => {
+    const { id, totalPrice, hostId, propertyTitle } =
+      await this.bookingRepository.manager.transaction(async (manager) => {
       const propertyRepository = manager.getRepository(Property);
       const bookingRepository = manager.getRepository(Booking);
       const roomRepository = manager.getRepository(Room);
@@ -167,12 +173,33 @@ export class BookingsService {
         paidAt: isOnlinePaid ? new Date() : null,
       });
       const saved = await bookingRepository.save(booking);
-      return { id: saved.id, totalPrice };
+      return {
+        id: saved.id,
+        totalPrice,
+        hostId: property.hostId,
+        propertyTitle: property.title,
+      };
     });
 
     this.logger.log(
       `Booking created: ${id} for property ${propertyId} (${nights} nights, ETB ${totalPrice})`,
     );
+
+    if (this.notificationsService) {
+      try {
+        await this.notificationsService.createNotification({
+          userId: hostId,
+          type: NotificationType.BOOKING_REQUESTED,
+          title: 'New Reservation Request',
+          message: `You received a new reservation request for "${propertyTitle}" (${nights} ${nights === 1 ? 'night' : 'nights'}).`,
+          link: '/host/reservations',
+          metadata: { bookingId: id, propertyId },
+          idempotencyKey: `booking_${id}_REQUESTED`,
+        });
+      } catch (notifErr: unknown) {
+        this.logger.warn(`Failed to dispatch booking notification: ${notifErr}`);
+      }
+    }
 
     return this.findOne(id, guestId);
   }
@@ -287,6 +314,35 @@ export class BookingsService {
     );
     if (updateResult.affected !== 1) {
       throw new ConflictException('This reservation changed while you were acting. Reload it and try again.');
+    }
+
+    if (this.notificationsService && booking.property?.hostId) {
+      try {
+        const propTitle = booking.property?.title || 'your property';
+        if (updateDto.status === BookingStatus.CANCELLED) {
+          await this.notificationsService.createNotification({
+            userId: booking.property.hostId,
+            type: NotificationType.BOOKING_CANCELLED,
+            title: 'Reservation Cancelled',
+            message: `Reservation #${booking.id.slice(0, 8)} for "${propTitle}" has been cancelled.`,
+            link: '/host/reservations',
+            metadata: { bookingId: id, propertyId: booking.property.id },
+            idempotencyKey: `booking_${id}_CANCELLED`,
+          });
+        } else if (updateDto.status === BookingStatus.CONFIRMED) {
+          await this.notificationsService.createNotification({
+            userId: booking.property.hostId,
+            type: NotificationType.BOOKING_CONFIRMED,
+            title: 'Reservation Confirmed',
+            message: `Reservation #${booking.id.slice(0, 8)} for "${propTitle}" has been confirmed.`,
+            link: '/host/reservations',
+            metadata: { bookingId: id, propertyId: booking.property.id },
+            idempotencyKey: `booking_${id}_CONFIRMED`,
+          });
+        }
+      } catch (notifErr: unknown) {
+        this.logger.warn(`Failed to dispatch booking status notification: ${notifErr}`);
+      }
     }
 
     this.logger.log(`Booking ${id} status updated to ${updateDto.status} by user ${userId}`);

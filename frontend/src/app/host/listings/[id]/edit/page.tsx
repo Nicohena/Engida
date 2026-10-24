@@ -27,8 +27,6 @@ import {
   Lock,
   Sparkles,
   Info,
-  Shield,
-  Clock,
 } from 'lucide-react';
 
 function initFormFromListing(data: HostListingDetail): EditFormState {
