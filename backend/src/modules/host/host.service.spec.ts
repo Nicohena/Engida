@@ -224,6 +224,7 @@ const mockHostProfileRepo = {
 
 const mockUserRepo = {
   findOne: jest.fn().mockResolvedValue(mockUser),
+  update: jest.fn().mockResolvedValue({ affected: 1 }),
 };
 
 const mockListingReviewRepo = {
@@ -370,6 +371,93 @@ describe('HostService', () => {
       } as any);
       // verificationStatus should remain UNVERIFIED
       expect(result.verificationStatus).toBe(HostVerificationStatus.UNVERIFIED);
+    });
+
+    it('[positive] updates avatar by updating the user record', async () => {
+      mockHostProfileRepo.findOne.mockResolvedValue({ ...mockHostProfile });
+      await service.updateHostProfile(HOST_ID, { avatar: 'https://example.com/avatar.jpg' });
+      expect(mockUserRepo.update).toHaveBeenCalledWith(HOST_ID, { avatar: 'https://example.com/avatar.jpg' });
+    });
+  });
+
+  describe('requestVerification', () => {
+    it('[positive] transitions UNVERIFIED profile to PENDING', async () => {
+      mockHostProfileRepo.findOne.mockResolvedValue({
+        ...mockHostProfile,
+        displayName: 'Test Host',
+        phone: '+251911223344',
+        verificationStatus: HostVerificationStatus.UNVERIFIED,
+      });
+
+      await service.requestVerification(HOST_ID);
+      expect(mockHostProfileRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          verificationStatus: HostVerificationStatus.PENDING,
+        }),
+      );
+    });
+
+    it('[positive] allows resubmission after REJECTED status', async () => {
+      mockHostProfileRepo.findOne.mockResolvedValue({
+        ...mockHostProfile,
+        displayName: 'Test Host',
+        phone: '+251911223344',
+        verificationStatus: HostVerificationStatus.REJECTED,
+      });
+
+      await service.requestVerification(HOST_ID);
+      expect(mockHostProfileRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          verificationStatus: HostVerificationStatus.PENDING,
+        }),
+      );
+    });
+
+    it('[negative] throws BadRequestException if already VERIFIED', async () => {
+      mockHostProfileRepo.findOne.mockResolvedValue({
+        ...mockHostProfile,
+        verificationStatus: HostVerificationStatus.VERIFIED,
+      });
+
+      await expect(service.requestVerification(HOST_ID)).rejects.toThrow(
+        'Your host profile is already verified.',
+      );
+    });
+
+    it('[negative] throws BadRequestException if already PENDING', async () => {
+      mockHostProfileRepo.findOne.mockResolvedValue({
+        ...mockHostProfile,
+        verificationStatus: HostVerificationStatus.PENDING,
+      });
+
+      await expect(service.requestVerification(HOST_ID)).rejects.toThrow(
+        'Verification request is already pending administrative review.',
+      );
+    });
+
+    it('[negative] throws BadRequestException if displayName is missing', async () => {
+      mockHostProfileRepo.findOne.mockResolvedValue({
+        ...mockHostProfile,
+        displayName: '',
+        verificationStatus: HostVerificationStatus.UNVERIFIED,
+      });
+
+      await expect(service.requestVerification(HOST_ID)).rejects.toThrow(
+        'Please set your host display name before requesting verification.',
+      );
+    });
+
+    it('[negative] throws BadRequestException if phone is missing', async () => {
+      mockHostProfileRepo.findOne.mockResolvedValue({
+        ...mockHostProfile,
+        displayName: 'Valid Name',
+        phone: '',
+        verificationStatus: HostVerificationStatus.UNVERIFIED,
+      });
+
+      await expect(service.requestVerification(HOST_ID)).rejects.toThrow(
+        'Please provide a valid contact phone number before requesting verification.',
+      );
     });
   });
 

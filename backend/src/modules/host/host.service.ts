@@ -133,8 +133,11 @@ export class HostService {
   /**
    * Get the HostProfile for the authenticated user.
    */
-  async getHostProfile(userId: string): Promise<HostProfile | null> {
-    const profile = await this.hostProfileRepository.findOne({ where: { userId } });
+  async getHostProfile(userId: string): Promise<HostProfile> {
+    const profile = await this.hostProfileRepository.findOne({
+      where: { userId },
+      relations: ['user'],
+    });
     if (!profile) {
       throw new NotFoundException('Host profile not found. User is not a host.');
     }
@@ -164,7 +167,7 @@ export class HostService {
   }
 
   /**
-   * Update host profile fields (displayName, bio, phone only).
+   * Update host profile fields (displayName, bio, phone, avatar).
    * verificationStatus cannot be changed by the host.
    */
   async updateHostProfile(userId: string, dto: UpdateHostProfileDto): Promise<HostProfile> {
@@ -174,6 +177,11 @@ export class HostService {
       if (dto.displayName !== undefined) profile.displayName = dto.displayName;
       if (dto.bio !== undefined) profile.bio = dto.bio;
       if (dto.phone !== undefined) profile.phone = dto.phone;
+
+      // Update user avatar if provided
+      if (dto.avatar !== undefined) {
+        await this.userRepository.update(userId, { avatar: dto.avatar || null });
+      }
 
       // Payout & Banking
       if (dto.payoutProvider !== undefined) profile.payoutProvider = dto.payoutProvider;
@@ -185,9 +193,44 @@ export class HostService {
       if (dto.payoutEmail !== undefined) profile.payoutEmail = dto.payoutEmail;
       if (dto.payoutCurrency !== undefined) profile.payoutCurrency = dto.payoutCurrency;
 
-      return this.hostProfileRepository.save(profile);
+      await this.hostProfileRepository.save(profile);
+      return this.getHostProfile(userId);
     }
     throw new NotFoundException('Host profile not found.');
+  }
+
+  /**
+   * Request identity verification for the host profile.
+   * Transitions status from UNVERIFIED or REJECTED to PENDING.
+   * Security: Hosts CANNOT set status to VERIFIED or approve themselves.
+   */
+  async requestVerification(userId: string): Promise<HostProfile> {
+    const profile = await this.getHostProfile(userId);
+    if (!profile) {
+      throw new NotFoundException('Host profile not found.');
+    }
+
+    if (profile.verificationStatus === HostVerificationStatus.VERIFIED) {
+      throw new BadRequestException('Your host profile is already verified.');
+    }
+
+    if (profile.verificationStatus === HostVerificationStatus.PENDING) {
+      throw new BadRequestException('Verification request is already pending administrative review.');
+    }
+
+    // Require essential identity fields before submitting for verification
+    if (!profile.displayName?.trim()) {
+      throw new BadRequestException('Please set your host display name before requesting verification.');
+    }
+    if (!profile.phone?.trim()) {
+      throw new BadRequestException('Please provide a valid contact phone number before requesting verification.');
+    }
+
+    profile.verificationStatus = HostVerificationStatus.PENDING;
+    await this.hostProfileRepository.save(profile);
+    this.logger.log(`Host ${userId} requested identity verification (status -> PENDING)`);
+
+    return this.getHostProfile(userId);
   }
 
   // ─────────────────────────────────────────

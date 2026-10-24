@@ -149,6 +149,13 @@ export interface HostProfile {
   bio: string | null;
   phone: string | null;
   verificationStatus: HostVerificationStatus;
+  user?: {
+    id: string;
+    name: string;
+    email: string;
+    avatar: string | null;
+    role: string;
+  };
   payoutProvider?: PayoutProvider | null;
   payoutAccountName?: string | null;
   payoutAccountNumber?: string | null;
@@ -159,6 +166,13 @@ export interface HostProfile {
   payoutCurrency?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface UpdateHostProfilePayload {
+  displayName?: string;
+  phone?: string | null;
+  bio?: string | null;
+  avatar?: string | null;
 }
 
 // ──────────────────────────────────────

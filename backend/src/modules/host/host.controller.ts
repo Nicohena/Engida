@@ -72,7 +72,7 @@ export class HostController {
 
   /**
    * PUT /host/profile
-   * Update displayName, bio, or phone. verificationStatus is read-only for hosts.
+   * Update displayName, bio, phone, or avatar. verificationStatus is read-only for hosts.
    */
   @Put('profile')
   async updateProfile(
@@ -80,6 +80,16 @@ export class HostController {
     @Body() dto: UpdateHostProfileDto,
   ) {
     return this.hostService.updateHostProfile(user.id, dto);
+  }
+
+  /**
+   * POST /host/profile/request-verification
+   * Request host identity verification (transitions UNVERIFIED/REJECTED -> PENDING).
+   * Host cannot approve or set VERIFIED.
+   */
+  @Post('profile/request-verification')
+  async requestVerification(@GetUser() user: User) {
+    return this.hostService.requestVerification(user.id);
   }
 
   // ─────────────────────────────────────────
