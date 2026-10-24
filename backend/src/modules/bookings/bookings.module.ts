@@ -5,11 +5,15 @@ import { Property } from '../properties/entities/property.entity';
 import { Room } from '../properties/entities/room.entity';
 import { AvailabilityBlock } from '../properties/entities/availability-block.entity';
 import { HostProfile } from '../../users/entities/host-profile.entity';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { BookingsService } from './bookings.service';
 import { BookingsController } from './bookings.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Booking, Property, Room, AvailabilityBlock, HostProfile])],
+  imports: [
+    TypeOrmModule.forFeature([Booking, Property, Room, AvailabilityBlock, HostProfile]),
+    NotificationsModule,
+  ],
   controllers: [BookingsController],
   providers: [BookingsService],
   exports: [BookingsService],

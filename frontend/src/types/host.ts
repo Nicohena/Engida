@@ -9,6 +9,24 @@ export type ListingStatus = 'DRAFT' | 'PUBLISHED' | 'PAUSED' | 'ARCHIVED' | 'SOL
 export type BookingStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED';
 export type PropertyType = 'HOUSE' | 'APARTMENT' | 'VILLA' | 'BEDROOM' | 'STUDIO';
 
+export type ReviewSubmissionType = 'INITIAL_PUBLISH' | 'IMPORTANT_EDIT';
+export type ReviewStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'WITHDRAWN';
+
+export interface ListingReviewItem {
+  id: string;
+  propertyId: string;
+  submissionType: ReviewSubmissionType;
+  status: ReviewStatus;
+  proposedChanges: Record<string, unknown> | null;
+  submittedByHostId: string;
+  submittedAt: string;
+  reviewedByAdminId: string | null;
+  reviewedAt: string | null;
+  rejectionReason: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Amenity {
   id: string;
   name: string;
@@ -98,6 +116,13 @@ export interface HostListingDetail {
   images: string[];
   amenities?: Amenity[];
   rooms?: import('./index').Room[];
+  adminHidden?: boolean;
+  adminHiddenReason?: string | null;
+  adminHiddenAt?: string | null;
+  activeReview?: ListingReviewItem | null;
+  reviewHistory?: ListingReviewItem[];
+  moderationMessage?: string | null;
+  isPendingReview?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -174,6 +199,11 @@ export interface HostListingRow {
   bedrooms: number;
   bathrooms: number;
   isAvailable: boolean;
+  adminHidden?: boolean;
+  adminHiddenReason?: string | null;
+  hasPendingReview?: boolean;
+  pendingReviewType?: ReviewSubmissionType | null;
+  rejectionReason?: string | null;
   createdAt: string;
   updatedAt: string;
 }

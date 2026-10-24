@@ -20,6 +20,8 @@ import { Booking, BookingStatus } from '../bookings/entities/booking.entity';
 import { HostProfile, HostVerificationStatus } from '../../users/entities/host-profile.entity';
 import { User, UserRole } from '../../users/entities/user.entity';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { ListingReview } from '../properties/entities/listing-review.entity';
+import { ListingModerationService } from '../properties/listing-moderation.service';
 
 // ─────────────────────────────────────────────────────────
 // Test fixtures
@@ -218,6 +220,44 @@ const mockUserRepo = {
   findOne: jest.fn().mockResolvedValue(mockUser),
 };
 
+const mockListingReviewRepo = {
+  find: jest.fn().mockResolvedValue([]),
+  findOne: jest.fn().mockResolvedValue(null),
+  save: jest.fn().mockImplementation((r) => Promise.resolve(r)),
+};
+
+const mockListingModerationService = {
+  submitForReview: jest.fn().mockImplementation(async (listingId, userId, role) => {
+    const prop = await mockPropertyRepo.findOne({ where: { id: listingId } });
+    if (!prop) throw new NotFoundException();
+    if (prop.hostId !== userId && role !== UserRole.ADMIN) throw new ForbiddenException();
+    if (prop.status !== ListingStatus.DRAFT) throw new BadRequestException('Already published or not draft');
+    if (!prop.coverImage || (prop.listingType === ListingType.RENTAL && !prop.pricePerNight)) {
+      throw new BadRequestException('Missing required fields');
+    }
+    return {
+      message: 'Submitted',
+      review: { id: 'rev-1', status: 'PENDING', submissionType: 'INITIAL_PUBLISH' },
+      property: prop,
+    };
+  }),
+  processListingUpdate: jest.fn().mockResolvedValue({
+    property: mockRentalListing,
+    review: null,
+    isPendingReview: false,
+    message: 'Updated.',
+  }),
+  withdrawReview: jest.fn().mockResolvedValue({
+    message: 'Review withdrawn.',
+    review: { id: 'rev-1', status: 'WITHDRAWN' },
+  }),
+  getHostListingReviews: jest.fn().mockResolvedValue({
+    activeReview: null,
+    history: [],
+    property: mockRentalListing,
+  }),
+};
+
 // ─────────────────────────────────────────────────────────
 // Test suite
 // ─────────────────────────────────────────────────────────
@@ -236,6 +276,8 @@ describe('HostService', () => {
         { provide: getRepositoryToken(Booking), useValue: mockBookingRepo },
         { provide: getRepositoryToken(HostProfile), useValue: mockHostProfileRepo },
         { provide: getRepositoryToken(User), useValue: mockUserRepo },
+        { provide: getRepositoryToken(ListingReview), useValue: mockListingReviewRepo },
+        { provide: ListingModerationService, useValue: mockListingModerationService },
         { provide: CloudinaryService, useValue: { deletePropertyImages: jest.fn().mockResolvedValue(undefined) } },
       ],
     }).compile();
@@ -479,6 +521,68 @@ describe('HostService', () => {
         service.updateListing('fake-id', { title: 'X' }, HOST_ID, UserRole.USER),
       ).rejects.toThrow(NotFoundException);
     });
+
+    it('[positive] updating published listing routes through listingModerationService.processListingUpdate', async () => {
+      mockPropertyRepo.findOne.mockResolvedValue({ ...mockPublishedListing });
+      mockPropertyRepo.createQueryBuilder.mockImplementation(() =>
+        createMockQb(mockPublishedListing),
+      );
+      mockListingModerationService.processListingUpdate.mockResolvedValueOnce({
+        property: mockPublishedListing,
+        review: {
+          id: 'rev-edit-1',
+          status: 'PENDING',
+          submissionType: 'IMPORTANT_EDIT',
+          proposedChanges: { pricePerNight: 3500 },
+        },
+        isPendingReview: true,
+        message: 'Important changes submitted for review.',
+      });
+
+      const result = await service.updateListing(
+        LISTING_ID,
+        { pricePerNight: 3500 },
+        HOST_ID,
+        UserRole.USER,
+      );
+
+      expect(mockListingModerationService.processListingUpdate).toHaveBeenCalledWith(
+        LISTING_ID,
+        expect.objectContaining({ pricePerNight: 3500 }),
+        HOST_ID,
+        UserRole.USER,
+      );
+      expect(result.isPendingReview).toBe(true);
+      expect(result.activeReview).toBeDefined();
+    });
+
+    it('[security] strips mass-assigned protected fields (status, adminHidden, hostId) when updating draft listing', async () => {
+      const draft = { ...mockRentalListing, status: ListingStatus.DRAFT, adminHidden: false };
+      mockPropertyRepo.findOne.mockResolvedValue({ ...draft });
+      mockPropertyRepo.createQueryBuilder.mockImplementation(() => createMockQb(draft));
+      mockPropertyRepo.save.mockImplementation(async (entity) => entity);
+
+      await service.updateListing(
+        LISTING_ID,
+        {
+          title: 'Clean Title',
+          status: ListingStatus.PUBLISHED,
+          adminHidden: true,
+          hostId: 'malicious-host-id',
+        } as any,
+        HOST_ID,
+        UserRole.USER,
+      );
+
+      expect(mockPropertyRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'Clean Title',
+          status: ListingStatus.DRAFT, // MUST NOT be overridden
+          adminHidden: false, // MUST NOT be overridden
+          hostId: HOST_ID, // MUST NOT be overridden
+        }),
+      );
+    });
   });
 
   // ─────────────────────────────────────────
@@ -486,10 +590,14 @@ describe('HostService', () => {
   // ─────────────────────────────────────────
 
   describe('publishListing', () => {
-    it('[positive] DRAFT → PUBLISHED when all required fields are present', async () => {
+    it('[positive] DRAFT → enters review queue when publishListing is called', async () => {
       mockPropertyRepo.findOne.mockResolvedValue({ ...mockRentalListing });
+      mockPropertyRepo.createQueryBuilder.mockImplementation(() =>
+        createMockQb(mockRentalListing),
+      );
       const result = await service.publishListing(LISTING_ID, HOST_ID, UserRole.USER);
-      expect(result.status).toBe(ListingStatus.PUBLISHED);
+      expect(result.review).toBeDefined();
+      expect(result.review.status).toBe('PENDING');
     });
 
     it('[negative] cannot publish a listing that is already PUBLISHED', async () => {

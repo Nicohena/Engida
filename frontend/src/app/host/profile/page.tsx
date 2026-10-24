@@ -1,13 +1,11 @@
 'use client';
 
-import React, { useCallback, useEffect, useState, type FormEvent } from 'react';
+import React, { useEffect, useState, type FormEvent } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { apiFetch } from '@/lib/api';
 import type { HostProfile, PayoutProvider } from '@/types/host';
 import {
   User,
-  Phone,
-  FileText,
   Building2,
   Landmark,
   Smartphone,
@@ -19,8 +17,6 @@ import {
   RotateCcw,
   Sparkles,
   Lock,
-  ChevronDown,
-  Info,
 } from 'lucide-react';
 
 interface HostProfileForm {
@@ -149,6 +145,7 @@ export default function HostProfilePage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   // Sync profile data into form state
   const syncProfileToForm = (data: HostProfile) => {
@@ -174,24 +171,39 @@ export default function HostProfilePage() {
     });
   };
 
-  const loadProfile = useCallback(async () => {
-    try {
-      const data = await apiFetch<HostProfile>('/host/profile');
-      syncProfileToForm(data);
-    } catch (loadError) {
-      setError(
-        loadError instanceof Error
-          ? loadError.message
-          : 'Unable to load your host profile.',
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
+    let active = true;
+
+    const loadProfile = async () => {
+      try {
+        const data = await apiFetch<HostProfile>('/host/profile');
+        if (!active) return;
+        syncProfileToForm(data);
+      } catch (loadError) {
+        if (!active) return;
+        setError(
+          loadError instanceof Error
+            ? loadError.message
+            : 'Unable to load your host profile.',
+        );
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    queueMicrotask(() => {
+      if (active) {
+        setLoading(true);
+        setError(null);
+      }
+    });
+
     void loadProfile();
-  }, [loadProfile]);
+
+    return () => {
+      active = false;
+    };
+  }, [reloadKey]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -843,11 +855,7 @@ export default function HostProfilePage() {
           </p>
           <button
             type="button"
-            onClick={() => {
-              setLoading(true);
-              setError(null);
-              void loadProfile();
-            }}
+            onClick={() => setReloadKey((k) => k + 1)}
             className="mt-6 px-5 py-2.5 rounded-xl bg-[#1e40af] text-white text-xs font-bold"
           >
             Try Again

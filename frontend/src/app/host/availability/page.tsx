@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import React, { useEffect, useMemo, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { apiFetch } from '@/lib/api';
@@ -20,11 +20,9 @@ import {
   Trash2,
   Building2,
   Info,
-  Clock,
   RotateCcw,
   CheckCircle2,
   AlertCircle,
-  HelpCircle,
   X,
 } from 'lucide-react';
 
@@ -132,16 +130,15 @@ export default function HostAvailabilityPage() {
   useEffect(() => {
     if (!listingId) return;
     let active = true;
-    setLoadingData(true);
-    setError(null);
 
-    Promise.all([
-      apiFetch<AvailabilityBlock[]>(`/host/listings/${listingId}/availability`),
-      apiFetch<HostReservationsResponse>(
-        `/host/reservations?propertyId=${listingId}&limit=100`,
-      ).catch(() => ({ data: [], total: 0, page: 1, limit: 100, totalPages: 1 })),
-    ])
-      .then(([blockData, resData]) => {
+    const loadCalendarData = async () => {
+      try {
+        const [blockData, resData] = await Promise.all([
+          apiFetch<AvailabilityBlock[]>(`/host/listings/${listingId}/availability`),
+          apiFetch<HostReservationsResponse>(
+            `/host/reservations?propertyId=${listingId}&limit=100`,
+          ).catch(() => ({ data: [], total: 0, page: 1, limit: 100, totalPages: 1 })),
+        ]);
         if (!active) return;
         setBlocks(blockData || []);
         setReservations(
@@ -149,8 +146,7 @@ export default function HostAvailabilityPage() {
             (r) => r.status === 'CONFIRMED' || r.status === 'PENDING',
           ),
         );
-      })
-      .catch((loadError: unknown) => {
+      } catch (loadError: unknown) {
         if (!active) return;
         setBlocks([]);
         setReservations([]);
@@ -159,10 +155,19 @@ export default function HostAvailabilityPage() {
             ? loadError.message
             : 'Unable to load calendar data.',
         );
-      })
-      .finally(() => {
+      } finally {
         if (active) setLoadingData(false);
-      });
+      }
+    };
+
+    queueMicrotask(() => {
+      if (active) {
+        setLoadingData(true);
+        setError(null);
+      }
+    });
+
+    void loadCalendarData();
 
     return () => {
       active = false;

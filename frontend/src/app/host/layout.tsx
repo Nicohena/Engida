@@ -16,6 +16,7 @@ import {
   ChevronRight,
   ExternalLink,
 } from 'lucide-react';
+import NotificationHub from '../../components/host/NotificationHub';
 
 // ──────────────────────────────────────────────────
 // Navigation items for the host sidebar
@@ -73,15 +74,18 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
             </span>
           </div>
         </Link>
-        {onClose && (
-          <button
-            onClick={onClose}
-            className="md:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
-            aria-label="Close menu"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        )}
+        <div className="flex items-center gap-1">
+          <NotificationHub variant="icon" />
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="md:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+              aria-label="Close menu"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Navigation */}
@@ -112,6 +116,11 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
             </Link>
           );
         })}
+
+        {/* Notifications Nav Item */}
+        <div className="pt-1.5 border-t border-slate-800/60 mt-2">
+          <NotificationHub variant="sidebar-item" />
+        </div>
       </nav>
 
       {/* Divider + User + Links */}
@@ -248,7 +257,7 @@ export default function HostLayout({ children }: { children: React.ReactNode }) 
             </div>
             <span className="font-black text-base tracking-tight text-white">Engida</span>
           </div>
-          <div className="w-9" /> {/* spacer for centering */}
+          <NotificationHub variant="icon" />
         </header>
 
         {/* Scrollable page content */}

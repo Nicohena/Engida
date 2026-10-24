@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '../../../context/AuthContext';
@@ -41,36 +41,48 @@ export default function HostDashboardPage() {
   const [recentReservations, setRecentReservations] = useState<HostReservationRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const fetchDashboardData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [summaryData, listingsData, reservationsData] = await Promise.all([
-        apiFetch<HostDashboardSummary>('/host/dashboard'),
-        apiFetch<HostListingsResponse>('/host/listings?limit=6').catch(() => ({ data: [], total: 0, page: 1, limit: 6, totalPages: 0 })),
-        apiFetch<HostReservationsResponse>('/host/reservations?limit=4').catch(() => ({ data: [], total: 0, page: 1, limit: 4, totalPages: 0 })),
-      ]);
-
-      setSummary(summaryData);
-      setRecentListings(listingsData.data || []);
-      setRecentReservations(reservationsData.data || []);
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError('Failed to load host dashboard. Please try again.');
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
-    if (!authLoading && user) {
-      fetchDashboardData();
-    }
-  }, [authLoading, user, fetchDashboardData]);
+    if (authLoading || !user) return;
+    let active = true;
+
+    const loadDashboardData = async () => {
+      try {
+        const [summaryData, listingsData, reservationsData] = await Promise.all([
+          apiFetch<HostDashboardSummary>('/host/dashboard'),
+          apiFetch<HostListingsResponse>('/host/listings?limit=6').catch(() => ({ data: [], total: 0, page: 1, limit: 6, totalPages: 0 })),
+          apiFetch<HostReservationsResponse>('/host/reservations?limit=4').catch(() => ({ data: [], total: 0, page: 1, limit: 4, totalPages: 0 })),
+        ]);
+        if (!active) return;
+        setSummary(summaryData);
+        setRecentListings(listingsData.data || []);
+        setRecentReservations(reservationsData.data || []);
+      } catch (err: unknown) {
+        if (!active) return;
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('Failed to load host dashboard. Please try again.');
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    queueMicrotask(() => {
+      if (active) {
+        setLoading(true);
+        setError(null);
+      }
+    });
+
+    void loadDashboardData();
+
+    return () => {
+      active = false;
+    };
+  }, [authLoading, user, refreshKey]);
 
   if (error) {
     return (
@@ -82,7 +94,7 @@ export default function HostDashboardPage() {
           <h2 className="text-lg font-bold text-slate-900 mb-1">Could not load Host Dashboard</h2>
           <p className="text-xs text-slate-600 mb-5 max-w-md mx-auto">{error}</p>
           <button
-            onClick={fetchDashboardData}
+            onClick={() => setRefreshKey((k) => k + 1)}
             className="inline-flex items-center gap-2 bg-[#1e40af] hover:bg-[#1e3a8a] text-white text-xs font-bold px-5 py-2.5 rounded-xl transition cursor-pointer"
           >
             <RotateCcw className="w-3.5 h-3.5" />
