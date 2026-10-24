@@ -17,7 +17,12 @@ import {
 import { AvailabilityBlock } from '../properties/entities/availability-block.entity';
 import { Room } from '../properties/entities/room.entity';
 import { Amenity } from '../amenities/entities/amenity.entity';
-import { Booking, BookingStatus } from '../bookings/entities/booking.entity';
+import {
+  Booking,
+  BookingStatus,
+  PaymentStatus,
+  PaymentMethod,
+} from '../bookings/entities/booking.entity';
 import { HostProfile, HostVerificationStatus } from '../../users/entities/host-profile.entity';
 import { User, UserRole } from '../../users/entities/user.entity';
 import { ListingReview, ReviewStatus, ReviewSubmissionType } from '../properties/entities/listing-review.entity';
@@ -29,6 +34,27 @@ import { CreateRoomDto } from '../properties/dto/create-room.dto';
 import { UpdateHostRoomDto } from './dto/update-host-room.dto';
 import { UpdateHostListingDto } from './dto/update-host-listing.dto';
 import { QueryHostListingsDto, QueryHostReservationsDto } from './dto/query-host.dto';
+import {
+  QueryHostEarningsSummaryDto,
+  QueryHostTransactionsDto,
+} from './dto/query-host-earnings.dto';
+import {
+  HostEarningsSummaryResponse,
+  MonthlyEarningItem,
+  HostTransactionItem,
+  HostTransactionsResponse,
+} from './dto/host-earnings-response.dto';
+import { Review } from '../reviews/entities/review.entity';
+import {
+  QueryHostReviewsDto,
+  QueryHostReviewsSummaryDto,
+} from './dto/query-host-reviews.dto';
+import {
+  HostReviewItem,
+  HostReviewsPage,
+  PropertyReviewSummary,
+  HostReviewsSummaryResponse,
+} from './dto/host-reviews-response.dto';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/entities/notification.entity';
 import { HostReservationResponse, HostReservationsPage } from './dto/host-reservation-response.dto';
@@ -95,6 +121,9 @@ export class HostService {
     private readonly listingModerationService: ListingModerationService,
     @Optional()
     private readonly notificationsService?: NotificationsService,
+    @Optional()
+    @InjectRepository(Review)
+    private readonly guestReviewRepository?: Repository<Review>,
   ) {}
 
   // ─────────────────────────────────────────
@@ -947,6 +976,372 @@ export class HostService {
       upcomingReservations,
       // Clearly labeled as booking totals, NOT actual paid/settled revenue
       totalBookingValue,
+    };
+  }
+
+  // ─────────────────────────────────────────
+  // 11. HOST EARNINGS & FINANCIAL REPORTING
+  // ─────────────────────────────────────────
+
+  /**
+   * Aggregates real stored financial metrics for properties owned by the authenticated host.
+   * Clearly distinguishes gross booking value from confirmed paid funds and on-arrival commitments.
+   */
+  async getEarningsSummary(
+    hostId: string,
+    query?: QueryHostEarningsSummaryDto,
+    userRole: UserRole = UserRole.USER,
+  ): Promise<HostEarningsSummaryResponse> {
+    await this.assertHostProfile(hostId, userRole);
+
+    const qb = this.bookingRepository
+      .createQueryBuilder('booking')
+      .innerJoin('booking.property', 'property')
+      .where('property.hostId = :hostId', { hostId });
+
+    if (query?.propertyId) {
+      qb.andWhere('property.id = :propertyId', { propertyId: query.propertyId });
+    }
+    if (query?.startDate) {
+      qb.andWhere('booking.createdAt >= :startDate', { startDate: new Date(query.startDate) });
+    }
+    if (query?.endDate) {
+      const end = new Date(query.endDate);
+      end.setHours(23, 59, 59, 999);
+      qb.andWhere('booking.createdAt <= :endDate', { endDate: end });
+    }
+
+    const bookings = await qb
+      .select([
+        'booking.id',
+        'booking.totalPrice',
+        'booking.status',
+        'booking.paymentStatus',
+        'booking.paymentMethod',
+        'booking.paymentCurrency',
+        'booking.createdAt',
+      ])
+      .orderBy('booking.createdAt', 'DESC')
+      .getMany();
+
+    const currency = bookings[0]?.paymentCurrency || 'ETB';
+
+    let totalBookingsCount = bookings.length;
+    let totalBookingValue = 0;
+    let confirmedPaidAmount = 0;
+    let confirmedPaidCount = 0;
+    let onArrivalAmount = 0;
+    let onArrivalCount = 0;
+    let pendingPaymentAmount = 0;
+    let pendingPaymentCount = 0;
+    let refundedAmount = 0;
+    let refundedCount = 0;
+    let cancelledCount = 0;
+    let cancelledBookingValue = 0;
+
+    const monthlyMap = new Map<string, MonthlyEarningItem>();
+    const monthNames = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    ];
+
+    for (const b of bookings) {
+      const price = Number(b.totalPrice) || 0;
+      const d = new Date(b.createdAt);
+      const yearMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const label = `${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+
+      if (!monthlyMap.has(yearMonth)) {
+        monthlyMap.set(yearMonth, {
+          yearMonth,
+          label,
+          bookingCount: 0,
+          totalBookingValue: 0,
+          confirmedPaidAmount: 0,
+          confirmedPaidCount: 0,
+          onArrivalAmount: 0,
+          onArrivalCount: 0,
+          refundedAmount: 0,
+          refundedCount: 0,
+          cancelledCount: 0,
+        });
+      }
+      const monthItem = monthlyMap.get(yearMonth)!;
+      monthItem.bookingCount += 1;
+
+      // Active or completed reservations contribute to gross booking value
+      if (b.status === BookingStatus.CONFIRMED || b.status === BookingStatus.COMPLETED) {
+        totalBookingValue += price;
+        monthItem.totalBookingValue += price;
+      }
+
+      if (b.paymentStatus === PaymentStatus.PAID) {
+        confirmedPaidAmount += price;
+        confirmedPaidCount += 1;
+        monthItem.confirmedPaidAmount += price;
+        monthItem.confirmedPaidCount += 1;
+      } else if (b.paymentStatus === PaymentStatus.ON_ARRIVAL) {
+        onArrivalAmount += price;
+        onArrivalCount += 1;
+        monthItem.onArrivalAmount += price;
+        monthItem.onArrivalCount += 1;
+      } else if (b.paymentStatus === PaymentStatus.PENDING) {
+        pendingPaymentAmount += price;
+        pendingPaymentCount += 1;
+      } else if (b.paymentStatus === PaymentStatus.REFUNDED) {
+        refundedAmount += price;
+        refundedCount += 1;
+        monthItem.refundedAmount += price;
+        monthItem.refundedCount += 1;
+      }
+
+      if (b.status === BookingStatus.CANCELLED) {
+        cancelledCount += 1;
+        cancelledBookingValue += price;
+        monthItem.cancelledCount += 1;
+      }
+    }
+
+    const monthlyBreakdown = Array.from(monthlyMap.values()).sort((a, b) =>
+      b.yearMonth.localeCompare(a.yearMonth),
+    );
+
+    return {
+      currency,
+      totalBookingsCount,
+      totalBookingValue: Math.round(totalBookingValue * 100) / 100,
+      confirmedPaidAmount: Math.round(confirmedPaidAmount * 100) / 100,
+      confirmedPaidCount,
+      onArrivalAmount: Math.round(onArrivalAmount * 100) / 100,
+      onArrivalCount,
+      pendingPaymentAmount: Math.round(pendingPaymentAmount * 100) / 100,
+      pendingPaymentCount,
+      refundedAmount: Math.round(refundedAmount * 100) / 100,
+      refundedCount,
+      cancelledCount,
+      cancelledBookingValue: Math.round(cancelledBookingValue * 100) / 100,
+      monthlyBreakdown,
+    };
+  }
+
+  /**
+   * Retrieves paginated financial transaction records for host properties.
+   */
+  async getFinancialTransactions(
+    hostId: string,
+    query?: QueryHostTransactionsDto,
+    userRole: UserRole = UserRole.USER,
+  ): Promise<HostTransactionsResponse> {
+    await this.assertHostProfile(hostId, userRole);
+
+    const page = Math.max(query?.page || 1, 1);
+    const limit = Math.min(query?.limit || 20, 100);
+    const skip = (page - 1) * limit;
+
+    const qb = this.bookingRepository
+      .createQueryBuilder('booking')
+      .innerJoin('booking.property', 'property')
+      .addSelect(['property.id', 'property.title', 'property.city'])
+      .leftJoin('booking.guest', 'guest')
+      .addSelect(['guest.id', 'guest.name', 'guest.email'])
+      .where('property.hostId = :hostId', { hostId })
+      .orderBy('booking.createdAt', 'DESC');
+
+    if (query?.propertyId) {
+      qb.andWhere('property.id = :propertyId', { propertyId: query.propertyId });
+    }
+    if (query?.paymentStatus) {
+      qb.andWhere('booking.paymentStatus = :paymentStatus', { paymentStatus: query.paymentStatus });
+    }
+    if (query?.paymentMethod) {
+      qb.andWhere('booking.paymentMethod = :paymentMethod', { paymentMethod: query.paymentMethod });
+    }
+    if (query?.bookingStatus) {
+      qb.andWhere('booking.status = :bookingStatus', { bookingStatus: query.bookingStatus });
+    }
+    if (query?.startDate) {
+      qb.andWhere('booking.createdAt >= :startDate', { startDate: new Date(query.startDate) });
+    }
+    if (query?.endDate) {
+      const end = new Date(query.endDate);
+      end.setHours(23, 59, 59, 999);
+      qb.andWhere('booking.createdAt <= :endDate', { endDate: end });
+    }
+
+    const [bookings, total] = await qb.skip(skip).take(limit).getManyAndCount();
+
+    const data: HostTransactionItem[] = bookings.map((b) => ({
+      id: b.id,
+      propertyId: b.property?.id || '',
+      propertyTitle: b.property?.title || 'Unknown Property',
+      propertyCity: b.property?.city || '',
+      guestName: b.guest?.name || 'Guest',
+      guestEmail: b.guest?.email || '',
+      checkInDate: b.checkInDate,
+      checkOutDate: b.checkOutDate,
+      guestCount: b.guestCount,
+      totalPrice: Number(b.totalPrice) || 0,
+      paymentCurrency: b.paymentCurrency || 'ETB',
+      bookingStatus: b.status,
+      paymentStatus: b.paymentStatus,
+      paymentMethod: b.paymentMethod,
+      paymentReference: b.paymentReference || null,
+      paidAt: b.paidAt,
+      createdAt: b.createdAt,
+    }));
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit) || 1,
+      currency: bookings[0]?.paymentCurrency || 'ETB',
+    };
+  }
+
+  // ─────────────────────────────────────────
+  // 12. HOST REVIEWS & REPUTATION MANAGEMENT
+  // ─────────────────────────────────────────
+
+  /**
+   * Retrieves paginated reviews for properties owned by the authenticated host.
+   * Host cannot create, update, or delete guest reviews (read-only).
+   * Sensitive guest information is omitted (only safe display name is returned).
+   */
+  async getHostReviews(
+    hostId: string,
+    query?: QueryHostReviewsDto,
+    userRole: UserRole = UserRole.USER,
+  ): Promise<HostReviewsPage> {
+    await this.assertHostProfile(hostId, userRole);
+
+    if (!this.guestReviewRepository) {
+      return { data: [], total: 0, page: 1, limit: 20, totalPages: 1 };
+    }
+
+    const page = Math.max(query?.page || 1, 1);
+    const limit = Math.min(query?.limit || 20, 100);
+    const skip = (page - 1) * limit;
+
+    const qb = this.guestReviewRepository
+      .createQueryBuilder('review')
+      .innerJoin('review.property', 'property')
+      .addSelect(['property.id', 'property.title', 'property.city'])
+      .leftJoin('review.user', 'guest')
+      .addSelect(['guest.id', 'guest.name'])
+      .where('property.hostId = :hostId', { hostId })
+      .orderBy('review.createdAt', 'DESC');
+
+    if (query?.propertyId) {
+      qb.andWhere('property.id = :propertyId', { propertyId: query.propertyId });
+    }
+    if (query?.rating) {
+      qb.andWhere('review.rating = :rating', { rating: query.rating });
+    }
+
+    const [reviews, total] = await qb.skip(skip).take(limit).getManyAndCount();
+
+    const data: HostReviewItem[] = reviews.map((r) => ({
+      id: r.id,
+      propertyId: r.property?.id || r.propertyId,
+      propertyTitle: r.property?.title || 'Listing',
+      propertyCity: r.property?.city || '',
+      guestName: r.user?.name || 'Verified Guest',
+      rating: r.rating,
+      comment: r.comment || null,
+      createdAt: r.createdAt,
+    }));
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit) || 1,
+    };
+  }
+
+  /**
+   * Calculates overall host rating statistics, distribution breakdown,
+   * and per-property review summaries for properties owned by the host.
+   */
+  async getHostReviewsSummary(
+    hostId: string,
+    query?: QueryHostReviewsSummaryDto,
+    userRole: UserRole = UserRole.USER,
+  ): Promise<HostReviewsSummaryResponse> {
+    await this.assertHostProfile(hostId, userRole);
+
+    const emptyDistribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    if (!this.guestReviewRepository) {
+      return {
+        totalReviews: 0,
+        averageRating: 0,
+        ratingDistribution: emptyDistribution,
+        propertySummaries: [],
+      };
+    }
+
+    // Load host properties to build property summaries
+    const hostProperties = await this.propertyRepository.find({
+      where: query?.propertyId ? { id: query.propertyId, hostId } : { hostId },
+      select: ['id', 'title', 'city', 'coverImage'],
+    });
+
+    const qb = this.guestReviewRepository
+      .createQueryBuilder('review')
+      .innerJoin('review.property', 'property')
+      .addSelect(['property.id', 'property.title', 'property.city', 'property.coverImage'])
+      .where('property.hostId = :hostId', { hostId });
+
+    if (query?.propertyId) {
+      qb.andWhere('property.id = :propertyId', { propertyId: query.propertyId });
+    }
+
+    const reviews = await qb.getMany();
+
+    const totalReviews = reviews.length;
+    const ratingSum = reviews.reduce((sum, r) => sum + (Number(r.rating) || 0), 0);
+    const averageRating = totalReviews > 0 ? Math.round((ratingSum / totalReviews) * 10) / 10 : 0;
+
+    const ratingDistribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    for (const r of reviews) {
+      const rating = Number(r.rating);
+      if (rating >= 1 && rating <= 5) {
+        ratingDistribution[rating as 1 | 2 | 3 | 4 | 5] += 1;
+      }
+    }
+
+    // Group ratings by propertyId
+    const ratingsByProperty = new Map<string, number[]>();
+    for (const r of reviews) {
+      const pid = r.property?.id || r.propertyId;
+      if (!ratingsByProperty.has(pid)) {
+        ratingsByProperty.set(pid, []);
+      }
+      ratingsByProperty.get(pid)!.push(Number(r.rating) || 0);
+    }
+
+    const propertySummaries: PropertyReviewSummary[] = hostProperties.map((p) => {
+      const propRatings = ratingsByProperty.get(p.id) || [];
+      const count = propRatings.length;
+      const avg = count > 0 ? Math.round((propRatings.reduce((sum, x) => sum + x, 0) / count) * 10) / 10 : 0;
+      return {
+        propertyId: p.id,
+        propertyTitle: p.title || 'Listing',
+        propertyCity: p.city || '',
+        coverImage: p.coverImage || null,
+        reviewCount: count,
+        averageRating: avg,
+      };
+    }).sort((a, b) => b.reviewCount - a.reviewCount);
+
+    return {
+      totalReviews,
+      averageRating,
+      ratingDistribution,
+      propertySummaries,
     };
   }
 

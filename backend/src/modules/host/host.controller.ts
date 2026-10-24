@@ -19,6 +19,14 @@ import { UpdateHostProfileDto } from './dto/update-host-profile.dto';
 import { CreateHostListingDto } from './dto/create-host-listing.dto';
 import { UpdateHostListingDto } from './dto/update-host-listing.dto';
 import { QueryHostListingsDto, QueryHostReservationsDto } from './dto/query-host.dto';
+import {
+  QueryHostEarningsSummaryDto,
+  QueryHostTransactionsDto,
+} from './dto/query-host-earnings.dto';
+import {
+  QueryHostReviewsDto,
+  QueryHostReviewsSummaryDto,
+} from './dto/query-host-reviews.dto';
 import { CreateAvailabilityBlockDto } from './dto/create-host-availability-block.dto';
 import { CreateRoomDto } from '../properties/dto/create-room.dto';
 import { UpdateHostRoomDto } from './dto/update-host-room.dto';
@@ -372,5 +380,62 @@ export class HostController {
   @Get(['dashboard', 'dashboard/summary'])
   async getDashboard(@GetUser() user: User) {
     return this.hostService.getDashboardSummary(user.id, user.role);
+  }
+
+  // ─────────────────────────────────────────
+  // 11. EARNINGS & FINANCIAL REPORTING
+  // ─────────────────────────────────────────
+
+  /**
+   * GET /host/earnings/summary
+   * Aggregates real stored financial metrics for host properties.
+   */
+  @Get('earnings/summary')
+  async getEarningsSummary(
+    @GetUser() user: User,
+    @Query() query: QueryHostEarningsSummaryDto,
+  ) {
+    return this.hostService.getEarningsSummary(user.id, query, user.role);
+  }
+
+  /**
+   * GET /host/earnings/transactions
+   * Returns paginated financial transaction records for host properties.
+   */
+  @Get('earnings/transactions')
+  async getFinancialTransactions(
+    @GetUser() user: User,
+    @Query() query: QueryHostTransactionsDto,
+  ) {
+    return this.hostService.getFinancialTransactions(user.id, query, user.role);
+  }
+
+  // ─────────────────────────────────────────
+  // 12. REVIEWS & REPUTATION MANAGEMENT
+  // ─────────────────────────────────────────
+
+  /**
+   * GET /host/reviews/summary
+   * Returns overall rating average, total review count, rating distribution,
+   * and per-property review summaries for host listings.
+   */
+  @Get('reviews/summary')
+  async getHostReviewsSummary(
+    @GetUser() user: User,
+    @Query() query: QueryHostReviewsSummaryDto,
+  ) {
+    return this.hostService.getHostReviewsSummary(user.id, query, user.role);
+  }
+
+  /**
+   * GET /host/reviews
+   * Returns paginated reviews for properties owned by the authenticated host.
+   */
+  @Get('reviews')
+  async getHostReviews(
+    @GetUser() user: User,
+    @Query() query: QueryHostReviewsDto,
+  ) {
+    return this.hostService.getHostReviews(user.id, query, user.role);
   }
 }
