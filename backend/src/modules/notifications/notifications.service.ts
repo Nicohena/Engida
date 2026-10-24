@@ -187,4 +187,17 @@ export class NotificationsService {
     );
     return { affected: result.affected || 0 };
   }
+
+  /**
+   * Fetches the latest notification of a given type for a user.
+   */
+  async getLatestNotification(
+    userId: string,
+    type: NotificationType,
+  ): Promise<Notification | null> {
+    return this.notificationRepository.findOne({
+      where: { userId, type },
+      order: { createdAt: 'DESC' },
+    });
+  }
 }

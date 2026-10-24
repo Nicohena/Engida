@@ -28,6 +28,8 @@ import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { ListingReview } from '../properties/entities/listing-review.entity';
 import { ListingModerationService } from '../properties/listing-moderation.service';
 import { Review } from '../reviews/entities/review.entity';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '../notifications/entities/notification.entity';
 
 // ─────────────────────────────────────────────────────────
 // Test fixtures
@@ -220,6 +222,12 @@ const mockHostProfileRepo = {
   findOne: jest.fn().mockResolvedValue(mockHostProfile),
   create: jest.fn().mockImplementation((dto: any) => ({ id: 'profile-uuid', ...dto })),
   save: jest.fn().mockImplementation((e: any) => Promise.resolve(e)),
+  createQueryBuilder: jest.fn().mockImplementation(() => createMockQb(mockHostProfile)),
+};
+
+const mockNotificationsService = {
+  createNotification: jest.fn().mockResolvedValue({ id: 'notif-1' }),
+  getLatestNotification: jest.fn().mockResolvedValue(null),
 };
 
 const mockUserRepo = {
@@ -293,6 +301,7 @@ describe('HostService', () => {
         { provide: getRepositoryToken(Review), useValue: mockGuestReviewRepo },
         { provide: ListingModerationService, useValue: mockListingModerationService },
         { provide: CloudinaryService, useValue: { deletePropertyImages: jest.fn().mockResolvedValue(undefined) } },
+        { provide: NotificationsService, useValue: mockNotificationsService },
       ],
     }).compile();
 
@@ -458,6 +467,173 @@ describe('HostService', () => {
       await expect(service.requestVerification(HOST_ID)).rejects.toThrow(
         'Please provide a valid contact phone number before requesting verification.',
       );
+    });
+  });
+
+  // ─────────────────────────────────────────
+  // ADMIN HOST VERIFICATION WORKFLOW
+  // ─────────────────────────────────────────
+
+  describe('admin host verification workflow', () => {
+    const adminUser = {
+      id: 'admin-uuid-1',
+      name: 'Admin Reviewer',
+      role: UserRole.ADMIN,
+    } as unknown as User;
+
+    describe('getHostVerifications', () => {
+      it('[positive] lists pending verification requests with pagination', async () => {
+        mockHostProfileRepo.createQueryBuilder.mockImplementation(() =>
+          createMockQb([mockHostProfile]),
+        );
+
+        const result = await service.getHostVerifications({
+          status: HostVerificationStatus.PENDING,
+          page: 1,
+          limit: 10,
+        });
+
+        expect(result).toHaveProperty('data');
+        expect(result).toHaveProperty('total');
+        expect(result).toHaveProperty('totalPages');
+      });
+    });
+
+    describe('approveHostVerification', () => {
+      it('[positive] approves pending host profile to VERIFIED and sends notification', async () => {
+        const pendingProfile = {
+          ...mockHostProfile,
+          id: 'profile-uuid-1',
+          userId: HOST_ID,
+          verificationStatus: HostVerificationStatus.PENDING,
+        };
+        mockHostProfileRepo.findOne.mockResolvedValue(pendingProfile);
+
+        const result = await service.approveHostVerification('profile-uuid-1', adminUser);
+
+        expect(result.verificationStatus).toBe(HostVerificationStatus.VERIFIED);
+        expect(mockHostProfileRepo.save).toHaveBeenCalledWith(
+          expect.objectContaining({ verificationStatus: HostVerificationStatus.VERIFIED }),
+        );
+        expect(mockNotificationsService.createNotification).toHaveBeenCalledWith(
+          expect.objectContaining({
+            userId: HOST_ID,
+            type: NotificationType.LISTING_APPROVED,
+            title: 'Host Verification Approved',
+          }),
+        );
+      });
+
+      it('[negative] throws BadRequestException if profile is not PENDING (already VERIFIED)', async () => {
+        mockHostProfileRepo.findOne.mockResolvedValue({
+          ...mockHostProfile,
+          verificationStatus: HostVerificationStatus.VERIFIED,
+        });
+
+        await expect(
+          service.approveHostVerification('profile-uuid-1', adminUser),
+        ).rejects.toThrow('Only host profiles in PENDING status can be approved.');
+      });
+
+      it('[negative] throws BadRequestException if profile is UNVERIFIED', async () => {
+        mockHostProfileRepo.findOne.mockResolvedValue({
+          ...mockHostProfile,
+          verificationStatus: HostVerificationStatus.UNVERIFIED,
+        });
+
+        await expect(
+          service.approveHostVerification('profile-uuid-1', adminUser),
+        ).rejects.toThrow('Only host profiles in PENDING status can be approved.');
+      });
+
+      it('[negative] throws NotFoundException if host profile does not exist', async () => {
+        mockHostProfileRepo.findOne.mockResolvedValue(null);
+
+        await expect(
+          service.approveHostVerification('nonexistent-uuid', adminUser),
+        ).rejects.toThrow(NotFoundException);
+      });
+    });
+
+    describe('rejectHostVerification', () => {
+      it('[positive] rejects pending host profile with explanation and sends notification', async () => {
+        const pendingProfile = {
+          ...mockHostProfile,
+          id: 'profile-uuid-1',
+          userId: HOST_ID,
+          verificationStatus: HostVerificationStatus.PENDING,
+        };
+        mockHostProfileRepo.findOne.mockResolvedValue(pendingProfile);
+
+        const explanation = 'The phone number provided could not be reached during verification.';
+        const result = await service.rejectHostVerification('profile-uuid-1', explanation, adminUser);
+
+        expect(result.verificationStatus).toBe(HostVerificationStatus.REJECTED);
+        expect((result as any).rejectionReason).toBe(explanation);
+        expect(mockHostProfileRepo.save).toHaveBeenCalledWith(
+          expect.objectContaining({ verificationStatus: HostVerificationStatus.REJECTED }),
+        );
+        expect(mockNotificationsService.createNotification).toHaveBeenCalledWith(
+          expect.objectContaining({
+            userId: HOST_ID,
+            type: NotificationType.LISTING_REJECTED,
+            metadata: expect.objectContaining({
+              rejectionReason: explanation,
+              verificationStatus: HostVerificationStatus.REJECTED,
+            }),
+          }),
+        );
+      });
+
+      it('[negative] throws BadRequestException if explanation is missing or too short', async () => {
+        await expect(
+          service.rejectHostVerification('profile-uuid-1', 'bad', adminUser),
+        ).rejects.toThrow('A valid rejection explanation (at least 5 characters) is required.');
+      });
+
+      it('[negative] throws BadRequestException if profile is not PENDING', async () => {
+        mockHostProfileRepo.findOne.mockResolvedValue({
+          ...mockHostProfile,
+          verificationStatus: HostVerificationStatus.UNVERIFIED,
+        });
+
+        await expect(
+          service.rejectHostVerification(
+            'profile-uuid-1',
+            'Cannot verify unsubmitted profile',
+            adminUser,
+          ),
+        ).rejects.toThrow('Only host profiles in PENDING status can be rejected.');
+      });
+
+      it('[negative] throws NotFoundException if host profile does not exist', async () => {
+        mockHostProfileRepo.findOne.mockResolvedValue(null);
+
+        await expect(
+          service.rejectHostVerification(
+            'nonexistent-uuid',
+            'Profile was not found in system',
+            adminUser,
+          ),
+        ).rejects.toThrow(NotFoundException);
+      });
+    });
+
+    describe('getHostProfile rejection explanation retrieval', () => {
+      it('[positive] attaches rejectionReason from latest rejection notification if REJECTED', async () => {
+        mockHostProfileRepo.findOne.mockResolvedValue({
+          ...mockHostProfile,
+          verificationStatus: HostVerificationStatus.REJECTED,
+        });
+        mockNotificationsService.getLatestNotification.mockResolvedValue({
+          metadata: { rejectionReason: 'Contact details unverified.' },
+        });
+
+        const profile = await service.getHostProfile(HOST_ID);
+
+        expect(profile.verificationStatus).toBe(HostVerificationStatus.REJECTED);
+        expect((profile as any).rejectionReason).toBe('Contact details unverified.');
+      });
     });
   });
 

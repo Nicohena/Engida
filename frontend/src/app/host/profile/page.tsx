@@ -480,6 +480,12 @@ export default function HostProfilePage() {
                 <p className="text-xs text-rose-800 leading-relaxed">
                   Your previous verification request could not be approved. Please review your public host profile details below—especially your display name and contact phone number—update any inaccurate information, and resubmit for review.
                 </p>
+                {profile.rejectionReason && (
+                  <div className="p-3.5 rounded-xl bg-white border border-rose-200 text-xs text-rose-900 space-y-1">
+                    <p className="font-bold">Compliance Team Feedback:</p>
+                    <p className="text-slate-700 font-medium">{profile.rejectionReason}</p>
+                  </div>
+                )}
                 <div>
                   <button
                     type="button"

@@ -156,6 +156,7 @@ export interface HostProfile {
     avatar: string | null;
     role: string;
   };
+  rejectionReason?: string | null;
   payoutProvider?: PayoutProvider | null;
   payoutAccountName?: string | null;
   payoutAccountNumber?: string | null;
@@ -166,6 +167,14 @@ export interface HostProfile {
   payoutCurrency?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface AdminHostVerificationsResponse {
+  data: HostProfile[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
 
 export interface UpdateHostProfilePayload {
