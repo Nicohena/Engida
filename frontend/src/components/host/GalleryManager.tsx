@@ -46,6 +46,14 @@ interface GalleryManagerProps {
   isPendingReview?: boolean;
 }
 
+const SAMPLE_PROPERTY_IMAGES = [
+  'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1200&q=80',
+  'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1200&q=80',
+  'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=1200&q=80',
+  'https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=1200&q=80',
+  'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80',
+];
+
 export default function GalleryManager({
   coverImage,
   images,
@@ -485,7 +493,22 @@ export default function GalleryManager({
             </button>
           )}
         </div>
-        {coverError && <p className="text-xs text-red-600 font-semibold">{coverError}</p>}
+        <div className="flex items-center justify-between text-xs">
+          {coverError ? (
+            <p className="text-xs text-red-600 font-semibold">{coverError}</p>
+          ) : (
+            <span />
+          )}
+          {!coverImage.trim() && (
+            <button
+              type="button"
+              onClick={() => onCoverImageChange(SAMPLE_PROPERTY_IMAGES[0])}
+              className="text-[#33599E] hover:underline font-semibold text-xs ml-auto"
+            >
+              Use sample cover photo
+            </button>
+          )}
+        </div>
 
         {/* Cover Preview Card */}
         {coverImage.trim() && (
@@ -631,6 +654,20 @@ export default function GalleryManager({
                 ? 'Add image URLs above or upload your property photos via Cloudinary.'
                 : 'Add image URLs now, or save this draft and upload property photos from the listing editor.'}
             </p>
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const toAdd = SAMPLE_PROPERTY_IMAGES.slice(1).filter(
+                    (url) => !images.includes(url) && url !== coverImage.trim(),
+                  );
+                  onImagesChange([...images, ...toAdd]);
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#CBD5E1] bg-white hover:bg-[#F4F7FC] text-xs font-semibold text-[#33599E] transition shadow-2xs"
+              >
+                <Plus className="w-3.5 h-3.5" /> Insert Sample Gallery Photos
+              </button>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">

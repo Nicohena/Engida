@@ -14,11 +14,7 @@ import {
   Coins,
   ArrowRight,
   ArrowLeft,
-  Mail,
-  Lock,
   User,
-  Phone,
-  FileText,
   AlertCircle,
   Eye,
   EyeOff,
@@ -89,7 +85,9 @@ export default function BecomeAHostGatewayPage() {
   // Prefill display name from user name when logged in
   useEffect(() => {
     if (user && !displayName) {
-      setDisplayName(user.name);
+      queueMicrotask(() => {
+        setDisplayName(user.name);
+      });
     }
   }, [user, displayName]);
 
@@ -126,7 +124,7 @@ export default function BecomeAHostGatewayPage() {
 
       setHostProfile(newProfile);
       void refreshUser();
-      router.replace('/host/dashboard');
+      router.replace('/host/profile?onboarded=true');
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to activate host profile.');
       setLoading(false);
@@ -180,8 +178,8 @@ export default function BecomeAHostGatewayPage() {
       setHostProfile(newProfile);
       void refreshUser();
 
-      setSubmittingStep('Redirecting to your Host Portal…');
-      router.replace('/host/dashboard');
+      setSubmittingStep('Redirecting to your Host Profile & Verification…');
+      router.replace('/host/profile?onboarded=true');
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Registration failed. Please check your information.');
       setLoading(false);

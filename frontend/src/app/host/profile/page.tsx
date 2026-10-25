@@ -24,6 +24,7 @@ import {
   ExternalLink,
   Info,
   BadgeCheck,
+  Sparkles,
 } from 'lucide-react';
 
 interface FormState {
@@ -60,9 +61,21 @@ export default function HostProfilePage() {
 
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
   const [successBanner, setSuccessBanner] = useState<string | null>(null);
+  const [onboardingNotice, setOnboardingNotice] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('onboarded') === 'true') {
+        queueMicrotask(() => {
+          setOnboardingNotice(true);
+        });
+      }
+    }
+  }, []);
 
   // Sync loaded profile into form state
   const syncProfileToForm = useCallback((data: HostProfile) => {
@@ -415,6 +428,34 @@ export default function HostProfilePage() {
         </div>
       ) : profile ? (
         <div className="space-y-8">
+          {/* Post-Onboarding Welcome & Continuity Notice */}
+          {onboardingNotice && (
+            <div
+              role="region"
+              aria-label="Host onboarding confirmation"
+              className="flex items-start gap-3.5 p-4 sm:p-5 rounded-2xl border border-blue-200 bg-blue-50/90 text-blue-900 shadow-2xs animate-in fade-in"
+            >
+              <div className="w-9 h-9 rounded-xl bg-blue-100 text-[#1e40af] flex items-center justify-center shrink-0 mt-0.5 border border-blue-200">
+                <Sparkles className="w-5 h-5 text-blue-700" />
+              </div>
+              <div className="flex-1 space-y-1">
+                <h2 className="text-sm font-bold text-blue-950">
+                  Welcome to ENGIDA Hosting!
+                </h2>
+                <p className="text-xs text-blue-800 leading-relaxed">
+                  Your host profile has been created with initial status <span className="font-extrabold uppercase px-1.5 py-0.5 rounded bg-blue-100 text-[#1e40af]">UNVERIFIED</span>. You can start drafting properties and setting your availability immediately. To display the official Verified Host badge on public listings, review your details below and click <strong>Submit for Verification Review</strong>.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setOnboardingNotice(false)}
+                className="text-blue-600 hover:text-blue-900 text-xs font-bold shrink-0 cursor-pointer"
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
+
           {/* Card 1: Identity & Business Verification Hub */}
           <section className="rounded-2xl border border-slate-200/90 bg-white p-6 sm:p-8 shadow-xs space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">

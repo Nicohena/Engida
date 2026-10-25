@@ -5,7 +5,15 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '../../../context/AuthContext';
 import { apiFetch } from '../../../lib/api';
-import type { HostDashboardSummary, HostListingRow, HostListingsResponse, HostReservationRow, HostReservationsResponse } from '../../../types/host';
+import type {
+  HostDashboardSummary,
+  HostListingRow,
+  HostListingsResponse,
+  HostReservationRow,
+  HostReservationsResponse,
+  HostProfile,
+  HostVerificationStatus,
+} from '../../../types/host';
 import {
   Building2,
   TrendingUp,
@@ -19,6 +27,10 @@ import {
   CreditCard,
   ExternalLink,
   ShieldCheck,
+  ShieldAlert,
+  Clock,
+  AlertTriangle,
+  BadgeCheck,
   Plus,
   Eye,
   Sliders,
@@ -37,6 +49,7 @@ function formatETB(value: number): string {
 export default function HostDashboardPage() {
   const { user, loading: authLoading } = useAuth();
   const [summary, setSummary] = useState<HostDashboardSummary | null>(null);
+  const [hostProfile, setHostProfile] = useState<HostProfile | null>(null);
   const [recentListings, setRecentListings] = useState<HostListingRow[]>([]);
   const [recentReservations, setRecentReservations] = useState<HostReservationRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,15 +62,19 @@ export default function HostDashboardPage() {
 
     const loadDashboardData = async () => {
       try {
-        const [summaryData, listingsData, reservationsData] = await Promise.all([
+        const [summaryData, listingsData, reservationsData, profileData] = await Promise.all([
           apiFetch<HostDashboardSummary>('/host/dashboard'),
           apiFetch<HostListingsResponse>('/host/listings?limit=6').catch(() => ({ data: [], total: 0, page: 1, limit: 6, totalPages: 0 })),
           apiFetch<HostReservationsResponse>('/host/reservations?limit=4').catch(() => ({ data: [], total: 0, page: 1, limit: 4, totalPages: 0 })),
+          apiFetch<HostProfile>('/host/profile').catch(() => null),
         ]);
         if (!active) return;
         setSummary(summaryData);
         setRecentListings(listingsData.data || []);
         setRecentReservations(reservationsData.data || []);
+        if (profileData) {
+          setHostProfile(profileData);
+        }
       } catch (err: unknown) {
         if (!active) return;
         if (err instanceof Error) {
@@ -119,11 +136,55 @@ export default function HostDashboardPage() {
     );
   }
 
-  const hostDisplayName = user?.hostProfile?.displayName || user?.name || 'Host Partner';
+  const hostDisplayName = hostProfile?.displayName || user?.hostProfile?.displayName || user?.name || 'Host Partner';
   const totalListings = summary?.totalListings || 0;
   const totalBookingValue = summary?.totalBookingValue || 0;
   const pendingReservations = summary?.pendingReservations || 0;
   const confirmedReservations = summary?.confirmedReservations || 0;
+
+  const verificationStatus: HostVerificationStatus =
+    hostProfile?.verificationStatus ||
+    user?.hostProfile?.verificationStatus ||
+    'UNVERIFIED';
+
+  const rejectionReason: string | null =
+    hostProfile?.rejectionReason ||
+    user?.hostProfile?.rejectionReason ||
+    null;
+
+  const renderStatusBadge = () => {
+    switch (verificationStatus) {
+      case 'VERIFIED':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            Verified Host
+          </span>
+        );
+      case 'PENDING':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-[#1e40af] border border-blue-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+            Verification Under Review
+          </span>
+        );
+      case 'REJECTED':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-800 border border-rose-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+            Verification Rejected
+          </span>
+        );
+      case 'UNVERIFIED':
+      default:
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+            Verification Required
+          </span>
+        );
+    }
+  };
 
   return (
     <div className="p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8 max-w-7xl mx-auto">
@@ -136,10 +197,7 @@ export default function HostDashboardPage() {
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
               Host Dashboard
             </h1>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Verified Host
-            </span>
+            {renderStatusBadge()}
           </div>
           <p className="text-xs sm:text-sm text-slate-500">
             Welcome back, <span className="font-semibold text-slate-700">{hostDisplayName}</span> • Managing {totalListings} active properties across Ethiopia
@@ -173,6 +231,135 @@ export default function HostDashboardPage() {
           </Link>
         </div>
       </section>
+
+      {/* ── VERIFICATION ACTION BANNER ── */}
+      {verificationStatus === 'UNVERIFIED' && (
+        <section
+          role="region"
+          aria-label="Verification status banner"
+          className="p-4 sm:p-5 rounded-2xl border border-amber-200 bg-amber-50/90 text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xs"
+        >
+          <div className="flex items-start gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0 mt-0.5 border border-amber-200">
+              <ShieldAlert className="w-5 h-5 text-amber-700" />
+            </div>
+            <div className="space-y-1">
+              <h2 className="text-sm font-bold text-amber-950">
+                Identity Verification Required
+              </h2>
+              <p className="text-xs text-amber-800 max-w-2xl leading-relaxed">
+                Your host profile has not been submitted for verification. While you can create and manage draft listings, properties require verified host status before moderation approval and public discovery.
+              </p>
+            </div>
+          </div>
+          <div className="shrink-0 sm:self-center">
+            <Link
+              href="/host/profile"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition shadow-xs cursor-pointer"
+            >
+              <ShieldCheck className="w-4 h-4" />
+              <span>Complete &amp; Submit Verification</span>
+            </Link>
+          </div>
+        </section>
+      )}
+
+      {verificationStatus === 'PENDING' && (
+        <section
+          role="region"
+          aria-label="Verification status banner"
+          className="p-4 sm:p-5 rounded-2xl border border-blue-200 bg-blue-50/90 text-blue-900 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xs"
+        >
+          <div className="flex items-start gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-blue-100 text-[#1e40af] flex items-center justify-center shrink-0 mt-0.5 border border-blue-200">
+              <Clock className="w-5 h-5 text-blue-700 animate-pulse" />
+            </div>
+            <div className="space-y-1">
+              <h2 className="text-sm font-bold text-blue-950">
+                Verification Request Awaiting Review
+              </h2>
+              <p className="text-xs text-blue-800 max-w-2xl leading-relaxed">
+                Your verification submission is currently being reviewed by the ENGIDA compliance team. You can continue creating properties, setting rates, and blocking dates while your review is processed.
+              </p>
+            </div>
+          </div>
+          <div className="shrink-0 sm:self-center">
+            <Link
+              href="/host/profile"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-blue-200 text-[#1e40af] hover:bg-blue-50 text-xs font-bold transition shadow-2xs cursor-pointer"
+            >
+              <span>View Profile Details</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </section>
+      )}
+
+      {verificationStatus === 'REJECTED' && (
+        <section
+          role="region"
+          aria-label="Verification status banner"
+          className="p-4 sm:p-5 rounded-2xl border border-rose-200 bg-rose-50/90 text-rose-900 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xs"
+        >
+          <div className="flex items-start gap-3.5 flex-1">
+            <div className="w-10 h-10 rounded-xl bg-rose-100 text-rose-800 flex items-center justify-center shrink-0 mt-0.5 border border-rose-200">
+              <AlertTriangle className="w-5 h-5 text-rose-700" />
+            </div>
+            <div className="space-y-1.5 flex-1">
+              <h2 className="text-sm font-bold text-rose-950">
+                Verification Request Was Not Approved
+              </h2>
+              <p className="text-xs text-rose-800 max-w-2xl leading-relaxed">
+                Your previous identity verification submission could not be approved. Please review the compliance feedback below, update your details, and resubmit for review.
+              </p>
+              {rejectionReason && (
+                <div className="p-3 rounded-xl bg-white/90 border border-rose-200 text-xs text-rose-950 max-w-2xl">
+                  <span className="font-bold">Compliance Feedback: </span>
+                  <span className="font-medium text-slate-800">{rejectionReason}</span>
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="shrink-0 sm:self-center">
+            <Link
+              href="/host/profile"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition shadow-xs cursor-pointer"
+            >
+              <ShieldCheck className="w-4 h-4" />
+              <span>Correct Details &amp; Resubmit</span>
+            </Link>
+          </div>
+        </section>
+      )}
+
+      {verificationStatus === 'VERIFIED' && (
+        <section
+          role="region"
+          aria-label="Verification status banner"
+          className="p-3.5 sm:p-4 rounded-2xl border border-emerald-200/80 bg-emerald-50/60 text-emerald-900 flex items-center justify-between gap-3 shadow-2xs"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+              <BadgeCheck className="w-4.5 h-4.5 text-emerald-600" />
+            </div>
+            <div>
+              <h2 className="text-xs sm:text-sm font-bold text-emerald-950">
+                Verified Host Partner
+              </h2>
+              <p className="text-[11px] sm:text-xs text-emerald-800">
+                Your identity has been verified. Your published listings proudly display the Verified Host trust badge.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/host/profile"
+            className="text-xs font-bold text-emerald-800 hover:text-emerald-950 hover:underline shrink-0 hidden sm:inline-flex items-center gap-1"
+          >
+            <span>Account Details</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </Link>
+        </section>
+      )}
 
       {/* ── 2. RESTRUCTURED 4-COLUMN METRIC CARDS ── */}
       <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5" aria-label="Key performance indicators">
