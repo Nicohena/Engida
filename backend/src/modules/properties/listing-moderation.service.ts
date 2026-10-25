@@ -27,6 +27,7 @@ import { QueryReviewsDto } from './dto/moderation-review.dto';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/entities/notification.entity';
+import { HostProfile, HostVerificationStatus } from '../../users/entities/host-profile.entity';
 
 @Injectable()
 export class ListingModerationService {
@@ -39,6 +40,8 @@ export class ListingModerationService {
     private readonly reviewRepository: Repository<ListingReview>,
     @InjectRepository(Amenity)
     private readonly amenityRepository: Repository<Amenity>,
+    @InjectRepository(HostProfile)
+    private readonly hostProfileRepository: Repository<HostProfile>,
     private readonly dataSource: DataSource,
     private readonly cloudinaryService: CloudinaryService,
     @Optional()
@@ -544,6 +547,17 @@ export class ListingModerationService {
 
       let previousLiveImages: string[] = [];
       if (review.submissionType === ReviewSubmissionType.INITIAL_PUBLISH) {
+        // Enforce: Owning host must have verification status VERIFIED
+        const hostProfileRepo = manager.getRepository(HostProfile);
+        const hostProfile = await hostProfileRepo.findOne({ where: { userId: property.hostId } });
+        if (!hostProfile || hostProfile.verificationStatus !== HostVerificationStatus.VERIFIED) {
+          throw new BadRequestException(
+            `Cannot publish listing: Host profile for host "${property.hostId}" is not verified (current status: ${
+              hostProfile?.verificationStatus || 'UNVERIFIED'
+            }). Host must be verified before listing can become publicly visible.`,
+          );
+        }
+
         property.status = ListingStatus.PUBLISHED;
         property.adminHidden = false;
         property.adminHiddenReason = null;
@@ -746,6 +760,19 @@ export class ListingModerationService {
     const property = await this.propertyRepository.findOne({ where: { id: propertyId } });
     if (!property) {
       throw new NotFoundException(`Listing with ID "${propertyId}" not found`);
+    }
+
+    if (property.status === ListingStatus.PUBLISHED) {
+      const hostProfile = await this.hostProfileRepository.findOne({
+        where: { userId: property.hostId },
+      });
+      if (!hostProfile || hostProfile.verificationStatus !== HostVerificationStatus.VERIFIED) {
+        throw new BadRequestException(
+          `Cannot restore listing "${propertyId}" to public visibility: Owning host is not verified (current status: ${
+            hostProfile?.verificationStatus || 'UNVERIFIED'
+          }).`,
+        );
+      }
     }
 
     property.adminHidden = false;

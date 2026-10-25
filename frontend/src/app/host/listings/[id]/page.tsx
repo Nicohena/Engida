@@ -35,7 +35,10 @@ import {
   ExternalLink,
   Sparkles,
   Clock,
+  ShieldAlert,
+  ArrowRight,
 } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 // ─────────────────────────────────────────────────────────
 // Status Badge Styles
@@ -213,6 +216,7 @@ function ActionModal({
 // Listing Detail Page Component
 // ─────────────────────────────────────────────────────────
 export default function ListingDetailPage() {
+  const { user } = useAuth();
   const params = useParams<{ id: string }>();
   const listingId = params.id;
 
@@ -453,6 +457,9 @@ export default function ListingDetailPage() {
   const isPaused = listing.status === 'PAUSED';
   const isSold = listing.status === 'SOLD';
   const isArchived = listing.status === 'ARCHIVED';
+
+  const verificationStatus = user?.hostProfile?.verificationStatus;
+  const isHostVerified = verificationStatus === 'VERIFIED';
 
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-6">
@@ -713,6 +720,30 @@ export default function ListingDetailPage() {
 
       {/* ── Status Workflow Action Bar ── */}
       <div className="bg-white border border-[#CBD5E1] rounded-2xl p-5 shadow-sm space-y-3">
+        {!isHostVerified && (isDraft || isPaused) && (
+          <div className="bg-amber-50/90 border border-amber-200 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs mb-3">
+            <div className="flex items-start gap-2.5">
+              <ShieldAlert className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+              <div>
+                <p className="font-bold text-amber-900">
+                  Host identity verification required for public listing publication
+                </p>
+                <p className="text-amber-800 text-[11px] mt-0.5">
+                  You can freely draft, edit, and organize your listing. However, public publication to guests requires administrative identity verification (your current status is{' '}
+                  <span className="font-bold uppercase">{verificationStatus || 'UNVERIFIED'}</span>).
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/host/profile"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-amber-900 bg-white border border-amber-300 hover:bg-amber-100 transition shrink-0 self-start sm:self-auto"
+            >
+              <span>Verify Host Profile</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        )}
+
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h2 className="text-sm font-black text-[#000000] flex items-center gap-2">

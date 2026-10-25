@@ -21,6 +21,7 @@ import {
 } from './entities/listing-review.entity';
 import { Amenity } from '../amenities/entities/amenity.entity';
 import { User, UserRole } from '../../users/entities/user.entity';
+import { HostProfile, HostVerificationStatus } from '../../users/entities/host-profile.entity';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import {
   validatePublishReadiness,
@@ -133,9 +134,11 @@ describe('ListingModerationService & Moderation Policies', () => {
   let mockReviewRepo: any;
   let mockPropertyRepo: any;
   let mockAmenityRepo: any;
+  let mockHostProfileRepo: any;
   let mockTxReviewRepo: any;
   let mockTxPropertyRepo: any;
   let mockTxAmenityRepo: any;
+  let mockTxHostProfileRepo: any;
   let mockEntityManager: any;
   let mockDataSource: any;
   let mockCloudinaryService: any;
@@ -152,12 +155,20 @@ describe('ListingModerationService & Moderation Policies', () => {
     mockTxAmenityRepo = {
       findByIds: jest.fn().mockResolvedValue([]),
     };
+    mockTxHostProfileRepo = {
+      findOne: jest.fn().mockResolvedValue({
+        id: 'hp-1',
+        userId: HOST_ID,
+        verificationStatus: HostVerificationStatus.VERIFIED,
+      }),
+    };
 
     mockEntityManager = {
       getRepository: jest.fn((entityClass) => {
         if (entityClass === ListingReview) return mockTxReviewRepo;
         if (entityClass === Property) return mockTxPropertyRepo;
         if (entityClass === Amenity) return mockTxAmenityRepo;
+        if (entityClass === HostProfile) return mockTxHostProfileRepo;
         return mockTxReviewRepo;
       }),
       findOne: jest.fn(),
@@ -194,6 +205,14 @@ describe('ListingModerationService & Moderation Policies', () => {
       ]),
     };
 
+    mockHostProfileRepo = {
+      findOne: jest.fn().mockResolvedValue({
+        id: 'hp-1',
+        userId: HOST_ID,
+        verificationStatus: HostVerificationStatus.VERIFIED,
+      }),
+    };
+
     mockCloudinaryService = {
       deletePropertyImages: jest.fn().mockResolvedValue(undefined),
     };
@@ -204,6 +223,7 @@ describe('ListingModerationService & Moderation Policies', () => {
         { provide: getRepositoryToken(ListingReview), useValue: mockReviewRepo },
         { provide: getRepositoryToken(Property), useValue: mockPropertyRepo },
         { provide: getRepositoryToken(Amenity), useValue: mockAmenityRepo },
+        { provide: getRepositoryToken(HostProfile), useValue: mockHostProfileRepo },
         { provide: DataSource, useValue: mockDataSource },
         { provide: CloudinaryService, useValue: mockCloudinaryService },
       ],
@@ -404,7 +424,7 @@ describe('ListingModerationService & Moderation Policies', () => {
   // 5. Admin Approval Flow
   // ─────────────────────────────────────────────────────────────
   describe('Admin Approval Flow', () => {
-    it('should approve an INITIAL_PUBLISH review and transition property status to PUBLISHED', async () => {
+    it('should throw BadRequestException if host profile is not VERIFIED when approving INITIAL_PUBLISH', async () => {
       const reviewToApprove = {
         ...mockPendingReview,
         submissionType: ReviewSubmissionType.INITIAL_PUBLISH,
@@ -412,6 +432,45 @@ describe('ListingModerationService & Moderation Policies', () => {
       };
       mockTxReviewRepo.findOne.mockResolvedValue(reviewToApprove);
       mockTxPropertyRepo.findOne.mockResolvedValue({ ...mockDraftProperty });
+      mockTxHostProfileRepo.findOne.mockResolvedValue({
+        id: 'hp-1',
+        userId: HOST_ID,
+        verificationStatus: HostVerificationStatus.UNVERIFIED,
+      });
+
+      await expect(
+        service.approveReview(REVIEW_ID, mockAdminUser),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException if host profile does not exist when approving INITIAL_PUBLISH', async () => {
+      const reviewToApprove = {
+        ...mockPendingReview,
+        submissionType: ReviewSubmissionType.INITIAL_PUBLISH,
+        property: { ...mockDraftProperty },
+      };
+      mockTxReviewRepo.findOne.mockResolvedValue(reviewToApprove);
+      mockTxPropertyRepo.findOne.mockResolvedValue({ ...mockDraftProperty });
+      mockTxHostProfileRepo.findOne.mockResolvedValue(null);
+
+      await expect(
+        service.approveReview(REVIEW_ID, mockAdminUser),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should approve an INITIAL_PUBLISH review and transition property status to PUBLISHED when host is VERIFIED', async () => {
+      const reviewToApprove = {
+        ...mockPendingReview,
+        submissionType: ReviewSubmissionType.INITIAL_PUBLISH,
+        property: { ...mockDraftProperty },
+      };
+      mockTxReviewRepo.findOne.mockResolvedValue(reviewToApprove);
+      mockTxPropertyRepo.findOne.mockResolvedValue({ ...mockDraftProperty });
+      mockTxHostProfileRepo.findOne.mockResolvedValue({
+        id: 'hp-1',
+        userId: HOST_ID,
+        verificationStatus: HostVerificationStatus.VERIFIED,
+      });
 
       const result = await service.approveReview(REVIEW_ID, mockAdminUser);
 
@@ -563,7 +622,25 @@ describe('ListingModerationService & Moderation Policies', () => {
       expect(mockPropertyRepo.save).toHaveBeenCalled();
     });
 
-    it('should restore an administratively hidden listing back to public view', async () => {
+    it('should throw BadRequestException if restoring a PUBLISHED listing when host is not verified', async () => {
+      const hiddenProp: Property = {
+        ...mockPublishedProperty,
+        adminHidden: true,
+        adminHiddenReason: 'Past dispute resolved',
+      };
+      mockPropertyRepo.findOne.mockResolvedValue(hiddenProp);
+      mockHostProfileRepo.findOne.mockResolvedValue({
+        id: 'hp-1',
+        userId: HOST_ID,
+        verificationStatus: HostVerificationStatus.PENDING,
+      });
+
+      await expect(
+        service.restoreListing(PROPERTY_ID, mockAdminUser),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should restore an administratively hidden listing back to public view when host is verified', async () => {
       const hiddenProp: Property = {
         ...mockPublishedProperty,
         adminHidden: true,
@@ -572,6 +649,11 @@ describe('ListingModerationService & Moderation Policies', () => {
         adminHiddenById: ADMIN_ID,
       };
       mockPropertyRepo.findOne.mockResolvedValue(hiddenProp);
+      mockHostProfileRepo.findOne.mockResolvedValue({
+        id: 'hp-1',
+        userId: HOST_ID,
+        verificationStatus: HostVerificationStatus.VERIFIED,
+      });
 
       const result = await service.restoreListing(PROPERTY_ID, mockAdminUser);
 

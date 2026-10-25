@@ -197,6 +197,7 @@ export class PropertiesService {
     const property = this.propertyRepository.create({
       ...propertyData,
       hostId,
+      status: ListingStatus.DRAFT,
     });
 
     if (amenityIds && amenityIds.length > 0) {

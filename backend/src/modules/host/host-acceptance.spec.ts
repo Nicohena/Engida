@@ -274,6 +274,7 @@ describe('Step 5L: Integrated Host-Side Acceptance Testing', () => {
               if (entity === Booking) return mockBookingRepo;
               if (entity === AvailabilityBlock) return mockBlockRepo;
               if (entity === Room) return { findOne: jest.fn().mockResolvedValue(null) };
+              if (entity === HostProfile) return mockHostProfileRepo;
               return {};
             },
           }),
@@ -428,6 +429,7 @@ describe('Step 5L: Integrated Host-Side Acceptance Testing', () => {
             if (entityClass === ListingReview) return mockListingReviewRepo;
             if (entityClass === Property) return mockPropertyRepo;
             if (entityClass === Amenity) return mockAmenityRepo;
+            if (entityClass === HostProfile) return mockHostProfileRepo;
             return mockListingReviewRepo;
           },
           findOne: jest.fn(),
@@ -557,18 +559,27 @@ describe('Step 5L: Integrated Host-Side Acceptance Testing', () => {
         ),
       ).rejects.toThrow('These dates overlap an existing availability block');
 
-      // 3. Host submits listing for moderation
-      const { review: reviewRecord } = await moderationService.submitForReview(
+      // 3. Host submits listing for moderation (unverified host can prepare and submit)
+      const submitResult = await hostService.submitListingForReview(
         storedProperty.id,
         HOST_ID,
         UserRole.HOST,
         'Ready for initial publish',
       );
-      expect(reviewRecord.submissionType).toBe(ReviewSubmissionType.INITIAL_PUBLISH);
-      expect(reviewRecord.status).toBe(ReviewStatus.PENDING);
+      expect(submitResult.review.submissionType).toBe(ReviewSubmissionType.INITIAL_PUBLISH);
+      expect(submitResult.review.status).toBe(ReviewStatus.PENDING);
+      expect(submitResult.message).toContain('Your host identity must be verified');
 
-      // 4. Admin approves listing -> PUBLISHED
-      const approvedResult = await moderationService.approveReview(reviewRecord.id, ADMIN_ID);
+      // 4. Initial publication blocked when host is UNVERIFIED
+      await expect(
+        moderationService.approveReview(submitResult.review.id, ADMIN_ID),
+      ).rejects.toThrow(BadRequestException);
+
+      // Once host identity verification is approved:
+      storedHostProfile.verificationStatus = HostVerificationStatus.VERIFIED;
+
+      // Admin approves listing -> PUBLISHED
+      const approvedResult = await moderationService.approveReview(submitResult.review.id, ADMIN_ID);
       expect(approvedResult.review.status).toBe(ReviewStatus.APPROVED);
       expect(storedProperty.status).toBe(ListingStatus.PUBLISHED);
 
@@ -584,6 +595,21 @@ describe('Step 5L: Integrated Host-Side Acceptance Testing', () => {
       expect(updateResult.activeReview.submissionType).toBe(ReviewSubmissionType.IMPORTANT_EDIT);
       expect(storedProperty.status).toBe(ListingStatus.PUBLISHED); // remains published
       expect(storedProperty.pricePerNight).toBe(2200); // unchanged until approved
+
+      // 6. Host pauses published listing -> PAUSED
+      const pausedListing = await hostService.pauseListing(storedProperty.id, HOST_ID, UserRole.HOST);
+      expect(pausedListing.status).toBe(ListingStatus.PAUSED);
+
+      // If host verification status changes to REJECTED, resuming publication is blocked
+      storedHostProfile.verificationStatus = HostVerificationStatus.REJECTED;
+      await expect(
+        hostService.publishListing(storedProperty.id, HOST_ID, UserRole.HOST),
+      ).rejects.toThrow(BadRequestException);
+
+      // When host is VERIFIED again, resuming publication succeeds
+      storedHostProfile.verificationStatus = HostVerificationStatus.VERIFIED;
+      const resumedListing = await hostService.publishListing(storedProperty.id, HOST_ID, UserRole.HOST);
+      expect(resumedListing.status).toBe(ListingStatus.PUBLISHED);
     });
   });
 

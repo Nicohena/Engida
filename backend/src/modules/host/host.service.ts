@@ -710,6 +710,15 @@ export class HostService {
 
     // If listing was previously approved and merely paused, unpausing is allowed without new review
     if (property.status === ListingStatus.PAUSED) {
+      const hostProfile = await this.hostProfileRepository.findOne({ where: { userId: property.hostId } });
+      if (!hostProfile || hostProfile.verificationStatus !== HostVerificationStatus.VERIFIED) {
+        throw new BadRequestException(
+          `Cannot resume listing "${listingId}": Host verification status is "${
+            hostProfile?.verificationStatus || 'UNVERIFIED'
+          }". Your host profile must be VERIFIED before listings can be published publicly.`,
+        );
+      }
+
       this.assertTransition(property.status, ListingStatus.PUBLISHED);
       property.status = ListingStatus.PUBLISHED;
       await this.propertyRepository.save(property);
@@ -728,7 +737,12 @@ export class HostService {
     notes?: string,
   ) {
     await this.assertHostProfile(userId, userRole);
-    return this.listingModerationService.submitForReview(listingId, userId, userRole, notes);
+    const hostProfile = await this.hostProfileRepository.findOne({ where: { userId } });
+    const result = await this.listingModerationService.submitForReview(listingId, userId, userRole, notes);
+    if (hostProfile && hostProfile.verificationStatus !== HostVerificationStatus.VERIFIED) {
+      result.message = `Listing submitted for moderation review. Note: Your host profile is currently ${hostProfile.verificationStatus}. Your host identity must be verified before the listing can be published publicly.`;
+    }
+    return result;
   }
 
   async withdrawListingReview(

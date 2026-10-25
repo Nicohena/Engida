@@ -911,6 +911,42 @@ describe('HostService', () => {
         service.publishListing(LISTING_ID, OTHER_HOST_ID, UserRole.USER),
       ).rejects.toThrow(ForbiddenException);
     });
+
+    it('[negative] cannot resume PAUSED listing if host is UNVERIFIED or REJECTED', async () => {
+      mockPropertyRepo.findOne.mockResolvedValue({
+        ...mockPublishedListing,
+        status: ListingStatus.PAUSED,
+      });
+      mockHostProfileRepo.findOne.mockResolvedValue({
+        ...mockHostProfile,
+        verificationStatus: HostVerificationStatus.UNVERIFIED,
+      });
+
+      await expect(
+        service.publishListing(LISTING_ID, HOST_ID, UserRole.USER),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('[positive] resumes PAUSED listing to PUBLISHED when host is VERIFIED', async () => {
+      const pausedListing = {
+        ...mockPublishedListing,
+        status: ListingStatus.PAUSED,
+      };
+      mockPropertyRepo.findOne.mockResolvedValue(pausedListing);
+      mockPropertyRepo.createQueryBuilder.mockImplementation(() =>
+        createMockQb({ ...pausedListing, status: ListingStatus.PUBLISHED }),
+      );
+      mockHostProfileRepo.findOne.mockResolvedValue({
+        ...mockHostProfile,
+        verificationStatus: HostVerificationStatus.VERIFIED,
+      });
+
+      const result = await service.publishListing(LISTING_ID, HOST_ID, UserRole.USER);
+      expect(result.status).toBe(ListingStatus.PUBLISHED);
+      expect(mockPropertyRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({ status: ListingStatus.PUBLISHED }),
+      );
+    });
   });
 
   describe('pauseListing', () => {
