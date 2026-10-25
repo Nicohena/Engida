@@ -17,18 +17,45 @@ import {
 import { AvailabilityBlock } from '../properties/entities/availability-block.entity';
 import { Room } from '../properties/entities/room.entity';
 import { Amenity } from '../amenities/entities/amenity.entity';
-import { Booking, BookingStatus } from '../bookings/entities/booking.entity';
+import {
+  Booking,
+  BookingStatus,
+  PaymentStatus,
+  PaymentMethod,
+} from '../bookings/entities/booking.entity';
 import { HostProfile, HostVerificationStatus } from '../../users/entities/host-profile.entity';
 import { User, UserRole } from '../../users/entities/user.entity';
 import { ListingReview, ReviewStatus, ReviewSubmissionType } from '../properties/entities/listing-review.entity';
 import { ListingModerationService } from '../properties/listing-moderation.service';
 import { CreateHostProfileDto } from './dto/create-host-profile.dto';
 import { UpdateHostProfileDto } from './dto/update-host-profile.dto';
+import { QueryHostVerificationsDto } from './dto/admin-host-verification.dto';
 import { CreateHostListingDto } from './dto/create-host-listing.dto';
 import { CreateRoomDto } from '../properties/dto/create-room.dto';
 import { UpdateHostRoomDto } from './dto/update-host-room.dto';
 import { UpdateHostListingDto } from './dto/update-host-listing.dto';
 import { QueryHostListingsDto, QueryHostReservationsDto } from './dto/query-host.dto';
+import {
+  QueryHostEarningsSummaryDto,
+  QueryHostTransactionsDto,
+} from './dto/query-host-earnings.dto';
+import {
+  HostEarningsSummaryResponse,
+  MonthlyEarningItem,
+  HostTransactionItem,
+  HostTransactionsResponse,
+} from './dto/host-earnings-response.dto';
+import { Review } from '../reviews/entities/review.entity';
+import {
+  QueryHostReviewsDto,
+  QueryHostReviewsSummaryDto,
+} from './dto/query-host-reviews.dto';
+import {
+  HostReviewItem,
+  HostReviewsPage,
+  PropertyReviewSummary,
+  HostReviewsSummaryResponse,
+} from './dto/host-reviews-response.dto';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/entities/notification.entity';
 import { HostReservationResponse, HostReservationsPage } from './dto/host-reservation-response.dto';
@@ -95,6 +122,9 @@ export class HostService {
     private readonly listingModerationService: ListingModerationService,
     @Optional()
     private readonly notificationsService?: NotificationsService,
+    @Optional()
+    @InjectRepository(Review)
+    private readonly guestReviewRepository?: Repository<Review>,
   ) {}
 
   // ─────────────────────────────────────────
@@ -104,11 +134,26 @@ export class HostService {
   /**
    * Get the HostProfile for the authenticated user.
    */
-  async getHostProfile(userId: string): Promise<HostProfile | null> {
-    const profile = await this.hostProfileRepository.findOne({ where: { userId } });
+  async getHostProfile(userId: string): Promise<HostProfile> {
+    const profile = await this.hostProfileRepository.findOne({
+      where: { userId },
+      relations: ['user'],
+    });
     if (!profile) {
       throw new NotFoundException('Host profile not found. User is not a host.');
     }
+
+    // If verification status is REJECTED, retrieve explanation from latest notification
+    if (profile.verificationStatus === HostVerificationStatus.REJECTED && this.notificationsService) {
+      const latestNotification = await this.notificationsService.getLatestNotification(
+        userId,
+        NotificationType.LISTING_REJECTED,
+      );
+      if (latestNotification?.metadata?.rejectionReason) {
+        (profile as any).rejectionReason = String(latestNotification.metadata.rejectionReason);
+      }
+    }
+
     return profile;
   }
 
@@ -135,7 +180,7 @@ export class HostService {
   }
 
   /**
-   * Update host profile fields (displayName, bio, phone only).
+   * Update host profile fields (displayName, bio, phone, avatar).
    * verificationStatus cannot be changed by the host.
    */
   async updateHostProfile(userId: string, dto: UpdateHostProfileDto): Promise<HostProfile> {
@@ -145,6 +190,11 @@ export class HostService {
       if (dto.displayName !== undefined) profile.displayName = dto.displayName;
       if (dto.bio !== undefined) profile.bio = dto.bio;
       if (dto.phone !== undefined) profile.phone = dto.phone;
+
+      // Update user avatar if provided
+      if (dto.avatar !== undefined) {
+        await this.userRepository.update(userId, { avatar: dto.avatar || null });
+      }
 
       // Payout & Banking
       if (dto.payoutProvider !== undefined) profile.payoutProvider = dto.payoutProvider;
@@ -156,9 +206,192 @@ export class HostService {
       if (dto.payoutEmail !== undefined) profile.payoutEmail = dto.payoutEmail;
       if (dto.payoutCurrency !== undefined) profile.payoutCurrency = dto.payoutCurrency;
 
-      return this.hostProfileRepository.save(profile);
+      await this.hostProfileRepository.save(profile);
+      return this.getHostProfile(userId);
     }
     throw new NotFoundException('Host profile not found.');
+  }
+
+  /**
+   * Request identity verification for the host profile.
+   * Transitions status from UNVERIFIED or REJECTED to PENDING.
+   * Security: Hosts CANNOT set status to VERIFIED or approve themselves.
+   */
+  async requestVerification(userId: string): Promise<HostProfile> {
+    const profile = await this.getHostProfile(userId);
+    if (!profile) {
+      throw new NotFoundException('Host profile not found.');
+    }
+
+    if (profile.verificationStatus === HostVerificationStatus.VERIFIED) {
+      throw new BadRequestException('Your host profile is already verified.');
+    }
+
+    if (profile.verificationStatus === HostVerificationStatus.PENDING) {
+      throw new BadRequestException('Verification request is already pending administrative review.');
+    }
+
+    // Require essential identity fields before submitting for verification
+    if (!profile.displayName?.trim()) {
+      throw new BadRequestException('Please set your host display name before requesting verification.');
+    }
+    if (!profile.phone?.trim()) {
+      throw new BadRequestException('Please provide a valid contact phone number before requesting verification.');
+    }
+
+    profile.verificationStatus = HostVerificationStatus.PENDING;
+    await this.hostProfileRepository.save(profile);
+    this.logger.log(`Host ${userId} requested identity verification (status -> PENDING)`);
+
+    return this.getHostProfile(userId);
+  }
+
+  // ─────────────────────────────────────────
+  // 1B. ADMIN HOST VERIFICATION WORKFLOW
+  // ─────────────────────────────────────────
+
+  /**
+   * List host identity verification requests (admin only).
+   */
+  async getHostVerifications(query?: QueryHostVerificationsDto): Promise<{
+    data: HostProfile[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    const page = Math.max(query?.page || 1, 1);
+    const limit = Math.min(query?.limit || 20, 100);
+    const skip = (page - 1) * limit;
+    const status = query?.status || HostVerificationStatus.PENDING;
+
+    const qb = this.hostProfileRepository
+      .createQueryBuilder('profile')
+      .leftJoinAndSelect('profile.user', 'user')
+      .where('profile.verification_status = :status', { status });
+
+    if (query?.search?.trim()) {
+      const term = `%${query.search.trim().toLowerCase()}%`;
+      qb.andWhere(
+        '(LOWER(profile.display_name) LIKE :term OR LOWER(profile.phone) LIKE :term OR LOWER(user.name) LIKE :term OR LOWER(user.email) LIKE :term)',
+        { term },
+      );
+    }
+
+    qb.orderBy('profile.updated_at', 'DESC');
+
+    const [data, total] = await qb.skip(skip).take(limit).getManyAndCount();
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit) || 1,
+    };
+  }
+
+  /**
+   * Admin approves a pending host verification request.
+   * Decisions are strictly restricted to profiles in PENDING status.
+   */
+  async approveHostVerification(profileId: string, admin: User): Promise<HostProfile> {
+    const profile = await this.hostProfileRepository.findOne({
+      where: { id: profileId },
+      relations: ['user'],
+    });
+
+    if (!profile) {
+      throw new NotFoundException(`Host profile with ID "${profileId}" not found.`);
+    }
+
+    if (profile.verificationStatus !== HostVerificationStatus.PENDING) {
+      throw new BadRequestException(
+        `Only host profiles in PENDING status can be approved. Current status: ${profile.verificationStatus}`,
+      );
+    }
+
+    profile.verificationStatus = HostVerificationStatus.VERIFIED;
+    const saved = await this.hostProfileRepository.save(profile);
+    this.logger.log(`Host verification approved for profile ${profileId} by admin ${admin.id}`);
+
+    if (this.notificationsService) {
+      await this.notificationsService.createNotification({
+        userId: profile.userId,
+        type: NotificationType.LISTING_APPROVED,
+        title: 'Host Verification Approved',
+        message:
+          'Congratulations! Your host profile identity has been verified by the ENGIDA compliance team. Your published listings now feature the Verified Host trust badge.',
+        link: '/host/profile',
+        metadata: {
+          profileId: profile.id,
+          verificationStatus: HostVerificationStatus.VERIFIED,
+          reviewedByAdminId: admin.id,
+        },
+        idempotencyKey: `host-verification-approved-${profile.id}-${Date.now()}`,
+      });
+    }
+
+    return saved;
+  }
+
+  /**
+   * Admin rejects a pending host verification request with required explanation.
+   * Decisions are strictly restricted to profiles in PENDING status.
+   */
+  async rejectHostVerification(
+    profileId: string,
+    explanation: string,
+    admin: User,
+  ): Promise<HostProfile> {
+    const trimmed = explanation?.trim();
+    if (!trimmed || trimmed.length < 5) {
+      throw new BadRequestException('A valid rejection explanation (at least 5 characters) is required.');
+    }
+    if (trimmed.length > 500) {
+      throw new BadRequestException('Rejection explanation cannot exceed 500 characters.');
+    }
+
+    const profile = await this.hostProfileRepository.findOne({
+      where: { id: profileId },
+      relations: ['user'],
+    });
+
+    if (!profile) {
+      throw new NotFoundException(`Host profile with ID "${profileId}" not found.`);
+    }
+
+    if (profile.verificationStatus !== HostVerificationStatus.PENDING) {
+      throw new BadRequestException(
+        `Only host profiles in PENDING status can be rejected. Current status: ${profile.verificationStatus}`,
+      );
+    }
+
+    profile.verificationStatus = HostVerificationStatus.REJECTED;
+    const saved = await this.hostProfileRepository.save(profile);
+    this.logger.log(
+      `Host verification rejected for profile ${profileId} by admin ${admin.id}: "${trimmed}"`,
+    );
+
+    if (this.notificationsService) {
+      await this.notificationsService.createNotification({
+        userId: profile.userId,
+        type: NotificationType.LISTING_REJECTED,
+        title: 'Host Verification Not Approved',
+        message: `Your host verification request was not approved. Feedback: ${trimmed}`,
+        link: '/host/profile',
+        metadata: {
+          profileId: profile.id,
+          verificationStatus: HostVerificationStatus.REJECTED,
+          rejectionReason: trimmed,
+          reviewedByAdminId: admin.id,
+        },
+        idempotencyKey: `host-verification-rejected-${profile.id}-${Date.now()}`,
+      });
+    }
+
+    (saved as any).rejectionReason = trimmed;
+    return saved;
   }
 
   // ─────────────────────────────────────────
@@ -477,6 +710,15 @@ export class HostService {
 
     // If listing was previously approved and merely paused, unpausing is allowed without new review
     if (property.status === ListingStatus.PAUSED) {
+      const hostProfile = await this.hostProfileRepository.findOne({ where: { userId: property.hostId } });
+      if (!hostProfile || hostProfile.verificationStatus !== HostVerificationStatus.VERIFIED) {
+        throw new BadRequestException(
+          `Cannot resume listing "${listingId}": Host verification status is "${
+            hostProfile?.verificationStatus || 'UNVERIFIED'
+          }". Your host profile must be VERIFIED before listings can be published publicly.`,
+        );
+      }
+
       this.assertTransition(property.status, ListingStatus.PUBLISHED);
       property.status = ListingStatus.PUBLISHED;
       await this.propertyRepository.save(property);
@@ -495,7 +737,12 @@ export class HostService {
     notes?: string,
   ) {
     await this.assertHostProfile(userId, userRole);
-    return this.listingModerationService.submitForReview(listingId, userId, userRole, notes);
+    const hostProfile = await this.hostProfileRepository.findOne({ where: { userId } });
+    const result = await this.listingModerationService.submitForReview(listingId, userId, userRole, notes);
+    if (hostProfile && hostProfile.verificationStatus !== HostVerificationStatus.VERIFIED) {
+      result.message = `Listing submitted for moderation review. Note: Your host profile is currently ${hostProfile.verificationStatus}. Your host identity must be verified before the listing can be published publicly.`;
+    }
+    return result;
   }
 
   async withdrawListingReview(
@@ -947,6 +1194,372 @@ export class HostService {
       upcomingReservations,
       // Clearly labeled as booking totals, NOT actual paid/settled revenue
       totalBookingValue,
+    };
+  }
+
+  // ─────────────────────────────────────────
+  // 11. HOST EARNINGS & FINANCIAL REPORTING
+  // ─────────────────────────────────────────
+
+  /**
+   * Aggregates real stored financial metrics for properties owned by the authenticated host.
+   * Clearly distinguishes gross booking value from confirmed paid funds and on-arrival commitments.
+   */
+  async getEarningsSummary(
+    hostId: string,
+    query?: QueryHostEarningsSummaryDto,
+    userRole: UserRole = UserRole.USER,
+  ): Promise<HostEarningsSummaryResponse> {
+    await this.assertHostProfile(hostId, userRole);
+
+    const qb = this.bookingRepository
+      .createQueryBuilder('booking')
+      .innerJoin('booking.property', 'property')
+      .where('property.hostId = :hostId', { hostId });
+
+    if (query?.propertyId) {
+      qb.andWhere('property.id = :propertyId', { propertyId: query.propertyId });
+    }
+    if (query?.startDate) {
+      qb.andWhere('booking.createdAt >= :startDate', { startDate: new Date(query.startDate) });
+    }
+    if (query?.endDate) {
+      const end = new Date(query.endDate);
+      end.setHours(23, 59, 59, 999);
+      qb.andWhere('booking.createdAt <= :endDate', { endDate: end });
+    }
+
+    const bookings = await qb
+      .select([
+        'booking.id',
+        'booking.totalPrice',
+        'booking.status',
+        'booking.paymentStatus',
+        'booking.paymentMethod',
+        'booking.paymentCurrency',
+        'booking.createdAt',
+      ])
+      .orderBy('booking.createdAt', 'DESC')
+      .getMany();
+
+    const currency = bookings[0]?.paymentCurrency || 'ETB';
+
+    let totalBookingsCount = bookings.length;
+    let totalBookingValue = 0;
+    let confirmedPaidAmount = 0;
+    let confirmedPaidCount = 0;
+    let onArrivalAmount = 0;
+    let onArrivalCount = 0;
+    let pendingPaymentAmount = 0;
+    let pendingPaymentCount = 0;
+    let refundedAmount = 0;
+    let refundedCount = 0;
+    let cancelledCount = 0;
+    let cancelledBookingValue = 0;
+
+    const monthlyMap = new Map<string, MonthlyEarningItem>();
+    const monthNames = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    ];
+
+    for (const b of bookings) {
+      const price = Number(b.totalPrice) || 0;
+      const d = new Date(b.createdAt);
+      const yearMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const label = `${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+
+      if (!monthlyMap.has(yearMonth)) {
+        monthlyMap.set(yearMonth, {
+          yearMonth,
+          label,
+          bookingCount: 0,
+          totalBookingValue: 0,
+          confirmedPaidAmount: 0,
+          confirmedPaidCount: 0,
+          onArrivalAmount: 0,
+          onArrivalCount: 0,
+          refundedAmount: 0,
+          refundedCount: 0,
+          cancelledCount: 0,
+        });
+      }
+      const monthItem = monthlyMap.get(yearMonth)!;
+      monthItem.bookingCount += 1;
+
+      // Active or completed reservations contribute to gross booking value
+      if (b.status === BookingStatus.CONFIRMED || b.status === BookingStatus.COMPLETED) {
+        totalBookingValue += price;
+        monthItem.totalBookingValue += price;
+      }
+
+      if (b.paymentStatus === PaymentStatus.PAID) {
+        confirmedPaidAmount += price;
+        confirmedPaidCount += 1;
+        monthItem.confirmedPaidAmount += price;
+        monthItem.confirmedPaidCount += 1;
+      } else if (b.paymentStatus === PaymentStatus.ON_ARRIVAL) {
+        onArrivalAmount += price;
+        onArrivalCount += 1;
+        monthItem.onArrivalAmount += price;
+        monthItem.onArrivalCount += 1;
+      } else if (b.paymentStatus === PaymentStatus.PENDING) {
+        pendingPaymentAmount += price;
+        pendingPaymentCount += 1;
+      } else if (b.paymentStatus === PaymentStatus.REFUNDED) {
+        refundedAmount += price;
+        refundedCount += 1;
+        monthItem.refundedAmount += price;
+        monthItem.refundedCount += 1;
+      }
+
+      if (b.status === BookingStatus.CANCELLED) {
+        cancelledCount += 1;
+        cancelledBookingValue += price;
+        monthItem.cancelledCount += 1;
+      }
+    }
+
+    const monthlyBreakdown = Array.from(monthlyMap.values()).sort((a, b) =>
+      b.yearMonth.localeCompare(a.yearMonth),
+    );
+
+    return {
+      currency,
+      totalBookingsCount,
+      totalBookingValue: Math.round(totalBookingValue * 100) / 100,
+      confirmedPaidAmount: Math.round(confirmedPaidAmount * 100) / 100,
+      confirmedPaidCount,
+      onArrivalAmount: Math.round(onArrivalAmount * 100) / 100,
+      onArrivalCount,
+      pendingPaymentAmount: Math.round(pendingPaymentAmount * 100) / 100,
+      pendingPaymentCount,
+      refundedAmount: Math.round(refundedAmount * 100) / 100,
+      refundedCount,
+      cancelledCount,
+      cancelledBookingValue: Math.round(cancelledBookingValue * 100) / 100,
+      monthlyBreakdown,
+    };
+  }
+
+  /**
+   * Retrieves paginated financial transaction records for host properties.
+   */
+  async getFinancialTransactions(
+    hostId: string,
+    query?: QueryHostTransactionsDto,
+    userRole: UserRole = UserRole.USER,
+  ): Promise<HostTransactionsResponse> {
+    await this.assertHostProfile(hostId, userRole);
+
+    const page = Math.max(query?.page || 1, 1);
+    const limit = Math.min(query?.limit || 20, 100);
+    const skip = (page - 1) * limit;
+
+    const qb = this.bookingRepository
+      .createQueryBuilder('booking')
+      .innerJoin('booking.property', 'property')
+      .addSelect(['property.id', 'property.title', 'property.city'])
+      .leftJoin('booking.guest', 'guest')
+      .addSelect(['guest.id', 'guest.name', 'guest.email'])
+      .where('property.hostId = :hostId', { hostId })
+      .orderBy('booking.createdAt', 'DESC');
+
+    if (query?.propertyId) {
+      qb.andWhere('property.id = :propertyId', { propertyId: query.propertyId });
+    }
+    if (query?.paymentStatus) {
+      qb.andWhere('booking.paymentStatus = :paymentStatus', { paymentStatus: query.paymentStatus });
+    }
+    if (query?.paymentMethod) {
+      qb.andWhere('booking.paymentMethod = :paymentMethod', { paymentMethod: query.paymentMethod });
+    }
+    if (query?.bookingStatus) {
+      qb.andWhere('booking.status = :bookingStatus', { bookingStatus: query.bookingStatus });
+    }
+    if (query?.startDate) {
+      qb.andWhere('booking.createdAt >= :startDate', { startDate: new Date(query.startDate) });
+    }
+    if (query?.endDate) {
+      const end = new Date(query.endDate);
+      end.setHours(23, 59, 59, 999);
+      qb.andWhere('booking.createdAt <= :endDate', { endDate: end });
+    }
+
+    const [bookings, total] = await qb.skip(skip).take(limit).getManyAndCount();
+
+    const data: HostTransactionItem[] = bookings.map((b) => ({
+      id: b.id,
+      propertyId: b.property?.id || '',
+      propertyTitle: b.property?.title || 'Unknown Property',
+      propertyCity: b.property?.city || '',
+      guestName: b.guest?.name || 'Guest',
+      guestEmail: b.guest?.email || '',
+      checkInDate: b.checkInDate,
+      checkOutDate: b.checkOutDate,
+      guestCount: b.guestCount,
+      totalPrice: Number(b.totalPrice) || 0,
+      paymentCurrency: b.paymentCurrency || 'ETB',
+      bookingStatus: b.status,
+      paymentStatus: b.paymentStatus,
+      paymentMethod: b.paymentMethod,
+      paymentReference: b.paymentReference || null,
+      paidAt: b.paidAt,
+      createdAt: b.createdAt,
+    }));
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit) || 1,
+      currency: bookings[0]?.paymentCurrency || 'ETB',
+    };
+  }
+
+  // ─────────────────────────────────────────
+  // 12. HOST REVIEWS & REPUTATION MANAGEMENT
+  // ─────────────────────────────────────────
+
+  /**
+   * Retrieves paginated reviews for properties owned by the authenticated host.
+   * Host cannot create, update, or delete guest reviews (read-only).
+   * Sensitive guest information is omitted (only safe display name is returned).
+   */
+  async getHostReviews(
+    hostId: string,
+    query?: QueryHostReviewsDto,
+    userRole: UserRole = UserRole.USER,
+  ): Promise<HostReviewsPage> {
+    await this.assertHostProfile(hostId, userRole);
+
+    if (!this.guestReviewRepository) {
+      return { data: [], total: 0, page: 1, limit: 20, totalPages: 1 };
+    }
+
+    const page = Math.max(query?.page || 1, 1);
+    const limit = Math.min(query?.limit || 20, 100);
+    const skip = (page - 1) * limit;
+
+    const qb = this.guestReviewRepository
+      .createQueryBuilder('review')
+      .innerJoin('review.property', 'property')
+      .addSelect(['property.id', 'property.title', 'property.city'])
+      .leftJoin('review.user', 'guest')
+      .addSelect(['guest.id', 'guest.name'])
+      .where('property.hostId = :hostId', { hostId })
+      .orderBy('review.createdAt', 'DESC');
+
+    if (query?.propertyId) {
+      qb.andWhere('property.id = :propertyId', { propertyId: query.propertyId });
+    }
+    if (query?.rating) {
+      qb.andWhere('review.rating = :rating', { rating: query.rating });
+    }
+
+    const [reviews, total] = await qb.skip(skip).take(limit).getManyAndCount();
+
+    const data: HostReviewItem[] = reviews.map((r) => ({
+      id: r.id,
+      propertyId: r.property?.id || r.propertyId,
+      propertyTitle: r.property?.title || 'Listing',
+      propertyCity: r.property?.city || '',
+      guestName: r.user?.name || 'Verified Guest',
+      rating: r.rating,
+      comment: r.comment || null,
+      createdAt: r.createdAt,
+    }));
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit) || 1,
+    };
+  }
+
+  /**
+   * Calculates overall host rating statistics, distribution breakdown,
+   * and per-property review summaries for properties owned by the host.
+   */
+  async getHostReviewsSummary(
+    hostId: string,
+    query?: QueryHostReviewsSummaryDto,
+    userRole: UserRole = UserRole.USER,
+  ): Promise<HostReviewsSummaryResponse> {
+    await this.assertHostProfile(hostId, userRole);
+
+    const emptyDistribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    if (!this.guestReviewRepository) {
+      return {
+        totalReviews: 0,
+        averageRating: 0,
+        ratingDistribution: emptyDistribution,
+        propertySummaries: [],
+      };
+    }
+
+    // Load host properties to build property summaries
+    const hostProperties = await this.propertyRepository.find({
+      where: query?.propertyId ? { id: query.propertyId, hostId } : { hostId },
+      select: ['id', 'title', 'city', 'coverImage'],
+    });
+
+    const qb = this.guestReviewRepository
+      .createQueryBuilder('review')
+      .innerJoin('review.property', 'property')
+      .addSelect(['property.id', 'property.title', 'property.city', 'property.coverImage'])
+      .where('property.hostId = :hostId', { hostId });
+
+    if (query?.propertyId) {
+      qb.andWhere('property.id = :propertyId', { propertyId: query.propertyId });
+    }
+
+    const reviews = await qb.getMany();
+
+    const totalReviews = reviews.length;
+    const ratingSum = reviews.reduce((sum, r) => sum + (Number(r.rating) || 0), 0);
+    const averageRating = totalReviews > 0 ? Math.round((ratingSum / totalReviews) * 10) / 10 : 0;
+
+    const ratingDistribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    for (const r of reviews) {
+      const rating = Number(r.rating);
+      if (rating >= 1 && rating <= 5) {
+        ratingDistribution[rating as 1 | 2 | 3 | 4 | 5] += 1;
+      }
+    }
+
+    // Group ratings by propertyId
+    const ratingsByProperty = new Map<string, number[]>();
+    for (const r of reviews) {
+      const pid = r.property?.id || r.propertyId;
+      if (!ratingsByProperty.has(pid)) {
+        ratingsByProperty.set(pid, []);
+      }
+      ratingsByProperty.get(pid)!.push(Number(r.rating) || 0);
+    }
+
+    const propertySummaries: PropertyReviewSummary[] = hostProperties.map((p) => {
+      const propRatings = ratingsByProperty.get(p.id) || [];
+      const count = propRatings.length;
+      const avg = count > 0 ? Math.round((propRatings.reduce((sum, x) => sum + x, 0) / count) * 10) / 10 : 0;
+      return {
+        propertyId: p.id,
+        propertyTitle: p.title || 'Listing',
+        propertyCity: p.city || '',
+        coverImage: p.coverImage || null,
+        reviewCount: count,
+        averageRating: avg,
+      };
+    }).sort((a, b) => b.reviewCount - a.reviewCount);
+
+    return {
+      totalReviews,
+      averageRating,
+      ratingDistribution,
+      propertySummaries,
     };
   }
 

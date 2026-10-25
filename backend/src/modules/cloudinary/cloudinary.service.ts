@@ -56,9 +56,20 @@ export class CloudinaryService {
    */
   private verifyConfiguration() {
     const config = cloudinary.config();
-    if (!config.cloud_name || !config.api_key || !config.api_secret) {
+    const isPlaceholder = (val?: string) =>
+      !val ||
+      val === 'your_cloudinary_cloud_name' ||
+      val === 'your_cloudinary_api_key' ||
+      val === 'your_cloudinary_api_secret' ||
+      val.startsWith('your_');
+
+    if (
+      isPlaceholder(config.cloud_name) ||
+      isPlaceholder(config.api_key) ||
+      isPlaceholder(config.api_secret)
+    ) {
       throw new BadRequestException(
-        'Cloudinary service is not configured. Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET in your environment.',
+        'Cloudinary service is not configured. Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET in your backend/.env file. You can still enter direct image URLs.',
       );
     }
   }

@@ -10,6 +10,8 @@ import {
   ListTodo,
   CalendarDays,
   CalendarRange,
+  BadgeDollarSign,
+  Star,
   LogOut,
   Menu,
   X,
@@ -36,6 +38,16 @@ const NAV_ITEMS = [
     href: '/host/reservations',
     label: 'Reservations',
     icon: CalendarDays,
+  },
+  {
+    href: '/host/earnings',
+    label: 'Earnings',
+    icon: BadgeDollarSign,
+  },
+  {
+    href: '/host/reviews',
+    label: 'Reviews',
+    icon: Star,
   },
   {
     href: '/host/availability',

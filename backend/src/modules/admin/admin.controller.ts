@@ -14,11 +14,16 @@ import { Roles } from '../../auth/decorators/roles.decorator';
 import { GetUser } from '../../auth/decorators/get-user.decorator';
 import { User, UserRole } from '../../users/entities/user.entity';
 import { ListingModerationService } from '../properties/listing-moderation.service';
+import { HostService } from '../host/host.service';
 import {
   QueryReviewsDto,
   RejectReviewDto,
   HideListingDto,
 } from '../properties/dto/moderation-review.dto';
+import {
+  QueryHostVerificationsDto,
+  RejectHostVerificationDto,
+} from '../host/dto/admin-host-verification.dto';
 
 @Controller('admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -26,6 +31,7 @@ import {
 export class AdminController {
   constructor(
     private readonly listingModerationService: ListingModerationService,
+    private readonly hostService: HostService,
   ) {}
 
   /**
@@ -94,5 +100,44 @@ export class AdminController {
     @GetUser() admin: User,
   ) {
     return this.listingModerationService.restoreListing(id, admin);
+  }
+
+  // ─────────────────────────────────────────
+  // HOST IDENTITY VERIFICATION WORKFLOW
+  // ─────────────────────────────────────────
+
+  /**
+   * GET /admin/host-verifications
+   * List pending (or filtered) host identity verification requests.
+   */
+  @Get('host-verifications')
+  async getHostVerifications(@Query() query: QueryHostVerificationsDto) {
+    return this.hostService.getHostVerifications(query);
+  }
+
+  /**
+   * POST /admin/host-verifications/:id/approve
+   * Approves a host's pending identity verification request.
+   */
+  @Post('host-verifications/:id/approve')
+  async approveHostVerification(
+    @Param('id', ParseUUIDPipe) id: string,
+    @GetUser() admin: User,
+  ) {
+    return this.hostService.approveHostVerification(id, admin);
+  }
+
+  /**
+   * POST /admin/host-verifications/:id/reject
+   * Rejects a host's pending identity verification request with required explanation.
+   */
+  @Post('host-verifications/:id/reject')
+  async rejectHostVerification(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: RejectHostVerificationDto,
+    @GetUser() admin: User,
+  ) {
+    const explanation = dto.explanation || dto.rejectionReason;
+    return this.hostService.rejectHostVerification(id, explanation!, admin);
   }
 }

@@ -106,6 +106,7 @@ export class AuthController {
       name: user.name,
       email: user.email,
       role: user.role,
+      avatar: user.avatar || null,
       createdAt: user.createdAt,
       hostProfile: user.hostProfile || null,
     };

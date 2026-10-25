@@ -3,33 +3,33 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import ProtectedRoute from '../../components/ProtectedRoute';
 import { apiFetch } from '../../lib/api';
-import type { ReviewSubmissionType, ReviewStatus } from '../../types/host';
+import type {
+  ReviewSubmissionType,
+  ReviewStatus,
+  HostProfile,
+} from '../../types/host';
 import {
   ShieldCheck,
   ShieldAlert,
   CheckCircle2,
   XCircle,
   Clock,
-  ArrowRight,
   Search,
   Building2,
-  Filter,
   Layers,
   AlertTriangle,
   RefreshCw,
   Eye,
   Check,
   X,
-  ChevronRight,
   User,
   Calendar,
-  DollarSign,
   MapPin,
-  SlidersHorizontal,
-  Home,
   AlertOctagon,
   FileText,
-  ExternalLink,
+  BadgeCheck,
+  Phone,
+  Mail,
 } from 'lucide-react';
 
 interface ReviewQueueItem {
@@ -37,7 +37,7 @@ interface ReviewQueueItem {
   propertyId: string;
   submissionType: ReviewSubmissionType;
   status: ReviewStatus;
-  proposedChanges: Record<string, any> | null;
+  proposedChanges: Record<string, unknown> | null;
   submittedByHostId: string;
   submittedAt: string;
   reviewedByAdminId: string | null;
@@ -71,14 +71,38 @@ interface ReviewQueueItem {
   };
 }
 
+interface AdminListingProperty {
+  id?: string;
+  title?: string;
+  propertyType?: string;
+  listingType?: string;
+  pricePerNight?: number;
+  salePrice?: number;
+  city?: string;
+  address?: string;
+  status?: string;
+  adminHidden?: boolean;
+  adminHiddenReason?: string;
+  adminHiddenAt?: string;
+  coverImage?: string;
+  maxGuests?: number;
+  bedrooms?: number;
+  description?: string;
+  images?: string[];
+  [key: string]: unknown;
+}
+
 interface ReviewDetailResponse {
   review: ReviewQueueItem;
-  property: any;
+  property: AdminListingProperty;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   diff: Record<string, { current: any; proposed: any }> | null;
 }
 
 export default function AdminModerationPage() {
-  const [activeTab, setActiveTab] = useState<'pending' | 'all' | 'takedowns'>('pending');
+  const [activeTab, setActiveTab] = useState<
+    'pending' | 'all' | 'takedowns' | 'host-verifications'
+  >('pending');
   const [reviews, setReviews] = useState<ReviewQueueItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -111,11 +135,27 @@ export default function AdminModerationPage() {
 
   // Takedown Console State
   const [takedownPropertyId, setTakedownPropertyId] = useState('');
-  const [takedownListing, setTakedownListing] = useState<any | null>(null);
+  const [takedownListing, setTakedownListing] = useState<AdminListingProperty | null>(null);
   const [takedownLoading, setTakedownLoading] = useState(false);
   const [takedownReason, setTakedownReason] = useState('');
   const [takedownMessage, setTakedownMessage] = useState<string | null>(null);
   const [takedownError, setTakedownError] = useState<string | null>(null);
+
+  // ── Host Verification Console State ──
+  const [hostVerifications, setHostVerifications] = useState<HostProfile[]>([]);
+  const [loadingHostVerif, setLoadingHostVerif] = useState(false);
+  const [hostVerifError, setHostVerifError] = useState<string | null>(null);
+  const [hostVerifSuccess, setHostVerifSuccess] = useState<string | null>(null);
+  const [hostVerifStatusFilter, setHostVerifStatusFilter] = useState<string>('PENDING');
+  const [hostVerifSearch, setHostVerifSearch] = useState('');
+  const [pendingHostCount, setPendingHostCount] = useState(0);
+
+  // Host Verification Decision Modal
+  const [approvingHostId, setApprovingHostId] = useState<string | null>(null);
+  const [rejectingHostProfile, setRejectingHostProfile] = useState<HostProfile | null>(null);
+  const [hostRejectionExplanation, setHostRejectionExplanation] = useState('');
+  const [hostRejectionModalError, setHostRejectionModalError] = useState<string | null>(null);
+  const [submittingHostRejection, setSubmittingHostRejection] = useState(false);
 
   // ─────────────────────────────────────────────────────────────
   // 1. Load Reviews Queue
@@ -154,18 +194,124 @@ export default function AdminModerationPage() {
         approvedTotal: (data.data || []).filter((r) => r.status === 'APPROVED').length,
         rejectedTotal: (data.data || []).filter((r) => r.status === 'REJECTED').length,
       });
-    } catch (err: any) {
-      setError(err.message || 'Failed to load review queue.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to load review queue.');
     } finally {
       setLoading(false);
     }
   }, [activeTab, statusFilter, typeFilter]);
 
-  useEffect(() => {
-    if (activeTab !== 'takedowns') {
-      fetchReviews();
+  // ─────────────────────────────────────────────────────────────
+  // 1B. Load Host Verifications
+  // ─────────────────────────────────────────────────────────────
+  const fetchHostVerifications = useCallback(async () => {
+    try {
+      setLoadingHostVerif(true);
+      setHostVerifError(null);
+
+      const params = new URLSearchParams();
+      if (hostVerifStatusFilter) {
+        params.append('status', hostVerifStatusFilter);
+      }
+      if (hostVerifSearch.trim()) {
+        params.append('search', hostVerifSearch.trim());
+      }
+      params.append('limit', '50');
+
+      const data = await apiFetch<{
+        data: HostProfile[];
+        total: number;
+      }>(`/admin/host-verifications?${params.toString()}`);
+
+      setHostVerifications(data.data || []);
+
+      if (hostVerifStatusFilter === 'PENDING') {
+        setPendingHostCount(data.total || (data.data || []).length);
+      }
+    } catch (err: unknown) {
+      setHostVerifError(
+        err instanceof Error ? err.message : 'Failed to load host verifications.',
+      );
+    } finally {
+      setLoadingHostVerif(false);
     }
-  }, [fetchReviews, activeTab]);
+  }, [hostVerifStatusFilter, hostVerifSearch]);
+
+  const handleApproveHost = async (profileId: string) => {
+    if (!window.confirm('Are you sure you want to approve this host identity verification?')) {
+      return;
+    }
+    try {
+      setApprovingHostId(profileId);
+      setHostVerifError(null);
+      setHostVerifSuccess(null);
+
+      await apiFetch<HostProfile>(`/admin/host-verifications/${profileId}/approve`, {
+        method: 'POST',
+      });
+
+      setHostVerifSuccess('Host verification approved! The host has been notified.');
+      await fetchHostVerifications();
+    } catch (err: unknown) {
+      setHostVerifError(
+        err instanceof Error ? err.message : 'Failed to approve host verification.',
+      );
+    } finally {
+      setApprovingHostId(null);
+    }
+  };
+
+  const handleRejectHostSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!rejectingHostProfile) return;
+
+    const trimmed = hostRejectionExplanation.trim();
+    if (trimmed.length < 5) {
+      setHostRejectionModalError('Please provide an explanation of at least 5 characters.');
+      return;
+    }
+
+    try {
+      setSubmittingHostRejection(true);
+      setHostRejectionModalError(null);
+      setHostVerifError(null);
+
+      await apiFetch<HostProfile>(`/admin/host-verifications/${rejectingHostProfile.id}/reject`, {
+        method: 'POST',
+        body: JSON.stringify({ explanation: trimmed }),
+      });
+
+      setHostVerifSuccess(
+        `Host verification for "${rejectingHostProfile.displayName || 'Host'}" was rejected. Feedback has been sent to the host.`,
+      );
+      setRejectingHostProfile(null);
+      setHostRejectionExplanation('');
+      await fetchHostVerifications();
+    } catch (err: unknown) {
+      setHostRejectionModalError(
+        err instanceof Error ? err.message : 'Failed to reject host verification.',
+      );
+    } finally {
+      setSubmittingHostRejection(false);
+    }
+  };
+
+  useEffect(() => {
+    let active = true;
+
+    queueMicrotask(() => {
+      if (!active) return;
+      if (activeTab === 'host-verifications') {
+        void fetchHostVerifications();
+      } else if (activeTab !== 'takedowns') {
+        void fetchReviews();
+      }
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [fetchReviews, fetchHostVerifications, activeTab]);
 
   // ─────────────────────────────────────────────────────────────
   // 2. Load Detailed Review & Diff
@@ -177,8 +323,8 @@ export default function AdminModerationPage() {
     try {
       const data = await apiFetch<ReviewDetailResponse>(`/admin/reviews/${reviewId}`);
       setReviewDetail(data);
-    } catch (err: any) {
-      setDetailError(err.message || 'Failed to load review details.');
+    } catch (err: unknown) {
+      setDetailError(err instanceof Error ? err.message : 'Failed to load review details.');
     } finally {
       setLoadingDetail(false);
     }
@@ -207,8 +353,8 @@ export default function AdminModerationPage() {
       });
       closeReviewDetail();
       fetchReviews();
-    } catch (err: any) {
-      alert(`Approval failed: ${err.message || 'Unknown error'}`);
+    } catch (err: unknown) {
+      alert(`Approval failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setActionInProgress(null);
     }
@@ -232,8 +378,8 @@ export default function AdminModerationPage() {
       });
       closeReviewDetail();
       fetchReviews();
-    } catch (err: any) {
-      setRejectionError(err.message || 'Rejection failed.');
+    } catch (err: unknown) {
+      setRejectionError(err instanceof Error ? err.message : 'Rejection failed.');
     } finally {
       setActionInProgress(null);
     }
@@ -251,10 +397,12 @@ export default function AdminModerationPage() {
 
     try {
       // Find property by ID using reviews or general endpoint
-      const res = await apiFetch<any>(`/properties/${takedownPropertyId.trim()}`);
+      const res = await apiFetch<AdminListingProperty>(`/properties/${takedownPropertyId.trim()}`);
       setTakedownListing(res);
-    } catch (err: any) {
-      setTakedownError(`Could not find listing: ${err.message || 'Listing not found'}`);
+    } catch (err: unknown) {
+      setTakedownError(
+        `Could not find listing: ${err instanceof Error ? err.message : 'Listing not found'}`,
+      );
     } finally {
       setTakedownLoading(false);
     }
@@ -268,15 +416,18 @@ export default function AdminModerationPage() {
     setTakedownLoading(true);
     setTakedownError(null);
     try {
-      const res = await apiFetch<any>(`/admin/listings/${takedownListing.id}/hide`, {
-        method: 'POST',
-        body: JSON.stringify({ reason: takedownReason.trim() }),
-      });
+      const res = await apiFetch<{ property: AdminListingProperty }>(
+        `/admin/listings/${takedownListing.id as string}/hide`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ reason: takedownReason.trim() }),
+        },
+      );
       setTakedownMessage('Listing has been immediately placed on administrative hold.');
       setTakedownListing(res.property);
       setTakedownReason('');
-    } catch (err: any) {
-      setTakedownError(`Failed to hide listing: ${err.message}`);
+    } catch (err: unknown) {
+      setTakedownError(`Failed to hide listing: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setTakedownLoading(false);
     }
@@ -290,13 +441,18 @@ export default function AdminModerationPage() {
     setTakedownLoading(true);
     setTakedownError(null);
     try {
-      const res = await apiFetch<any>(`/admin/listings/${takedownListing.id}/restore`, {
-        method: 'POST',
-      });
+      const res = await apiFetch<{ property: AdminListingProperty }>(
+        `/admin/listings/${takedownListing.id as string}/restore`,
+        {
+          method: 'POST',
+        },
+      );
       setTakedownMessage('Listing has been restored to active public status.');
       setTakedownListing(res.property);
-    } catch (err: any) {
-      setTakedownError(`Failed to restore listing: ${err.message}`);
+    } catch (err: unknown) {
+      setTakedownError(
+        `Failed to restore listing: ${err instanceof Error ? err.message : 'Unknown error'}`,
+      );
     } finally {
       setTakedownLoading(false);
     }
@@ -445,10 +601,26 @@ export default function AdminModerationPage() {
           >
             <ShieldAlert className="w-4 h-4" /> Safety Hold & Takedown
           </button>
+
+          <button
+            onClick={() => setActiveTab('host-verifications')}
+            className={`px-4 py-2.5 text-sm font-bold border-b-2 transition flex items-center gap-2 ${
+              activeTab === 'host-verifications'
+                ? 'border-[#33599E] text-[#33599E]'
+                : 'border-transparent text-[#64748B] hover:text-[#000000]'
+            }`}
+          >
+            <ShieldCheck className="w-4 h-4" /> Host Verifications
+            {pendingHostCount > 0 && (
+              <span className="bg-blue-100 text-[#1e40af] text-xs px-2 py-0.5 rounded-full font-black">
+                {pendingHostCount}
+              </span>
+            )}
+          </button>
         </div>
 
         {/* ── TAB 1 & 2: Review Queue & History ── */}
-        {activeTab !== 'takedowns' && (
+        {activeTab !== 'takedowns' && activeTab !== 'host-verifications' && (
           <div className="space-y-4">
             {/* Filter Bar */}
             <div className="bg-white border border-[#CBD5E1] rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm">
@@ -600,7 +772,11 @@ export default function AdminModerationPage() {
                               <span className="flex items-center gap-1">
                                 <Calendar className="w-3.5 h-3.5 text-[#94A3B8]" />
                                 Submitted:{' '}
-                                {new Date(rev.submittedAt || rev.createdAt || Date.now()).toLocaleDateString()}
+                                {rev.submittedAt
+                                  ? new Date(rev.submittedAt).toLocaleDateString()
+                                  : rev.createdAt
+                                  ? new Date(rev.createdAt).toLocaleDateString()
+                                  : 'N/A'}
                               </span>
                             </div>
 
@@ -786,6 +962,212 @@ export default function AdminModerationPage() {
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {/* ── TAB 4: Host Identity Verification Console ── */}
+        {activeTab === 'host-verifications' && (
+          <div className="space-y-4">
+            {hostVerifSuccess && (
+              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs sm:text-sm font-semibold flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                  <span>{hostVerifSuccess}</span>
+                </div>
+                <button
+                  onClick={() => setHostVerifSuccess(null)}
+                  className="text-emerald-700 hover:text-emerald-900 text-xs font-bold cursor-pointer"
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
+
+            {hostVerifError && (
+              <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-800 text-xs sm:text-sm font-semibold flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-red-600 shrink-0" />
+                  <span>{hostVerifError}</span>
+                </div>
+                <button
+                  onClick={() => setHostVerifError(null)}
+                  className="text-red-700 hover:text-red-900 text-xs font-bold cursor-pointer"
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
+
+            {/* Filter & Search Bar */}
+            <div className="bg-white border border-[#CBD5E1] rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm">
+              <div className="relative flex-1 max-w-md">
+                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#94A3B8]" />
+                <input
+                  type="text"
+                  placeholder="Search by host display name, legal name, email, or phone..."
+                  value={hostVerifSearch}
+                  onChange={(e) => setHostVerifSearch(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 rounded-xl border border-[#CBD5E1] text-xs font-semibold text-[#000000] focus:outline-none focus:ring-2 focus:ring-[#33599E]/20 focus:border-[#33599E]"
+                />
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2.5">
+                <select
+                  value={hostVerifStatusFilter}
+                  onChange={(e) => setHostVerifStatusFilter(e.target.value)}
+                  className="px-3 py-2 rounded-xl border border-[#CBD5E1] text-xs font-bold text-[#000000] bg-white focus:outline-none focus:border-[#33599E]"
+                >
+                  <option value="PENDING">Status: Pending Review</option>
+                  <option value="VERIFIED">Status: Verified</option>
+                  <option value="REJECTED">Status: Rejected</option>
+                  <option value="">Status: All Records</option>
+                </select>
+
+                <button
+                  type="button"
+                  onClick={() => fetchHostVerifications()}
+                  disabled={loadingHostVerif}
+                  className="p-2 rounded-xl border border-[#CBD5E1] hover:bg-slate-50 text-[#64748B] transition cursor-pointer"
+                  title="Refresh"
+                >
+                  <RefreshCw className={`w-4 h-4 ${loadingHostVerif ? 'animate-spin' : ''}`} />
+                </button>
+              </div>
+            </div>
+
+            {/* Verifications List */}
+            {loadingHostVerif ? (
+              <div className="py-20 text-center bg-white border border-[#CBD5E1] rounded-2xl">
+                <div className="w-8 h-8 border-3 border-[#33599E] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                <p className="text-xs font-bold text-[#64748B]">Loading host verification requests...</p>
+              </div>
+            ) : hostVerifications.length === 0 ? (
+              <div className="py-16 text-center bg-white border border-[#CBD5E1] rounded-2xl">
+                <ShieldCheck className="w-12 h-12 text-[#94A3B8] mx-auto mb-3" />
+                <h3 className="text-sm font-black text-[#000000]">No Host Verification Requests</h3>
+                <p className="text-xs text-[#64748B] mt-1 max-w-sm mx-auto">
+                  There are no host verification requests matching the selected filter criteria.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {hostVerifications.map((host) => {
+                  const isPending = host.verificationStatus === 'PENDING';
+                  const isVerified = host.verificationStatus === 'VERIFIED';
+                  const isRejected = host.verificationStatus === 'REJECTED';
+
+                  return (
+                    <div
+                      key={host.id}
+                      className="bg-white border border-[#CBD5E1] rounded-2xl p-5 shadow-sm hover:border-slate-300 transition flex flex-col md:flex-row md:items-center justify-between gap-4"
+                    >
+                      <div className="flex items-start gap-4 flex-1">
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#33599E] to-blue-600 text-white flex items-center justify-center text-sm font-black shrink-0 shadow-inner overflow-hidden">
+                          {host.user?.avatar ? (
+                            /* eslint-disable-next-line @next/next/no-img-element */
+                            <img
+                              src={host.user.avatar}
+                              alt={host.displayName || 'Host'}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <span>
+                              {(host.displayName || host.user?.name || 'H').slice(0, 2).toUpperCase()}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="space-y-1.5 flex-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="text-sm font-black text-[#000000] truncate">
+                              {host.displayName || 'Unnamed Host'}
+                            </h3>
+                            <span
+                              className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full border ${
+                                isVerified
+                                  ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                                  : isPending
+                                  ? 'bg-amber-50 text-amber-800 border-amber-200'
+                                  : isRejected
+                                  ? 'bg-rose-50 text-rose-800 border-rose-200'
+                                  : 'bg-slate-50 text-slate-700 border-slate-200'
+                              }`}
+                            >
+                              {host.verificationStatus}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs text-[#64748B]">
+                            <div className="flex items-center gap-1.5">
+                              <User className="w-3.5 h-3.5 text-[#94A3B8] shrink-0" />
+                              <span className="truncate">{host.user?.name || 'N/A'}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <Mail className="w-3.5 h-3.5 text-[#94A3B8] shrink-0" />
+                              <span className="truncate">{host.user?.email || 'N/A'}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <Phone className="w-3.5 h-3.5 text-[#94A3B8] shrink-0" />
+                              <span className="truncate">{host.phone || 'No phone'}</span>
+                            </div>
+                          </div>
+
+                          {host.bio && (
+                            <p className="text-xs text-slate-600 line-clamp-2 pt-1 border-t border-slate-100">
+                              {host.bio}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Decision Buttons */}
+                      <div className="flex items-center gap-2 self-end md:self-center shrink-0">
+                        {isPending ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setRejectingHostProfile(host);
+                                setHostRejectionExplanation('');
+                                setHostRejectionModalError(null);
+                              }}
+                              disabled={approvingHostId !== null}
+                              className="px-3.5 py-2 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                            >
+                              <XCircle className="w-4 h-4" /> Reject…
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleApproveHost(host.id)}
+                              disabled={approvingHostId !== null}
+                              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                            >
+                              {approvingHostId === host.id ? (
+                                <RefreshCw className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <BadgeCheck className="w-4 h-4" />
+                              )}
+                              <span>Approve Host</span>
+                            </button>
+                          </>
+                        ) : isVerified ? (
+                          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200">
+                            <BadgeCheck className="w-4 h-4" />
+                            <span>Verified Host</span>
+                          </div>
+                        ) : (
+                          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-50 text-rose-700 text-xs font-bold border border-rose-200">
+                            <XCircle className="w-4 h-4" />
+                            <span>Rejected</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
@@ -1063,6 +1445,104 @@ export default function AdminModerationPage() {
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── MODAL: Host Verification Rejection ── */}
+        {rejectingHostProfile && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+            <div className="bg-white rounded-3xl max-w-lg w-full border border-slate-200 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+              {/* Modal Header */}
+              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-rose-50/50">
+                <div className="flex items-center gap-2 text-rose-700">
+                  <XCircle className="w-5 h-5 text-rose-600" />
+                  <h3 className="text-base font-black text-rose-950">
+                    Reject Host Verification
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRejectingHostProfile(null);
+                    setHostRejectionExplanation('');
+                    setHostRejectionModalError(null);
+                  }}
+                  disabled={submittingHostRejection}
+                  className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <form onSubmit={handleRejectHostSubmit} className="p-6 space-y-4">
+                <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
+                  <div className="text-xs font-black text-slate-900">
+                    Host: {rejectingHostProfile.displayName || rejectingHostProfile.user?.name || 'Unnamed Host'}
+                  </div>
+                  <div className="text-xs text-slate-500">
+                    Email: {rejectingHostProfile.user?.email || 'N/A'} • Phone: {rejectingHostProfile.phone || 'N/A'}
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label htmlFor="host-rejection-explanation" className="block text-xs font-bold text-slate-900">
+                    Required Explanation for Host <span className="text-rose-600">*</span>
+                  </label>
+                  <p className="text-xs text-slate-500">
+                    Provide clear, constructive feedback detailing what identity documentation or profile information requires correction before resubmission (minimum 5 characters).
+                  </p>
+                  <textarea
+                    id="host-rejection-explanation"
+                    rows={4}
+                    value={hostRejectionExplanation}
+                    onChange={(e) => {
+                      setHostRejectionExplanation(e.target.value);
+                      if (hostRejectionModalError) setHostRejectionModalError(null);
+                    }}
+                    placeholder="e.g. The government ID image is blurry or expired. Please upload a clear photo of your unexpired Ethiopian passport or National ID."
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 bg-white shadow-xs"
+                    disabled={submittingHostRejection}
+                  />
+                  {hostRejectionModalError && (
+                    <p className="text-xs font-bold text-rose-600">{hostRejectionModalError}</p>
+                  )}
+                </div>
+
+                {/* Modal Actions */}
+                <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRejectingHostProfile(null);
+                      setHostRejectionExplanation('');
+                      setHostRejectionModalError(null);
+                    }}
+                    disabled={submittingHostRejection}
+                    className="px-4 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-50 transition cursor-pointer disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submittingHostRejection || hostRejectionExplanation.trim().length < 5}
+                    className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                  >
+                    {submittingHostRejection ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        <span>Rejecting…</span>
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="w-4 h-4" />
+                        <span>Confirm Rejection</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}
