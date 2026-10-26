@@ -620,8 +620,9 @@ describe('Step 5L: Integrated Host-Side Acceptance Testing', () => {
   // ─────────────────────────────────────────────────────────────
   describe('Workflow 3: Reservations, Chapa Payments & Financial Earnings', () => {
     it('manages guest booking, overlap blocking, Chapa payment confirmation, and real earnings', async () => {
-      // Ensure property is PUBLISHED for bookings
+      // Ensure property is PUBLISHED and host is VERIFIED for bookings
       storedProperty.status = ListingStatus.PUBLISHED;
+      storedHostProfile.verificationStatus = HostVerificationStatus.VERIFIED;
 
       // 1. Guest attempts to book dates blocked by host -> Rejected
       storedBlocks = [
@@ -701,6 +702,30 @@ describe('Step 5L: Integrated Host-Side Acceptance Testing', () => {
         GUEST_ID,
       );
       expect(cashBooking.paymentStatus).toBe(PaymentStatus.ON_ARRIVAL);
+
+      // 7. Revoking host verification blocks new bookings but preserves existing confirmed reservations
+      storedHostProfile.verificationStatus = HostVerificationStatus.REJECTED;
+
+      await expect(
+        bookingsService.create(
+          {
+            propertyId: storedProperty.id,
+            checkInDate: '2027-06-01',
+            checkOutDate: '2027-06-05',
+            guestCount: 2,
+            paymentMethod: PaymentMethod.CASH_ON_ARRIVAL,
+          },
+          GUEST_ID,
+        ),
+      ).rejects.toThrow('This property is not currently available for booking because the host is not verified');
+
+      // Existing confirmed reservation remains intact
+      const existingConfirmedBooking = storedBookings.find((b) => b.id === booking.id);
+      expect(existingConfirmedBooking).toBeDefined();
+      expect(existingConfirmedBooking?.status).toBe(BookingStatus.CONFIRMED);
+
+      // Restore VERIFIED status for subsequent tests
+      storedHostProfile.verificationStatus = HostVerificationStatus.VERIFIED;
     });
   });
 

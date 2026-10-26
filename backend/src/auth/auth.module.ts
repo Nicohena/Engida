@@ -10,6 +10,7 @@ import { AuthController } from './auth.controller';
 import { GoogleAuthService } from './google-auth.service';
 import { GoogleAuthController } from './google-auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { OtpService } from './otp.service';
 
 @Module({
   imports: [
@@ -27,8 +28,8 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     }),
     TypeOrmModule.forFeature([RefreshToken]),
   ],
-  providers: [AuthService, GoogleAuthService, JwtStrategy],
-  controllers: [AuthController, GoogleAuthController],
-  exports: [AuthService],
+  providers: [AuthService, JwtStrategy, OtpService],
+  controllers: [AuthController],
+  exports: [AuthService, OtpService],
 })
 export class AuthModule {}

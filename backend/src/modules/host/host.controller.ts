@@ -16,6 +16,7 @@ import {
 import { HostService } from './host.service';
 import { CreateHostProfileDto } from './dto/create-host-profile.dto';
 import { UpdateHostProfileDto } from './dto/update-host-profile.dto';
+import { RequestHostVerificationDto } from './dto/request-verification.dto';
 import { CreateHostListingDto } from './dto/create-host-listing.dto';
 import { UpdateHostListingDto } from './dto/update-host-listing.dto';
 import { QueryHostListingsDto, QueryHostReservationsDto } from './dto/query-host.dto';
@@ -89,8 +90,20 @@ export class HostController {
    * Host cannot approve or set VERIFIED.
    */
   @Post('profile/request-verification')
-  async requestVerification(@GetUser() user: User) {
-    return this.hostService.requestVerification(user.id);
+  async requestVerification(
+    @GetUser() user: User,
+    @Body() dto?: RequestHostVerificationDto,
+  ) {
+    return this.hostService.requestVerification(user.id, dto);
+  }
+
+  /**
+   * GET /host/verification/audit
+   * View active identity verification audit metadata for the authenticated host.
+   */
+  @Get('verification/audit')
+  async getMyVerificationAudit(@GetUser() user: User) {
+    return this.hostService.getVerificationAudit(user.id);
   }
 
   // ─────────────────────────────────────────

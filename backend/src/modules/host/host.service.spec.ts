@@ -30,7 +30,10 @@ import { ListingModerationService } from '../properties/listing-moderation.servi
 import { Review } from '../reviews/entities/review.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/entities/notification.entity';
-import { AuditService } from '../audit/audit.service';
+import {
+  IdentityDocumentType,
+  VerificationProviderType,
+} from './dto/request-verification.dto';
 
 // ─────────────────────────────────────────────────────────
 // Test fixtures
@@ -384,6 +387,19 @@ describe('HostService', () => {
       expect(result.verificationStatus).toBe(HostVerificationStatus.UNVERIFIED);
     });
 
+    it('[security] ordinary profile update preserves VERIFIED status and does not unpublish listings', async () => {
+      mockHostProfileRepo.findOne.mockResolvedValue({
+        ...mockHostProfile,
+        verificationStatus: HostVerificationStatus.VERIFIED,
+      });
+      const result = await service.updateHostProfile(HOST_ID, {
+        displayName: 'New Verified Display Name',
+        bio: 'Updated bio information',
+      });
+      expect(result.verificationStatus).toBe(HostVerificationStatus.VERIFIED);
+      expect(mockPropertyRepo.save).not.toHaveBeenCalled();
+    });
+
     it('[positive] updates avatar by updating the user record', async () => {
       mockHostProfileRepo.findOne.mockResolvedValue({ ...mockHostProfile });
       await service.updateHostProfile(HOST_ID, { avatar: 'https://example.com/avatar.jpg' });
@@ -469,6 +485,70 @@ describe('HostService', () => {
       await expect(service.requestVerification(HOST_ID)).rejects.toThrow(
         'Please provide a valid contact phone number before requesting verification.',
       );
+    });
+
+    it('[positive] accepts Ethiopian Kebele ID with issuing country Ethiopia', async () => {
+      mockHostProfileRepo.findOne.mockResolvedValue({
+        ...mockHostProfile,
+        displayName: 'Almaz Host',
+        phone: '+251911223344',
+        verificationStatus: HostVerificationStatus.UNVERIFIED,
+      });
+
+      const result = await service.requestVerification(HOST_ID, {
+        documentType: IdentityDocumentType.ETHIOPIAN_KEBELE_ID,
+        issuingCountry: 'ET',
+        documentNumber: 'KBL-987654321',
+        issuingAuthority: 'Addis Ababa City Administration',
+      });
+
+      expect(mockHostProfileRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          verificationStatus: HostVerificationStatus.PENDING,
+        }),
+      );
+      expect(result).toBeDefined();
+    });
+
+    it('[negative] rejects Ethiopian Kebele ID if issuing country is not Ethiopia', async () => {
+      mockHostProfileRepo.findOne.mockResolvedValue({
+        ...mockHostProfile,
+        displayName: 'Almaz Host',
+        phone: '+251911223344',
+        verificationStatus: HostVerificationStatus.UNVERIFIED,
+      });
+
+      await expect(
+        service.requestVerification(HOST_ID, {
+          documentType: IdentityDocumentType.ETHIOPIAN_KEBELE_ID,
+          issuingCountry: 'US',
+          documentNumber: 'KBL-987654321',
+        }),
+      ).rejects.toThrow('must specify Ethiopia (ET) as the issuing country');
+    });
+
+    it('[positive] accepts foreign passport with international issuing country', async () => {
+      mockHostProfileRepo.findOne.mockResolvedValue({
+        ...mockHostProfile,
+        displayName: 'International Host',
+        phone: '+251911223344',
+        verificationStatus: HostVerificationStatus.UNVERIFIED,
+      });
+
+      const result = await service.requestVerification(HOST_ID, {
+        documentType: IdentityDocumentType.FOREIGN_PASSPORT,
+        issuingCountry: 'US',
+        documentNumber: 'USA-99887766',
+        issuingAuthority: 'US Department of State',
+        verificationProvider: VerificationProviderType.MANUAL_ADMIN_REVIEW,
+      });
+
+      expect(mockHostProfileRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          verificationStatus: HostVerificationStatus.PENDING,
+        }),
+      );
+      expect(result).toBeDefined();
     });
   });
 
@@ -635,6 +715,62 @@ describe('HostService', () => {
 
         expect(profile.verificationStatus).toBe(HostVerificationStatus.REJECTED);
         expect((profile as any).rejectionReason).toBe('Contact details unverified.');
+      });
+    });
+
+    describe('revokeHostVerification', () => {
+      it('[positive] revokes a VERIFIED host profile to REJECTED with explanation and notification', async () => {
+        const verifiedProfile = {
+          ...mockHostProfile,
+          id: 'profile-uuid-1',
+          userId: HOST_ID,
+          verificationStatus: HostVerificationStatus.VERIFIED,
+        };
+        mockHostProfileRepo.findOne.mockResolvedValue(verifiedProfile);
+
+        const explanation = 'Host credentials reported invalid by issuing authority.';
+        const result = await service.revokeHostVerification('profile-uuid-1', explanation, adminUser);
+
+        expect(result.verificationStatus).toBe(HostVerificationStatus.REJECTED);
+        expect(mockHostProfileRepo.save).toHaveBeenCalledWith(
+          expect.objectContaining({ verificationStatus: HostVerificationStatus.REJECTED }),
+        );
+        expect(mockNotificationsService.createNotification).toHaveBeenCalledWith(
+          expect.objectContaining({
+            userId: HOST_ID,
+            type: NotificationType.LISTING_REJECTED,
+            title: 'Host Verification Revoked',
+          }),
+        );
+      });
+
+      it('[negative] throws BadRequestException if profile is not VERIFIED', async () => {
+        mockHostProfileRepo.findOne.mockResolvedValue({
+          ...mockHostProfile,
+          verificationStatus: HostVerificationStatus.PENDING,
+        });
+
+        await expect(
+          service.revokeHostVerification(
+            'profile-uuid-1',
+            'Cannot revoke pending verification',
+            adminUser,
+          ),
+        ).rejects.toThrow('Only host profiles in VERIFIED status can have verification revoked.');
+      });
+
+      it('[negative] throws BadRequestException if explanation is missing or too short', async () => {
+        await expect(
+          service.revokeHostVerification('profile-uuid-1', 'bad', adminUser),
+        ).rejects.toThrow('A valid revocation explanation (at least 5 characters) is required.');
+      });
+
+      it('[negative] throws NotFoundException if host profile does not exist', async () => {
+        mockHostProfileRepo.findOne.mockResolvedValue(null);
+
+        await expect(
+          service.revokeHostVerification('nonexistent-id', 'Valid revocation reason', adminUser),
+        ).rejects.toThrow(NotFoundException);
       });
     });
   });

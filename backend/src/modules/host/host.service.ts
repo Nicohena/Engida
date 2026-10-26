@@ -29,6 +29,15 @@ import { ListingReview, ReviewStatus, ReviewSubmissionType } from '../properties
 import { ListingModerationService } from '../properties/listing-moderation.service';
 import { CreateHostProfileDto } from './dto/create-host-profile.dto';
 import { UpdateHostProfileDto } from './dto/update-host-profile.dto';
+import {
+  RequestHostVerificationDto,
+  IdentityDocumentType,
+  VerificationProviderType,
+} from './dto/request-verification.dto';
+import {
+  IdentityVerificationService,
+  ProviderVerificationResult,
+} from './identity-verification.service';
 import { QueryHostVerificationsDto } from './dto/admin-host-verification.dto';
 import { CreateHostListingDto } from './dto/create-host-listing.dto';
 import { CreateRoomDto } from '../properties/dto/create-room.dto';
@@ -128,6 +137,8 @@ export class HostService {
     @Optional()
     @InjectRepository(Review)
     private readonly guestReviewRepository?: Repository<Review>,
+    @Optional()
+    private readonly identityVerificationService?: IdentityVerificationService,
   ) {}
 
   // ─────────────────────────────────────────
@@ -157,6 +168,20 @@ export class HostService {
       }
     }
 
+    return profile;
+  }
+
+  /**
+   * Get the HostProfile by profile ID (UUID).
+   */
+  async getHostProfileById(profileId: string): Promise<HostProfile> {
+    const profile = await this.hostProfileRepository.findOne({
+      where: { id: profileId },
+      relations: ['user'],
+    });
+    if (!profile) {
+      throw new NotFoundException(`Host profile with ID "${profileId}" not found.`);
+    }
     return profile;
   }
 
@@ -220,7 +245,7 @@ export class HostService {
    * Transitions status from UNVERIFIED or REJECTED to PENDING.
    * Security: Hosts CANNOT set status to VERIFIED or approve themselves.
    */
-  async requestVerification(userId: string): Promise<HostProfile> {
+  async requestVerification(userId: string, dto?: RequestHostVerificationDto): Promise<HostProfile> {
     const profile = await this.getHostProfile(userId);
     if (!profile) {
       throw new NotFoundException('Host profile not found.');
@@ -242,9 +267,39 @@ export class HostService {
       throw new BadRequestException('Please provide a valid contact phone number before requesting verification.');
     }
 
+    // Process and audit identity document metadata if provided
+    if (dto) {
+      if (this.identityVerificationService) {
+        this.identityVerificationService.initiateVerificationSession(userId, profile.id, dto);
+      } else {
+        // Fallback validation if identity service is not injected (e.g. isolated unit tests)
+        if (
+          (dto.documentType === IdentityDocumentType.ETHIOPIAN_KEBELE_ID ||
+            dto.documentType === IdentityDocumentType.ETHIOPIAN_FAYDA_ID) &&
+          !['ET', 'ETH', 'Ethiopia'].includes(dto.issuingCountry)
+        ) {
+          throw new BadRequestException(
+            `Document type "${dto.documentType}" must specify Ethiopia (ET) as the issuing country.`,
+          );
+        }
+
+        const docNum = dto.documentNumber.trim();
+        const maskedNumber =
+          docNum.length > 4
+            ? `${'*'.repeat(Math.max(docNum.length - 4, 3))}-${docNum.slice(-4)}`
+            : '****';
+
+        const provider = dto.verificationProvider || VerificationProviderType.MANUAL_ADMIN_REVIEW;
+        this.logger.log(
+          `Host ${userId} requested identity verification with document: ${dto.documentType}, country: ${dto.issuingCountry}, masked: ${maskedNumber}, provider: ${provider}`,
+        );
+      }
+    } else {
+      this.logger.log(`Host ${userId} requested identity verification (status -> PENDING)`);
+    }
+
     profile.verificationStatus = HostVerificationStatus.PENDING;
     await this.hostProfileRepository.save(profile);
-    this.logger.log(`Host ${userId} requested identity verification (status -> PENDING)`);
 
     return this.getHostProfile(userId);
   }
@@ -322,17 +377,9 @@ export class HostService {
     const saved = await this.hostProfileRepository.save(profile);
     this.logger.log(`Host verification approved for profile ${profileId} by admin ${admin.id}`);
 
-    await this.auditService.record({
-      actor: admin,
-      action: 'host.verification.approve',
-      entityType: 'host_profile',
-      entityId: profile.id,
-      before: { verificationStatus: HostVerificationStatus.PENDING },
-      after: { verificationStatus: saved.verificationStatus },
-      metadata: { userId: profile.userId },
-      ipAddress: auditContext?.ipAddress ?? null,
-      userAgent: auditContext?.userAgent ?? null,
-    });
+    if (this.identityVerificationService) {
+      this.identityVerificationService.recordAdminDecision(profile.userId, 'APPROVED', admin.id);
+    }
 
     if (this.notificationsService) {
       try {
@@ -400,17 +447,9 @@ export class HostService {
       `Host verification rejected for profile ${profileId} by admin ${admin.id}: "${trimmed}"`,
     );
 
-    await this.auditService.record({
-      actor: admin,
-      action: 'host.verification.reject',
-      entityType: 'host_profile',
-      entityId: profile.id,
-      before: { verificationStatus: HostVerificationStatus.PENDING },
-      after: { verificationStatus: saved.verificationStatus },
-      metadata: { userId: profile.userId, reason: trimmed },
-      ipAddress: auditContext?.ipAddress ?? null,
-      userAgent: auditContext?.userAgent ?? null,
-    });
+    if (this.identityVerificationService) {
+      this.identityVerificationService.recordAdminDecision(profile.userId, 'REJECTED', admin.id, trimmed);
+    }
 
     if (this.notificationsService) {
       try {
@@ -438,6 +477,138 @@ export class HostService {
 
     (saved as any).rejectionReason = trimmed;
     return saved;
+  }
+
+  /**
+   * Admin revokes an active host verification.
+   * Transitions status from VERIFIED to REJECTED with required explanation.
+   */
+  async revokeHostVerification(
+    profileId: string,
+    explanation: string,
+    admin: User,
+  ): Promise<HostProfile> {
+    const trimmed = explanation?.trim();
+    if (!trimmed || trimmed.length < 5) {
+      throw new BadRequestException('A valid revocation explanation (at least 5 characters) is required.');
+    }
+    if (trimmed.length > 500) {
+      throw new BadRequestException('Revocation explanation cannot exceed 500 characters.');
+    }
+
+    const profile = await this.hostProfileRepository.findOne({
+      where: { id: profileId },
+      relations: ['user'],
+    });
+
+    if (!profile) {
+      throw new NotFoundException(`Host profile with ID "${profileId}" not found.`);
+    }
+
+    if (profile.verificationStatus !== HostVerificationStatus.VERIFIED) {
+      throw new BadRequestException(
+        `Only host profiles in VERIFIED status can have verification revoked. Current status: ${profile.verificationStatus}`,
+      );
+    }
+
+    profile.verificationStatus = HostVerificationStatus.REJECTED;
+    const saved = await this.hostProfileRepository.save(profile);
+    this.logger.log(
+      `Host verification revoked for profile ${profileId} by admin ${admin.id}: "${trimmed}"`,
+    );
+
+    if (this.identityVerificationService) {
+      this.identityVerificationService.recordAdminDecision(profile.userId, 'REVOKED', admin.id, trimmed);
+    }
+
+    if (this.notificationsService) {
+      await this.notificationsService.createNotification({
+        userId: profile.userId,
+        type: NotificationType.LISTING_REJECTED,
+        title: 'Host Verification Revoked',
+        message: `Your host verification has been revoked by an administrator: ${trimmed}`,
+        link: '/host/profile',
+        metadata: {
+          profileId: profile.id,
+          verificationStatus: HostVerificationStatus.REJECTED,
+          rejectionReason: trimmed,
+          reviewedByAdminId: admin.id,
+        },
+        idempotencyKey: `host-verification-revoked-${profile.id}-${Date.now()}`,
+      });
+    }
+
+    (saved as any).rejectionReason = trimmed;
+    return saved;
+  }
+
+  /**
+   * Process an authoritative identity verification provider result (e.g. from webhook).
+   * Verifies document authenticity, face matching, and liveness.
+   * If successful, approves host identity. If inconclusive, routes to exception review.
+   */
+  async processProviderVerificationResult(
+    result: ProviderVerificationResult,
+  ): Promise<{
+    verified: boolean;
+    verificationStatus: HostVerificationStatus;
+    exceptionWorkflow: boolean;
+    canRetry: boolean;
+  }> {
+    if (!this.identityVerificationService) {
+      throw new BadRequestException('Identity verification service is unconfigured.');
+    }
+
+    const outcome = this.identityVerificationService.processProviderResult(result);
+    const profile = await this.hostProfileRepository.findOne({
+      where: { userId: outcome.record.userId },
+    });
+
+    if (profile && outcome.verified) {
+      profile.verificationStatus = HostVerificationStatus.VERIFIED;
+      await this.hostProfileRepository.save(profile);
+
+      if (this.notificationsService) {
+        await this.notificationsService.createNotification({
+          userId: profile.userId,
+          type: NotificationType.LISTING_APPROVED,
+          title: 'Identity Verification Confirmed',
+          message: `Your identity has been verified via ${outcome.record.provider}. Your verified host badge is now active.`,
+          link: '/host/profile',
+          metadata: {
+            profileId: profile.id,
+            verificationStatus: HostVerificationStatus.VERIFIED,
+            transactionId: result.transactionId,
+          },
+          idempotencyKey: `id-verified-${result.transactionId}`,
+        });
+      }
+    }
+
+    return {
+      verified: outcome.verified,
+      verificationStatus: outcome.status,
+      exceptionWorkflow: outcome.exceptionWorkflow,
+      canRetry: outcome.canRetry,
+    };
+  }
+
+  /**
+   * Get verification audit record for host or admin inspection.
+   */
+  async getVerificationAudit(userId: string) {
+    if (!this.identityVerificationService) return null;
+    return this.identityVerificationService.getVerificationAudit(userId);
+  }
+
+  /**
+   * Get supported verification config.
+   */
+  getVerificationConfig() {
+    if (!this.identityVerificationService) {
+      return { supportedDocuments: [], supportedCountries: [], providers: [] };
+    }
+    return this.identityVerificationService.getVerificationConfig();
   }
 
   // ─────────────────────────────────────────

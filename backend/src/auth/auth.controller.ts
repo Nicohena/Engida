@@ -16,6 +16,8 @@ import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { SendOtpDto, VerifyOtpDto } from './dto/otp.dto';
+import { OtpService } from './otp.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { GetUser } from './decorators/get-user.decorator';
 import { User } from '../users/entities/user.entity';
@@ -26,8 +28,25 @@ import { setRefreshCookie, clearRefreshCookie } from './refresh-cookie';
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    private readonly configService: ConfigService,
+    private readonly otpService: OtpService,
   ) {}
+
+  @Post('otp/send')
+  @HttpCode(HttpStatus.OK)
+  async sendOtp(@Body() dto: SendOtpDto) {
+    return this.otpService.sendOtp(dto);
+  }
+
+  @Post('otp/verify')
+  @HttpCode(HttpStatus.OK)
+  async verifyOtp(@Body() dto: VerifyOtpDto) {
+    return this.otpService.verifyOtp(dto);
+  }
+
+  @Get('otp/status')
+  getOtpProviderStatus() {
+    return this.otpService.getProviderStatus();
+  }
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)

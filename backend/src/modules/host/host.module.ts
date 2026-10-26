@@ -14,7 +14,8 @@ import { Review } from '../reviews/entities/review.entity';
 import { CloudinaryModule } from '../cloudinary/cloudinary.module';
 import { ListingModerationModule } from '../properties/listing-moderation.module';
 import { NotificationsModule } from '../notifications/notifications.module';
-import { AuditModule } from '../audit/audit.module';
+import { IdentityVerificationService } from './identity-verification.service';
+import { IdentityVerificationController } from './identity-verification.controller';
 
 @Module({
   imports: [
@@ -34,8 +35,8 @@ import { AuditModule } from '../audit/audit.module';
       Review,
     ]),
   ],
-  controllers: [HostController],
-  providers: [HostService],
-  exports: [HostService],
+  controllers: [HostController, IdentityVerificationController],
+  providers: [HostService, IdentityVerificationService],
+  exports: [HostService, IdentityVerificationService],
 })
 export class HostModule {}
