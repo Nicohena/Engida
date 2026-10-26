@@ -327,7 +327,17 @@ export default function BecomeAHostWizardPage() {
             updateData={updateFormData}
             currentUser={user}
             onRegisterAccount={async (name, email, pass) => {
-              await register(name, email, pass);
+              try {
+                await register(name, email, pass);
+              } catch (err: unknown) {
+                const message = err instanceof Error ? err.message : String(err);
+                if (message.toLowerCase().includes('already exists') || message.toLowerCase().includes('conflict')) {
+                  // Account already registered in a prior session; log in directly with provided credentials
+                  await login(email, pass);
+                  return;
+                }
+                throw err;
+              }
             }}
             onHostProfileCreated={handleHostProfileCreated}
             onBack={() => handleBackStep(4)}

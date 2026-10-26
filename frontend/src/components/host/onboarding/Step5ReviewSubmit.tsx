@@ -76,7 +76,7 @@ export default function Step5ReviewSubmit({
           : ' [Individual Host]';
       const completeBio = `${data.bio ? data.bio.trim() + ' — ' : ''}Operating Address: ${locationSummary}${businessSummary}`;
 
-      // Step 3: Create Host Profile via backend API
+      // Step 3: Create Host Profile via backend API (or update existing unverified draft)
       setSubmissionProgress('Setting up your host profile…');
       const hostPayload = {
         displayName: data.displayName.trim(),
@@ -84,10 +84,23 @@ export default function Step5ReviewSubmit({
         bio: completeBio.slice(0, 500),
       };
 
-      const newProfile = await apiFetch<HostProfile>('/host/profile', {
-        method: 'POST',
-        body: JSON.stringify(hostPayload),
-      });
+      let newProfile: HostProfile;
+      try {
+        newProfile = await apiFetch<HostProfile>('/host/profile', {
+          method: 'POST',
+          body: JSON.stringify(hostPayload),
+        });
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        if (msg.includes('already has a host profile') || msg.includes('Conflict')) {
+          newProfile = await apiFetch<HostProfile>('/host/profile', {
+            method: 'PUT',
+            body: JSON.stringify(hostPayload),
+          });
+        } else {
+          throw err;
+        }
+      }
 
       // Step 3.5: Upload attached document images to secure KYC vault
       let uploadedFrontUrl = data.documentFrontUrl || undefined;
@@ -378,6 +391,9 @@ export default function Step5ReviewSubmit({
                         src={data.filePreviewUrl}
                         alt="Front preview"
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.currentTarget.parentElement as HTMLElement | null)?.style.setProperty('display', 'none');
+                        }}
                       />
                     </div>
                   )}
@@ -388,6 +404,9 @@ export default function Step5ReviewSubmit({
                         src={data.backFilePreviewUrl}
                         alt="Back preview"
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.currentTarget.parentElement as HTMLElement | null)?.style.setProperty('display', 'none');
+                        }}
                       />
                     </div>
                   )}
