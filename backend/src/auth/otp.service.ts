@@ -41,15 +41,18 @@ export class OtpService {
     if (channel === OtpChannel.EMAIL) {
       return trimmed.toLowerCase();
     }
-    // Normalize Ethiopian phone number (+251 9... / 09... -> +2519...)
+    // Normalize phone number to standard E.164 (+<country><subscriber>)
     const digitsOnly = trimmed.replace(/[^\d+]/g, '');
+    if (digitsOnly.startsWith('+')) {
+      return digitsOnly;
+    }
     if (digitsOnly.startsWith('09') || digitsOnly.startsWith('07')) {
       return `+251${digitsOnly.slice(1)}`;
     }
     if (digitsOnly.startsWith('251')) {
       return `+${digitsOnly}`;
     }
-    return digitsOnly;
+    return `+${digitsOnly}`;
   }
 
   /**

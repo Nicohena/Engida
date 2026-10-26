@@ -2,7 +2,12 @@
 
 import React, { useState } from 'react';
 import { Eye, EyeOff, CheckCircle2, AlertCircle, Lock, Mail, Phone, User as UserIcon } from 'lucide-react';
-import type { OnboardingFormData } from './types';
+import {
+  COUNTRY_DIAL_CODES,
+  parsePhoneNumber,
+  formatToE164,
+  type OnboardingFormData,
+} from './types';
 import type { User } from '@/context/AuthContext';
 
 interface Step1AccountProps {
@@ -29,6 +34,34 @@ export default function Step1Account({
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
 
+  // Parse initial country dial code and national number from data.phone
+  const parsedPhone = parsePhoneNumber(data.phone);
+  const [selectedCountryCode, setSelectedCountryCode] = useState<string>(parsedPhone.countryCode);
+  const [nationalNumber, setNationalNumber] = useState<string>(parsedPhone.nationalNumber);
+
+  const currentCountry =
+    COUNTRY_DIAL_CODES.find((c) => c.code === selectedCountryCode) || COUNTRY_DIAL_CODES[0];
+
+  const handleCountryChange = (newCountryCode: string) => {
+    setSelectedCountryCode(newCountryCode);
+    const cfg = COUNTRY_DIAL_CODES.find((c) => c.code === newCountryCode) || COUNTRY_DIAL_CODES[0];
+    const full = formatToE164(cfg.dialCode, nationalNumber);
+    updateData({ phone: full });
+    if (errors.phone) setErrors((prev) => ({ ...prev, phone: '' }));
+  };
+
+  const handleNationalNumberChange = (rawInput: string) => {
+    let clean = rawInput.replace(/[^\d]/g, '');
+    // Auto-strip leading zeros (e.g. 0911... -> 911... in Ethiopia, 079... -> 79... in UK)
+    if (clean.startsWith('0') && currentCountry.code !== 'OTHER') {
+      clean = clean.replace(/^0+/, '');
+    }
+    setNationalNumber(clean);
+    const full = formatToE164(currentCountry.dialCode, clean);
+    updateData({ phone: full });
+    if (errors.phone) setErrors((prev) => ({ ...prev, phone: '' }));
+  };
+
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
@@ -49,11 +82,14 @@ export default function Step1Account({
       }
     }
 
-    // Phone validation (Ethiopian mobile phone format)
-    const cleanPhone = data.phone.replace(/[^\d+]/g, '');
-    const isEthPhone = /^\+?251[79]\d{8}$/.test(cleanPhone) || /^0[79]\d{8}$/.test(cleanPhone);
-    if (!data.phone.trim() || !isEthPhone) {
-      newErrors.phone = 'Please provide a valid Ethiopian mobile phone (e.g. +251 91 122 3344 or 0911223344).';
+    // Phone validation (Ethiopian or International mobile phone)
+    const phoneDigits = nationalNumber.replace(/[^\d]/g, '');
+    if (!phoneDigits) {
+      newErrors.phone = 'Mobile phone number is required.';
+    } else if (currentCountry.pattern && !currentCountry.pattern.test(phoneDigits)) {
+      newErrors.phone = `Invalid ${currentCountry.name} number. ${currentCountry.formatHint || `${currentCountry.minLength} digits expected`}.`;
+    } else if (phoneDigits.length < currentCountry.minLength || phoneDigits.length > currentCountry.maxLength) {
+      newErrors.phone = `Phone number must be between ${currentCountry.minLength} and ${currentCountry.maxLength} digits for ${currentCountry.name}.`;
     }
 
     if (!data.agreedToTerms) {
@@ -264,28 +300,60 @@ export default function Step1Account({
           )}
         </div>
 
-        {/* Ethiopian Mobile Phone */}
+        {/* Mobile Phone Number (Country Dial Code + National Number) */}
         <div>
-          <label htmlFor="phone" className="block text-xs font-bold text-slate-700 mb-1">
-            Ethiopian Mobile Phone <span className="text-rose-500">*</span>
+          <label htmlFor="nationalPhone" className="block text-xs font-bold text-slate-700 mb-1">
+            Mobile Phone Number <span className="text-rose-500">*</span>
           </label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-              <Phone className="w-4 h-4" />
+          <div className="flex gap-2">
+            {/* Country Dial Code Dropdown */}
+            <div className="relative w-40 sm:w-48 shrink-0">
+              <select
+                id="countryDialCode"
+                aria-label="Country calling code"
+                value={selectedCountryCode}
+                onChange={(e) => handleCountryChange(e.target.value)}
+                className="w-full px-3 py-2.5 text-xs sm:text-sm font-medium border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-600 transition truncate cursor-pointer"
+              >
+                {COUNTRY_DIAL_CODES.map((c) => (
+                  <option key={c.code} value={c.code}>
+                    {c.flag} {c.code} ({c.dialCode})
+                  </option>
+                ))}
+              </select>
             </div>
-            <input
-              id="phone"
-              type="tel"
-              value={data.phone}
-              onChange={(e) => updateData({ phone: e.target.value })}
-              placeholder="+251 91 123 4567"
-              className={`w-full pl-9 pr-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 transition ${
-                errors.phone ? 'border-rose-400 bg-rose-50/30' : 'border-slate-300 bg-white'
-              }`}
-              aria-invalid={Boolean(errors.phone)}
-              aria-describedby={errors.phone ? 'phone-error' : undefined}
-            />
+
+            {/* National Number Input */}
+            <div className="relative flex-1">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <Phone className="w-4 h-4" />
+              </div>
+              <input
+                id="nationalPhone"
+                type="tel"
+                inputMode="numeric"
+                value={nationalNumber}
+                onChange={(e) => handleNationalNumberChange(e.target.value)}
+                placeholder={currentCountry.placeholder}
+                className={`w-full pl-9 pr-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 transition font-mono ${
+                  errors.phone ? 'border-rose-400 bg-rose-50/30' : 'border-slate-300 bg-white'
+                }`}
+                aria-invalid={Boolean(errors.phone)}
+                aria-describedby={errors.phone ? 'phone-error' : undefined}
+              />
+            </div>
           </div>
+
+          {/* Standard E.164 preview */}
+          {nationalNumber && (
+            <div className="mt-1 text-[11px] text-slate-500 flex items-center gap-1.5">
+              <span>Standard E.164:</span>
+              <span className="font-mono font-medium text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded">
+                {formatToE164(currentCountry.dialCode, nationalNumber)}
+              </span>
+            </div>
+          )}
+
           {errors.phone && (
             <p id="phone-error" className="text-xs text-rose-600 mt-1 flex items-center gap-1">
               <AlertCircle className="w-3.5 h-3.5 shrink-0" />
@@ -293,7 +361,7 @@ export default function Step1Account({
             </p>
           )}
           <span className="text-[11px] text-slate-500 block mt-0.5">
-            Used for urgent host-guest booking communications and account recovery.
+            Select your country code and enter your mobile number. Used for urgent host-guest booking communications and account recovery.
           </span>
         </div>
 

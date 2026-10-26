@@ -71,6 +71,22 @@ describe('OtpService', () => {
       expect((result as any).code).toBeUndefined(); // never expose raw OTP
     });
 
+    it('normalizes international phone numbers to standard E.164', async () => {
+      mockConfigService.get.mockReturnValue('configured-provider-key');
+
+      const result = await service.sendOtp({
+        target: '+1 (415) 555-2671',
+        channel: OtpChannel.PHONE,
+        purpose: 'HOST_ONBOARDING',
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.target).toBe('+14155552671');
+
+      const store = (service as any).otpStore as Map<string, any>;
+      expect(store.has('+14155552671')).toBe(true);
+    });
+
     it('enforces 60-second resend throttling for the same contact target', async () => {
       mockConfigService.get.mockReturnValue('configured-provider-key');
 
