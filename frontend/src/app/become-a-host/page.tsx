@@ -21,20 +21,20 @@ export default function BecomeAHostWizardPage() {
 
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
-  const [formData, setFormData] = useState<OnboardingFormData>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = sessionStorage.getItem('engida_host_onboarding_state');
-        if (saved) {
-          return { ...INITIAL_ONBOARDING_STATE, ...JSON.parse(saved) };
-        }
-      } catch {
-        // ignore storage errors
-      }
-    }
-    return INITIAL_ONBOARDING_STATE;
-  });
+  const [formData, setFormData] = useState<OnboardingFormData>(INITIAL_ONBOARDING_STATE);
   const [saveToast, setSaveToast] = useState<string | null>(null);
+
+  // Restore draft state from sessionStorage after initial client mount to prevent SSR hydration mismatch
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem('engida_host_onboarding_state');
+      if (saved) {
+        setFormData((prev) => ({ ...prev, ...JSON.parse(saved) }));
+      }
+    } catch {
+      // ignore storage errors
+    }
+  }, []);
 
   // Sync state changes with current user if logged in
   useEffect(() => {

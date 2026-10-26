@@ -253,7 +253,7 @@ export default function Step5ReviewSubmit({
               <span className="text-slate-500 block">Contact Verification</span>
               <span className="font-medium text-emerald-700 flex items-center gap-1">
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                {data.contactVerified ? 'Verified via OTP' : 'Attached for Manual Audit'}
+                {data.contactVerified ? 'Email Verified via OTP' : 'Pending Email Verification'}
               </span>
             </div>
           </div>
