@@ -14,6 +14,7 @@ import { Review } from '../reviews/entities/review.entity';
 import { CloudinaryModule } from '../cloudinary/cloudinary.module';
 import { ListingModerationModule } from '../properties/listing-moderation.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { AuditModule } from '../audit/audit.module';
 import { IdentityVerificationService } from './identity-verification.service';
 import { IdentityVerificationController } from './identity-verification.controller';
 

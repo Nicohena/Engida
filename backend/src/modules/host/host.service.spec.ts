@@ -34,6 +34,7 @@ import {
   IdentityDocumentType,
   VerificationProviderType,
 } from './dto/request-verification.dto';
+import { AuditService } from '../audit/audit.service';
 
 // ─────────────────────────────────────────────────────────
 // Test fixtures

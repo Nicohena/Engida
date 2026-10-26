@@ -292,4 +292,41 @@ describe('IdentityVerificationService', () => {
       expect(audit?.auditTrail.some((e) => e.action === 'ADMIN_APPROVED')).toBe(true);
     });
   });
+
+  describe('Fayda NIDP Digital Identity Extraction', () => {
+    it('[positive] successfully extracts demographic identity attributes for a 12-digit FIN', async () => {
+      const record = await service.lookupFaydaRecord({
+        faydaNumber: '1029 3847 5610',
+        fullName: 'Abebe Bikila',
+      });
+
+      expect(record.fin).toBe('1029 3847 5610');
+      expect(record.rawNumber).toBe('102938475610');
+      expect(record.fullName).toBe('Abebe Bikila');
+      expect(record.nationality).toBe('Ethiopian');
+      expect(record.region).toBe('Addis Ababa');
+      expect(record.subCity).toBeDefined();
+      expect(record.status).toBe('ACTIVE_VERIFIED');
+      expect(record.verificationToken).toContain('NIDP-ET-');
+      expect(record.provider).toBe('FAYDA_NIDP');
+    });
+
+    it('[positive] accepts 16-digit FAN and formats appropriately', async () => {
+      const record = await service.lookupFaydaRecord({
+        faydaNumber: '1029 3847 5610 9821',
+      });
+
+      expect(record.fan).toBe('1029 3847 5610 9821');
+      expect(record.fin).toBe('1029 3847 5610');
+      expect(record.status).toBe('ACTIVE_VERIFIED');
+    });
+
+    it('[negative] rejects invalid Fayda number length', async () => {
+      await expect(
+        service.lookupFaydaRecord({
+          faydaNumber: '12345',
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
 });

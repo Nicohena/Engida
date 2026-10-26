@@ -6,6 +6,7 @@ import {
   MaxLength,
   MinLength,
   IsBoolean,
+  IsNumber,
 } from 'class-validator';
 
 export enum IdentityDocumentType {
@@ -67,4 +68,20 @@ export class RequestHostVerificationDto {
   @IsOptional()
   @IsBoolean()
   livenessVerified?: boolean;
+
+  @IsOptional()
+  @IsString()
+  documentFrontUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  documentBackUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  documentFileName?: string;
+
+  @IsOptional()
+  @IsNumber()
+  documentFileSize?: number;
 }

@@ -340,8 +340,13 @@ export class HostService {
 
     const [data, total] = await qb.skip(skip).take(limit).getManyAndCount();
 
+    const enriched = data.map((profile) => {
+      const audit = this.identityVerificationService?.getVerificationAudit(profile.userId) || null;
+      return Object.assign(profile, { verificationAudit: audit });
+    });
+
     return {
-      data,
+      data: enriched,
       total,
       page,
       limit,

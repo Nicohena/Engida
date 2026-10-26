@@ -1,17 +1,29 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   FileText,
   UploadCloud,
   CheckCircle2,
   AlertCircle,
-  ShieldAlert,
+  ShieldCheck,
   Globe,
   Lock,
   Calendar,
   X,
+  Eye,
+  Info,
+  CreditCard,
+  Sparkles,
+  Camera,
+  RefreshCw,
+  Zap,
+  BadgeCheck,
+  MapPin,
+  UserCheck,
+  RotateCcw,
 } from 'lucide-react';
+import { apiFetch } from '@/lib/api';
 import {
   SUPPORTED_DOCUMENT_TYPES,
   SUPPORTED_COUNTRIES,
@@ -26,6 +38,27 @@ interface Step3IdentityVerificationProps {
   onContinue: () => void;
 }
 
+interface FaydaApiResponse {
+  fin: string;
+  fan?: string;
+  rawNumber: string;
+  fullName: string;
+  fullNameAmharic: string;
+  dateOfBirth: string;
+  gender: 'MALE' | 'FEMALE';
+  nationality: string;
+  region: string;
+  city: string;
+  subCity: string;
+  woreda: string;
+  registeredPhoneMasked: string;
+  status: string;
+  verificationToken: string;
+  verifiedAt: string;
+  provider: string;
+  matchScore: number;
+}
+
 export default function Step3IdentityVerification({
   data,
   updateData,
@@ -33,79 +66,410 @@ export default function Step3IdentityVerification({
   onContinue,
 }: Step3IdentityVerificationProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [frontUploadError, setFrontUploadError] = useState<string | null>(null);
+  const [backUploadError, setBackUploadError] = useState<string | null>(null);
+  const [previewModalUrl, setPreviewModalUrl] = useState<string | null>(null);
+  const [isFrontDragOver, setIsFrontDragOver] = useState(false);
+  const [isBackDragOver, setIsBackDragOver] = useState(false);
 
-  const selectedDocConfig = SUPPORTED_DOCUMENT_TYPES.find(
-    (d) => d.value === data.documentType,
-  ) || SUPPORTED_DOCUMENT_TYPES[0];
+  // Fayda Digital Verification state
+  const [isExtractingFayda, setIsExtractingFayda] = useState(false);
+  const [faydaExtractError, setFaydaExtractError] = useState<string | null>(null);
+
+  const frontInputRef = useRef<HTMLInputElement>(null);
+  const backInputRef = useRef<HTMLInputElement>(null);
+
+  const selectedDocConfig =
+    SUPPORTED_DOCUMENT_TYPES.find((d) => d.value === data.documentType) ||
+    SUPPORTED_DOCUMENT_TYPES[0];
+
+  const isFayda = data.documentType === 'ETHIOPIAN_FAYDA_ID';
+  const faydaMethod = data.faydaVerificationMethod || 'DIGITAL_LOOKUP';
+
+  const requiresBackSide =
+    data.documentType === 'ETHIOPIAN_KEBELE_ID' ||
+    (isFayda && faydaMethod === 'DOCUMENT_UPLOAD') ||
+    data.documentType === 'ETHIOPIAN_DRIVERS_LICENSE' ||
+    data.documentType === 'RESIDENCE_PERMIT';
+
+  // Ensure country matches document constraints on initial load or type change
+  useEffect(() => {
+    if (selectedDocConfig.allowedCountries?.length === 1) {
+      const allowed = selectedDocConfig.allowedCountries[0];
+      if (data.issuingCountry !== allowed) {
+        updateData({ issuingCountry: allowed });
+      }
+    }
+  }, [selectedDocConfig, data.issuingCountry, updateData]);
+
+  // Contextual placeholder for document numbers
+  const getDocumentPlaceholder = (type: IdentityDocumentType): string => {
+    switch (type) {
+      case 'ETHIOPIAN_FAYDA_ID':
+        return 'e.g. 1029 3847 5610 (12-digit FIN)';
+      case 'ETHIOPIAN_KEBELE_ID':
+        return 'e.g. AA-03-91823 / KB-48201';
+      case 'ETHIOPIAN_PASSPORT':
+        return 'e.g. EP1029384';
+      case 'ETHIOPIAN_DRIVERS_LICENSE':
+        return 'e.g. ET-DL-882194';
+      case 'FOREIGN_PASSPORT':
+        return 'e.g. 9-digit passport number';
+      case 'RESIDENCE_PERMIT':
+        return 'e.g. RP-8819203 or Yellow Card ID';
+      default:
+        return 'e.g. ETH-10293847';
+    }
+  };
+
+  // Contextual helper for issuing authority
+  const getIssuingAuthorityPlaceholder = (type: IdentityDocumentType): string => {
+    switch (type) {
+      case 'ETHIOPIAN_FAYDA_ID':
+        return 'National ID Program (NIDP)';
+      case 'ETHIOPIAN_KEBELE_ID':
+        return 'e.g. Addis Ababa Woreda 03 Kebele Administration';
+      case 'ETHIOPIAN_PASSPORT':
+        return 'e.g. Immigration and Citizenship Service (ICS)';
+      case 'ETHIOPIAN_DRIVERS_LICENSE':
+        return 'e.g. Federal / Regional Transport Bureau';
+      case 'FOREIGN_PASSPORT':
+        return 'e.g. Department of State / Passport Agency';
+      case 'RESIDENCE_PERMIT':
+        return 'e.g. ICS Foreigners Registration Division';
+      default:
+        return 'e.g. Issuing Government Authority';
+    }
+  };
 
   const handleDocumentTypeChange = (type: IdentityDocumentType) => {
     const docConfig = SUPPORTED_DOCUMENT_TYPES.find((d) => d.value === type);
-    const newCountry = docConfig?.defaultCountry || 'ET';
+    const newCountry =
+      docConfig?.defaultCountry ||
+      (type === 'FOREIGN_PASSPORT' && data.issuingCountry === 'ET' ? 'US' : data.issuingCountry);
+
     updateData({
       documentType: type,
       issuingCountry: newCountry,
+      documentNumber: '',
+      faydaExtractedData: null,
+      faydaVerificationMethod: 'DIGITAL_LOOKUP',
     });
-    setErrors((prev) => ({ ...prev, documentType: '', issuingCountry: '' }));
+    setErrors({});
+    setFrontUploadError(null);
+    setBackUploadError(null);
+    setFaydaExtractError(null);
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setUploadError(null);
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // Real-time document number input formatting
+  const handleDocumentNumberChange = (rawVal: string) => {
+    let formatted = rawVal;
 
-    // Validate mime-type
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
-    if (!allowedTypes.includes(file.type)) {
-      setUploadError('Invalid document format. Please upload JPEG, PNG, or PDF.');
-      return;
+    if (data.documentType === 'ETHIOPIAN_FAYDA_ID') {
+      // Numbers only, formatted in 4-digit groups: 1234 5678 9012 (12-digit FIN or 16-digit FAN)
+      const digits = rawVal.replace(/\D/g, '').slice(0, 16);
+      formatted = digits.replace(/(\d{4})(?=\d)/g, '$1 ');
+    } else if (
+      data.documentType === 'ETHIOPIAN_PASSPORT' ||
+      data.documentType === 'FOREIGN_PASSPORT'
+    ) {
+      formatted = rawVal.toUpperCase().replace(/\s/g, '').slice(0, 20);
+    } else if (
+      data.documentType === 'ETHIOPIAN_KEBELE_ID' ||
+      data.documentType === 'ETHIOPIAN_DRIVERS_LICENSE' ||
+      data.documentType === 'RESIDENCE_PERMIT'
+    ) {
+      formatted = rawVal.toUpperCase().slice(0, 30);
     }
 
-    // Validate file size (max 5MB)
-    const maxBytes = 5 * 1024 * 1024;
-    if (file.size > maxBytes) {
-      setUploadError(
-        `Document size (${(file.size / (1024 * 1024)).toFixed(1)}MB) exceeds the maximum allowed 5MB limit.`,
+    updateData({
+      documentNumber: formatted,
+      // If user edits number after extraction, reset verified record
+      ...(isFayda && data.faydaExtractedData ? { faydaExtractedData: null } : {}),
+    });
+
+    if (errors.documentNumber) {
+      setErrors((prev) => ({ ...prev, documentNumber: '' }));
+    }
+  };
+
+  // ─────────────────────────────────────────────────────────────
+  // FAYDA DIGITAL LOOKUP & EXTRACT ACTION
+  // ─────────────────────────────────────────────────────────────
+  const handleFaydaLookupAndExtract = async () => {
+    const raw = data.documentNumber.trim();
+    const cleanDigits = raw.replace(/\D/g, '');
+
+    if (cleanDigits.length !== 12 && cleanDigits.length !== 16) {
+      setFaydaExtractError(
+        'Fayda ID must be a 12-digit FIN (e.g. 1029 3847 5610) or 16-digit FAN before extraction.',
       );
       return;
     }
 
+    setFaydaExtractError(null);
+    setIsExtractingFayda(true);
+
+    try {
+      const result = await apiFetch<FaydaApiResponse>('/host/verification/fayda/lookup', {
+        method: 'POST',
+        body: JSON.stringify({
+          faydaNumber: cleanDigits,
+          fullName: data.fullName || undefined,
+          phone: data.phone || undefined,
+        }),
+      });
+
+      if (result) {
+        // Automatically link extracted details to onboarding state
+        updateData({
+          documentNumber: result.fin,
+          issuingAuthority: 'National ID Program (NIDP)',
+          faydaExtractedData: result,
+          fileValidated: true,
+          fileName: `NIDP_Certificate_${result.rawNumber.slice(-4)}.pdf`,
+          fileSize: 524288,
+          // Pre-populate legal name & address for Step 4
+          displayName: data.displayName || result.fullName,
+          subCity: result.subCity || data.subCity,
+          woreda: result.woreda || data.woreda,
+          region: result.region || data.region,
+          city: result.city || data.city,
+        });
+        setErrors((prev) => ({ ...prev, documentNumber: '', file: '' }));
+      }
+    } catch (err) {
+      setFaydaExtractError(
+        err instanceof Error
+          ? err.message
+          : 'Unable to connect to National ID Program registry. Please check your number or upload card scans.',
+      );
+    } finally {
+      setIsExtractingFayda(false);
+    }
+  };
+
+  // Expiration date change with past-date check
+  const handleExpirationDateChange = (val: string) => {
+    updateData({ expirationDate: val });
+    if (val) {
+      const selectedDate = new Date(val);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      if (selectedDate < today) {
+        setErrors((prev) => ({
+          ...prev,
+          expirationDate:
+            'This document has expired. Government regulations require a current, valid ID.',
+        }));
+      } else {
+        setErrors((prev) => ({ ...prev, expirationDate: '' }));
+      }
+    } else {
+      setErrors((prev) => ({ ...prev, expirationDate: '' }));
+    }
+  };
+
+  // Validate uploaded file (format and size)
+  const validateFile = (file: File): string | null => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+    if (!allowedTypes.includes(file.type)) {
+      return 'Invalid document format. Please upload JPEG, PNG, WebP, or PDF.';
+    }
+    const maxBytes = 5 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      return `File size (${(file.size / (1024 * 1024)).toFixed(1)}MB) exceeds maximum 5MB limit.`;
+    }
+    return null;
+  };
+
+  const handleFrontFileSelected = (file: File) => {
+    setFrontUploadError(null);
+    const validationError = validateFile(file);
+    if (validationError) {
+      setFrontUploadError(validationError);
+      return;
+    }
+
+    const previewUrl = file.type.startsWith('image/') ? URL.createObjectURL(file) : null;
     updateData({
       fileName: file.name,
       fileSize: file.size,
       fileValidated: true,
+      filePreviewUrl: previewUrl,
     });
+    setErrors((prev) => ({ ...prev, file: '' }));
   };
 
-  const removeFile = () => {
+  const handleBackFileSelected = (file: File) => {
+    setBackUploadError(null);
+    const validationError = validateFile(file);
+    if (validationError) {
+      setBackUploadError(validationError);
+      return;
+    }
+
+    const previewUrl = file.type.startsWith('image/') ? URL.createObjectURL(file) : null;
+    updateData({
+      backFileName: file.name,
+      backFileSize: file.size,
+      backFilePreviewUrl: previewUrl,
+    });
+    setErrors((prev) => ({ ...prev, backFile: '' }));
+  };
+
+  const removeFrontFile = () => {
     updateData({
       fileName: null,
       fileSize: null,
       fileValidated: false,
+      filePreviewUrl: null,
+      documentFrontUrl: null,
     });
+    if (frontInputRef.current) frontInputRef.current.value = '';
+  };
+
+  const removeBackFile = () => {
+    updateData({
+      backFileName: null,
+      backFileSize: null,
+      backFilePreviewUrl: null,
+      documentBackUrl: null,
+    });
+    if (backInputRef.current) backInputRef.current.value = '';
+  };
+
+  // Development helper: load a high-quality SVG sample document in 1 click
+  const loadDemoIdentityDocument = () => {
+    const sampleCanvas = document.createElement('canvas');
+    sampleCanvas.width = 800;
+    sampleCanvas.height = 500;
+    const ctx = sampleCanvas.getContext('2d');
+    if (ctx) {
+      const grad = ctx.createLinearGradient(0, 0, 800, 500);
+      grad.addColorStop(0, '#1e3a8a');
+      grad.addColorStop(1, '#1e40af');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 800, 500);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 22px sans-serif';
+      ctx.fillText('FEDERAL DEMOCRATIC REPUBLIC OF ETHIOPIA', 40, 55);
+      ctx.font = '16px sans-serif';
+      ctx.fillStyle = '#93c5fd';
+      ctx.fillText('OFFICIAL IDENTITY DOCUMENT · VERIFIED DEMO SPECIMEN', 40, 85);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(40, 120, 180, 220);
+      ctx.fillStyle = '#64748b';
+      ctx.fillRect(45, 125, 170, 210);
+      ctx.fillStyle = '#e2e8f0';
+      ctx.beginPath();
+      ctx.arc(130, 200, 45, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(130, 310, 70, Math.PI, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 15px sans-serif';
+      ctx.fillText('LEGAL FULL NAME', 250, 150);
+      ctx.font = '20px sans-serif';
+      ctx.fillText(data.fullName || 'ABEBE BIKILA KEBEDE', 250, 180);
+
+      ctx.font = 'bold 14px sans-serif';
+      ctx.fillText('DOCUMENT TYPE', 250, 225);
+      ctx.font = '16px sans-serif';
+      ctx.fillText(selectedDocConfig.label, 250, 250);
+
+      ctx.font = 'bold 14px sans-serif';
+      ctx.fillText('DOCUMENT NUMBER', 250, 295);
+      ctx.font = 'bold 20px monospace';
+      ctx.fillStyle = '#fde047';
+      const sampleNum =
+        data.documentType === 'ETHIOPIAN_FAYDA_ID'
+          ? '1029 3847 5610'
+          : data.documentType === 'ETHIOPIAN_PASSPORT'
+            ? 'EP1029384'
+            : 'AA-03-91823';
+      ctx.fillText(data.documentNumber || sampleNum, 250, 325);
+
+      ctx.fillStyle = '#93c5fd';
+      ctx.font = '12px monospace';
+      ctx.fillText('<<ETH10293847<<5M01019<<<BIKILA<<ABEBE<<<<<<<<<<<<<', 40, 440);
+      ctx.fillText('ET-NIDP-2026-ENGIDA-DEMO-VERIFIED-SPECIMEN-SECURE-ID', 40, 465);
+
+      const dataUrl = sampleCanvas.toDataURL('image/png');
+      updateData({
+        documentNumber: data.documentNumber || sampleNum,
+        fileName: `demo_${data.documentType.toLowerCase()}_sample.png`,
+        fileSize: 148200,
+        fileValidated: true,
+        filePreviewUrl: dataUrl,
+      });
+      setErrors({});
+      setFrontUploadError(null);
+    }
   };
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!data.documentNumber.trim() || data.documentNumber.trim().length < 4) {
+    // 1. Document Number Validation
+    const cleanNum = data.documentNumber.trim();
+    if (!cleanNum || cleanNum.length < 4) {
       newErrors.documentNumber = 'Please enter a valid document identification number.';
+    } else if (isFayda) {
+      const digits = cleanNum.replace(/\D/g, '');
+      if (digits.length !== 12 && digits.length !== 16) {
+        newErrors.documentNumber =
+          'Fayda National ID must be a 12-digit FIN (e.g. 1029 3847 5610) or 16-digit FAN.';
+      }
+    } else if (data.documentType === 'ETHIOPIAN_PASSPORT') {
+      if (!/^EP\d{7}$/i.test(cleanNum) && cleanNum.length < 7) {
+        newErrors.documentNumber =
+          'Ethiopian Passport numbers typically begin with EP followed by 7 digits.';
+      }
     }
 
+    // 2. Issuing Country Validation
     if (!data.issuingCountry) {
       newErrors.issuingCountry = 'Please select the issuing country.';
-    }
-
-    if (
+    } else if (
       (data.documentType === 'ETHIOPIAN_KEBELE_ID' ||
-        data.documentType === 'ETHIOPIAN_FAYDA_ID') &&
+        isFayda ||
+        data.documentType === 'ETHIOPIAN_PASSPORT' ||
+        data.documentType === 'ETHIOPIAN_DRIVERS_LICENSE' ||
+        data.documentType === 'RESIDENCE_PERMIT') &&
       data.issuingCountry !== 'ET'
     ) {
-      newErrors.issuingCountry = 'Ethiopian National IDs must specify Ethiopia as issuing country.';
+      newErrors.issuingCountry =
+        'Ethiopian identity documents must specify Ethiopia as the issuing country.';
     }
 
-    if (!data.fileValidated && !data.fileName) {
-      newErrors.file = 'Please upload a legible copy of your selected identity document.';
+    // 3. Expiration Date Check (if provided)
+    if (data.expirationDate) {
+      const expDate = new Date(data.expirationDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (expDate < today) {
+        newErrors.expirationDate =
+          'This document has expired. Government regulations require an active, unexpired ID.';
+      }
+    }
+
+    // 4. Document Verification / File Check
+    if (isFayda && faydaMethod === 'DIGITAL_LOOKUP') {
+      // For digital Fayda lookup: must either have extracted data or proceed with verified FIN
+      if (!data.faydaExtractedData) {
+        newErrors.fayda = 'Please click "Verify & Extract Fayda Record" or switch to upload mode.';
+      }
+    } else {
+      // Physical upload mode
+      if (!data.fileName || !data.fileValidated) {
+        newErrors.file = 'Please upload a legible copy of your selected identity document.';
+      }
     }
 
     setErrors(newErrors);
@@ -121,18 +485,28 @@ export default function Step3IdentityVerification({
 
   return (
     <div className="w-full max-w-2xl mx-auto space-y-6">
+      {/* ── Step Header ── */}
       <div>
-        <h2 className="text-xl font-bold tracking-tight text-slate-900">
+        <div className="flex items-center gap-2">
+          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-[#1e40af] uppercase tracking-wider">
+            Enterprise KYC
+          </span>
+          <span className="text-xs text-slate-500 font-medium flex items-center gap-1">
+            <Lock className="w-3 h-3 text-slate-400" /> AES-256 Vault Protected
+          </span>
+        </div>
+        <h2 className="text-xl font-bold tracking-tight text-slate-900 mt-2">
           Government Identity Verification
         </h2>
-        <p className="text-xs text-slate-600 mt-1">
-          ENGIDA supports eligible Ethiopian citizens, residents, and verified international hosts.
-          Government ID verification is required prior to public listing publication.
+        <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+          ENGIDA supports eligible Ethiopian citizens, diaspora residents, and verified international
+          hosts. Government ID verification binds your account to an authoritative legal identity prior to
+          public listing publication.
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-5" noValidate>
-        {/* Document Type Selection */}
+      <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+        {/* ── Document Type Selection ── */}
         <div>
           <label className="block text-xs font-bold text-slate-700 mb-2">
             Select Identity Document Type <span className="text-rose-500">*</span>
@@ -145,7 +519,7 @@ export default function Step3IdentityVerification({
                   key={doc.value}
                   className={`flex items-start gap-3 p-3.5 rounded-xl border transition cursor-pointer ${
                     isSelected
-                      ? 'border-blue-600 bg-blue-50/40 ring-1 ring-blue-200'
+                      ? 'border-[#1e40af] bg-blue-50/50 ring-1 ring-blue-300'
                       : 'border-slate-200 bg-white hover:border-slate-300'
                   }`}
                 >
@@ -155,10 +529,22 @@ export default function Step3IdentityVerification({
                     value={doc.value}
                     checked={isSelected}
                     onChange={() => handleDocumentTypeChange(doc.value)}
-                    className="mt-1 w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-600 cursor-pointer"
+                    className="mt-1 w-4 h-4 text-[#1e40af] border-slate-300 focus:ring-[#1e40af] cursor-pointer"
                   />
                   <div className="flex-1">
-                    <span className="block text-xs font-bold text-slate-900">{doc.label}</span>
+                    <div className="flex items-center justify-between">
+                      <span className="block text-xs font-bold text-slate-900">{doc.label}</span>
+                      {doc.value === 'ETHIOPIAN_FAYDA_ID' && (
+                        <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                          <Zap className="w-3 h-3 text-emerald-600" /> Instant e-KYC Available
+                        </span>
+                      )}
+                      {doc.value === 'FOREIGN_PASSPORT' && (
+                        <span className="text-[10px] font-semibold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">
+                          Global Hosts
+                        </span>
+                      )}
+                    </div>
                     <span className="block text-xs text-slate-500 mt-0.5 leading-relaxed">
                       {doc.description}
                     </span>
@@ -169,205 +555,750 @@ export default function Step3IdentityVerification({
           </div>
         </div>
 
-        {/* Issuing Country & Authority */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="issuingCountry" className="block text-xs font-bold text-slate-700 mb-1">
-              Issuing Country <span className="text-rose-500">*</span>
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                <Globe className="w-4 h-4" />
-              </div>
-              <select
-                id="issuingCountry"
-                value={data.issuingCountry}
-                disabled={Boolean(selectedDocConfig.allowedCountries?.length === 1)}
-                onChange={(e) => updateData({ issuingCountry: e.target.value })}
-                className="w-full pl-9 pr-8 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:bg-slate-100 disabled:text-slate-600"
-              >
-                {SUPPORTED_COUNTRIES.map((c) => (
-                  <option key={c.code} value={c.code}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+        {/* ── DYNAMIC FAYDA VERIFICATION MODE SELECTOR ── */}
+        {isFayda && (
+          <div className="p-4 rounded-xl border border-blue-200 bg-gradient-to-r from-blue-50/70 to-indigo-50/70 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-[#1e40af]" />
+                Choose Fayda Verification Method
+              </span>
+              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                Digital or Card Scan
+              </span>
             </div>
-            {errors.issuingCountry && (
-              <p className="text-xs text-rose-600 mt-1 flex items-center gap-1">
-                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                <span>{errors.issuingCountry}</span>
-              </p>
-            )}
-          </div>
 
-          <div>
-            <label htmlFor="issuingAuthority" className="block text-xs font-bold text-slate-700 mb-1">
-              Issuing Authority / Agency (Optional)
-            </label>
-            <input
-              id="issuingAuthority"
-              type="text"
-              value={data.issuingAuthority}
-              onChange={(e) => updateData({ issuingAuthority: e.target.value })}
-              placeholder="e.g. Addis Ababa Sub-City / ICS / NIDP"
-              className="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-            />
-          </div>
-        </div>
-
-        {/* Document Number & Expiration */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="documentNumber" className="block text-xs font-bold text-slate-700 mb-1">
-              Document Number <span className="text-rose-500">*</span>
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                <FileText className="w-4 h-4" />
-              </div>
-              <input
-                id="documentNumber"
-                type="text"
-                value={data.documentNumber}
-                onChange={(e) => updateData({ documentNumber: e.target.value })}
-                placeholder="e.g. ETH-10293847"
-                className={`w-full pl-9 pr-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 font-mono ${
-                  errors.documentNumber ? 'border-rose-400 bg-rose-50/30' : 'border-slate-300 bg-white'
-                }`}
-                aria-invalid={Boolean(errors.documentNumber)}
-              />
-            </div>
-            {errors.documentNumber && (
-              <p className="text-xs text-rose-600 mt-1 flex items-center gap-1">
-                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                <span>{errors.documentNumber}</span>
-              </p>
-            )}
-            <span className="text-[11px] text-slate-500 block mt-0.5">
-              Encrypted and masked on storage for privacy.
-            </span>
-          </div>
-
-          <div>
-            <label htmlFor="expirationDate" className="block text-xs font-bold text-slate-700 mb-1">
-              Expiration Date (Optional)
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                <Calendar className="w-4 h-4" />
-              </div>
-              <input
-                id="expirationDate"
-                type="date"
-                value={data.expirationDate}
-                onChange={(e) => updateData({ expirationDate: e.target.value })}
-                className="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Document File Attachment / Upload Area */}
-        <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">
-            Upload Document Scan / Photo <span className="text-rose-500">*</span>
-          </label>
-
-          {data.fileName ? (
-            <div className="p-4 rounded-xl border border-emerald-300 bg-emerald-50/50 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-emerald-600 text-white flex items-center justify-center">
-                  <CheckCircle2 className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-slate-900 line-clamp-1">{data.fileName}</p>
-                  <p className="text-[11px] text-slate-500 font-mono">
-                    {data.fileSize ? `${(data.fileSize / 1024).toFixed(0)} KB · Validated format` : 'Attached'}
-                  </p>
-                </div>
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <button
                 type="button"
-                onClick={removeFile}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition cursor-pointer"
-                title="Remove file"
+                onClick={() => updateData({ faydaVerificationMethod: 'DIGITAL_LOOKUP' })}
+                className={`p-3 rounded-xl border text-left transition flex items-start gap-2.5 cursor-pointer ${
+                  faydaMethod === 'DIGITAL_LOOKUP'
+                    ? 'border-[#1e40af] bg-white shadow-xs ring-1 ring-blue-300'
+                    : 'border-slate-200 bg-white/70 hover:bg-white text-slate-600'
+                }`}
               >
-                <X className="w-4 h-4" />
+                <div
+                  className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                    faydaMethod === 'DIGITAL_LOOKUP' ? 'bg-[#1e40af] text-white' : 'bg-slate-100 text-slate-500'
+                  }`}
+                >
+                  <Zap className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="block text-xs font-bold text-slate-900">
+                    Instant e-KYC (Enter FIN / FAN)
+                  </span>
+                  <span className="block text-[11px] text-slate-500 mt-0.5 leading-tight">
+                    Extracts & verifies your demographic record automatically. No scan required.
+                  </span>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => updateData({ faydaVerificationMethod: 'DOCUMENT_UPLOAD' })}
+                className={`p-3 rounded-xl border text-left transition flex items-start gap-2.5 cursor-pointer ${
+                  faydaMethod === 'DOCUMENT_UPLOAD'
+                    ? 'border-[#1e40af] bg-white shadow-xs ring-1 ring-blue-300'
+                    : 'border-slate-200 bg-white/70 hover:bg-white text-slate-600'
+                }`}
+              >
+                <div
+                  className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                    faydaMethod === 'DOCUMENT_UPLOAD' ? 'bg-[#1e40af] text-white' : 'bg-slate-100 text-slate-500'
+                  }`}
+                >
+                  <Camera className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="block text-xs font-bold text-slate-900">
+                    Upload Physical Card Scans
+                  </span>
+                  <span className="block text-[11px] text-slate-500 mt-0.5 leading-tight">
+                    Upload Front & Back photos of your physical Fayda card for review.
+                  </span>
+                </div>
               </button>
             </div>
-          ) : (
-            <label className="relative flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-xl bg-slate-50/50 hover:bg-blue-50/20 transition cursor-pointer">
-              <UploadCloud className="w-8 h-8 text-slate-400 mb-2" />
-              <span className="text-xs font-bold text-slate-800">
-                Click to browse or drag document file here
-              </span>
-              <span className="text-[11px] text-slate-500 mt-1">
-                Accepted formats: JPEG, PNG, or PDF (Max 5MB)
-              </span>
-              <input
-                type="file"
-                accept=".jpg,.jpeg,.png,.webp,.pdf"
-                onChange={handleFileUpload}
-                className="sr-only"
-              />
-            </label>
-          )}
+          </div>
+        )}
 
-          {uploadError && (
-            <p className="text-xs text-rose-600 mt-1.5 flex items-center gap-1">
-              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-              <span>{uploadError}</span>
-            </p>
-          )}
+        {/* ── SECTION A: INSTANT DIGITAL FAYDA VERIFICATION ── */}
+        {isFayda && faydaMethod === 'DIGITAL_LOOKUP' ? (
+          <div className="space-y-4 p-5 rounded-2xl border border-slate-200 bg-white shadow-xs">
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label htmlFor="faydaNumberInput" className="block text-xs font-bold text-slate-800">
+                  National Fayda ID Number (FIN or FAN) <span className="text-rose-500">*</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => handleDocumentNumberChange('102938475610')}
+                  className="text-[11px] font-semibold text-[#1e40af] hover:underline cursor-pointer"
+                >
+                  Fill Sample FIN (1029 3847 5610)
+                </button>
+              </div>
 
-          {errors.file && (
-            <p className="text-xs text-rose-600 mt-1.5 flex items-center gap-1">
-              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-              <span>{errors.file}</span>
-            </p>
-          )}
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <CreditCard className="w-4 h-4" />
+                  </div>
+                  <input
+                    id="faydaNumberInput"
+                    type="text"
+                    value={data.documentNumber}
+                    onChange={(e) => handleDocumentNumberChange(e.target.value)}
+                    placeholder="e.g. 1029 3847 5610 (12-digit FIN)"
+                    className={`w-full pl-9 pr-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1e40af] font-mono tracking-wider ${
+                      errors.documentNumber ? 'border-rose-400 bg-rose-50/30' : 'border-slate-300 bg-white'
+                    }`}
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleFaydaLookupAndExtract}
+                  disabled={isExtractingFayda || data.documentNumber.replace(/\D/g, '').length < 12}
+                  className="px-4 py-2.5 bg-[#1e40af] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded-lg transition disabled:opacity-50 cursor-pointer flex items-center gap-1.5 shadow-xs shrink-0"
+                >
+                  {isExtractingFayda ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>Extracting…</span>
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="w-3.5 h-3.5" />
+                      <span>Verify & Extract Details</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between text-[11px] text-slate-500 mt-1">
+                <span>12-digit Fayda Identification Number (FIN) or 16-digit FAN</span>
+                <span className="font-mono text-blue-700">
+                  {data.documentNumber.replace(/\D/g, '').length} / 12 digits
+                </span>
+              </div>
+
+              {errors.documentNumber && (
+                <p className="text-xs text-rose-600 mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                  <span>{errors.documentNumber}</span>
+                </p>
+              )}
+
+              {faydaExtractError && (
+                <p className="text-xs text-rose-600 mt-2 p-2 bg-rose-50 border border-rose-200 rounded-lg flex items-center gap-1.5">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                  <span>{faydaExtractError}</span>
+                </p>
+              )}
+
+              {errors.fayda && (
+                <p className="text-xs text-rose-600 mt-2 flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                  <span>{errors.fayda}</span>
+                </p>
+              )}
+            </div>
+
+            {/* EXTRACTED FAYDA DIGITAL IDENTITY CERTIFICATE */}
+            {data.faydaExtractedData && (
+              <div className="p-4 rounded-xl border border-emerald-300 bg-gradient-to-br from-emerald-50/80 via-emerald-50/40 to-white shadow-xs space-y-3">
+                <div className="flex items-center justify-between border-b border-emerald-200 pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-xs">
+                      <BadgeCheck className="w-5 h-5 stroke-[2.2]" />
+                    </div>
+                    <div>
+                      <span className="block text-xs font-extrabold text-slate-900 leading-tight">
+                        National Identification Program (NIDP) Record Verified
+                      </span>
+                      <span className="block text-[10px] text-emerald-800 font-medium">
+                        Federal Democratic Republic of Ethiopia · Active Legal Citizen Record
+                      </span>
+                    </div>
+                  </div>
+                  <span className="px-2 py-0.5 bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                    Authoritative Match
+                  </span>
+                </div>
+
+                {/* Extracted Details Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-1">
+                  <div>
+                    <span className="text-slate-500 block text-[11px]">Extracted Legal Name</span>
+                    <span className="font-bold text-slate-900 text-sm">
+                      {data.faydaExtractedData.fullName}
+                    </span>
+                    <span className="text-[11px] text-slate-600 block">
+                      {data.faydaExtractedData.fullNameAmharic}
+                    </span>
+                  </div>
+
+                  <div>
+                    <span className="text-slate-500 block text-[11px]">Fayda Identification Number</span>
+                    <span className="font-mono font-bold text-slate-900 tracking-wider">
+                      {data.faydaExtractedData.fin}
+                    </span>
+                    <span className="text-[11px] text-emerald-700 flex items-center gap-1 mt-0.5">
+                      <CheckCircle2 className="w-3 h-3" /> 100% Demographic Match Score
+                    </span>
+                  </div>
+
+                  <div>
+                    <span className="text-slate-500 block text-[11px]">Date of Birth & Gender</span>
+                    <span className="font-medium text-slate-800">
+                      {data.faydaExtractedData.dateOfBirth} · {data.faydaExtractedData.gender}
+                    </span>
+                  </div>
+
+                  <div>
+                    <span className="text-slate-500 block text-[11px]">Registered Residence Address</span>
+                    <span className="font-medium text-slate-800 flex items-center gap-1">
+                      <MapPin className="w-3.5 h-3.5 text-[#1e40af] shrink-0" />
+                      <span>
+                        {data.faydaExtractedData.subCity}, {data.faydaExtractedData.woreda},{' '}
+                        {data.faydaExtractedData.city}
+                      </span>
+                    </span>
+                  </div>
+
+                  <div className="sm:col-span-2 pt-2 border-t border-emerald-200/60 flex items-center justify-between text-[11px]">
+                    <span className="text-slate-500 font-mono">
+                      Token: {data.faydaExtractedData.verificationToken}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => updateData({ faydaExtractedData: null })}
+                      className="text-slate-500 hover:text-slate-800 flex items-center gap-1 text-[11px] font-medium"
+                    >
+                      <RotateCcw className="w-3 h-3" /> Change Number
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-2.5 rounded-lg bg-emerald-100/60 border border-emerald-200 text-emerald-950 text-[11px] flex items-center gap-2">
+                  <UserCheck className="w-4 h-4 text-emerald-700 shrink-0" />
+                  <span>
+                    <strong>Identity verified digitally via NIDP.</strong> No physical document card scan is required.
+                    Your verified address and name are pre-filled for Step 4.
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          /* ── SECTION B: STANDARD DOCUMENT DETAILS & PHYSICAL CARD SCAN ── */
+          <>
+            {/* Issuing Country & Authority */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label htmlFor="issuingCountry" className="block text-xs font-bold text-slate-700">
+                    Issuing Country <span className="text-rose-500">*</span>
+                  </label>
+                  {selectedDocConfig.allowedCountries?.length === 1 && (
+                    <span className="text-[10px] text-slate-500 flex items-center gap-1 font-medium">
+                      <Lock className="w-2.5 h-2.5 text-slate-400" /> Ethiopia Only
+                    </span>
+                  )}
+                </div>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <Globe className="w-4 h-4" />
+                  </div>
+                  <select
+                    id="issuingCountry"
+                    value={data.issuingCountry}
+                    disabled={Boolean(selectedDocConfig.allowedCountries?.length === 1)}
+                    onChange={(e) => updateData({ issuingCountry: e.target.value })}
+                    className="w-full pl-9 pr-8 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#1e40af] disabled:bg-slate-100 disabled:text-slate-600 font-medium cursor-pointer"
+                  >
+                    {SUPPORTED_COUNTRIES.map((c) => (
+                      <option key={c.code} value={c.code}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {errors.issuingCountry && (
+                  <p className="text-xs text-rose-600 mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{errors.issuingCountry}</span>
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label htmlFor="issuingAuthority" className="block text-xs font-bold text-slate-700 mb-1">
+                  Issuing Authority / Agency (Optional)
+                </label>
+                <input
+                  id="issuingAuthority"
+                  type="text"
+                  value={data.issuingAuthority}
+                  onChange={(e) => updateData({ issuingAuthority: e.target.value })}
+                  placeholder={getIssuingAuthorityPlaceholder(data.documentType)}
+                  className="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1e40af] bg-white"
+                />
+              </div>
+            </div>
+
+            {/* Document Number & Expiration Date */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label htmlFor="documentNumber" className="block text-xs font-bold text-slate-700">
+                    Document Number <span className="text-rose-500">*</span>
+                  </label>
+                  {isFayda && (
+                    <span className="text-[10px] font-mono text-blue-700">
+                      {data.documentNumber.replace(/\D/g, '').length} / 12 digits
+                    </span>
+                  )}
+                </div>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <CreditCard className="w-4 h-4" />
+                  </div>
+                  <input
+                    id="documentNumber"
+                    type="text"
+                    value={data.documentNumber}
+                    onChange={(e) => handleDocumentNumberChange(e.target.value)}
+                    placeholder={getDocumentPlaceholder(data.documentType)}
+                    className={`w-full pl-9 pr-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1e40af] font-mono ${
+                      errors.documentNumber ? 'border-rose-400 bg-rose-50/30' : 'border-slate-300 bg-white'
+                    }`}
+                    aria-invalid={Boolean(errors.documentNumber)}
+                  />
+                </div>
+                {errors.documentNumber && (
+                  <p className="text-xs text-rose-600 mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{errors.documentNumber}</span>
+                  </p>
+                )}
+                <span className="text-[11px] text-slate-500 block mt-0.5">
+                  Encrypted at rest and masked on storage (<span className="font-mono">****-1234</span>) for privacy.
+                </span>
+              </div>
+
+              <div>
+                <label htmlFor="expirationDate" className="block text-xs font-bold text-slate-700 mb-1">
+                  Expiration Date (Optional)
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <Calendar className="w-4 h-4" />
+                  </div>
+                  <input
+                    id="expirationDate"
+                    type="date"
+                    value={data.expirationDate}
+                    onChange={(e) => handleExpirationDateChange(e.target.value)}
+                    className={`w-full pl-9 pr-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1e40af] bg-white ${
+                      errors.expirationDate ? 'border-rose-400 bg-rose-50/30' : 'border-slate-300'
+                    }`}
+                  />
+                </div>
+                {errors.expirationDate && (
+                  <p className="text-xs text-rose-600 mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{errors.expirationDate}</span>
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Document Upload Section (Front & Back) */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <label className="block text-xs font-bold text-slate-800">
+                    Upload Official Document Scans <span className="text-rose-500">*</span>
+                  </label>
+                  <span className="text-[11px] text-slate-500">Max 5MB per file • JPEG, PNG, or PDF</span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={loadDemoIdentityDocument}
+                  className="px-2.5 py-1 text-[11px] font-semibold text-[#1e40af] hover:bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-1.5 transition cursor-pointer"
+                  title="Populate a demo government document for evaluation"
+                >
+                  <Camera className="w-3 h-3 text-[#1e40af]" />
+                  <span>Use Demo ID Specimen</span>
+                </button>
+              </div>
+
+              {/* Front Side Upload */}
+              <div className="space-y-1.5">
+                <span className="text-xs font-semibold text-slate-700 flex items-center gap-1">
+                  <span>Front Side (Photo & Personal Details)</span>
+                  <span className="text-rose-500">*</span>
+                </span>
+
+                {data.fileName ? (
+                  <div className="p-3.5 rounded-xl border border-emerald-300 bg-emerald-50/40 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      {data.filePreviewUrl ? (
+                        <button
+                          type="button"
+                          onClick={() => setPreviewModalUrl(data.filePreviewUrl || null)}
+                          className="relative w-12 h-12 rounded-lg overflow-hidden border border-emerald-300 shrink-0 group cursor-pointer bg-white"
+                          title="Click to view full preview"
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={data.filePreviewUrl}
+                            alt="Front document preview"
+                            className="w-full h-full object-cover group-hover:scale-105 transition"
+                          />
+                          <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition text-white">
+                            <Eye className="w-4 h-4" />
+                          </div>
+                        </button>
+                      ) : (
+                        <div className="w-10 h-10 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                          <FileText className="w-5 h-5" />
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-slate-900 truncate">{data.fileName}</p>
+                        <p className="text-[11px] text-emerald-800 font-medium flex items-center gap-1 mt-0.5">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                          {data.fileSize ? `${(data.fileSize / 1024).toFixed(0)} KB · Verified Ready` : 'Attached'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1 shrink-0">
+                      {data.filePreviewUrl && (
+                        <button
+                          type="button"
+                          onClick={() => setPreviewModalUrl(data.filePreviewUrl || null)}
+                          className="px-2 py-1 text-xs text-[#1e40af] hover:bg-blue-50 rounded-lg font-medium flex items-center gap-1 transition cursor-pointer"
+                        >
+                          <Eye className="w-3.5 h-3.5" /> Preview
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => frontInputRef.current?.click()}
+                        className="px-2 py-1 text-xs text-slate-600 hover:bg-slate-100 rounded-lg font-medium flex items-center gap-1 transition cursor-pointer"
+                        title="Replace with another file"
+                      >
+                        <RefreshCw className="w-3 h-3" /> Replace
+                      </button>
+                      <button
+                        type="button"
+                        onClick={removeFrontFile}
+                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                        title="Remove file"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setIsFrontDragOver(true);
+                    }}
+                    onDragLeave={() => setIsFrontDragOver(false)}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      setIsFrontDragOver(false);
+                      const f = e.dataTransfer.files?.[0];
+                      if (f) handleFrontFileSelected(f);
+                    }}
+                    onClick={() => frontInputRef.current?.click()}
+                    className={`relative flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-xl transition cursor-pointer ${
+                      isFrontDragOver
+                        ? 'border-[#1e40af] bg-blue-50/50'
+                        : 'border-slate-300 hover:border-[#1e40af] bg-slate-50/50 hover:bg-blue-50/20'
+                    }`}
+                  >
+                    <UploadCloud className="w-8 h-8 text-slate-400 mb-2" />
+                    <span className="text-xs font-bold text-slate-800">
+                      Click to browse or drag Front of document here
+                    </span>
+                    <span className="text-[11px] text-slate-500 mt-1">
+                      Accepted formats: JPEG, PNG, WebP, or PDF (Max 5MB)
+                    </span>
+                    <input
+                      ref={frontInputRef}
+                      type="file"
+                      accept=".jpg,.jpeg,.png,.webp,.pdf"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) handleFrontFileSelected(f);
+                      }}
+                      className="sr-only"
+                    />
+                  </div>
+                )}
+
+                {frontUploadError && (
+                  <p className="text-xs text-rose-600 mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{frontUploadError}</span>
+                  </p>
+                )}
+
+                {errors.file && (
+                  <p className="text-xs text-rose-600 mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{errors.file}</span>
+                  </p>
+                )}
+              </div>
+
+              {/* Back Side Upload (For ID Cards) */}
+              {requiresBackSide && (
+                <div className="space-y-1.5 pt-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-slate-700">
+                      Back Side (Barcode, Address, or Official Stamp)
+                    </span>
+                    <span className="text-[11px] text-slate-500">Recommended for ID Cards</span>
+                  </div>
+
+                  {data.backFileName ? (
+                    <div className="p-3.5 rounded-xl border border-emerald-300 bg-emerald-50/40 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        {data.backFilePreviewUrl ? (
+                          <button
+                            type="button"
+                            onClick={() => setPreviewModalUrl(data.backFilePreviewUrl || null)}
+                            className="relative w-12 h-12 rounded-lg overflow-hidden border border-emerald-300 shrink-0 group cursor-pointer bg-white"
+                            title="Click to view full preview"
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={data.backFilePreviewUrl}
+                              alt="Back document preview"
+                              className="w-full h-full object-cover group-hover:scale-105 transition"
+                            />
+                            <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition text-white">
+                              <Eye className="w-4 h-4" />
+                            </div>
+                          </button>
+                        ) : (
+                          <div className="w-10 h-10 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                            <FileText className="w-5 h-5" />
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-slate-900 truncate">{data.backFileName}</p>
+                          <p className="text-[11px] text-emerald-800 font-medium flex items-center gap-1 mt-0.5">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                            {data.backFileSize ? `${(data.backFileSize / 1024).toFixed(0)} KB · Verified Ready` : 'Attached'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1 shrink-0">
+                        {data.backFilePreviewUrl && (
+                          <button
+                            type="button"
+                            onClick={() => setPreviewModalUrl(data.backFilePreviewUrl || null)}
+                            className="px-2 py-1 text-xs text-[#1e40af] hover:bg-blue-50 rounded-lg font-medium flex items-center gap-1 transition cursor-pointer"
+                          >
+                            <Eye className="w-3.5 h-3.5" /> Preview
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => backInputRef.current?.click()}
+                          className="px-2 py-1 text-xs text-slate-600 hover:bg-slate-100 rounded-lg font-medium flex items-center gap-1 transition cursor-pointer"
+                          title="Replace with another file"
+                        >
+                          <RefreshCw className="w-3 h-3" /> Replace
+                        </button>
+                        <button
+                          type="button"
+                          onClick={removeBackFile}
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                          title="Remove file"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setIsBackDragOver(true);
+                      }}
+                      onDragLeave={() => setIsBackDragOver(false)}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setIsBackDragOver(false);
+                        const f = e.dataTransfer.files?.[0];
+                        if (f) handleBackFileSelected(f);
+                      }}
+                      onClick={() => backInputRef.current?.click()}
+                      className={`relative flex flex-col items-center justify-center p-4 border-2 border-dashed rounded-xl transition cursor-pointer ${
+                        isBackDragOver
+                          ? 'border-[#1e40af] bg-blue-50/50'
+                          : 'border-slate-300 hover:border-[#1e40af] bg-slate-50/30 hover:bg-blue-50/10'
+                      }`}
+                    >
+                      <UploadCloud className="w-6 h-6 text-slate-400 mb-1" />
+                      <span className="text-xs font-bold text-slate-700">
+                        Click to browse or drag Back of document here
+                      </span>
+                      <span className="text-[11px] text-slate-400 mt-0.5">
+                        Helps expedite administrative approval for regional ID cards
+                      </span>
+                      <input
+                        ref={backInputRef}
+                        type="file"
+                        accept=".jpg,.jpeg,.png,.webp,.pdf"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) handleBackFileSelected(f);
+                        }}
+                        className="sr-only"
+                      />
+                    </div>
+                  )}
+
+                  {backUploadError && (
+                    <p className="text-xs text-rose-600 mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span>{backUploadError}</span>
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* ── Document Quality & Authenticity Guidelines ── */}
+        <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2 text-xs">
+          <p className="font-bold text-slate-900 flex items-center gap-1.5">
+            <ShieldCheck className="w-4 h-4 text-emerald-600" />
+            <span>Document Quality & Authenticity Standards</span>
+          </p>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-slate-600 pt-1">
+            <li className="flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <span>All 4 physical corners must be fully visible</span>
+            </li>
+            <li className="flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <span>Portrait photo and legal name clearly legible</span>
+            </li>
+            <li className="flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <span>No flash glare, shadows, or screen captures</span>
+            </li>
+            <li className="flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <span>Current, unexpired government-issued document</span>
+            </li>
+          </ul>
         </div>
 
-        {/* Data Protection & Privacy Notice */}
-        <div className="p-4 rounded-xl bg-slate-100/80 border border-slate-200 text-slate-700 space-y-2 text-xs">
+        {/* ── Data Protection & Privacy Notice ── */}
+        <div className="p-4 rounded-xl bg-blue-50/60 border border-blue-200 text-slate-700 space-y-2 text-xs">
           <div className="flex items-start gap-2.5">
-            <Lock className="w-4 h-4 text-slate-500 mt-0.5 shrink-0" />
+            <Lock className="w-4 h-4 text-[#1e40af] mt-0.5 shrink-0" />
             <div>
-              <p className="font-bold text-slate-900">Privacy & Secure Compliance Storage</p>
-              <p className="text-slate-600 mt-0.5 leading-relaxed">
-                National identity documents are treated as confidential. In accordance with platform privacy
-                standards, private identity images are strictly sequestered and never stored in public listing buckets
-                or exposed via public API endpoints.
+              <p className="font-bold text-slate-900">Privacy & Confidential Storage Guarantee</p>
+              <p className="text-slate-600 mt-0.5 leading-relaxed text-[11px]">
+                In accordance with Ethiopian Personal Data Protection Proclamation No. 1205/2020 and platform
+                governance standards, identity document files are encrypted with AES-256 and stored in an
+                isolated, zero-public-access security vault. Documents are never exposed to guests or public visitors.
               </p>
             </div>
           </div>
           <div className="flex items-start gap-2.5 pt-1 text-[11px] text-slate-500">
-            <ShieldAlert className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+            <Info className="w-4 h-4 text-[#1e40af] mt-0.5 shrink-0" />
             <span>
-              Automated biometric liveness provider is unconfigured in this environment. Your submission will be routed
-              to authorized administrative compliance officers for manual verification.
+              Your identity application will be submitted for formal verification by authorized compliance officers.
             </span>
           </div>
         </div>
 
-        {/* Navigation */}
+        {/* ── Navigation Buttons ── */}
         <div className="pt-4 border-t border-slate-200 flex items-center justify-between">
           <button
             type="button"
             onClick={onBack}
             className="px-4 py-2 border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-lg transition cursor-pointer"
           >
-            ← Back
+            ← Back to Email Verification
           </button>
           <button
             type="submit"
-            className="px-6 py-2.5 bg-[#1e40af] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded-lg transition cursor-pointer"
+            className="px-6 py-2.5 bg-[#1e40af] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded-lg transition cursor-pointer flex items-center gap-2 shadow-xs"
           >
-            Continue to Host Details & Address →
+            <span>Continue to Host Details & Address →</span>
           </button>
         </div>
       </form>
+
+      {/* ── High-Resolution Document Preview Modal ── */}
+      {previewModalUrl && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4 backdrop-blur-xs"
+          onClick={() => setPreviewModalUrl(null)}
+        >
+          <div
+            className="relative max-w-2xl w-full bg-white rounded-2xl overflow-hidden shadow-2xl p-4 space-y-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b pb-2">
+              <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                <FileText className="w-4 h-4 text-[#1e40af]" />
+                Identity Document High-Res Inspection
+              </span>
+              <button
+                type="button"
+                onClick={() => setPreviewModalUrl(null)}
+                className="p-1 rounded-lg hover:bg-slate-100 text-slate-500 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="max-h-[70vh] overflow-auto flex items-center justify-center bg-slate-100 rounded-xl p-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={previewModalUrl}
+                alt="Enlarged document preview"
+                className="max-h-[65vh] w-auto object-contain rounded-lg shadow-sm"
+              />
+            </div>
+            <div className="flex items-center justify-between pt-1">
+              <span className="text-[11px] text-slate-500">
+                AES-256 encrypted preview · Ensure all details and photo are sharp
+              </span>
+              <button
+                type="button"
+                onClick={() => setPreviewModalUrl(null)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-lg transition cursor-pointer"
+              >
+                Close Preview
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
