@@ -8,6 +8,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { LessThanOrEqual, Repository } from 'typeorm';
 import { Review } from './entities/review.entity';
+import { ReviewModerationStatus } from './entities/review.entity';
 import { Property } from '../properties/entities/property.entity';
 import { Booking, BookingStatus } from '../bookings/entities/booking.entity';
 import { CreateReviewDto } from './dto/create-review.dto';
@@ -48,6 +49,9 @@ export class ReviewsService {
       .leftJoin('review.user', 'user')
       .addSelect(['user.id', 'user.name'])
       .where('review.property_id = :propertyId', { propertyId })
+      .andWhere('review.moderationStatus = :moderationStatus', {
+        moderationStatus: ReviewModerationStatus.VISIBLE,
+      })
       .orderBy('review.created_at', 'DESC')
       .getMany();
 

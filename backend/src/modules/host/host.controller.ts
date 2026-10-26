@@ -32,6 +32,7 @@ import { CreateRoomDto } from '../properties/dto/create-room.dto';
 import { UpdateHostRoomDto } from './dto/update-host-room.dto';
 import { SubmitReviewDto } from '../properties/dto/moderation-review.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { SuperAdminBypassGuard } from '../admin/rbac/super-admin-bypass.guard';
 import { GetUser } from '../../auth/decorators/get-user.decorator';
 import { User } from '../../users/entities/user.entity';
 
@@ -40,7 +41,7 @@ import { User } from '../../users/entities/user.entity';
  * Ownership is enforced at the service layer for every mutation.
  */
 @Controller('host')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, SuperAdminBypassGuard)
 export class HostController {
   constructor(private readonly hostService: HostService) {}
 

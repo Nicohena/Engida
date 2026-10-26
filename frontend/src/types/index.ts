@@ -71,7 +71,7 @@ export interface Room {
 export interface Review {
   id: string;
   propertyId: string;
-  user: Pick<User, 'name'>;
+  user: Pick<User, 'id' | 'name'>;
   rating: number;
   comment: string | null;
   createdAt: string;

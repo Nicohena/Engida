@@ -17,10 +17,9 @@ import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { RolesGuard } from './guards/roles.guard';
-import { Roles } from './decorators/roles.decorator';
 import { GetUser } from './decorators/get-user.decorator';
-import { User, UserRole } from '../users/entities/user.entity';
+import { User } from '../users/entities/user.entity';
+import { getAdminPermissions } from '../modules/admin/rbac/permissions';
 import { setRefreshCookie, clearRefreshCookie } from './refresh-cookie';
 
 @Controller('auth')
@@ -94,19 +93,11 @@ export class AuthController {
       name: user.name,
       email: user.email,
       role: user.role,
+      adminRole: user.adminRole || null,
+      permissions: getAdminPermissions(user),
       avatar: user.avatar || null,
       createdAt: user.createdAt,
       hostProfile: user.hostProfile || null,
-    };
-  }
-
-  @Get('admin')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
-  getAdminData(@GetUser() user: User) {
-    return {
-      message: 'Welcome to the protected admin panel!',
-      admin: user.name,
     };
   }
 }

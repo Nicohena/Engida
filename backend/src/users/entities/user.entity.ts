@@ -17,6 +17,19 @@ export enum UserRole {
 }
 
 /**
+ * Granular admin roles. `UserRole.ADMIN` remains the coarse account flag so
+ * existing guards and database values keep working; `adminRole` decides what an
+ * administrator is actually allowed to do.
+ */
+export enum AdminRole {
+  SUPER_ADMIN = 'SUPER_ADMIN',
+  BOOKING_MANAGER = 'BOOKING_MANAGER',
+  SUPPORT_AGENT = 'SUPPORT_AGENT',
+  PROPERTY_MODERATOR = 'PROPERTY_MODERATOR',
+  FINANCE_MANAGER = 'FINANCE_MANAGER',
+}
+
+/**
  * Where the user's credentials come from.
  * LOCAL  = email + password (default)
  * GOOGLE = Google Sign-In (OpenID Connect)
@@ -61,6 +74,18 @@ export class User {
     default: UserRole.USER,
   })
   role: UserRole;
+
+  /**
+   * Set only for administrator accounts. Null means a regular user.
+   * Legacy admins were backfilled to SUPER_ADMIN by migration.
+   */
+  @Column({
+    type: 'enum',
+    enum: AdminRole,
+    nullable: true,
+    name: 'admin_role',
+  })
+  adminRole: AdminRole | null;
 
   @Column({ type: 'varchar', length: 50, nullable: true })
   phone: string | null;

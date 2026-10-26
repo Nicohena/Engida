@@ -26,6 +26,7 @@ import { CreateRoomDto } from './dto/create-room.dto';
 import { DeletePropertyImageDto } from './dto/delete-property-image.dto';
 import { CreateAvailabilityBlockDto } from './dto/create-availability-block.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { SuperAdminBypassGuard } from '../admin/rbac/super-admin-bypass.guard';
 import { GetUser } from '../../auth/decorators/get-user.decorator';
 import { User } from '../../users/entities/user.entity';
 
@@ -64,14 +65,14 @@ export class PropertiesController {
    * Protected: Get current user's own listings
    */
   @Get('my/listings')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, SuperAdminBypassGuard)
   async getMyListings(@GetUser() user: User) {
     return this.propertiesService.findMyProperties(user.id);
   }
 
   /** Legacy create route is retired; new listings must use the host onboarding workflow. */
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, SuperAdminBypassGuard)
   @HttpCode(HttpStatus.GONE)
   create() {
     throw new GoneException('Create a host profile, then create listings through /host/listings');
@@ -84,7 +85,7 @@ export class PropertiesController {
    * to published listings cannot bypass ListingModerationService.
    */
   @Put(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, SuperAdminBypassGuard)
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updatePropertyDto: UpdatePropertyDto,
@@ -94,23 +95,23 @@ export class PropertiesController {
   }
 
   /**
-   * Protected: Delete a property listing (owner or admin only)
+   * Permanent deletion is retired. Admin takedown must preserve the record so
+   * bookings, reviews and the audit trail stay intact.
    */
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async remove(
-    @Param('id', ParseUUIDPipe) id: string,
-    @GetUser() user: User,
-  ) {
-    return this.propertiesService.remove(id, user.id, user.role);
+  @UseGuards(JwtAuthGuard, SuperAdminBypassGuard)
+  @HttpCode(HttpStatus.GONE)
+  remove() {
+    throw new GoneException(
+      'Listings cannot be permanently deleted. Archive the listing or hide it from public view instead.',
+    );
   }
 
   /**
    * Protected: Add a room to a property (owner or admin only)
    */
   @Post(':id/rooms')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, SuperAdminBypassGuard)
   @HttpCode(HttpStatus.CREATED)
   async addRoom(
     @Param('id', ParseUUIDPipe) id: string,
@@ -124,7 +125,7 @@ export class PropertiesController {
    * Protected: Upload and set cover image for a property
    */
   @Post(':id/cover-image')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, SuperAdminBypassGuard)
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024 } }))
   async uploadCoverImage(
@@ -142,7 +143,7 @@ export class PropertiesController {
    * Protected: Upload multiple images to property gallery (up to 10)
    */
   @Post(':id/images')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, SuperAdminBypassGuard)
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(FilesInterceptor('files', 10, { limits: { fileSize: 10 * 1024 * 1024 } }))
   async uploadGalleryImages(
@@ -160,7 +161,7 @@ export class PropertiesController {
    * Protected: Remove an image from property gallery
    */
   @Delete(':id/images')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, SuperAdminBypassGuard)
   @HttpCode(HttpStatus.OK)
   async removeGalleryImage(
     @Param('id', ParseUUIDPipe) id: string,
@@ -174,7 +175,7 @@ export class PropertiesController {
    * Protected: Add an availability block (dates when property cannot be booked)
    */
   @Post(':id/availability-blocks')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, SuperAdminBypassGuard)
   @HttpCode(HttpStatus.CREATED)
   async addAvailabilityBlock(
     @Param('id', ParseUUIDPipe) id: string,
@@ -203,7 +204,7 @@ export class PropertiesController {
    * Protected: Remove an availability block from a property
    */
   @Delete(':id/availability-blocks/:blockId')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, SuperAdminBypassGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async removeAvailabilityBlock(
     @Param('id', ParseUUIDPipe) id: string,

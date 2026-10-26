@@ -27,6 +27,7 @@ import { QueryReviewsDto } from './dto/moderation-review.dto';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/entities/notification.entity';
+import { AuditService, AuditRequestContext } from '../audit/audit.service';
 import { HostProfile, HostVerificationStatus } from '../../users/entities/host-profile.entity';
 
 @Injectable()
@@ -44,6 +45,7 @@ export class ListingModerationService {
     private readonly hostProfileRepository: Repository<HostProfile>,
     private readonly dataSource: DataSource,
     private readonly cloudinaryService: CloudinaryService,
+    private readonly auditService: AuditService,
     @Optional()
     private readonly notificationsService?: NotificationsService,
   ) {}
@@ -512,6 +514,7 @@ export class ListingModerationService {
   async approveReview(
     reviewId: string,
     adminUser: User,
+    auditContext?: AuditRequestContext,
   ): Promise<{ message: string; review: ListingReview; property: Property }> {
     return this.dataSource.transaction(async (manager) => {
       const reviewRepo = manager.getRepository(ListingReview);
@@ -537,7 +540,6 @@ export class ListingModerationService {
       // Lock the property row
       const property = await propertyRepo.findOne({
         where: { id: review.propertyId },
-        relations: ['amenities'],
         lock: { mode: 'pessimistic_write' },
       });
 
@@ -545,6 +547,7 @@ export class ListingModerationService {
         throw new NotFoundException(`Property with ID "${review.propertyId}" not found`);
       }
 
+      const previousPropertyStatus = property.status;
       let previousLiveImages: string[] = [];
       if (review.submissionType === ReviewSubmissionType.INITIAL_PUBLISH) {
         // Enforce: Owning host must have verification status VERIFIED
@@ -598,6 +601,31 @@ export class ListingModerationService {
         `Review ${reviewId} approved by admin ${adminUser.id} for property ${property.id}`,
       );
 
+      await this.auditService.record(
+        {
+          actor: adminUser,
+          action: 'listing.review.approve',
+          entityType: 'listing_review',
+          entityId: savedReview.id,
+          before: {
+            reviewStatus: ReviewStatus.PENDING,
+            propertyStatus: previousPropertyStatus,
+          },
+          after: {
+            reviewStatus: savedReview.status,
+            propertyStatus: property.status,
+            adminHidden: property.adminHidden,
+          },
+          metadata: {
+            propertyId: property.id,
+            submissionType: savedReview.submissionType,
+          },
+          ipAddress: auditContext?.ipAddress ?? null,
+          userAgent: auditContext?.userAgent ?? null,
+        },
+        manager,
+      );
+
       if (this.notificationsService && property.hostId) {
         try {
           await this.notificationsService.createNotification({
@@ -635,6 +663,7 @@ export class ListingModerationService {
     reviewId: string,
     rejectionReason: string,
     adminUser: User,
+    auditContext?: AuditRequestContext,
   ): Promise<{ message: string; review: ListingReview }> {
     if (!rejectionReason || !rejectionReason.trim() || rejectionReason.trim().length < 5) {
       throw new BadRequestException(
@@ -677,6 +706,25 @@ export class ListingModerationService {
 
       this.logger.log(
         `Review ${reviewId} rejected by admin ${adminUser.id}. Reason: ${rejectionReason.trim()}`,
+      );
+
+      await this.auditService.record(
+        {
+          actor: adminUser,
+          action: 'listing.review.reject',
+          entityType: 'listing_review',
+          entityId: savedReview.id,
+          before: { reviewStatus: ReviewStatus.PENDING },
+          after: { reviewStatus: savedReview.status },
+          metadata: {
+            propertyId: review.propertyId,
+            submissionType: review.submissionType,
+            reason: rejectionReason.trim(),
+          },
+          ipAddress: auditContext?.ipAddress ?? null,
+          userAgent: auditContext?.userAgent ?? null,
+        },
+        manager,
       );
 
       if (this.notificationsService) {
@@ -724,6 +772,7 @@ export class ListingModerationService {
     propertyId: string,
     reason: string,
     adminUser: User,
+    auditContext?: AuditRequestContext,
   ): Promise<{ message: string; property: Property }> {
     if (!reason || !reason.trim()) {
       throw new BadRequestException('A reason is required to temporarily hide a listing');
@@ -734,6 +783,16 @@ export class ListingModerationService {
       throw new NotFoundException(`Listing with ID "${propertyId}" not found`);
     }
 
+    if (property.adminHidden) {
+      throw new BadRequestException('This listing is already hidden');
+    }
+
+    const before = {
+      adminHidden: property.adminHidden,
+      adminHiddenReason: property.adminHiddenReason,
+      adminHiddenAt: property.adminHiddenAt,
+    };
+
     property.adminHidden = true;
     property.adminHiddenReason = reason.trim();
     property.adminHiddenAt = new Date();
@@ -743,6 +802,22 @@ export class ListingModerationService {
     this.logger.warn(
       `Listing ${propertyId} temporarily hidden by admin ${adminUser.id}. Reason: ${reason.trim()}`,
     );
+
+    await this.auditService.record({
+      actor: adminUser,
+      action: 'listing.hide',
+      entityType: 'property',
+      entityId: property.id,
+      before,
+      after: {
+        adminHidden: saved.adminHidden,
+        adminHiddenReason: saved.adminHiddenReason,
+        adminHiddenAt: saved.adminHiddenAt,
+      },
+      metadata: { reason: reason.trim() },
+      ipAddress: auditContext?.ipAddress ?? null,
+      userAgent: auditContext?.userAgent ?? null,
+    });
 
     return {
       message: 'Listing has been temporarily hidden from public discovery and bookings.',
@@ -756,10 +831,15 @@ export class ListingModerationService {
   async restoreListing(
     propertyId: string,
     adminUser: User,
+    auditContext?: AuditRequestContext,
   ): Promise<{ message: string; property: Property }> {
     const property = await this.propertyRepository.findOne({ where: { id: propertyId } });
     if (!property) {
       throw new NotFoundException(`Listing with ID "${propertyId}" not found`);
+    }
+
+    if (!property.adminHidden) {
+      throw new BadRequestException('This listing is not currently hidden');
     }
 
     if (property.status === ListingStatus.PUBLISHED) {
@@ -775,6 +855,12 @@ export class ListingModerationService {
       }
     }
 
+    const before = {
+      adminHidden: property.adminHidden,
+      adminHiddenReason: property.adminHiddenReason,
+      adminHiddenAt: property.adminHiddenAt,
+    };
+
     property.adminHidden = false;
     property.adminHiddenReason = null;
     property.adminHiddenAt = null;
@@ -782,6 +868,17 @@ export class ListingModerationService {
 
     const saved = await this.propertyRepository.save(property);
     this.logger.log(`Listing ${propertyId} restored by admin ${adminUser.id}`);
+
+    await this.auditService.record({
+      actor: adminUser,
+      action: 'listing.restore',
+      entityType: 'property',
+      entityId: property.id,
+      before,
+      after: { adminHidden: saved.adminHidden },
+      ipAddress: auditContext?.ipAddress ?? null,
+      userAgent: auditContext?.userAgent ?? null,
+    });
 
     return {
       message: 'Listing has been restored to public visibility and is now bookable.',

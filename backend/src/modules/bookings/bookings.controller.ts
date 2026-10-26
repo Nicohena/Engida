@@ -14,11 +14,12 @@ import { BookingsService } from './bookings.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingStatusDto } from './dto/update-booking-status.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { SuperAdminBypassGuard } from '../admin/rbac/super-admin-bypass.guard';
 import { GetUser } from '../../auth/decorators/get-user.decorator';
 import { User } from '../../users/entities/user.entity';
 
 @Controller('bookings')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, SuperAdminBypassGuard)
 export class BookingsController {
   constructor(private readonly bookingsService: BookingsService) {}
 
