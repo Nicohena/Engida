@@ -8,6 +8,7 @@ import { RefreshToken } from './entities/refresh-token.entity';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { OtpService } from './otp.service';
 
 @Module({
   imports: [
@@ -25,8 +26,8 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     }),
     TypeOrmModule.forFeature([RefreshToken]),
   ],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, OtpService],
   controllers: [AuthController],
-  exports: [AuthService],
+  exports: [AuthService, OtpService],
 })
 export class AuthModule {}

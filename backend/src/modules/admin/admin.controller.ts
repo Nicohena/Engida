@@ -154,4 +154,14 @@ export class AdminController {
     const explanation = dto.explanation || dto.rejectionReason;
     return this.hostService.revokeHostVerification(id, explanation!, admin);
   }
+
+  /**
+   * GET /admin/host-verifications/:id/audit-trail
+   * Retrieves full audit records, masked document numbers, provider transaction IDs, and liveness/face-match scores for compliance inspection.
+   */
+  @Get('host-verifications/:id/audit-trail')
+  async getHostVerificationAuditTrail(@Param('id', ParseUUIDPipe) id: string) {
+    const profile = await this.hostService.getHostProfileById(id);
+    return this.hostService.getVerificationAudit(profile.userId);
+  }
 }

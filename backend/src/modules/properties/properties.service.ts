@@ -14,6 +14,7 @@ import { AvailabilityBlock } from './entities/availability-block.entity';
 import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
 import { QueryPropertyDto } from './dto/query-property.dto';
+import { CreateRoomDto } from './dto/create-room.dto';
 import { UserRole } from '../../users/entities/user.entity';
 import { HostVerificationStatus } from '../../users/entities/host-profile.entity';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
