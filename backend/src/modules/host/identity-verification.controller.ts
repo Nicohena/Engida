@@ -12,6 +12,7 @@ import {
 import { IdentityVerificationService } from './identity-verification.service';
 import { HostService } from './host.service';
 import { VerificationProviderType } from './dto/request-verification.dto';
+import { LookupFaydaDto } from './dto/lookup-fayda.dto';
 
 @Controller('host/verification')
 export class IdentityVerificationController {
@@ -27,6 +28,16 @@ export class IdentityVerificationController {
   @Get('config')
   getVerificationConfig() {
     return this.identityVerificationService.getVerificationConfig();
+  }
+
+  /**
+   * POST /host/verification/fayda/lookup
+   * Instant digital identity verification & demographic extraction via Ethiopian National ID Program (FIN / FAN).
+   */
+  @Post('fayda/lookup')
+  @HttpCode(HttpStatus.OK)
+  async lookupFayda(@Body() dto: LookupFaydaDto) {
+    return this.identityVerificationService.lookupFaydaRecord(dto);
   }
 
   /**

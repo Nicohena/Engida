@@ -393,6 +393,33 @@ export interface OnboardingFormData {
   fileName: string | null;
   fileSize: number | null;
   fileValidated: boolean;
+  filePreviewUrl?: string | null;
+  documentFrontUrl?: string | null;
+  backFileName?: string | null;
+  backFileSize?: number | null;
+  backFilePreviewUrl?: string | null;
+  documentBackUrl?: string | null;
+  dateOfBirth?: string;
+  gender?: 'MALE' | 'FEMALE' | '';
+  faydaVerificationMethod?: 'DIGITAL_LOOKUP' | 'DOCUMENT_UPLOAD';
+  faydaExtractedData?: {
+    fin: string;
+    fan?: string;
+    rawNumber: string;
+    fullName?: string;
+    fullNameAmharic?: string;
+    dateOfBirth?: string;
+    gender?: 'MALE' | 'FEMALE';
+    nationality: string;
+    region?: string;
+    city?: string;
+    subCity?: string;
+    woreda?: string;
+    verificationToken: string;
+    verifiedAt: string;
+    status: string;
+    isLiveNidpExtract?: boolean;
+  } | null;
 
   // Step 4: Host Details & Address
   displayName: string;
@@ -420,7 +447,7 @@ export const INITIAL_ONBOARDING_STATE: OnboardingFormData = {
   agreedToTerms: false,
   isExistingUser: false,
 
-  verificationChannel: 'PHONE',
+  verificationChannel: 'EMAIL',
   otpCode: '',
   contactVerified: false,
   otpCooldownSeconds: 0,
@@ -438,6 +465,16 @@ export const INITIAL_ONBOARDING_STATE: OnboardingFormData = {
   fileName: null,
   fileSize: null,
   fileValidated: false,
+  filePreviewUrl: null,
+  documentFrontUrl: null,
+  backFileName: null,
+  backFileSize: null,
+  backFilePreviewUrl: null,
+  documentBackUrl: null,
+  dateOfBirth: '',
+  gender: '',
+  faydaVerificationMethod: 'DOCUMENT_UPLOAD',
+  faydaExtractedData: null,
 
   displayName: '',
   hostType: 'INDIVIDUAL',

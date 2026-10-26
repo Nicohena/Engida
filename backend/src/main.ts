@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 
+// Hot reload active: Public domain BACKEND_URL configured
 async function bootstrap() {
   const isDebug = process.env.DEBUG === 'true' || process.env.VERBOSE_LOGS === 'true';
 

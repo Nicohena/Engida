@@ -19,7 +19,7 @@ interface StepItem {
 
 const STEPS: StepItem[] = [
   { number: 1, title: 'Account Details', shortTitle: 'Account', icon: User },
-  { number: 2, title: 'Contact Verification', shortTitle: 'Contact', icon: ShieldCheck },
+  { number: 2, title: 'Email Verification', shortTitle: 'Email', icon: ShieldCheck },
   { number: 3, title: 'Identity Verification', shortTitle: 'Identity', icon: FileText },
   { number: 4, title: 'Host & Address', shortTitle: 'Address', icon: Home },
   { number: 5, title: 'Review & Submit', shortTitle: 'Review', icon: Send },

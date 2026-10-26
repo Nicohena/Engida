@@ -89,16 +89,63 @@ export default function Step5ReviewSubmit({
         body: JSON.stringify(hostPayload),
       });
 
+      // Step 3.5: Upload attached document images to secure KYC vault
+      let uploadedFrontUrl = data.documentFrontUrl || undefined;
+      let uploadedBackUrl = data.documentBackUrl || undefined;
+
+      if (!uploadedFrontUrl && data.filePreviewUrl) {
+        try {
+          setSubmissionProgress('Encrypting & uploading identity document scan…');
+          const res = await fetch(data.filePreviewUrl);
+          const blob = await res.blob();
+          const uploadForm = new FormData();
+          uploadForm.append('file', blob, data.fileName || 'identity_document.png');
+          const uploadRes = await apiFetch<{ secureUrl?: string; url?: string }>('/upload/image', {
+            method: 'POST',
+            body: uploadForm,
+          });
+          if (uploadRes?.secureUrl || uploadRes?.url) {
+            uploadedFrontUrl = uploadRes.secureUrl || uploadRes.url;
+          }
+        } catch {
+          // If upload fails, continue with document metadata
+        }
+      }
+
+      if (!uploadedBackUrl && data.backFilePreviewUrl) {
+        try {
+          const res = await fetch(data.backFilePreviewUrl);
+          const blob = await res.blob();
+          const uploadForm = new FormData();
+          uploadForm.append('file', blob, data.backFileName || 'identity_document_back.png');
+          const uploadRes = await apiFetch<{ secureUrl?: string; url?: string }>('/upload/image', {
+            method: 'POST',
+            body: uploadForm,
+          });
+          if (uploadRes?.secureUrl || uploadRes?.url) {
+            uploadedBackUrl = uploadRes.secureUrl || uploadRes.url;
+          }
+        } catch {
+          // If upload fails, continue with document metadata
+        }
+      }
+
       // Step 4: Submit Identity Verification Request with multi-document payload
       setSubmissionProgress('Submitting government identity verification for review…');
       const verificationPayload = {
         documentType: data.documentType,
         issuingCountry: data.issuingCountry,
         documentNumber: data.documentNumber.trim(),
-        issuingAuthority: data.issuingAuthority?.trim() || undefined,
+        issuingAuthority:
+          data.issuingAuthority?.trim() ||
+          (data.faydaExtractedData ? 'National ID Program (NIDP)' : undefined),
         expirationDate: data.expirationDate || undefined,
-        verificationProvider: 'MANUAL_ADMIN_REVIEW',
-        verificationReference: `ONBOARD-${Date.now()}`,
+        verificationProvider: data.faydaExtractedData?.isLiveNidpExtract ? 'FAYDA_NIDP' : 'MANUAL_ADMIN_REVIEW',
+        verificationReference: data.faydaExtractedData?.verificationToken || `ONBOARD-${Date.now()}`,
+        documentFrontUrl: uploadedFrontUrl,
+        documentBackUrl: uploadedBackUrl,
+        documentFileName: data.fileName || undefined,
+        documentFileSize: data.fileSize || undefined,
       };
 
       const pendingProfile = await apiFetch<HostProfile>('/host/profile/request-verification', {
@@ -253,7 +300,7 @@ export default function Step5ReviewSubmit({
               <span className="text-slate-500 block">Contact Verification</span>
               <span className="font-medium text-emerald-700 flex items-center gap-1">
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                {data.contactVerified ? 'Verified via OTP' : 'Attached for Manual Audit'}
+                {data.contactVerified ? 'Email Verified via OTP' : 'Pending Email Verification'}
               </span>
             </div>
           </div>
@@ -287,10 +334,66 @@ export default function Step5ReviewSubmit({
               <span className="text-slate-500 block">Masked ID Number</span>
               <span className="font-mono font-semibold text-slate-900">{maskedDocNumber}</span>
             </div>
-            <div>
-              <span className="text-slate-500 block">Attached File</span>
-              <span className="font-medium text-slate-800 line-clamp-1">{data.fileName || 'Attached'}</span>
-            </div>
+            {data.faydaExtractedData?.isLiveNidpExtract ? (
+              <div className="sm:col-span-2 pt-2 border-t border-slate-100 space-y-2">
+                <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-950 flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-bold block text-slate-900">
+                        Verified via National ID Program (NIDP / Fayda)
+                      </span>
+                      <span className="text-slate-600 text-[11px] block mt-0.5">
+                        Legal Name: <strong>{data.faydaExtractedData.fullName}</strong>
+                      </span>
+                      <span className="text-slate-500 text-[10px] block font-mono mt-0.5">
+                        Token: {data.faydaExtractedData.verificationToken}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full shrink-0">
+                    e-KYC Verified
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="sm:col-span-2 pt-2 border-t border-slate-100 flex items-center justify-between">
+                <div>
+                  <span className="text-slate-500 block text-[11px]">Attached Scans</span>
+                  <span className="font-medium text-slate-800 text-xs">
+                    {data.fileName || 'Document attached'}
+                    {data.backFileName ? ` + Back: ${data.backFileName}` : ''}
+                  </span>
+                  {data.faydaExtractedData?.verificationToken && (
+                    <span className="text-slate-500 text-[10px] block font-mono mt-0.5">
+                      Fayda Format Token: {data.faydaExtractedData.verificationToken}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  {data.filePreviewUrl && (
+                    <div className="w-12 h-9 rounded border border-slate-200 overflow-hidden bg-slate-50 shrink-0">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={data.filePreviewUrl}
+                        alt="Front preview"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  {data.backFilePreviewUrl && (
+                    <div className="w-12 h-9 rounded border border-slate-200 overflow-hidden bg-slate-50 shrink-0">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={data.backFilePreviewUrl}
+                        alt="Back preview"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
