@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { apiFetch } from '@/lib/api';
 
@@ -275,7 +274,6 @@ interface StitchHomePageProps {
 }
 
 export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }: StitchHomePageProps) {
-  const router = useRouter();
   const { user, logout } = useAuth();
 
   // Search state
@@ -303,6 +301,13 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
   // User menu and language menu
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [currency, setCurrency] = useState('USD');
+
+  const formatPrice = (usdAmount: number) => {
+    if (currency === 'ETB') {
+      return `${Math.round(usdAmount * 120).toLocaleString()} ETB`;
+    }
+    return `$${usdAmount.toLocaleString()}`;
+  };
 
   // Load wishlist from localStorage on mount
   useEffect(() => {
@@ -359,6 +364,22 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
         const matchesSub = item.subLocation.toLowerCase().includes(q);
         if (!matchesLoc && !matchesTitle && !matchesSub) return false;
       }
+      // Guest capacity filter
+      if (guestCount > 1) {
+        const guestMatch = item.details.match(/(\d+)\s*guests?/i);
+        const maxGuests = guestMatch ? parseInt(guestMatch[1], 10) : 2;
+        if (maxGuests < guestCount) {
+          return false;
+        }
+      }
+      // Date availability filter
+      if (datesSelected && datesSelected !== 'Flexible Dates') {
+        if (datesSelected === 'Anytime in Nov') {
+          if (!item.dates.toLowerCase().includes('nov')) return false;
+        } else if (item.dates) {
+          if (!item.dates.trim()) return false;
+        }
+      }
       // Superhost chip
       if (activeFilters.includes('Superhost') && !item.isSuperhost && item.badge !== 'Superhost') {
         return false;
@@ -367,6 +388,13 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
       if (activeFilters.includes('Instant Book') && !item.instantBook) {
         return false;
       }
+      // Entire home filter
+      if (activeFilters.includes('Entire home')) {
+        const detailsLower = item.details.toLowerCase();
+        if (detailsLower.includes('private room') || detailsLower.includes('shared room') || detailsLower.includes('hotel room')) {
+          return false;
+        }
+      }
       return true;
     }).sort((a, b) => {
       if (sortOption === 'price-asc') return a.pricePerNight - b.pricePerNight;
@@ -374,7 +402,7 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
       if (sortOption === 'rating') return b.rating - a.rating;
       return 0; // recommended
     });
-  }, [selectedCategory, destinationSearch, activeFilters, sortOption]);
+  }, [selectedCategory, destinationSearch, guestCount, datesSelected, activeFilters, sortOption]);
 
   const displayedListings = useMemo(() => {
     return filteredListings.slice(0, visibleCount);
@@ -916,8 +944,7 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
                 return (
                   <article
                     key={property.id}
-                    onClick={() => router.push(`/properties/${property.id}`)}
-                    className="property-card group flex flex-col bg-white rounded-xl border border-[#d8d0c8]/70 overflow-hidden shadow-[0_4px_20px_-2px_rgba(58,48,42,0.05)] hover:shadow-[0_16px_36px_-4px_rgba(194,101,42,0.18)] hover:-translate-y-1.5 transition-all duration-300 animate-fade-in-up cursor-pointer"
+                    className="property-card group relative flex flex-col bg-white rounded-xl border border-[#d8d0c8]/70 overflow-hidden shadow-[0_4px_20px_-2px_rgba(58,48,42,0.05)] hover:shadow-[0_16px_36px_-4px_rgba(194,101,42,0.18)] hover:-translate-y-1.5 transition-all duration-300 animate-fade-in-up"
                     style={{ animationDelay: `${0.1 + (idx % 8) * 0.05}s` }}
                   >
                     {/* Media Container with 4:3 Aspect Ratio */}
@@ -950,7 +977,7 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
                         type="button"
                         aria-label="Add to wishlist"
                         onClick={(e) => toggleWishlist(property.id, e)}
-                        className={`wishlist-btn absolute top-2.5 right-2.5 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm border border-[#d8d0c8]/60 flex items-center justify-center shadow-sm hover:scale-110 active:scale-95 transition-all duration-200 cursor-pointer ${
+                        className={`wishlist-btn absolute top-2.5 right-2.5 z-10 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm border border-[#d8d0c8]/60 flex items-center justify-center shadow-sm hover:scale-110 active:scale-95 transition-all duration-200 cursor-pointer ${
                           isSaved ? 'text-[#c2652a]' : 'text-[#3a302a]'
                         }`}
                       >
@@ -974,7 +1001,12 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
                     <div className="flex flex-col p-4 flex-1">
                       <div className="flex items-start justify-between gap-1">
                         <h3 className="font-headline text-lg font-bold text-[#3a302a] truncate group-hover:text-[#c2652a] transition-colors duration-200">
-                          {property.title}
+                          <Link
+                            href={`/properties/${property.id}`}
+                            className="focus:outline-hidden after:absolute after:inset-0 after:z-0"
+                          >
+                            {property.title}
+                          </Link>
                         </h3>
                         <div className="flex items-center gap-1 shrink-0">
                           <span
@@ -997,11 +1029,11 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
                       <div className="mt-4 pt-2 flex items-baseline justify-between border-t border-[#d8d0c8]/40">
                         <div>
                           <span className="text-lg font-bold text-[#3a302a] font-headline">
-                            ${property.pricePerNight}
+                            {formatPrice(property.pricePerNight)}
                           </span>
                           <span className="text-xs text-[#605850]"> / night</span>
                           <span className="block text-[11px] text-[#605850]/80">
-                            ${property.totalBeforeTaxes} total before taxes
+                            {formatPrice(property.totalBeforeTaxes)} total before taxes
                           </span>
                         </div>
                       </div>

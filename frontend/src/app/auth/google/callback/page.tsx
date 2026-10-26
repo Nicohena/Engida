@@ -1,65 +1,35 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Building2, AlertCircle } from 'lucide-react';
-import { getApiBaseUrl, setAccessToken } from '@/lib/api';
 import { getSafeReturnPath } from '@/lib/navigation';
 import { useAuth } from '@/context/AuthContext';
 
 /**
  * Landing page for the Google Sign-In callback.
  *
- * The backend has already verified the Google identity and stored the session
- * in an HttpOnly refresh cookie. This page exchanges that cookie for an
- * in-memory access token, loads the profile and forwards the user onwards.
+ * The backend has verified the Google identity and set the HttpOnly refresh cookie.
+ * AuthProvider exchanges the cookie for session access and loads the user profile.
  */
 export default function GoogleCallbackPage() {
   const router = useRouter();
-  const { refreshUser } = useAuth();
+  const { user, loading } = useAuth();
   const [status, setStatus] = useState<'working' | 'error'>('working');
-  const started = useRef(false);
 
   useEffect(() => {
-    if (started.current) return;
-    started.current = true;
+    if (loading) return;
 
     const params = new URLSearchParams(window.location.search);
     const nextPath = getSafeReturnPath(params.get('next'), '/dashboard');
 
-    const completeSignIn = async () => {
-      try {
-        const response = await fetch(`${getApiBaseUrl()}/auth/refresh`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-        });
-
-        if (!response.ok) {
-          throw new Error('Unable to refresh the session');
-        }
-
-        const data = await response.json();
-        if (!data?.accessToken) {
-          throw new Error('No access token was issued');
-        }
-
-        setAccessToken(data.accessToken);
-
-        const user = await refreshUser();
-        if (!user) {
-          throw new Error('Unable to load the user profile');
-        }
-
-        router.replace(nextPath);
-      } catch {
-        setStatus('error');
-        router.replace('/login?error=google_failed');
-      }
-    };
-
-    completeSignIn();
-  }, [router, refreshUser]);
+    if (user) {
+      router.replace(nextPath);
+    } else {
+      setStatus('error');
+      router.replace('/login?error=google_failed');
+    }
+  }, [user, loading, router]);
 
   return (
     <div className="min-h-screen bg-[#F4F7FC] flex items-center justify-center px-4">

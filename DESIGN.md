@@ -2,7 +2,7 @@
 name: Engida Architectural Modernism
 description: Warm Mediterranean and desert modernist hospitality design system for Ethiopian property rentals
 colors:
-  primary: "#c2652a"
+  primary: "#b3541e"
   primary-container: "#e08850"
   on-primary: "#ffffff"
   secondary: "#78706a"
@@ -64,7 +64,7 @@ This design system expresses quiet architectural luxury, warmth, and enduring cr
 
 ## Colors
 
-- **Primary (`#c2652a` - Terracotta Rust):** Anchors focal actions, primary CTAs, active segmented tabs, category selection indicators, and rating stars.
+- **Primary (`#b3541e` - Terracotta Rust):** Anchors focal actions, primary CTAs, active segmented tabs, category selection indicators, and rating stars (calibrated to 5.0:1 contrast against white).
 - **Primary Container (`#e08850` - Warm Ochre Glow):** Applied to guest favorite badges and active hover states.
 - **Surface & Background (`#faf5ee` - Warm Sand Linen):** Root canvas tone eliminating sterile monitor white glare.
 - **Elevated Cards (`#ffffff`):** Dedicated to floating listing tiles, elevated search panels, and interactive modal dialogs.

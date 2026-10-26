@@ -419,19 +419,71 @@ export default function PropertyDetailsPage() {
       });
   }, [id]);
 
-  // Pricing math
-  const nightsCount = 5;
+  // Pricing math & nights calculation based on selected dates
+  const nightsCount = useMemo(() => {
+    if (!checkIn || !checkOut) return 0;
+    const start = new Date(checkIn);
+    const end = new Date(checkOut);
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) return 0;
+    const diffTime = end.getTime() - start.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : 0;
+  }, [checkIn, checkOut]);
+
   const nightlyPrice = property?.pricePerNight || 350;
   const subtotal = nightlyPrice * nightsCount;
-  const cleaningFee = 65;
-  const serviceFee = Math.round(subtotal * 0.12);
+  const cleaningFee = useMemo(() => {
+    if (nightsCount < 1) return 0;
+    return property?.currency?.toUpperCase() === 'ETB' ? 750 : 65;
+  }, [nightsCount, property?.currency]);
+  const serviceFee = nightsCount > 0 ? Math.round(subtotal * 0.12) : 0;
   const totalPrice = subtotal + cleaningFee + serviceFee;
 
-  const handleBooking = () => {
-    setIsBookingSuccess(true);
-    setTimeout(() => {
-      setIsBookingSuccess(false);
-    }, 4000);
+  // Booking & messaging states
+  const [isBookingLoading, setIsBookingLoading] = useState(false);
+  const [bookingError, setBookingError] = useState<string | null>(null);
+  const { user } = useAuth();
+
+  const handleBooking = async () => {
+    if (nightsCount < 1 || !property) return;
+    setBookingError(null);
+
+    // If user is unauthenticated, redirect to login with safe returnUrl
+    if (!user) {
+      router.push(`/auth/login?returnUrl=/properties/${id}`);
+      return;
+    }
+
+    setIsBookingLoading(true);
+    try {
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(property.id);
+      if (isUuid) {
+        await apiFetch('/bookings', {
+          method: 'POST',
+          body: JSON.stringify({
+            propertyId: property.id,
+            checkInDate: checkIn,
+            checkOutDate: checkOut,
+            guestCount: guests,
+          }),
+        });
+      }
+      setIsBookingSuccess(true);
+      setTimeout(() => {
+        setIsBookingSuccess(false);
+      }, 5000);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to submit reservation request';
+      setBookingError(msg);
+    } finally {
+      setIsBookingLoading(false);
+    }
+  };
+
+  const openPhotoModal = (targetIndex: number) => {
+    const imagesCount = property?.images?.length || 1;
+    const maxIdx = Math.max(0, imagesCount - 1);
+    setActivePhotoModal(Math.min(targetIndex, maxIdx));
   };
 
   if (loading || !property) {
@@ -546,7 +598,7 @@ export default function PropertyDetailsPage() {
             {/* Primary Hero Image (Takes Left 2 Columns) */}
             <div
               className="md:col-span-2 relative h-full overflow-hidden cursor-pointer"
-              onClick={() => setActivePhotoModal(0)}
+              onClick={() => openPhotoModal(0)}
             >
               <img
                 src={property.images[0] || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80'}
@@ -558,7 +610,7 @@ export default function PropertyDetailsPage() {
             {/* Sub-photo 1 */}
             <div
               className="hidden md:block relative h-full overflow-hidden cursor-pointer"
-              onClick={() => setActivePhotoModal(1)}
+              onClick={() => openPhotoModal(1)}
             >
               <img
                 src={property.images[1] || property.images[0]}
@@ -571,7 +623,7 @@ export default function PropertyDetailsPage() {
             <div className="hidden md:flex flex-col gap-3.5 h-full">
               <div
                 className="relative h-1/2 overflow-hidden cursor-pointer"
-                onClick={() => setActivePhotoModal(2)}
+                onClick={() => openPhotoModal(2)}
               >
                 <img
                   src={property.images[2] || property.images[0]}
@@ -581,7 +633,7 @@ export default function PropertyDetailsPage() {
               </div>
               <div
                 className="relative h-1/2 overflow-hidden cursor-pointer"
-                onClick={() => setActivePhotoModal(3)}
+                onClick={() => openPhotoModal(3)}
               >
                 <img
                   src={property.images[3] || property.images[0]}
@@ -594,7 +646,7 @@ export default function PropertyDetailsPage() {
             {/* "Show all photos" Pill Button */}
             <button
               type="button"
-              onClick={() => setActivePhotoModal(0)}
+              onClick={() => openPhotoModal(0)}
               className="absolute bottom-4 right-4 z-10 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/95 backdrop-blur-md text-[#3a302a] text-xs font-semibold hover:bg-white transition-all shadow-md hover:shadow-lg active:scale-95 cursor-pointer font-body"
             >
               <span className="material-symbols-outlined text-sm">grid_view</span>
@@ -855,11 +907,18 @@ export default function PropertyDetailsPage() {
               {/* Reserve Button */}
               <button
                 type="button"
+                disabled={nightsCount < 1 || isBookingLoading}
                 onClick={handleBooking}
-                className="w-full py-4 px-4 rounded-xl bg-[#b2531b] hover:bg-[#994413] text-white font-semibold text-sm transition-all duration-200 shadow-md shadow-[#b2531b]/25 active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2"
+                className="w-full py-4 px-4 rounded-xl bg-[#b2531b] hover:bg-[#994413] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm transition-all duration-200 shadow-md shadow-[#b2531b]/25 active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2"
               >
-                <span>Reserve this Stay</span>
-                <span className="material-symbols-outlined text-base">arrow_forward</span>
+                {isBookingLoading ? (
+                  <span>Processing Reservation...</span>
+                ) : (
+                  <>
+                    <span>{nightsCount < 1 ? 'Select valid dates' : 'Reserve this Stay'}</span>
+                    <span className="material-symbols-outlined text-base">arrow_forward</span>
+                  </>
+                )}
               </button>
 
               {/* Message Host Secondary Action Button */}
@@ -872,12 +931,18 @@ export default function PropertyDetailsPage() {
                 className="w-full mt-2.5 py-3 px-4 rounded-xl bg-[#faf5ee] hover:bg-[#ede4d8] text-[#3a302a] font-semibold text-xs transition-all duration-200 active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2"
               >
                 <span className="material-symbols-outlined text-base text-[#a84d16]">chat_bubble</span>
-                <span>Message Host</span>
+                <span>Inquire with Host (Preview)</span>
               </button>
 
               {isBookingSuccess && (
                 <div className="mt-3 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold text-center animate-fade-in-up">
                   Reservation request sent! Host will confirm within 2 hours.
+                </div>
+              )}
+
+              {bookingError && (
+                <div className="mt-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold text-center animate-fade-in-up">
+                  {bookingError}
                 </div>
               )}
 
@@ -979,10 +1044,10 @@ export default function PropertyDetailsPage() {
                 </div>
                 <div>
                   <h3 className="font-headline font-bold text-lg text-[#3a302a] leading-tight">
-                    Message {property.host.name}
+                    Inquire with {property.host.name} (Preview)
                   </h3>
                   <p className="text-xs text-[#605850]">
-                    Typically responds {property.host.responseRate.toLowerCase()}
+                    Typically responds {property.host.responseRate.toLowerCase()} · Messaging preview mode
                   </p>
                 </div>
               </div>
@@ -1004,10 +1069,10 @@ export default function PropertyDetailsPage() {
                     <span className="material-symbols-outlined text-2xl">check_circle</span>
                   </div>
                   <h4 className="font-headline font-bold text-xl text-[#3a302a]">
-                    Message Sent to {property.host.name}
+                    Inquiry Preview Recorded
                   </h4>
                   <p className="text-xs text-[#605850] mt-2 max-w-xs leading-relaxed">
-                    Your inquiry has been delivered directly. Replies will appear in your Engida messages and email.
+                    Host messaging is currently in preview mode. Your inquiry has been saved for when live messaging is enabled.
                   </p>
                   <button
                     type="button"
@@ -1075,7 +1140,7 @@ export default function PropertyDetailsPage() {
                       disabled={!hostMessage.trim()}
                       className="px-6 py-2.5 rounded-xl bg-[#b2531b] hover:bg-[#994413] disabled:opacity-40 text-white text-xs font-semibold transition active:scale-95 shadow-sm cursor-pointer flex items-center gap-1.5"
                     >
-                      <span>Send Message</span>
+                      <span>Send Inquiry (Preview)</span>
                       <span className="material-symbols-outlined text-sm">send</span>
                     </button>
                   </div>
