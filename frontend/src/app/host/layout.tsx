@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '../../context/AuthContext';
+import HostAvatar from '../../components/host/HostAvatar';
 import {
   Building2,
   LayoutDashboard,
@@ -131,9 +132,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
         {/* User info + logout */}
         {user && (
           <div className="bg-[#F4F7FC] rounded-xl p-3 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-[#33599E] flex items-center justify-center text-white text-sm font-black flex-shrink-0">
-              {user.name.charAt(0).toUpperCase()}
-            </div>
+            <HostAvatar src={user.avatar} name={user.name} size={36} />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-[#000000] truncate">{user.name}</p>
               <p className="text-xs text-[#64748B] truncate">{user.email}</p>

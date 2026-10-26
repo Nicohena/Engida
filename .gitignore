@@ -31,6 +31,8 @@ htmlcov/
 *~
 .DS_Store
 .agents
+.agent/
+*.tsbuildinfo
 
 # Logs
 logs/

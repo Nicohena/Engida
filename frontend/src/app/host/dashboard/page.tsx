@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '../../../context/AuthContext';
 import { apiFetch } from '../../../lib/api';
+import HostAvatar from '../../../components/host/HostAvatar';
 import type { HostDashboardSummary } from '../../../types/host';
 import {
   Building2,
@@ -225,13 +226,17 @@ export default function HostDashboardPage() {
 
       {/* Page header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-black text-[#000000] leading-tight">
-            Dashboard
-          </h1>
-          <p className="text-sm text-[#64748B] mt-0.5">
-            Your host activity at a glance
-          </p>
+        <div className="flex items-center gap-3">
+          {user && <HostAvatar src={user.avatar} name={user.name} size={44} />}
+          <div>
+            <h1 className="text-2xl font-black text-[#000000] leading-tight">
+              Dashboard
+            </h1>
+            <p className="text-sm text-[#64748B] mt-0.5">
+              {user ? `Welcome back, ${user.name.split(' ')[0]}. ` : ''}
+              Your host activity at a glance
+            </p>
+          </div>
         </div>
         <Link
           href="/host/listings"

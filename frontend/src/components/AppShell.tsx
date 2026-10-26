@@ -11,7 +11,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const isPropertyDetailsPage = pathname.startsWith('/properties/');
   // Host area and standalone auth/gateway pages manage their own dedicated layouts
   const isHostArea = pathname.startsWith('/host');
-  const isStandalonePage = pathname === '/login' || pathname === '/register' || pathname === '/become-a-host';
+  const isStandalonePage =
+    pathname === '/login' ||
+    pathname === '/register' ||
+    pathname === '/become-a-host' ||
+    pathname.startsWith('/auth/');
 
   if (isLandingPage || isPropertyDetailsPage || isHostArea || isStandalonePage) {
     return <>{children}</>;

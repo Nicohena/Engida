@@ -1,0 +1,14 @@
+{
+  "name": "engida-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ENGIDA Ethiopian Property Marketplace monorepo workspace",
+  "scripts": {
+    "dev:backend": "npm --prefix backend run start:dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "build:backend": "npm --prefix backend run build",
+    "build:frontend": "npm --prefix frontend run build",
+    "install:backend": "npm --prefix backend install",
+    "install:frontend": "npm --prefix frontend install"
+  }
+}
