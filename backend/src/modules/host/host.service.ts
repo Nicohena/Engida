@@ -394,6 +394,65 @@ export class HostService {
     return saved;
   }
 
+  /**
+   * Admin revokes an active host verification.
+   * Transitions status from VERIFIED to REJECTED with required explanation.
+   */
+  async revokeHostVerification(
+    profileId: string,
+    explanation: string,
+    admin: User,
+  ): Promise<HostProfile> {
+    const trimmed = explanation?.trim();
+    if (!trimmed || trimmed.length < 5) {
+      throw new BadRequestException('A valid revocation explanation (at least 5 characters) is required.');
+    }
+    if (trimmed.length > 500) {
+      throw new BadRequestException('Revocation explanation cannot exceed 500 characters.');
+    }
+
+    const profile = await this.hostProfileRepository.findOne({
+      where: { id: profileId },
+      relations: ['user'],
+    });
+
+    if (!profile) {
+      throw new NotFoundException(`Host profile with ID "${profileId}" not found.`);
+    }
+
+    if (profile.verificationStatus !== HostVerificationStatus.VERIFIED) {
+      throw new BadRequestException(
+        `Only host profiles in VERIFIED status can have verification revoked. Current status: ${profile.verificationStatus}`,
+      );
+    }
+
+    profile.verificationStatus = HostVerificationStatus.REJECTED;
+    const saved = await this.hostProfileRepository.save(profile);
+    this.logger.log(
+      `Host verification revoked for profile ${profileId} by admin ${admin.id}: "${trimmed}"`,
+    );
+
+    if (this.notificationsService) {
+      await this.notificationsService.createNotification({
+        userId: profile.userId,
+        type: NotificationType.LISTING_REJECTED,
+        title: 'Host Verification Revoked',
+        message: `Your host verification has been revoked by an administrator: ${trimmed}`,
+        link: '/host/profile',
+        metadata: {
+          profileId: profile.id,
+          verificationStatus: HostVerificationStatus.REJECTED,
+          rejectionReason: trimmed,
+          reviewedByAdminId: admin.id,
+        },
+        idempotencyKey: `host-verification-revoked-${profile.id}-${Date.now()}`,
+      });
+    }
+
+    (saved as any).rejectionReason = trimmed;
+    return saved;
+  }
+
   // ─────────────────────────────────────────
   // 2. MY LISTINGS (paginated, filtered)
   // ─────────────────────────────────────────

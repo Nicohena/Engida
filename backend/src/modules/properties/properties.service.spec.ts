@@ -8,8 +8,9 @@ import { Amenity } from '../amenities/entities/amenity.entity';
 import { AvailabilityBlock } from './entities/availability-block.entity';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { UserRole } from '../../users/entities/user.entity';
-import { HostService } from '../host/host.service';
 import { ListingModerationService } from './listing-moderation.service';
+import { HostService } from '../host/host.service';
+import { HostVerificationStatus } from '../../users/entities/host-profile.entity';
 
 describe('PropertiesService', () => {
   let service: PropertiesService;
@@ -67,6 +68,7 @@ describe('PropertiesService', () => {
     take: jest.fn().mockReturnThis(),
     getOne: jest.fn().mockResolvedValue(result),
     getManyAndCount: jest.fn().mockResolvedValue([[result], 1]),
+    getMany: jest.fn().mockResolvedValue([result]),
   });
 
   const mockPropertyRepository = {
@@ -751,6 +753,57 @@ describe('PropertiesService', () => {
       );
 
       expect(mockAvailabilityBlockRepository.remove).toHaveBeenCalledWith(mockBlock);
+    });
+  });
+
+  describe('Public Listing Discovery & Host Verification Gating', () => {
+    it('findAll enforces hostProfile.verificationStatus = VERIFIED', async () => {
+      const qb = createMockQueryBuilder();
+      mockPropertyRepository.createQueryBuilder.mockReturnValue(qb);
+
+      const result = await service.findAll({});
+
+      expect(qb.andWhere).toHaveBeenCalledWith(
+        'hostProfile.verificationStatus = :verifiedStatus',
+        { verifiedStatus: HostVerificationStatus.VERIFIED },
+      );
+      expect(result.data).toHaveLength(1);
+    });
+
+    it('findPublicOne returns property when host is VERIFIED', async () => {
+      const qb = createMockQueryBuilder(mockProperty);
+      mockPropertyRepository.createQueryBuilder.mockReturnValue(qb);
+
+      const result = await service.findPublicOne('prop-uuid-1');
+
+      expect(qb.andWhere).toHaveBeenCalledWith(
+        'hostProfile.verificationStatus = :verifiedStatus',
+        { verifiedStatus: HostVerificationStatus.VERIFIED },
+      );
+      expect(result.id).toBe('prop-uuid-1');
+    });
+
+    it('findPublicOne throws NotFoundException if host is not verified or revoked', async () => {
+      const qb = createMockQueryBuilder(null);
+      mockPropertyRepository.createQueryBuilder.mockReturnValue(qb);
+
+      await expect(service.findPublicOne('prop-uuid-1')).rejects.toThrow(NotFoundException);
+    });
+
+    it('findRelated enforces hostProfile.verificationStatus = VERIFIED', async () => {
+      const detailQb = createMockQueryBuilder(mockProperty);
+      const relatedQb = createMockQueryBuilder(mockProperty);
+      mockPropertyRepository.createQueryBuilder
+        .mockReturnValueOnce(detailQb)
+        .mockReturnValueOnce(relatedQb);
+
+      const result = await service.findRelated('prop-uuid-1');
+
+      expect(relatedQb.andWhere).toHaveBeenCalledWith(
+        'hostProfile.verificationStatus = :verifiedStatus',
+        { verifiedStatus: HostVerificationStatus.VERIFIED },
+      );
+      expect(result).toHaveLength(1);
     });
   });
 });

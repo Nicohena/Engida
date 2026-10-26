@@ -11,7 +11,7 @@ import { Booking, BookingStatus, PaymentMethod, PaymentStatus } from './entities
 import { Property, PropertyType, ListingType, ListingStatus } from '../properties/entities/property.entity';
 import { Room } from '../properties/entities/room.entity';
 import { AvailabilityBlock } from '../properties/entities/availability-block.entity';
-import { HostProfile } from '../../users/entities/host-profile.entity';
+import { HostProfile, HostVerificationStatus } from '../../users/entities/host-profile.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/entities/notification.entity';
 import { UserRole } from '../../users/entities/user.entity';
@@ -120,6 +120,7 @@ describe('BookingsService Integration Acceptance', () => {
               if (entity === Booking) return mockBookingRepo;
               if (entity === Room) return mockRoomRepo;
               if (entity === AvailabilityBlock) return mockAvailabilityBlockRepo;
+              if (entity === HostProfile) return mockHostProfileRepo;
               return {};
             },
           }),
@@ -140,7 +141,11 @@ describe('BookingsService Integration Acceptance', () => {
     };
 
     mockHostProfileRepo = {
-      findOne: jest.fn().mockResolvedValue({ id: 'prof-1', userId: HOST_ID }),
+      findOne: jest.fn().mockResolvedValue({
+        id: 'prof-1',
+        userId: HOST_ID,
+        verificationStatus: HostVerificationStatus.VERIFIED,
+      }),
     };
 
     mockNotificationsService = {
@@ -221,6 +226,62 @@ describe('BookingsService Integration Acceptance', () => {
           GUEST_ID,
         ),
       ).rejects.toThrow('This property is not currently published for booking');
+    });
+
+    it('rejects booking if owning host verification status is UNVERIFIED', async () => {
+      mockHostProfileRepo.findOne.mockResolvedValueOnce({
+        id: 'prof-1',
+        userId: HOST_ID,
+        verificationStatus: HostVerificationStatus.UNVERIFIED,
+      });
+
+      await expect(
+        service.create(
+          {
+            propertyId: PROPERTY_ID,
+            checkInDate: '2027-05-10',
+            checkOutDate: '2027-05-15',
+            guestCount: 2,
+          },
+          GUEST_ID,
+        ),
+      ).rejects.toThrow('This property is not currently available for booking because the host is not verified');
+    });
+
+    it('rejects booking if owning host verification status is REJECTED (e.g. revoked)', async () => {
+      mockHostProfileRepo.findOne.mockResolvedValueOnce({
+        id: 'prof-1',
+        userId: HOST_ID,
+        verificationStatus: HostVerificationStatus.REJECTED,
+      });
+
+      await expect(
+        service.create(
+          {
+            propertyId: PROPERTY_ID,
+            checkInDate: '2027-05-10',
+            checkOutDate: '2027-05-15',
+            guestCount: 2,
+          },
+          GUEST_ID,
+        ),
+      ).rejects.toThrow('This property is not currently available for booking because the host is not verified');
+    });
+
+    it('rejects booking if host profile does not exist', async () => {
+      mockHostProfileRepo.findOne.mockResolvedValueOnce(null);
+
+      await expect(
+        service.create(
+          {
+            propertyId: PROPERTY_ID,
+            checkInDate: '2027-05-10',
+            checkOutDate: '2027-05-15',
+            guestCount: 2,
+          },
+          GUEST_ID,
+        ),
+      ).rejects.toThrow('This property is not currently available for booking because the host is not verified');
     });
 
     it('rejects booking if host attempts to book their own property', async () => {

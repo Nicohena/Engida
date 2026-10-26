@@ -140,4 +140,18 @@ export class AdminController {
     const explanation = dto.explanation || dto.rejectionReason;
     return this.hostService.rejectHostVerification(id, explanation!, admin);
   }
+
+  /**
+   * POST /admin/host-verifications/:id/revoke
+   * Revokes an active host verification with required explanation.
+   */
+  @Post('host-verifications/:id/revoke')
+  async revokeHostVerification(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: RejectHostVerificationDto,
+    @GetUser() admin: User,
+  ) {
+    const explanation = dto.explanation || dto.rejectionReason;
+    return this.hostService.revokeHostVerification(id, explanation!, admin);
+  }
 }

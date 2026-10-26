@@ -382,6 +382,19 @@ describe('HostService', () => {
       expect(result.verificationStatus).toBe(HostVerificationStatus.UNVERIFIED);
     });
 
+    it('[security] ordinary profile update preserves VERIFIED status and does not unpublish listings', async () => {
+      mockHostProfileRepo.findOne.mockResolvedValue({
+        ...mockHostProfile,
+        verificationStatus: HostVerificationStatus.VERIFIED,
+      });
+      const result = await service.updateHostProfile(HOST_ID, {
+        displayName: 'New Verified Display Name',
+        bio: 'Updated bio information',
+      });
+      expect(result.verificationStatus).toBe(HostVerificationStatus.VERIFIED);
+      expect(mockPropertyRepo.save).not.toHaveBeenCalled();
+    });
+
     it('[positive] updates avatar by updating the user record', async () => {
       mockHostProfileRepo.findOne.mockResolvedValue({ ...mockHostProfile });
       await service.updateHostProfile(HOST_ID, { avatar: 'https://example.com/avatar.jpg' });
@@ -633,6 +646,62 @@ describe('HostService', () => {
 
         expect(profile.verificationStatus).toBe(HostVerificationStatus.REJECTED);
         expect((profile as any).rejectionReason).toBe('Contact details unverified.');
+      });
+    });
+
+    describe('revokeHostVerification', () => {
+      it('[positive] revokes a VERIFIED host profile to REJECTED with explanation and notification', async () => {
+        const verifiedProfile = {
+          ...mockHostProfile,
+          id: 'profile-uuid-1',
+          userId: HOST_ID,
+          verificationStatus: HostVerificationStatus.VERIFIED,
+        };
+        mockHostProfileRepo.findOne.mockResolvedValue(verifiedProfile);
+
+        const explanation = 'Host credentials reported invalid by issuing authority.';
+        const result = await service.revokeHostVerification('profile-uuid-1', explanation, adminUser);
+
+        expect(result.verificationStatus).toBe(HostVerificationStatus.REJECTED);
+        expect(mockHostProfileRepo.save).toHaveBeenCalledWith(
+          expect.objectContaining({ verificationStatus: HostVerificationStatus.REJECTED }),
+        );
+        expect(mockNotificationsService.createNotification).toHaveBeenCalledWith(
+          expect.objectContaining({
+            userId: HOST_ID,
+            type: NotificationType.LISTING_REJECTED,
+            title: 'Host Verification Revoked',
+          }),
+        );
+      });
+
+      it('[negative] throws BadRequestException if profile is not VERIFIED', async () => {
+        mockHostProfileRepo.findOne.mockResolvedValue({
+          ...mockHostProfile,
+          verificationStatus: HostVerificationStatus.PENDING,
+        });
+
+        await expect(
+          service.revokeHostVerification(
+            'profile-uuid-1',
+            'Cannot revoke pending verification',
+            adminUser,
+          ),
+        ).rejects.toThrow('Only host profiles in VERIFIED status can have verification revoked.');
+      });
+
+      it('[negative] throws BadRequestException if explanation is missing or too short', async () => {
+        await expect(
+          service.revokeHostVerification('profile-uuid-1', 'bad', adminUser),
+        ).rejects.toThrow('A valid revocation explanation (at least 5 characters) is required.');
+      });
+
+      it('[negative] throws NotFoundException if host profile does not exist', async () => {
+        mockHostProfileRepo.findOne.mockResolvedValue(null);
+
+        await expect(
+          service.revokeHostVerification('nonexistent-id', 'Valid revocation reason', adminUser),
+        ).rejects.toThrow(NotFoundException);
       });
     });
   });

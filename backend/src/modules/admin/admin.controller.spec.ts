@@ -53,6 +53,7 @@ describe('AdminController - Host Verification', () => {
       getHostVerifications: jest.fn(),
       approveHostVerification: jest.fn(),
       rejectHostVerification: jest.fn(),
+      revokeHostVerification: jest.fn(),
     };
 
     listingModerationService = {
@@ -155,6 +156,26 @@ describe('AdminController - Host Verification', () => {
         'Contact details are invalid.',
         mockAdminUser,
       );
+    });
+  });
+
+  describe('revokeHostVerification', () => {
+    it('should delegate to hostService.revokeHostVerification with explanation and admin', async () => {
+      const revokedProfile = {
+        ...mockProfile,
+        verificationStatus: HostVerificationStatus.REJECTED,
+      };
+      (hostService.revokeHostVerification as jest.Mock).mockResolvedValue(revokedProfile);
+
+      const dto = { explanation: 'Repeated platform policy violation.' };
+      const result = await controller.revokeHostVerification('profile-uuid-1', dto, mockAdminUser);
+
+      expect(hostService.revokeHostVerification).toHaveBeenCalledWith(
+        'profile-uuid-1',
+        'Repeated platform policy violation.',
+        mockAdminUser,
+      );
+      expect(result.verificationStatus).toBe(HostVerificationStatus.REJECTED);
     });
   });
 });

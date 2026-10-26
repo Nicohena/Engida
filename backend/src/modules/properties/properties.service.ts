@@ -14,8 +14,8 @@ import { AvailabilityBlock } from './entities/availability-block.entity';
 import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
 import { QueryPropertyDto } from './dto/query-property.dto';
-import { CreateRoomDto } from './dto/create-room.dto';
 import { UserRole } from '../../users/entities/user.entity';
+import { HostVerificationStatus } from '../../users/entities/host-profile.entity';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { HostService } from '../host/host.service';
 import { ListingModerationService } from './listing-moderation.service';
@@ -57,9 +57,10 @@ export class PropertiesService {
       .leftJoinAndSelect('property.rooms', 'rooms')
       .where('property.isAvailable = :available', { available: true });
 
-    // Public discovery must never reveal drafts, paused, archived, or sold listings, or listings hidden by admin.
+    // Public discovery must never reveal drafts, paused, archived, or sold listings, listings hidden by admin, or listings from unverified/revoked hosts.
     qb.andWhere('property.status = :publishedStatus', { publishedStatus: ListingStatus.PUBLISHED });
     qb.andWhere('property.adminHidden = false');
+    qb.andWhere('hostProfile.verificationStatus = :verifiedStatus', { verifiedStatus: HostVerificationStatus.VERIFIED });
 
     // Listing type filter (RENTAL or SALE)
     if (query.listingType) {
@@ -155,7 +156,8 @@ export class PropertiesService {
     if (publicOnly) {
       qb.andWhere('property.status = :publishedStatus', { publishedStatus: ListingStatus.PUBLISHED })
         .andWhere('property.isAvailable = :available', { available: true })
-        .andWhere('property.adminHidden = false');
+        .andWhere('property.adminHidden = false')
+        .andWhere('hostProfile.verificationStatus = :verifiedStatus', { verifiedStatus: HostVerificationStatus.VERIFIED });
     }
 
     const property = await qb.getOne();
@@ -168,9 +170,7 @@ export class PropertiesService {
   }
 
   async findRelated(id: string, limit = 4): Promise<Property[]> {
-    const property = await this.propertyRepository.findOne({
-      where: { id, status: ListingStatus.PUBLISHED, isAvailable: true, adminHidden: false },
-    });
+    const property = await this.loadPropertyDetail(id, true);
     if (!property) {
       throw new NotFoundException(`Property with ID "${id}" not found`);
     }
@@ -185,6 +185,7 @@ export class PropertiesService {
       .andWhere('property.status = :status', { status: ListingStatus.PUBLISHED })
       .andWhere('property.isAvailable = :available', { available: true })
       .andWhere('property.adminHidden = false')
+      .andWhere('hostProfile.verificationStatus = :verifiedStatus', { verifiedStatus: HostVerificationStatus.VERIFIED })
       .orderBy('property.createdAt', 'DESC')
       .take(limit);
 

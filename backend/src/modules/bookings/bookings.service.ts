@@ -13,7 +13,7 @@ import { Booking, BookingStatus, PaymentMethod, PaymentStatus } from './entities
 import { Property, ListingType, ListingStatus } from '../properties/entities/property.entity';
 import { Room } from '../properties/entities/room.entity';
 import { AvailabilityBlock } from '../properties/entities/availability-block.entity';
-import { HostProfile } from '../../users/entities/host-profile.entity';
+import { HostProfile, HostVerificationStatus } from '../../users/entities/host-profile.entity';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingStatusDto } from './dto/update-booking-status.dto';
 import { UserRole } from '../../users/entities/user.entity';
@@ -87,6 +87,17 @@ export class BookingsService {
       if (property.adminHidden) {
         throw new BadRequestException('This property is temporarily unavailable for booking');
       }
+
+      // Prevent new bookings for listings whose host is not currently VERIFIED
+      const hostProfile = await manager.getRepository(HostProfile).findOne({
+        where: { userId: property.hostId },
+      });
+      if (!hostProfile || hostProfile.verificationStatus !== HostVerificationStatus.VERIFIED) {
+        throw new BadRequestException(
+          'This property is not currently available for booking because the host is not verified',
+        );
+      }
+
       if (!roomId && guestCount > property.maxGuests) {
         throw new BadRequestException(`This property allows up to ${property.maxGuests} guests`);
       }
