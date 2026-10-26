@@ -130,27 +130,27 @@ export class AuditService {
 
     const qb = this.auditRepository
       .createQueryBuilder('audit')
-      .orderBy('audit.created_at', 'DESC');
+      .orderBy('audit.createdAt', 'DESC');
 
     if (query.actorId) {
-      qb.andWhere('audit.actor_id = :actorId', { actorId: query.actorId });
+      qb.andWhere('audit.actorId = :actorId', { actorId: query.actorId });
     }
     if (query.action?.trim()) {
       qb.andWhere('audit.action = :action', { action: query.action.trim() });
     }
     if (query.entityType?.trim()) {
-      qb.andWhere('audit.entity_type = :entityType', {
+      qb.andWhere('audit.entityType = :entityType', {
         entityType: query.entityType.trim(),
       });
     }
     if (query.entityId?.trim()) {
-      qb.andWhere('audit.entity_id = :entityId', { entityId: query.entityId.trim() });
+      qb.andWhere('audit.entityId = :entityId', { entityId: query.entityId.trim() });
     }
     if (query.from) {
-      qb.andWhere('audit.created_at >= :from', { from: query.from });
+      qb.andWhere('audit.createdAt >= :from', { from: query.from });
     }
     if (query.to) {
-      qb.andWhere('audit.created_at <= :to', { to: query.to });
+      qb.andWhere('audit.createdAt <= :to', { to: query.to });
     }
 
     const [data, total] = await qb.skip(skip).take(limit).getManyAndCount();

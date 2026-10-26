@@ -271,7 +271,7 @@ export class HostService {
     const qb = this.hostProfileRepository
       .createQueryBuilder('profile')
       .leftJoinAndSelect('profile.user', 'user')
-      .where('profile.verification_status = :status', { status });
+      .where('profile.verificationStatus = :status', { status });
 
     if (query?.search?.trim()) {
       const term = `%${query.search.trim().toLowerCase()}%`;
@@ -281,7 +281,7 @@ export class HostService {
       );
     }
 
-    qb.orderBy('profile.updated_at', 'DESC');
+    qb.orderBy('profile.updatedAt', 'DESC');
 
     const [data, total] = await qb.skip(skip).take(limit).getManyAndCount();
 
@@ -462,11 +462,11 @@ export class HostService {
 
     const qb: SelectQueryBuilder<Property> = this.propertyRepository
       .createQueryBuilder('property')
-      .where('property.host_id = :hostId', { hostId })
-      .orderBy('property.created_at', 'DESC');
+      .where('property.hostId = :hostId', { hostId })
+      .orderBy('property.createdAt', 'DESC');
 
     if (query.listingType) {
-      qb.andWhere('property.listing_type = :listingType', { listingType: query.listingType });
+      qb.andWhere('property.listingType = :listingType', { listingType: query.listingType });
     }
     if (query.status) {
       qb.andWhere('property.status = :status', { status: query.status });
@@ -896,7 +896,7 @@ export class HostService {
 
       const overlappingBlock = await blockRepository
         .createQueryBuilder('block')
-        .where('block.property_id = :listingId', { listingId })
+        .where('block.propertyId = :listingId', { listingId })
         .andWhere('(block.start_date < :endDate AND block.end_date > :startDate)', {
           startDate,
           endDate,
@@ -908,7 +908,7 @@ export class HostService {
 
       const overlappingReservation = await bookingRepository
         .createQueryBuilder('booking')
-        .where('booking.property_id = :listingId', { listingId })
+        .where('booking.propertyId = :listingId', { listingId })
         .andWhere('booking.status IN (:...statuses)', {
           statuses: [BookingStatus.PENDING, BookingStatus.CONFIRMED],
         })

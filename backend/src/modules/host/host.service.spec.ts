@@ -729,7 +729,7 @@ describe('HostService', () => {
       mockPropertyRepo.createQueryBuilder.mockImplementation(() => mockQb);
       await service.getMyListings(HOST_ID, {});
       expect(mockQb.where).toHaveBeenCalledWith(
-        'property.host_id = :hostId',
+        'property.hostId = :hostId',
         { hostId: HOST_ID },
       );
     });

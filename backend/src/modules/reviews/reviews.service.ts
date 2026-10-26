@@ -48,11 +48,11 @@ export class ReviewsService {
       ])
       .leftJoin('review.user', 'user')
       .addSelect(['user.id', 'user.name'])
-      .where('review.property_id = :propertyId', { propertyId })
+      .where('review.propertyId = :propertyId', { propertyId })
       .andWhere('review.moderationStatus = :moderationStatus', {
         moderationStatus: ReviewModerationStatus.VISIBLE,
       })
-      .orderBy('review.created_at', 'DESC')
+      .orderBy('review.createdAt', 'DESC')
       .getMany();
 
     const totalReviews = reviews.length;

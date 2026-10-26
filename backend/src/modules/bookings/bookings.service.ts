@@ -108,7 +108,7 @@ export class BookingsService {
 
       const overlapping = await bookingRepository
         .createQueryBuilder('booking')
-        .where('booking.property_id = :propertyId', { propertyId })
+        .where('booking.propertyId = :propertyId', { propertyId })
         .andWhere('booking.status NOT IN (:...excludedStatuses)', {
           excludedStatuses: [BookingStatus.CANCELLED],
         })
@@ -128,7 +128,7 @@ export class BookingsService {
 
       const blocked = await availabilityBlockRepository
         .createQueryBuilder('block')
-        .where('block.property_id = :propertyId', { propertyId })
+        .where('block.propertyId = :propertyId', { propertyId })
         .andWhere('(block.start_date < :checkOut AND block.end_date > :checkIn)', {
           checkIn: checkInDate,
           checkOut: checkOutDate,
@@ -247,8 +247,8 @@ export class BookingsService {
       .leftJoinAndSelect('booking.room', 'room')
       .leftJoin('booking.guest', 'guest')
       .addSelect(['guest.id', 'guest.name'])
-      .where('property.host_id = :hostId', { hostId })
-      .orderBy('booking.created_at', 'DESC')
+      .where('property.hostId = :hostId', { hostId })
+      .orderBy('booking.createdAt', 'DESC')
       .getMany();
     return bookings;
   }

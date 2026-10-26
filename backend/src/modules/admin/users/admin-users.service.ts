@@ -145,7 +145,7 @@ export class AdminUsersService {
       this.bookingRepository
         .createQueryBuilder('booking')
         .innerJoin('booking.property', 'property')
-        .where('property.host_id = :id', { id })
+        .where('property.hostId = :id', { id })
         .getCount(),
       this.reviewRepository.count({ where: { userId: id } }),
     ]);

@@ -139,7 +139,7 @@ describe('NotificationsService', () => {
       expect(result.total).toBe(1);
       expect(result.unreadCount).toBe(1);
       expect(mockQueryBuilder.where).toHaveBeenCalledWith(
-        'notification.user_id = :userId',
+        'notification.userId = :userId',
         { userId: USER_ID },
       );
       expect(mockQueryBuilder.skip).toHaveBeenCalledWith(0);
@@ -154,7 +154,7 @@ describe('NotificationsService', () => {
       });
 
       expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
-        'notification.is_read = false',
+        'notification.isRead = false',
       );
     });
   });
