@@ -84,7 +84,7 @@ export default function Step4HostDetails({
         </p>
       </div>
 
-      {data.faydaExtractedData && (
+      {data.faydaExtractedData?.isLiveNidpExtract && (
         <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-950 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />

@@ -88,22 +88,24 @@ export interface FaydaExtractedRecord {
   fin: string;
   fan?: string;
   rawNumber: string;
-  fullName: string;
-  fullNameAmharic: string;
-  dateOfBirth: string;
-  gender: 'MALE' | 'FEMALE';
+  fullName?: string;
+  fullNameAmharic?: string;
+  dateOfBirth?: string;
+  gender?: 'MALE' | 'FEMALE';
   nationality: 'Ethiopian';
-  region: string;
-  city: string;
-  subCity: string;
-  woreda: string;
-  registeredPhoneMasked: string;
-  status: 'ACTIVE_VERIFIED' | 'REVOKED' | 'EXPIRED';
+  region?: string;
+  city?: string;
+  subCity?: string;
+  woreda?: string;
+  registeredPhoneMasked?: string;
+  status: 'ACTIVE_VERIFIED' | 'FORMAT_VALIDATED' | 'REVOKED' | 'EXPIRED';
   verificationToken: string;
   verifiedAt: string;
   provider: 'FAYDA_NIDP';
   matchScore: number;
+  isLiveNidpExtract?: boolean;
 }
+
 
 @Injectable()
 export class IdentityVerificationService {
@@ -643,20 +645,8 @@ export class IdentityVerificationService {
       }
     }
 
-    // High-fidelity authoritative demographic extraction
-    const subCities = ['Bole', 'Kirkos', 'Yeka', 'Arada', 'Lideta', 'Nifas Silk-Lafto', 'Gullele'];
-    const subCityIndex = parseInt(cleanDigits.slice(-2), 10) % subCities.length;
-    const woredaNumber = (parseInt(cleanDigits.slice(-3, -1), 10) % 15) + 1;
-    const woreda = `Woreda ${String(woredaNumber).padStart(2, '0')}`;
-    const selectedSubCity = subCities[subCityIndex];
-
-    const legalName = dto.fullName?.trim() || 'Abebe Bikila Kebede';
-    let amharicName = 'አበበ ቢቂላ ከበደ';
-    if (dto.fullName) {
-      amharicName = `${legalName} (በኢትዮጵያ ብሔራዊ መታወቂያ የተረጋገጠ)`;
-    }
-
-    const token = `NIDP-ET-${crypto
+    // Clean format validation without synthetic fake mock data
+    const token = `NIDP-VAL-${crypto
       .createHmac('sha256', 'engida-fayda-verification')
       .update(cleanDigits)
       .digest('hex')
@@ -667,29 +657,21 @@ export class IdentityVerificationService {
       fin: formattedFin,
       fan: formattedFan,
       rawNumber: cleanDigits,
-      fullName: legalName,
-      fullNameAmharic: amharicName,
-      dateOfBirth: '1992-05-14',
-      gender: parseInt(cleanDigits.slice(-1), 10) % 2 === 0 ? 'FEMALE' : 'MALE',
+      fullName: dto.fullName?.trim() || undefined,
       nationality: 'Ethiopian',
-      region: 'Addis Ababa',
-      city: 'Addis Ababa',
-      subCity: selectedSubCity,
-      woreda,
-      registeredPhoneMasked: dto.phone
-        ? `${dto.phone.slice(0, 4)}****${dto.phone.slice(-3)}`
-        : '+251 91 **** 456',
-      status: 'ACTIVE_VERIFIED',
+      status: 'FORMAT_VALIDATED',
       verificationToken: token,
       verifiedAt: new Date().toISOString(),
       provider: 'FAYDA_NIDP',
       matchScore: 100,
+      isLiveNidpExtract: false,
     };
 
     this.logger.log(
-      `Extracted authoritative Fayda NIDP record for ${formattedFin} (${legalName}, SubCity: ${selectedSubCity})`,
+      `Validated Fayda FIN/FAN format for ${formattedFin} (Token: ${token})`,
     );
 
     return record;
   }
 }
+

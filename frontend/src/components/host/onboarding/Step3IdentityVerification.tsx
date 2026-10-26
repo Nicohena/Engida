@@ -42,21 +42,22 @@ interface FaydaApiResponse {
   fin: string;
   fan?: string;
   rawNumber: string;
-  fullName: string;
-  fullNameAmharic: string;
-  dateOfBirth: string;
-  gender: 'MALE' | 'FEMALE';
+  fullName?: string;
+  fullNameAmharic?: string;
+  dateOfBirth?: string;
+  gender?: 'MALE' | 'FEMALE';
   nationality: string;
-  region: string;
-  city: string;
-  subCity: string;
-  woreda: string;
-  registeredPhoneMasked: string;
+  region?: string;
+  city?: string;
+  subCity?: string;
+  woreda?: string;
+  registeredPhoneMasked?: string;
   status: string;
   verificationToken: string;
   verifiedAt: string;
   provider: string;
   matchScore: number;
+  isLiveNidpExtract?: boolean;
 }
 
 export default function Step3IdentityVerification({
@@ -84,11 +85,10 @@ export default function Step3IdentityVerification({
     SUPPORTED_DOCUMENT_TYPES[0];
 
   const isFayda = data.documentType === 'ETHIOPIAN_FAYDA_ID';
-  const faydaMethod = data.faydaVerificationMethod || 'DIGITAL_LOOKUP';
 
   const requiresBackSide =
     data.documentType === 'ETHIOPIAN_KEBELE_ID' ||
-    (isFayda && faydaMethod === 'DOCUMENT_UPLOAD') ||
+    isFayda ||
     data.documentType === 'ETHIOPIAN_DRIVERS_LICENSE' ||
     data.documentType === 'RESIDENCE_PERMIT';
 
@@ -221,22 +221,23 @@ export default function Step3IdentityVerification({
       });
 
       if (result) {
-        // Automatically link extracted details to onboarding state
         updateData({
           documentNumber: result.fin,
           issuingAuthority: 'National ID Program (NIDP)',
           faydaExtractedData: result,
-          fileValidated: true,
-          fileName: `NIDP_Certificate_${result.rawNumber.slice(-4)}.pdf`,
-          fileSize: 524288,
-          // Pre-populate legal name & address for Step 4
-          displayName: data.displayName || result.fullName,
-          subCity: result.subCity || data.subCity,
-          woreda: result.woreda || data.woreda,
-          region: result.region || data.region,
-          city: result.city || data.city,
+          ...(result.isLiveNidpExtract
+            ? {
+                displayName: data.displayName || result.fullName,
+                subCity: result.subCity || data.subCity,
+                woreda: result.woreda || data.woreda,
+                region: result.region || data.region,
+                city: result.city || data.city,
+                dateOfBirth: result.dateOfBirth || data.dateOfBirth,
+                gender: result.gender || data.gender,
+              }
+            : {}),
         });
-        setErrors((prev) => ({ ...prev, documentNumber: '', file: '' }));
+        setErrors((prev) => ({ ...prev, documentNumber: '' }));
       }
     } catch (err) {
       setFaydaExtractError(
@@ -460,15 +461,13 @@ export default function Step3IdentityVerification({
     }
 
     // 4. Document Verification / File Check
-    if (isFayda && faydaMethod === 'DIGITAL_LOOKUP') {
-      // For digital Fayda lookup: must either have extracted data or proceed with verified FIN
-      if (!data.faydaExtractedData) {
-        newErrors.fayda = 'Please click "Verify & Extract Fayda Record" or switch to upload mode.';
-      }
+    if (isFayda && data.faydaExtractedData?.isLiveNidpExtract) {
+      // Live NIDP e-KYC verified - physical upload is optional
     } else {
-      // Physical upload mode
       if (!data.fileName || !data.fileValidated) {
-        newErrors.file = 'Please upload a legible copy of your selected identity document.';
+        newErrors.file = isFayda
+          ? 'Please upload the front side of your Fayda card.'
+          : 'Please upload a legible copy of your selected identity document.';
       }
     }
 
@@ -555,90 +554,36 @@ export default function Step3IdentityVerification({
           </div>
         </div>
 
-        {/* ── DYNAMIC FAYDA VERIFICATION MODE SELECTOR ── */}
-        {isFayda && (
-          <div className="p-4 rounded-xl border border-blue-200 bg-gradient-to-r from-blue-50/70 to-indigo-50/70 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-[#1e40af]" />
-                Choose Fayda Verification Method
-              </span>
-              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
-                Digital or Card Scan
+        {/* ── FAYDA DIGITAL ID SECTION ── */}
+        {isFayda ? (
+          <div className="space-y-4 p-5 rounded-2xl border border-blue-200 bg-white shadow-xs">
+            {/* Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-blue-100 text-[#1e40af] flex items-center justify-center">
+                  <CreditCard className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="block text-xs font-bold text-slate-900">National Fayda Digital ID</span>
+                  <span className="block text-[11px] text-slate-500">
+                    Federal Democratic Republic of Ethiopia · National Identification Program (NIDP)
+                  </span>
+                </div>
+              </div>
+              <span className="text-[10px] font-bold text-blue-800 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                <ShieldCheck className="w-3 h-3 text-[#1e40af]" /> NIDP Compliant
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => updateData({ faydaVerificationMethod: 'DIGITAL_LOOKUP' })}
-                className={`p-3 rounded-xl border text-left transition flex items-start gap-2.5 cursor-pointer ${
-                  faydaMethod === 'DIGITAL_LOOKUP'
-                    ? 'border-[#1e40af] bg-white shadow-xs ring-1 ring-blue-300'
-                    : 'border-slate-200 bg-white/70 hover:bg-white text-slate-600'
-                }`}
-              >
-                <div
-                  className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
-                    faydaMethod === 'DIGITAL_LOOKUP' ? 'bg-[#1e40af] text-white' : 'bg-slate-100 text-slate-500'
-                  }`}
-                >
-                  <Zap className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="block text-xs font-bold text-slate-900">
-                    Instant e-KYC (Enter FIN / FAN)
-                  </span>
-                  <span className="block text-[11px] text-slate-500 mt-0.5 leading-tight">
-                    Extracts & verifies your demographic record automatically. No scan required.
-                  </span>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => updateData({ faydaVerificationMethod: 'DOCUMENT_UPLOAD' })}
-                className={`p-3 rounded-xl border text-left transition flex items-start gap-2.5 cursor-pointer ${
-                  faydaMethod === 'DOCUMENT_UPLOAD'
-                    ? 'border-[#1e40af] bg-white shadow-xs ring-1 ring-blue-300'
-                    : 'border-slate-200 bg-white/70 hover:bg-white text-slate-600'
-                }`}
-              >
-                <div
-                  className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
-                    faydaMethod === 'DOCUMENT_UPLOAD' ? 'bg-[#1e40af] text-white' : 'bg-slate-100 text-slate-500'
-                  }`}
-                >
-                  <Camera className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="block text-xs font-bold text-slate-900">
-                    Upload Physical Card Scans
-                  </span>
-                  <span className="block text-[11px] text-slate-500 mt-0.5 leading-tight">
-                    Upload Front & Back photos of your physical Fayda card for review.
-                  </span>
-                </div>
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* ── SECTION A: INSTANT DIGITAL FAYDA VERIFICATION ── */}
-        {isFayda && faydaMethod === 'DIGITAL_LOOKUP' ? (
-          <div className="space-y-4 p-5 rounded-2xl border border-slate-200 bg-white shadow-xs">
+            {/* FIN or FAN Input */}
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label htmlFor="faydaNumberInput" className="block text-xs font-bold text-slate-800">
                   National Fayda ID Number (FIN or FAN) <span className="text-rose-500">*</span>
                 </label>
-                <button
-                  type="button"
-                  onClick={() => handleDocumentNumberChange('102938475610')}
-                  className="text-[11px] font-semibold text-[#1e40af] hover:underline cursor-pointer"
-                >
-                  Fill Sample FIN (1029 3847 5610)
-                </button>
+                <span className="text-[11px] font-mono text-blue-700">
+                  {data.documentNumber.replace(/\D/g, '').length} / 12 digits
+                </span>
               </div>
 
               <div className="flex gap-2">
@@ -651,7 +596,7 @@ export default function Step3IdentityVerification({
                     type="text"
                     value={data.documentNumber}
                     onChange={(e) => handleDocumentNumberChange(e.target.value)}
-                    placeholder="e.g. 1029 3847 5610 (12-digit FIN)"
+                    placeholder="e.g. 6874 0718 4986 (12-digit FIN)"
                     className={`w-full pl-9 pr-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1e40af] font-mono tracking-wider ${
                       errors.documentNumber ? 'border-rose-400 bg-rose-50/30' : 'border-slate-300 bg-white'
                     }`}
@@ -667,22 +612,20 @@ export default function Step3IdentityVerification({
                   {isExtractingFayda ? (
                     <>
                       <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                      <span>Extracting…</span>
+                      <span>Validating…</span>
                     </>
                   ) : (
                     <>
-                      <Zap className="w-3.5 h-3.5" />
-                      <span>Verify & Extract Details</span>
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>Validate Number</span>
                     </>
                   )}
                 </button>
               </div>
 
               <div className="flex items-center justify-between text-[11px] text-slate-500 mt-1">
-                <span>12-digit Fayda Identification Number (FIN) or 16-digit FAN</span>
-                <span className="font-mono text-blue-700">
-                  {data.documentNumber.replace(/\D/g, '').length} / 12 digits
-                </span>
+                <span>Enter 12-digit FIN printed on front, or 16-digit FAN on back</span>
+                <span className="text-slate-400 font-mono">Encrypted at rest</span>
               </div>
 
               {errors.documentNumber && (
@@ -698,104 +641,86 @@ export default function Step3IdentityVerification({
                   <span>{faydaExtractError}</span>
                 </p>
               )}
-
-              {errors.fayda && (
-                <p className="text-xs text-rose-600 mt-2 flex items-center gap-1">
-                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                  <span>{errors.fayda}</span>
-                </p>
-              )}
             </div>
 
-            {/* EXTRACTED FAYDA DIGITAL IDENTITY CERTIFICATE */}
+            {/* Validated Format Confirmation Badge */}
             {data.faydaExtractedData && (
-              <div className="p-4 rounded-xl border border-emerald-300 bg-gradient-to-br from-emerald-50/80 via-emerald-50/40 to-white shadow-xs space-y-3">
-                <div className="flex items-center justify-between border-b border-emerald-200 pb-2.5">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-xs">
-                      <BadgeCheck className="w-5 h-5 stroke-[2.2]" />
-                    </div>
-                    <div>
-                      <span className="block text-xs font-extrabold text-slate-900 leading-tight">
-                        National Identification Program (NIDP) Record Verified
-                      </span>
-                      <span className="block text-[10px] text-emerald-800 font-medium">
-                        Federal Democratic Republic of Ethiopia · Active Legal Citizen Record
-                      </span>
-                    </div>
-                  </div>
-                  <span className="px-2 py-0.5 bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-full text-[10px] font-bold uppercase tracking-wider">
-                    Authoritative Match
-                  </span>
-                </div>
-
-                {/* Extracted Details Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-1">
+              <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-950 flex items-start justify-between gap-3 text-xs">
+                <div className="flex items-start gap-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                   <div>
-                    <span className="text-slate-500 block text-[11px]">Extracted Legal Name</span>
-                    <span className="font-bold text-slate-900 text-sm">
-                      {data.faydaExtractedData.fullName}
+                    <span className="font-bold block text-slate-900">
+                      National Fayda Number Validated ({data.faydaExtractedData.fin})
                     </span>
-                    <span className="text-[11px] text-slate-600 block">
-                      {data.faydaExtractedData.fullNameAmharic}
+                    <span className="text-slate-600 text-[11px] block mt-0.5">
+                      12-digit national structure authentic. Please upload your physical card scans below for document verification.
                     </span>
-                  </div>
-
-                  <div>
-                    <span className="text-slate-500 block text-[11px]">Fayda Identification Number</span>
-                    <span className="font-mono font-bold text-slate-900 tracking-wider">
-                      {data.faydaExtractedData.fin}
+                    <span className="text-slate-500 text-[10px] block font-mono mt-0.5">
+                      Audit Token: {data.faydaExtractedData.verificationToken}
                     </span>
-                    <span className="text-[11px] text-emerald-700 flex items-center gap-1 mt-0.5">
-                      <CheckCircle2 className="w-3 h-3" /> 100% Demographic Match Score
-                    </span>
-                  </div>
-
-                  <div>
-                    <span className="text-slate-500 block text-[11px]">Date of Birth & Gender</span>
-                    <span className="font-medium text-slate-800">
-                      {data.faydaExtractedData.dateOfBirth} · {data.faydaExtractedData.gender}
-                    </span>
-                  </div>
-
-                  <div>
-                    <span className="text-slate-500 block text-[11px]">Registered Residence Address</span>
-                    <span className="font-medium text-slate-800 flex items-center gap-1">
-                      <MapPin className="w-3.5 h-3.5 text-[#1e40af] shrink-0" />
-                      <span>
-                        {data.faydaExtractedData.subCity}, {data.faydaExtractedData.woreda},{' '}
-                        {data.faydaExtractedData.city}
-                      </span>
-                    </span>
-                  </div>
-
-                  <div className="sm:col-span-2 pt-2 border-t border-emerald-200/60 flex items-center justify-between text-[11px]">
-                    <span className="text-slate-500 font-mono">
-                      Token: {data.faydaExtractedData.verificationToken}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => updateData({ faydaExtractedData: null })}
-                      className="text-slate-500 hover:text-slate-800 flex items-center gap-1 text-[11px] font-medium"
-                    >
-                      <RotateCcw className="w-3 h-3" /> Change Number
-                    </button>
                   </div>
                 </div>
-
-                <div className="p-2.5 rounded-lg bg-emerald-100/60 border border-emerald-200 text-emerald-950 text-[11px] flex items-center gap-2">
-                  <UserCheck className="w-4 h-4 text-emerald-700 shrink-0" />
-                  <span>
-                    <strong>Identity verified digitally via NIDP.</strong> No physical document card scan is required.
-                    Your verified address and name are pre-filled for Step 4.
-                  </span>
-                </div>
+                <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full shrink-0">
+                  Format Valid
+                </span>
               </div>
             )}
+
+            {/* Host Demographic Details Confirmation (Real Data Input) */}
+            <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 space-y-2.5 text-xs">
+              <span className="font-bold text-slate-800 flex items-center gap-1.5">
+                <UserCheck className="w-3.5 h-3.5 text-[#1e40af]" />
+                Identity Details (As Printed on Your Fayda Card)
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="faydaDobInput" className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    Date of Birth
+                  </label>
+                  <input
+                    id="faydaDobInput"
+                    type="date"
+                    value={data.dateOfBirth || ''}
+                    onChange={(e) => updateData({ dateOfBirth: e.target.value })}
+                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1e40af] bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    Gender
+                  </label>
+                  <div className="flex gap-4 items-center h-8">
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="hostGender"
+                        value="MALE"
+                        checked={data.gender === 'MALE'}
+                        onChange={() => updateData({ gender: 'MALE' })}
+                        className="w-4 h-4 text-[#1e40af] focus:ring-[#1e40af]"
+                      />
+                      <span className="text-xs text-slate-800 font-medium">Male</span>
+                    </label>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="hostGender"
+                        value="FEMALE"
+                        checked={data.gender === 'FEMALE'}
+                        onChange={() => updateData({ gender: 'FEMALE' })}
+                        className="w-4 h-4 text-[#1e40af] focus:ring-[#1e40af]"
+                      />
+                      <span className="text-xs text-slate-800 font-medium">Female</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         ) : (
-          /* ── SECTION B: STANDARD DOCUMENT DETAILS & PHYSICAL CARD SCAN ── */
-          <>
+          /* ── STANDARD DOCUMENT INPUTS (FOR OTHER DOC TYPES) ── */
+          <div className="space-y-4">
             {/* Issuing Country & Authority */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -916,10 +841,12 @@ export default function Step3IdentityVerification({
                 )}
               </div>
             </div>
+          </div>
+        )}
 
-            {/* Document Upload Section (Front & Back) */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
+        {/* Document Upload Section (Front & Back) */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
                 <div>
                   <label className="block text-xs font-bold text-slate-800">
                     Upload Official Document Scans <span className="text-rose-500">*</span>
@@ -1183,8 +1110,6 @@ export default function Step3IdentityVerification({
                 </div>
               )}
             </div>
-          </>
-        )}
 
         {/* ── Document Quality & Authenticity Guidelines ── */}
         <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2 text-xs">

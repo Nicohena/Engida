@@ -140,7 +140,7 @@ export default function Step5ReviewSubmit({
           data.issuingAuthority?.trim() ||
           (data.faydaExtractedData ? 'National ID Program (NIDP)' : undefined),
         expirationDate: data.expirationDate || undefined,
-        verificationProvider: data.faydaExtractedData ? 'FAYDA_NIDP' : 'MANUAL_ADMIN_REVIEW',
+        verificationProvider: data.faydaExtractedData?.isLiveNidpExtract ? 'FAYDA_NIDP' : 'MANUAL_ADMIN_REVIEW',
         verificationReference: data.faydaExtractedData?.verificationToken || `ONBOARD-${Date.now()}`,
         documentFrontUrl: uploadedFrontUrl,
         documentBackUrl: uploadedBackUrl,
@@ -334,7 +334,7 @@ export default function Step5ReviewSubmit({
               <span className="text-slate-500 block">Masked ID Number</span>
               <span className="font-mono font-semibold text-slate-900">{maskedDocNumber}</span>
             </div>
-            {data.faydaExtractedData ? (
+            {data.faydaExtractedData?.isLiveNidpExtract ? (
               <div className="sm:col-span-2 pt-2 border-t border-slate-100 space-y-2">
                 <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-950 flex items-start justify-between gap-3">
                   <div className="flex items-start gap-2">
@@ -344,7 +344,7 @@ export default function Step5ReviewSubmit({
                         Verified via National ID Program (NIDP / Fayda)
                       </span>
                       <span className="text-slate-600 text-[11px] block mt-0.5">
-                        Legal Name: <strong>{data.faydaExtractedData.fullName}</strong> ({data.faydaExtractedData.fullNameAmharic})
+                        Legal Name: <strong>{data.faydaExtractedData.fullName}</strong>
                       </span>
                       <span className="text-slate-500 text-[10px] block font-mono mt-0.5">
                         Token: {data.faydaExtractedData.verificationToken}
@@ -364,6 +364,11 @@ export default function Step5ReviewSubmit({
                     {data.fileName || 'Document attached'}
                     {data.backFileName ? ` + Back: ${data.backFileName}` : ''}
                   </span>
+                  {data.faydaExtractedData?.verificationToken && (
+                    <span className="text-slate-500 text-[10px] block font-mono mt-0.5">
+                      Fayda Format Token: {data.faydaExtractedData.verificationToken}
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   {data.filePreviewUrl && (

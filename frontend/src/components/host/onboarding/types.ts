@@ -399,22 +399,26 @@ export interface OnboardingFormData {
   backFileSize?: number | null;
   backFilePreviewUrl?: string | null;
   documentBackUrl?: string | null;
+  dateOfBirth?: string;
+  gender?: 'MALE' | 'FEMALE' | '';
   faydaVerificationMethod?: 'DIGITAL_LOOKUP' | 'DOCUMENT_UPLOAD';
   faydaExtractedData?: {
     fin: string;
     fan?: string;
-    fullName: string;
-    fullNameAmharic: string;
-    dateOfBirth: string;
-    gender: 'MALE' | 'FEMALE';
+    rawNumber: string;
+    fullName?: string;
+    fullNameAmharic?: string;
+    dateOfBirth?: string;
+    gender?: 'MALE' | 'FEMALE';
     nationality: string;
-    region: string;
-    city: string;
-    subCity: string;
-    woreda: string;
+    region?: string;
+    city?: string;
+    subCity?: string;
+    woreda?: string;
     verificationToken: string;
     verifiedAt: string;
     status: string;
+    isLiveNidpExtract?: boolean;
   } | null;
 
   // Step 4: Host Details & Address
@@ -467,7 +471,9 @@ export const INITIAL_ONBOARDING_STATE: OnboardingFormData = {
   backFileSize: null,
   backFilePreviewUrl: null,
   documentBackUrl: null,
-  faydaVerificationMethod: 'DIGITAL_LOOKUP',
+  dateOfBirth: '',
+  gender: '',
+  faydaVerificationMethod: 'DOCUMENT_UPLOAD',
   faydaExtractedData: null,
 
   displayName: '',
