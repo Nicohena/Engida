@@ -5,10 +5,13 @@
     "test",
     "dist",
     "**/*spec.ts",
+    "prisma",
     "src/index.ts",
+    "src/lib",
     "src/lib/**",
+    "src/routes",
     "src/routes/**",
-    "src/middleware/**",
-    "prisma/**"
+    "src/middleware",
+    "src/middleware/**"
   ]
 }

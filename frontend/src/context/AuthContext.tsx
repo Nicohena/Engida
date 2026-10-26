@@ -9,10 +9,9 @@ export interface User {
   name: string;
   email: string;
   role: 'USER' | 'ADMIN';
-  avatar?: string | null;
-  createdAt?: string;
   /** Profile picture URL (e.g. the Google account photo). */
   avatar?: string | null;
+  createdAt?: string;
   hostProfile?: HostProfile | null;
 }
 

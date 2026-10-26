@@ -24,13 +24,14 @@
   },
   "exclude": [
     "node_modules",
-    "test",
     "dist",
-    "**/*spec.ts",
+    "prisma",
     "src/index.ts",
+    "src/lib",
     "src/lib/**",
-    "src/routes/**",
+    "src/middleware",
     "src/middleware/**",
-    "prisma/**"
+    "src/routes",
+    "src/routes/**"
   ]
 }
