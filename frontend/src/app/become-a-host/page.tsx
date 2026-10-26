@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { apiFetch } from '@/lib/api';
+import { googleErrorMessage } from '@/lib/google-auth';
+import GoogleButton from '@/components/auth/GoogleButton';
 import type { HostProfile } from '@/types/host';
 import {
   Building2,
@@ -81,6 +83,21 @@ export default function BecomeAHostGatewayPage() {
   const annualEarnings = useMemo(() => {
     return monthlyEarnings * 12;
   }, [monthlyEarnings]);
+
+  // If user is already logged in as a host, redirect or provide quick link
+  useEffect(() => {
+    if (user?.hostProfile) {
+      router.replace('/host/dashboard');
+    }
+  }, [user, router]);
+
+  // Surface Google sign-in errors (e.g. an account already uses this email)
+  useEffect(() => {
+    const googleError = new URLSearchParams(window.location.search).get('error');
+    if (googleError) {
+      setError(googleErrorMessage(googleError));
+    }
+  }, []);
 
   // Prefill display name from user name when logged in
   useEffect(() => {

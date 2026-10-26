@@ -9,6 +9,7 @@ export interface User {
   name: string;
   email: string;
   role: 'USER' | 'ADMIN';
+  /** Profile picture URL (e.g. the Google account photo). */
   avatar?: string | null;
   createdAt?: string;
   hostProfile?: HostProfile | null;
@@ -20,7 +21,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<User>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  refreshUser: () => Promise<void>;
+  refreshUser: () => Promise<User | null>;
   setHostProfile: (profile: HostProfile | null) => void;
 }
 
@@ -30,13 +31,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
-  const refreshUser = async () => {
+  const refreshUser = async (): Promise<User | null> => {
     try {
       // First attempt to get active user using stored token or silent refresh
       const userData = await apiFetch<User>('/auth/me');
       setUser(userData);
+      return userData;
     } catch {
       setUser(null);
+      return null;
     } finally {
       setLoading(false);
     }

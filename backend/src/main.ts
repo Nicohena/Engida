@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, ForbiddenException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
@@ -30,23 +30,42 @@ async function bootstrap() {
   );
 
   // CORS Configuration
-  const frontendUrl = configService.get<string>('FRONTEND_URL', 'http://localhost:3001');
+  // Only explicitly allowed origins may send credentialed requests.
+  const allowedOrigins = configService
+    .get<string>('FRONTEND_URL', 'http://localhost:3001')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  const isLocalOrigin = (origin: string) =>
+    /^http:\/\/localhost(:\d+)?$/.test(origin) || /^http:\/\/127\.0\.0\.1(:\d+)?$/.test(origin);
+
+  // Allow local private network IP addresses (10.x.x.x, 192.168.x.x, 172.16-31.x.x)
+  const isPrivateNetworkOrigin = (origin: string) =>
+    /^http:\/\/(10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3})(:\d+)?$/.test(
+      origin,
+    );
+
   app.enableCors({
     origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
       // Allow requests with no origin (like mobile apps, curl, or same-origin)
       if (!origin) return callback(null, true);
       // Allow localhost on any port
-      if (/^http:\/\/localhost(:\d+)?$/.test(origin) || /^http:\/\/127\.0\.0\.1(:\d+)?$/.test(origin)) {
+      if (isLocalOrigin(origin)) {
         return callback(null, true);
       }
       // Allow local private network IP addresses (10.x.x.x, 192.168.x.x, 172.16-31.x.x)
-      if (/^http:\/\/(10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3})(:\d+)?$/.test(origin)) {
+      if (isPrivateNetworkOrigin(origin)) {
         return callback(null, true);
       }
-      if (origin === frontendUrl) {
+      if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
-      return callback(null, true);
+      // Reject unknown origins instead of allowing credentialed cross-origin calls.
+      return callback(
+        new ForbiddenException(`Origin ${origin} is not allowed by CORS`),
+        false,
+      );
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],

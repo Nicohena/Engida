@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '../../context/AuthContext';
+import HostAvatar from '../../components/host/HostAvatar';
 import {
   Building2,
   LayoutDashboard,
@@ -156,9 +157,12 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
               className="flex items-center gap-2.5 flex-1 min-w-0"
               title="Host Account & Profile Settings"
             >
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white text-xs font-black shadow-xs shrink-0 uppercase group-hover:scale-105 transition-transform">
-                {user.name ? user.name.charAt(0) : 'H'}
-              </div>
+              <HostAvatar
+                src={user.avatar}
+                name={user.name}
+                size={36}
+                className="rounded-xl ring-1 ring-white/10 group-hover:scale-105 transition-transform"
+              />
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-bold text-white truncate leading-snug group-hover:text-blue-400 transition-colors">
                   {user.name}
