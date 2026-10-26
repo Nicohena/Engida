@@ -8,6 +8,7 @@ import {
   formatToE164,
   type OnboardingFormData,
 } from './types';
+import CountryCodePicker from './CountryCodePicker';
 import type { User } from '@/context/AuthContext';
 
 interface Step1AccountProps {
@@ -306,22 +307,11 @@ export default function Step1Account({
             Mobile Phone Number <span className="text-rose-500">*</span>
           </label>
           <div className="flex gap-2">
-            {/* Country Dial Code Dropdown */}
-            <div className="relative w-40 sm:w-48 shrink-0">
-              <select
-                id="countryDialCode"
-                aria-label="Country calling code"
-                value={selectedCountryCode}
-                onChange={(e) => handleCountryChange(e.target.value)}
-                className="w-full px-3 py-2.5 text-xs sm:text-sm font-medium border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-600 transition truncate cursor-pointer"
-              >
-                {COUNTRY_DIAL_CODES.map((c) => (
-                  <option key={c.code} value={c.code}>
-                    {c.flag} {c.code} ({c.dialCode})
-                  </option>
-                ))}
-              </select>
-            </div>
+            {/* Country Dial Code Dropdown with Real SVG Flags */}
+            <CountryCodePicker
+              selectedCountryCode={selectedCountryCode}
+              onSelectCountry={handleCountryChange}
+            />
 
             {/* National Number Input */}
             <div className="relative flex-1">
