@@ -16,6 +16,16 @@ export enum UserRole {
   ADMIN = 'ADMIN',
 }
 
+/**
+ * Where the user's credentials come from.
+ * LOCAL  = email + password (default)
+ * GOOGLE = Google Sign-In (OpenID Connect)
+ */
+export enum AuthProvider {
+  LOCAL = 'LOCAL',
+  GOOGLE = 'GOOGLE',
+}
+
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
@@ -27,8 +37,23 @@ export class User {
   @Column({ type: 'varchar', length: 255, unique: true })
   email: string;
 
-  @Column({ type: 'varchar', length: 255, select: false, name: 'password_hash' })
-  passwordHash: string;
+  @Column({ type: 'varchar', length: 255, select: false, nullable: true, name: 'password_hash' })
+  passwordHash: string | null;
+
+  @Column({
+    type: 'varchar',
+    length: 20,
+    default: AuthProvider.LOCAL,
+    name: 'auth_provider',
+  })
+  authProvider: AuthProvider;
+
+  /**
+   * Identifier returned by the identity provider (Google `sub` claim).
+   * NULL for accounts that only use email/password.
+   */
+  @Column({ type: 'varchar', length: 255, nullable: true, name: 'provider_id' })
+  providerId: string | null;
 
   @Column({
     type: 'enum',

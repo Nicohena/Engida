@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { apiFetch } from '@/lib/api';
+import { googleErrorMessage } from '@/lib/google-auth';
+import GoogleButton from '@/components/auth/GoogleButton';
 import type { HostProfile } from '@/types/host';
 import {
   Building2,
@@ -92,6 +94,14 @@ export default function BecomeAHostGatewayPage() {
       router.replace('/host/dashboard');
     }
   }, [user, router]);
+
+  // Surface Google sign-in errors (e.g. an account already uses this email)
+  useEffect(() => {
+    const googleError = new URLSearchParams(window.location.search).get('error');
+    if (googleError) {
+      setError(googleErrorMessage(googleError));
+    }
+  }, []);
 
   // Prefill display name from full name or user name
   useEffect(() => {
@@ -555,6 +565,25 @@ export default function BecomeAHostGatewayPage() {
                         </>
                       )}
                     </button>
+
+                    <div className="flex items-center gap-3 pt-1">
+                      <span className="h-px flex-1 bg-slate-200" />
+                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                        or
+                      </span>
+                      <span className="h-px flex-1 bg-slate-200" />
+                    </div>
+
+                    <GoogleButton
+                      nextPath="/become-a-host"
+                      label="Continue with Google"
+                      variant="compact"
+                    />
+
+                    <p className="text-[11px] text-slate-500 text-center leading-relaxed">
+                      Signing in with the same Google account links it to this profile so you can
+                      use Google next time.
+                    </p>
                   </form>
                 </div>
               ) : (
@@ -715,6 +744,20 @@ export default function BecomeAHostGatewayPage() {
                           </>
                         )}
                       </button>
+
+                      <div className="flex items-center gap-3 pt-1">
+                        <span className="h-px flex-1 bg-slate-200" />
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                          or
+                        </span>
+                        <span className="h-px flex-1 bg-slate-200" />
+                      </div>
+
+                      <GoogleButton
+                        nextPath="/become-a-host"
+                        label="Sign up with Google"
+                        variant="compact"
+                      />
                     </form>
                   ) : (
                     /* TAB 2: SIGN IN TO EXISTING ACCOUNT */
@@ -775,6 +818,20 @@ export default function BecomeAHostGatewayPage() {
                           </>
                         )}
                       </button>
+
+                      <div className="flex items-center gap-3">
+                        <span className="h-px flex-1 bg-slate-200" />
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                          or
+                        </span>
+                        <span className="h-px flex-1 bg-slate-200" />
+                      </div>
+
+                      <GoogleButton
+                        nextPath="/become-a-host"
+                        label="Continue with Google"
+                        variant="compact"
+                      />
 
                       <div className="text-center pt-2">
                         <button
