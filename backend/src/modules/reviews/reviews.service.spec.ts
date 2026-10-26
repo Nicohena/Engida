@@ -6,7 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ReviewsService } from './reviews.service';
-import { Review } from './entities/review.entity';
+import { Review, ReviewModerationStatus } from './entities/review.entity';
 import { Property, PropertyType, ListingType, ListingStatus } from '../properties/entities/property.entity';
 import { Booking, BookingStatus } from '../bookings/entities/booking.entity';
 
@@ -76,6 +76,7 @@ describe('ReviewsService Integration Acceptance', () => {
     addSelect: jest.fn().mockReturnThis(),
     leftJoin: jest.fn().mockReturnThis(),
     where: jest.fn().mockReturnThis(),
+    andWhere: jest.fn().mockReturnThis(),
     orderBy: jest.fn().mockReturnThis(),
     getMany: jest.fn().mockResolvedValue(reviews),
     getOne: jest.fn().mockResolvedValue(reviews[0] || null),
@@ -198,6 +199,29 @@ describe('ReviewsService Integration Acceptance', () => {
       // (5 + 4 + 4) / 3 = 13 / 3 = 4.333... -> 4.3
       expect(summary.averageRating).toBe(4.3);
       expect(summary.reviews).toHaveLength(3);
+    });
+
+    it('filters hidden reviews out of public property summaries', async () => {
+      const qb = {
+        select: jest.fn().mockReturnThis(),
+        addSelect: jest.fn().mockReturnThis(),
+        leftJoin: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue([]),
+        getOne: jest.fn().mockResolvedValue(null),
+      };
+      mockReviewRepo.createQueryBuilder = jest.fn().mockReturnValue(qb);
+
+      const summary = await service.findByProperty(PROPERTY_ID);
+
+      expect(qb.andWhere).toHaveBeenCalledWith(
+        'review.moderationStatus = :moderationStatus',
+        { moderationStatus: ReviewModerationStatus.VISIBLE },
+      );
+      expect(summary.totalReviews).toBe(0);
+      expect(summary.reviews).toEqual([]);
     });
 
     it('returns hasReviewed boolean correctly', async () => {

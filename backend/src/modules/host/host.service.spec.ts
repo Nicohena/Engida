@@ -306,6 +306,7 @@ describe('HostService', () => {
         { provide: ListingModerationService, useValue: mockListingModerationService },
         { provide: CloudinaryService, useValue: { deletePropertyImages: jest.fn().mockResolvedValue(undefined) } },
         { provide: NotificationsService, useValue: mockNotificationsService },
+        { provide: AuditService, useValue: { record: jest.fn().mockResolvedValue(undefined) } },
       ],
     }).compile();
 

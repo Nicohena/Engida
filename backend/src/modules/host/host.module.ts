@@ -22,6 +22,7 @@ import { IdentityVerificationController } from './identity-verification.controll
     CloudinaryModule,
     ListingModerationModule,
     NotificationsModule,
+    AuditModule,
     TypeOrmModule.forFeature([
       Property,
       Room,

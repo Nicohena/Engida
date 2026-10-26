@@ -7,12 +7,14 @@ import { HostProfile } from '../../users/entities/host-profile.entity';
 import { ListingModerationService } from './listing-moderation.service';
 import { CloudinaryModule } from '../cloudinary/cloudinary.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { AuditModule } from '../audit/audit.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Property, ListingReview, Amenity, HostProfile]),
     CloudinaryModule,
     NotificationsModule,
+    AuditModule,
   ],
   providers: [ListingModerationService],
   exports: [ListingModerationService, TypeOrmModule],

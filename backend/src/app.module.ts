@@ -22,6 +22,8 @@ import { HostModule } from './modules/host/host.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { ListingModerationModule } from './modules/properties/listing-moderation.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { AuditModule } from './modules/audit/audit.module';
+import { AuditLog } from './modules/audit/entities/audit-log.entity';
 import { Property } from './modules/properties/entities/property.entity';
 import { Room } from './modules/properties/entities/room.entity';
 import { AvailabilityBlock } from './modules/properties/entities/availability-block.entity';
@@ -31,6 +33,8 @@ import { Review } from './modules/reviews/entities/review.entity';
 import { ListingReview } from './modules/properties/entities/listing-review.entity';
 import { Notification } from './modules/notifications/entities/notification.entity';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { ReportsModule } from './modules/reports/reports.module';
+import { Report } from './modules/reports/entities/report.entity';
 import { validate } from './config/env.validation';
 
 @Module({
@@ -64,6 +68,8 @@ import { validate } from './config/env.validation';
           Review,
           ListingReview,
           Notification,
+          AuditLog,
+          Report,
         ];
 
         if (databaseUrl) {
@@ -114,6 +120,8 @@ import { validate } from './config/env.validation';
     ListingModerationModule,
     AdminModule,
     NotificationsModule,
+    AuditModule,
+    ReportsModule,
   ],
   controllers: [AppController],
   providers: [

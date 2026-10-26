@@ -117,7 +117,11 @@ describe('AdminController - Host Verification', () => {
 
       const result = await controller.approveHostVerification('profile-uuid-1', mockAdminUser);
 
-      expect(hostService.approveHostVerification).toHaveBeenCalledWith('profile-uuid-1', mockAdminUser);
+      expect(hostService.approveHostVerification).toHaveBeenCalledWith(
+        'profile-uuid-1',
+        mockAdminUser,
+        { ipAddress: undefined, userAgent: undefined },
+      );
       expect(result.verificationStatus).toBe(HostVerificationStatus.VERIFIED);
     });
   });
@@ -137,6 +141,7 @@ describe('AdminController - Host Verification', () => {
         'profile-uuid-1',
         'The phone number provided could not be confirmed.',
         mockAdminUser,
+        { ipAddress: undefined, userAgent: undefined },
       );
       expect(result.verificationStatus).toBe(HostVerificationStatus.REJECTED);
     });
@@ -155,6 +160,7 @@ describe('AdminController - Host Verification', () => {
         'profile-uuid-1',
         'Contact details are invalid.',
         mockAdminUser,
+        { ipAddress: undefined, userAgent: undefined },
       );
     });
   });

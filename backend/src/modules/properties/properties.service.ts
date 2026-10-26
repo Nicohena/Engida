@@ -20,6 +20,7 @@ import { HostVerificationStatus } from '../../users/entities/host-profile.entity
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { HostService } from '../host/host.service';
 import { ListingModerationService } from './listing-moderation.service';
+import { ReviewModerationStatus } from '../reviews/entities/review.entity';
 
 @Injectable()
 export class PropertiesService {
@@ -138,11 +139,22 @@ export class PropertiesService {
       .createQueryBuilder('property')
       .leftJoinAndSelect('property.amenities', 'amenity')
       .leftJoinAndSelect('property.rooms', 'room')
-      .leftJoin('property.reviews', 'review')
       .leftJoinAndSelect('property.availabilityBlocks', 'availabilityBlock')
-      .leftJoin('review.user', 'reviewUser')
       .leftJoin('property.host', 'host')
-      .leftJoin('host.hostProfile', 'hostProfile')
+      .leftJoin('host.hostProfile', 'hostProfile');
+
+    if (publicOnly) {
+      qb.leftJoin(
+        'property.reviews',
+        'review',
+        'review.moderation_status = :visibleReviewStatus',
+        { visibleReviewStatus: ReviewModerationStatus.VISIBLE },
+      );
+    } else {
+      qb.leftJoin('property.reviews', 'review');
+    }
+
+    qb.leftJoin('review.user', 'reviewUser')
       .addSelect([
         'review.id',
         'review.propertyId',
@@ -219,25 +231,6 @@ export class PropertiesService {
     userRole: UserRole,
   ): Promise<any> {
     return this.hostService.updateListing(id, updatePropertyDto, userId, userRole);
-  }
-
-  async remove(id: string, userId: string, userRole: UserRole): Promise<void> {
-    const property = await this.propertyRepository.findOne({ where: { id } });
-
-    if (!property) {
-      throw new NotFoundException(`Property with ID "${id}" not found`);
-    }
-
-    if (property.hostId !== userId && userRole !== UserRole.ADMIN) {
-      throw new ForbiddenException('You can only delete your own properties');
-    }
-
-    if (userRole !== UserRole.ADMIN) {
-      throw new ForbiddenException('Hosts cannot permanently delete listings. Archive the listing instead.');
-    }
-
-    await this.propertyRepository.remove(property);
-    this.logger.log(`Property "${id}" removed by user ${userId}`);
   }
 
   async addRoom(propertyId: string, createRoomDto: CreateRoomDto, userId: string, userRole: UserRole): Promise<Room> {

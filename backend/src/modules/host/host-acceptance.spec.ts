@@ -24,6 +24,7 @@ import { Review } from '../reviews/entities/review.entity';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { Notification, NotificationType } from '../notifications/entities/notification.entity';
 import { ConfigService } from '@nestjs/config';
+import { AuditService } from '../audit/audit.service';
 
 describe('Step 5L: Integrated Host-Side Acceptance Testing', () => {
   let hostService: HostService;
@@ -459,6 +460,7 @@ describe('Step 5L: Integrated Host-Side Acceptance Testing', () => {
         { provide: getRepositoryToken(Review), useValue: mockGuestReviewRepo },
         { provide: CloudinaryService, useValue: mockCloudinaryService },
         { provide: ConfigService, useValue: mockConfigService },
+        { provide: AuditService, useValue: { record: jest.fn().mockResolvedValue(undefined) } },
       ],
     }).compile();
 
