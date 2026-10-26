@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '../../../context/AuthContext';
 import { apiFetch } from '../../../lib/api';
+import HostAvatar from '../../../components/host/HostAvatar';
 import type {
   HostDashboardSummary,
   HostListingRow,
@@ -194,6 +195,7 @@ export default function HostDashboardPage() {
         {/* Left: Title & Host Status */}
         <div className="space-y-1">
           <div className="flex items-center gap-2.5">
+            {user && <HostAvatar src={user.avatar} name={user.name} size={36} />}
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
               Host Dashboard
             </h1>

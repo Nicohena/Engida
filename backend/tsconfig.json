@@ -28,7 +28,10 @@
     "prisma",
     "src/index.ts",
     "src/lib",
-    "src/middleware/mockAuth.ts",
-    "src/routes"
+    "src/lib/**",
+    "src/middleware",
+    "src/middleware/**",
+    "src/routes",
+    "src/routes/**"
   ]
 }

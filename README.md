@@ -72,6 +72,88 @@ docker-compose up
 # - PostgreSQL: localhost:5432
 ```
 
+### Google Sign-In (Optional)
+
+Users can sign in with Google in addition to email/password. The backend is the
+OAuth client, so the app never sees the Google client secret.
+
+**1. Create the OAuth client**
+
+1. Open the [Google Cloud Console](https://console.cloud.google.com/) and pick (or create) a project.
+2. Enable the **Google Identity Services** API for that project.
+3. Go to *APIs & Services → Credentials → Create credentials → OAuth client ID*.
+4. Choose **Web application**.
+5. Add the redirect URI of your backend:
+   - local: `http://localhost:3000/auth/google/callback`
+   - production: `https://api.<your-domain>/auth/google/callback`
+6. Copy the **Client ID** and **Client secret**.
+
+**2. Configure the backend**
+
+```env
+# backend/.env (or the root .env when using Docker Compose)
+GOOGLE_CLIENT_ID=xxxxx.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=xxxxx
+GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
+# Optional: only allow one Google Workspace domain
+# GOOGLE_ALLOWED_HOSTED_DOMAIN=engida.com
+```
+
+The same variables are forwarded to the backend container by `docker-compose.yml`.
+
+**3. Apply the database migration**
+
+Google accounts are stored in the `users` table with `auth_provider` and
+`provider_id`:
+
+```bash
+cd backend
+npm run migration:run
+```
+
+**How it works**
+
+```
+Browser ──▶ GET /auth/google?next=/dashboard
+         ◀── 302 to accounts.google.com (signed state + nonce cookie)
+Browser ──▶ Google consent screen
+         ◀── 302 to GET /auth/google/callback?code=...&state=...
+Backend    ── exchanges the code, verifies the id_token (signature, audience, issuer, expiry)
+         ── creates or links the account, issues access + refresh tokens
+         ── sets the HttpOnly refresh cookie, redirects to /auth/google/callback?next=...
+Browser ──▶ /auth/google/callback (frontend) exchanges the cookie for an access token
+```
+
+Notes:
+
+- The access token is never placed in a URL; the browser only receives the
+  HttpOnly `refreshToken` cookie, exactly like a normal sign-in.
+- The `state` parameter is signed and bound to a nonce cookie, so the callback
+  cannot be forged or replayed from another browser (CSRF protection).
+- Only verified Google email addresses are accepted.
+- If the email already belongs to a local account, the Google identity is
+  **not** linked automatically (local accounts have no email verification, so
+  that would allow an account takeover). Sign in with your password first and
+  then use "Continue with Google" again — the identity is linked to the account
+  the browser is signed in to.
+- If `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` are missing the button reports
+  that Google sign-in is unavailable and email/password sign-in still works.
+
+**Hosts**
+
+The host gateway (`/become-a-host`, also served at `/host/onboarding`) offers
+*Sign up with Google* and *Continue with Google* next to the email/password
+forms:
+
+1. Google sign-in creates or resolves the Engida account.
+2. The host finishes step 2 of 2 — display name, contact phone and short bio —
+   which creates the host profile and opens the host portal.
+3. The Google profile picture is used as the host avatar (with initials as the
+   fallback) and is editable later in the host profile.
+
+If a Google sign-in fails, the user is returned to the host gateway with a
+readable message instead of a generic login page.
+
 ### Option 2: Manual Setup
 
 #### Backend Setup
@@ -202,6 +284,11 @@ AI_SERVICE_URL=http://localhost:8000
 
 # Frontend
 NEXT_PUBLIC_API_URL=http://localhost:3000
+
+# Google Sign-In
+GOOGLE_CLIENT_ID=your-google-oauth-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your-google-oauth-client-secret
+GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
 ```
 
 ## Contributing

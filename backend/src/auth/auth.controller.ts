@@ -11,6 +11,7 @@ import {
   Ip,
   Headers,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
@@ -22,6 +23,7 @@ import { RolesGuard } from './guards/roles.guard';
 import { Roles } from './decorators/roles.decorator';
 import { GetUser } from './decorators/get-user.decorator';
 import { User, UserRole } from '../users/entities/user.entity';
+import { setRefreshCookie, clearRefreshCookie } from './refresh-cookie';
 
 @Controller('auth')
 export class AuthController {
@@ -63,13 +65,7 @@ export class AuthController {
   ) {
     const result = await this.authService.login(loginDto, userAgent, ipAddress);
 
-    res.cookie('refreshToken', result.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/auth',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    setRefreshCookie(res, result.refreshToken, this.configService);
 
     return {
       accessToken: result.accessToken,
@@ -88,13 +84,7 @@ export class AuthController {
     const refreshToken = req.cookies?.refreshToken;
     const result = await this.authService.refreshTokens(refreshToken, userAgent, ipAddress);
 
-    res.cookie('refreshToken', result.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/auth',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    setRefreshCookie(res, result.refreshToken, this.configService);
 
     return {
       accessToken: result.accessToken,
@@ -110,12 +100,7 @@ export class AuthController {
     const refreshToken = req.cookies?.refreshToken;
     await this.authService.logout(refreshToken);
 
-    res.clearCookie('refreshToken', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/auth',
-    });
+    clearRefreshCookie(res, this.configService);
 
     return { message: 'Logged out successfully' };
   }

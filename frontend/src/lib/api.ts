@@ -137,6 +137,17 @@ export async function apiFetch<T = unknown>(endpoint: string, options: FetchOpti
   return data as T;
 }
 
+/**
+ * Build the URL that starts the Google Sign-In flow on the backend.
+ * The backend owns the OAuth client, verifies the identity and then hands the
+ * session back to the app through an HttpOnly refresh cookie.
+ */
+export function getGoogleAuthUrl(nextPath?: string): string {
+  const baseUrl = getApiBaseUrl();
+  const query = nextPath ? `?next=${encodeURIComponent(nextPath)}` : '';
+  return `${baseUrl}/auth/google${query}`;
+}
+
 export function formatETB(amount: number): string {
   return `ETB ${amount.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
 }
@@ -144,3 +155,4 @@ export function formatETB(amount: number): string {
 export function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
+

@@ -34,8 +34,13 @@ CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
+    -- Nullable: accounts created through Google Sign-In have no password
+    password_hash VARCHAR(255),
     role user_role_enum DEFAULT 'USER' NOT NULL,
+    -- LOCAL = email/password, GOOGLE = Google Sign-In (OpenID Connect)
+    auth_provider VARCHAR(20) NOT NULL DEFAULT 'LOCAL',
+    -- Identity provider subject id (Google "sub" claim)
+    provider_id VARCHAR(255),
     is_active BOOLEAN DEFAULT TRUE NOT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL
@@ -43,6 +48,9 @@ CREATE TABLE users (
 
 -- Index for User Email Lookup
 CREATE INDEX idx_users_email ON users(email);
+
+-- One external identity may only be linked to a single account
+CREATE UNIQUE INDEX idx_users_provider_identity ON users(auth_provider, provider_id);
 
 -- ================================================================
 -- TABLE: REFRESH_TOKENS

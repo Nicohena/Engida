@@ -4,8 +4,10 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { KeyRound, Mail, Lock, Building2, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Mail, Lock, Building2, AlertCircle, ArrowLeft, ArrowRight } from 'lucide-react';
 import { getSafeReturnPath } from '../../lib/navigation';
+import GoogleButton from '../../components/auth/GoogleButton';
+import { googleErrorMessage } from '../../lib/google-auth';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -18,7 +20,13 @@ export default function LoginPage() {
   const router = useRouter();
 
   useEffect(() => {
-    setReturnPath(getSafeReturnPath(new URLSearchParams(window.location.search).get('next'), '/dashboard'));
+    const params = new URLSearchParams(window.location.search);
+    setReturnPath(getSafeReturnPath(params.get('next'), '/dashboard'));
+
+    const googleError = params.get('error');
+    if (googleError) {
+      setError(googleErrorMessage(googleError));
+    }
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -57,61 +65,59 @@ export default function LoginPage() {
   const isHostFlow = returnPath.includes('/host');
 
   return (
-    <div className="min-h-screen bg-[#F4F7FC] flex flex-col text-[#000000]">
+    <div className="min-h-screen bg-[#faf5ee] flex flex-col text-[#3a302a] selection:bg-[#c2652a]/20 selection:text-[#3a302a]">
       {/* Top Header */}
-      <header className="bg-white border-b border-[#CBD5E1] py-4 px-6 md:px-12 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#33599E] to-[#234079] flex items-center justify-center text-white shadow-sm group-hover:scale-105 transition-transform">
-            <Building2 className="w-5 h-5 stroke-[2.2]" />
-          </div>
-          <div>
-            <span className="font-black text-xl tracking-tight text-[#000000] leading-none block">
+      <header className="bg-[#faf5ee]/95 backdrop-blur-xl border-b border-[#d8d0c8]/60 py-4 px-6 md:px-12 flex items-center justify-between sticky top-0 z-20">
+        <div className="flex items-center gap-3">
+          <Link
+            href="/"
+            className="flex items-center gap-2 group transition-transform duration-200 hover:scale-[1.02] active:scale-95"
+          >
+            <span className="text-3xl font-bold tracking-tight text-[#c2652a] font-headline transition-colors group-hover:text-[#e08850]">
               Engida
             </span>
-            <span className="text-[10px] font-bold text-[#33599E] uppercase tracking-widest leading-none">
-              {isHostFlow ? 'Host Authentication' : 'Authentication'}
+          </Link>
+          {isHostFlow && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-[#f2ece4] text-[#c2652a] text-[11px] font-semibold tracking-wide uppercase font-body border border-[#d8d0c8]/60">
+              Host Portal
             </span>
-          </div>
-        </Link>
+          )}
+        </div>
 
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-[#64748B] hover:text-[#33599E] transition"
+          className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-[#605850] hover:text-[#c2652a] transition-colors font-body"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Back to Home</span>
+          <span>Back to stays</span>
         </Link>
       </header>
 
       {/* Main Container */}
       <div className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full bg-white border border-[#CBD5E1] p-8 sm:p-10 rounded-3xl shadow-lg shadow-[#33599E]/5">
+        <div className="max-w-md w-full bg-white border border-[#d8d0c8] p-8 sm:p-10 rounded-2xl sm:rounded-3xl shadow-[0_8px_30px_rgba(58,48,42,0.06)] animate-fade-in-up">
+          {/* Header */}
           <div className="text-center mb-8">
-            <div className="w-14 h-14 bg-gradient-to-br from-[#33599E] to-[#7093CD] text-white rounded-2xl flex items-center justify-center font-bold mx-auto mb-3 shadow-md shadow-[#33599E]/20">
-              <Building2 className="w-7 h-7 stroke-[2.2]" />
-            </div>
-            <h2 className="text-3xl font-black text-[#000000] tracking-tight">
-              {isHostFlow ? 'Host Sign In' : 'Engida Sign In'}
-            </h2>
-            <p className="mt-2 text-sm font-semibold text-[#334155]">
-              {isHostFlow
-                ? 'Sign in to access your Host Portal or set up your host profile'
-                : 'Sign in to access your authenticated dashboard'}
-            </p>
+            <h1 className="text-3xl sm:text-4xl font-bold text-[#3a302a] font-headline tracking-tight">
+              {isHostFlow ? 'Host Sign In' : 'Welcome back'}
+            </h1>
+         
           </div>
 
-          {/* Clear Alert Message */}
+          {/* Error Alert */}
           {error && (
-            <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm font-bold flex items-start gap-2.5 shadow-xs">
-              <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+            <div className="mb-6 p-4 rounded-xl bg-rose-50/90 border border-rose-200 text-rose-900 text-sm font-medium flex items-start gap-2.5 shadow-xs font-body">
+              <AlertCircle className="w-5 h-5 text-rose-700 shrink-0 mt-0.5" />
               <div className="flex-1 leading-snug">{error}</div>
             </div>
           )}
 
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          {/* Sign In Form */}
+          <form className="space-y-5" onSubmit={handleSubmit}>
             <div>
-              <label className="block text-xs font-black uppercase tracking-wider text-[#33599E] mb-2 flex items-center gap-1">
-                <Mail className="w-3.5 h-3.5" /> Email Address
+              <label className="block text-xs font-semibold uppercase tracking-wider text-[#605850] mb-2 flex items-center gap-1.5 font-body">
+                <Mail className="w-3.5 h-3.5 text-[#b2531b]" />
+                Email Address
               </label>
               <input
                 type="email"
@@ -119,47 +125,63 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@example.com"
-                className="w-full px-4 py-3 bg-[#F4F7FC] border border-[#CBD5E1] rounded-xl text-[#000000] font-bold placeholder-[#64748B] focus:outline-none focus:ring-2 focus:ring-[#33599E] focus:border-transparent text-sm transition"
+                className="w-full px-4 py-3 bg-[#faf5ee]/50 border border-[#d8d0c8] rounded-xl text-[#3a302a] font-medium placeholder-[#706860] focus:outline-none focus:ring-2 focus:ring-[#b2531b]/20 focus:border-[#b2531b] focus:bg-white text-sm transition-all font-body"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-black uppercase tracking-wider text-[#33599E] mb-2 flex items-center gap-1">
-                <Lock className="w-3.5 h-3.5" /> Password
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs font-semibold uppercase tracking-wider text-[#605850] flex items-center gap-1.5 font-body">
+                  <Lock className="w-3.5 h-3.5 text-[#b2531b]" />
+                  Password
+                </label>
+              </div>
               <input
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-4 py-3 bg-[#F4F7FC] border border-[#CBD5E1] rounded-xl text-[#000000] font-bold placeholder-[#64748B] focus:outline-none focus:ring-2 focus:ring-[#33599E] focus:border-transparent text-sm transition"
+                className="w-full px-4 py-3 bg-[#faf5ee]/50 border border-[#d8d0c8] rounded-xl text-[#3a302a] font-medium placeholder-[#706860] focus:outline-none focus:ring-2 focus:ring-[#b2531b]/20 focus:border-[#b2531b] focus:bg-white text-sm transition-all font-body"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center items-center gap-2 py-3.5 px-4 border border-transparent rounded-xl text-sm font-black text-white bg-gradient-to-r from-[#33599E] to-[#234079] hover:from-[#234079] hover:to-[#162B54] focus:outline-none disabled:opacity-50 transition shadow-md shadow-[#33599E]/25 cursor-pointer"
+              className="w-full flex justify-center items-center gap-2 py-3.5 px-4 rounded-xl text-sm font-semibold text-white bg-[#b2531b] hover:bg-[#994413] focus:outline-none focus:ring-2 focus:ring-[#b2531b]/40 disabled:opacity-50 transition-all duration-200 shadow-md shadow-[#b2531b]/20 active:scale-[0.99] cursor-pointer font-body"
             >
               {loading ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
-                  <KeyRound className="w-4 h-4" />
-                  Sign In
+                  <span>Sign In</span>
+                  <ArrowRight className="w-4 h-4" />
                 </>
               )}
             </button>
           </form>
 
-          <div className="mt-6 text-center text-sm font-bold text-[#334155]">
+          {/* Divider */}
+          <div className="my-6 flex items-center gap-4">
+            <span className="h-px flex-1 bg-[#d8d0c8]" />
+            <span className="text-xs font-semibold uppercase tracking-widest text-[#706860] px-1 font-body">
+              or
+            </span>
+            <span className="h-px flex-1 bg-[#d8d0c8]" />
+          </div>
+
+          {/* Social Sign In */}
+          <GoogleButton nextPath={returnPath} />
+
+          {/* Registration Link */}
+          <div className="mt-6 text-center text-sm font-body text-[#605850]">
             Don&apos;t have an account?{' '}
             <Link
               href={returnPath === '/dashboard' ? '/register' : `/register?next=${encodeURIComponent(returnPath)}`}
-              className="font-black text-[#33599E] hover:underline"
+              className="font-semibold text-[#b2531b] hover:text-[#994413] hover:underline transition-colors"
             >
-              Register Here
+              Create an account
             </Link>
           </div>
         </div>
