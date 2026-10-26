@@ -3,12 +3,15 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { apiFetch, setAccessToken } from '../lib/api';
 import type { HostProfile } from '../types/host';
+import type { AdminRole, Permission } from '../types/admin';
 
 export interface User {
   id: string;
   name: string;
   email: string;
   role: 'USER' | 'ADMIN';
+  adminRole?: AdminRole | null;
+  permissions?: Permission[];
   /** Profile picture URL (e.g. the Google account photo). */
   avatar?: string | null;
   createdAt?: string;

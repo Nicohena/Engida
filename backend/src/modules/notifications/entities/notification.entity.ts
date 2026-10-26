@@ -17,6 +17,8 @@ export enum NotificationType {
   BOOKING_COMPLETED = 'BOOKING_COMPLETED',
   LISTING_APPROVED = 'LISTING_APPROVED',
   LISTING_REJECTED = 'LISTING_REJECTED',
+  REVIEW_HIDDEN = 'REVIEW_HIDDEN',
+  REVIEW_RESTORED = 'REVIEW_RESTORED',
 }
 
 @Entity('notifications')
@@ -36,6 +38,7 @@ export class Notification {
   @Column({
     type: 'enum',
     enum: NotificationType,
+    enumName: 'notification_type_enum',
   })
   type: NotificationType;
 

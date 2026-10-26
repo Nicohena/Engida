@@ -23,6 +23,7 @@ import { Amenity } from '../amenities/entities/amenity.entity';
 import { User, UserRole } from '../../users/entities/user.entity';
 import { HostProfile, HostVerificationStatus } from '../../users/entities/host-profile.entity';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { AuditService } from '../audit/audit.service';
 import {
   validatePublishReadiness,
   classifyListingChanges,
@@ -226,6 +227,7 @@ describe('ListingModerationService & Moderation Policies', () => {
         { provide: getRepositoryToken(HostProfile), useValue: mockHostProfileRepo },
         { provide: DataSource, useValue: mockDataSource },
         { provide: CloudinaryService, useValue: mockCloudinaryService },
+        { provide: AuditService, useValue: { record: jest.fn().mockResolvedValue(undefined) } },
       ],
     }).compile();
 

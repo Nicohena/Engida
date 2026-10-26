@@ -1,7 +1,7 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User, UserRole, AuthProvider } from './entities/user.entity';
+import { User, UserRole, AuthProvider, AdminRole } from './entities/user.entity';
 import { HostProfile, HostVerificationStatus } from './entities/host-profile.entity';
 
 @Injectable()
@@ -22,6 +22,7 @@ export class UsersService {
         email: true,
         passwordHash: true,
         role: true,
+        adminRole: true,
         isActive: true,
         authProvider: true,
         providerId: true,
@@ -45,6 +46,7 @@ export class UsersService {
     email: string;
     passwordHash?: string | null;
     role?: UserRole;
+    adminRole?: AdminRole | null;
     authProvider?: AuthProvider;
     providerId?: string | null;
     avatar?: string | null;
@@ -62,6 +64,7 @@ export class UsersService {
       email: normalizedEmail,
       passwordHash: data.passwordHash ?? null,
       role: data.role || UserRole.USER,
+      adminRole: data.adminRole ?? null,
       authProvider: data.authProvider || AuthProvider.LOCAL,
       providerId: data.providerId ?? null,
       avatar: data.avatar ?? null,

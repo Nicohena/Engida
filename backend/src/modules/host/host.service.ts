@@ -46,6 +46,7 @@ import {
   HostTransactionsResponse,
 } from './dto/host-earnings-response.dto';
 import { Review } from '../reviews/entities/review.entity';
+import { ReviewModerationStatus } from '../reviews/entities/review.entity';
 import {
   QueryHostReviewsDto,
   QueryHostReviewsSummaryDto,
@@ -58,6 +59,7 @@ import {
 } from './dto/host-reviews-response.dto';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/entities/notification.entity';
+import { AuditService, AuditRequestContext } from '../audit/audit.service';
 import { HostReservationResponse, HostReservationsPage } from './dto/host-reservation-response.dto';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { sanitizeListingUpdatePayload } from '../properties/constants/moderation.constants';
@@ -120,6 +122,7 @@ export class HostService {
     private readonly reviewRepository: Repository<ListingReview>,
     private readonly cloudinaryService: CloudinaryService,
     private readonly listingModerationService: ListingModerationService,
+    private readonly auditService: AuditService,
     @Optional()
     private readonly notificationsService?: NotificationsService,
     @Optional()
@@ -295,7 +298,11 @@ export class HostService {
    * Admin approves a pending host verification request.
    * Decisions are strictly restricted to profiles in PENDING status.
    */
-  async approveHostVerification(profileId: string, admin: User): Promise<HostProfile> {
+  async approveHostVerification(
+    profileId: string,
+    admin: User,
+    auditContext?: AuditRequestContext,
+  ): Promise<HostProfile> {
     const profile = await this.hostProfileRepository.findOne({
       where: { id: profileId },
       relations: ['user'],
@@ -315,21 +322,40 @@ export class HostService {
     const saved = await this.hostProfileRepository.save(profile);
     this.logger.log(`Host verification approved for profile ${profileId} by admin ${admin.id}`);
 
+    await this.auditService.record({
+      actor: admin,
+      action: 'host.verification.approve',
+      entityType: 'host_profile',
+      entityId: profile.id,
+      before: { verificationStatus: HostVerificationStatus.PENDING },
+      after: { verificationStatus: saved.verificationStatus },
+      metadata: { userId: profile.userId },
+      ipAddress: auditContext?.ipAddress ?? null,
+      userAgent: auditContext?.userAgent ?? null,
+    });
+
     if (this.notificationsService) {
-      await this.notificationsService.createNotification({
-        userId: profile.userId,
-        type: NotificationType.LISTING_APPROVED,
-        title: 'Host Verification Approved',
-        message:
-          'Congratulations! Your host profile identity has been verified by the ENGIDA compliance team. Your published listings now feature the Verified Host trust badge.',
-        link: '/host/profile',
-        metadata: {
-          profileId: profile.id,
-          verificationStatus: HostVerificationStatus.VERIFIED,
-          reviewedByAdminId: admin.id,
-        },
-        idempotencyKey: `host-verification-approved-${profile.id}-${Date.now()}`,
-      });
+      try {
+        await this.notificationsService.createNotification({
+          userId: profile.userId,
+          type: NotificationType.LISTING_APPROVED,
+          title: 'Host Verification Approved',
+          message:
+            'Congratulations! Your host profile identity has been verified by the ENGIDA compliance team. Your published listings now feature the Verified Host trust badge.',
+          link: '/host/profile',
+          metadata: {
+            profileId: profile.id,
+            verificationStatus: HostVerificationStatus.VERIFIED,
+            reviewedByAdminId: admin.id,
+          },
+          idempotencyKey: `host-verification-approved-${profile.id}-${Date.now()}`,
+        });
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
+        this.logger.warn(
+          `Host verification ${profile.id} was approved but the notification failed: ${message}`,
+        );
+      }
     }
 
     return saved;
@@ -343,6 +369,7 @@ export class HostService {
     profileId: string,
     explanation: string,
     admin: User,
+    auditContext?: AuditRequestContext,
   ): Promise<HostProfile> {
     const trimmed = explanation?.trim();
     if (!trimmed || trimmed.length < 5) {
@@ -373,21 +400,40 @@ export class HostService {
       `Host verification rejected for profile ${profileId} by admin ${admin.id}: "${trimmed}"`,
     );
 
+    await this.auditService.record({
+      actor: admin,
+      action: 'host.verification.reject',
+      entityType: 'host_profile',
+      entityId: profile.id,
+      before: { verificationStatus: HostVerificationStatus.PENDING },
+      after: { verificationStatus: saved.verificationStatus },
+      metadata: { userId: profile.userId, reason: trimmed },
+      ipAddress: auditContext?.ipAddress ?? null,
+      userAgent: auditContext?.userAgent ?? null,
+    });
+
     if (this.notificationsService) {
-      await this.notificationsService.createNotification({
-        userId: profile.userId,
-        type: NotificationType.LISTING_REJECTED,
-        title: 'Host Verification Not Approved',
-        message: `Your host verification request was not approved. Feedback: ${trimmed}`,
-        link: '/host/profile',
-        metadata: {
-          profileId: profile.id,
-          verificationStatus: HostVerificationStatus.REJECTED,
-          rejectionReason: trimmed,
-          reviewedByAdminId: admin.id,
-        },
-        idempotencyKey: `host-verification-rejected-${profile.id}-${Date.now()}`,
-      });
+      try {
+        await this.notificationsService.createNotification({
+          userId: profile.userId,
+          type: NotificationType.LISTING_REJECTED,
+          title: 'Host Verification Not Approved',
+          message: `Your host verification request was not approved. Feedback: ${trimmed}`,
+          link: '/host/profile',
+          metadata: {
+            profileId: profile.id,
+            verificationStatus: HostVerificationStatus.REJECTED,
+            rejectionReason: trimmed,
+            reviewedByAdminId: admin.id,
+          },
+          idempotencyKey: `host-verification-rejected-${profile.id}-${Date.now()}`,
+        });
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
+        this.logger.warn(
+          `Host verification ${profile.id} was rejected but the notification failed: ${message}`,
+        );
+      }
     }
 
     (saved as any).rejectionReason = trimmed;
@@ -1449,6 +1495,9 @@ export class HostService {
       .leftJoin('review.user', 'guest')
       .addSelect(['guest.id', 'guest.name'])
       .where('property.hostId = :hostId', { hostId })
+      .andWhere('review.moderationStatus = :moderationStatus', {
+        moderationStatus: ReviewModerationStatus.VISIBLE,
+      })
       .orderBy('review.createdAt', 'DESC');
 
     if (query?.propertyId) {
@@ -1511,7 +1560,10 @@ export class HostService {
       .createQueryBuilder('review')
       .innerJoin('review.property', 'property')
       .addSelect(['property.id', 'property.title', 'property.city', 'property.coverImage'])
-      .where('property.hostId = :hostId', { hostId });
+      .where('property.hostId = :hostId', { hostId })
+      .andWhere('review.moderationStatus = :moderationStatus', {
+        moderationStatus: ReviewModerationStatus.VISIBLE,
+      });
 
     if (query?.propertyId) {
       qb.andWhere('property.id = :propertyId', { propertyId: query.propertyId });

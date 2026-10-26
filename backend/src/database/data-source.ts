@@ -16,6 +16,8 @@ import { Booking } from '../modules/bookings/entities/booking.entity';
 import { Review } from '../modules/reviews/entities/review.entity';
 import { ListingReview } from '../modules/properties/entities/listing-review.entity';
 import { Notification } from '../modules/notifications/entities/notification.entity';
+import { AuditLog } from '../modules/audit/entities/audit-log.entity';
+import { Report } from '../modules/reports/entities/report.entity';
 
 const databaseUrl = process.env.DATABASE_URL;
 
@@ -36,6 +38,8 @@ const AppDataSource = new DataSource(
           Review,
           ListingReview,
           Notification,
+          AuditLog,
+          Report,
         ],
         migrations: [path.join(__dirname, 'migrations/*{.ts,.js}')],
         synchronize: false,
@@ -60,6 +64,8 @@ const AppDataSource = new DataSource(
           Review,
           ListingReview,
           Notification,
+          AuditLog,
+          Report,
         ],
         migrations: [path.join(__dirname, 'migrations/*{.ts,.js}')],
         synchronize: false,

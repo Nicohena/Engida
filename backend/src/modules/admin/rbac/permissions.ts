@@ -1,0 +1,113 @@
+import { AdminRole, User, UserRole } from '../../../users/entities/user.entity';
+
+/**
+ * Stable permission keys used by backend guards and the admin frontend.
+ * Keep these values in sync with `frontend/src/types/admin.ts`.
+ */
+export enum Permission {
+  DASHBOARD_VIEW = 'admin.dashboard.view',
+  USERS_VIEW = 'users.view',
+  USERS_MANAGE = 'users.manage',
+  ADMINS_MANAGE = 'admins.manage',
+  HOSTS_VIEW = 'hosts.view',
+  HOSTS_VERIFY = 'hosts.verify',
+  LISTINGS_VIEW = 'listings.view',
+  LISTINGS_REVIEW = 'listings.review',
+  LISTINGS_HIDE = 'listings.hide',
+  REVIEWS_VIEW = 'reviews.view',
+  REVIEWS_MODERATE = 'reviews.moderate',
+  REPORTS_VIEW = 'reports.view',
+  REPORTS_RESOLVE = 'reports.resolve',
+  AUDIT_VIEW = 'audit.view',
+}
+
+export const ALL_PERMISSIONS: Permission[] = Object.values(Permission);
+
+/**
+ * Role -> permission map for the fixed MVP role set.
+ *
+ * Phase 1 is deliberately code-defined: roles are stable and permission changes
+ * go through code review. Phase 2 will add booking/case permissions here.
+ */
+export const ADMIN_ROLE_PERMISSIONS: Record<AdminRole, Permission[]> = {
+  [AdminRole.SUPER_ADMIN]: ALL_PERMISSIONS,
+
+  [AdminRole.PROPERTY_MODERATOR]: [
+    Permission.DASHBOARD_VIEW,
+    Permission.USERS_VIEW,
+    Permission.HOSTS_VIEW,
+    Permission.HOSTS_VERIFY,
+    Permission.LISTINGS_VIEW,
+    Permission.LISTINGS_REVIEW,
+    Permission.LISTINGS_HIDE,
+    Permission.REVIEWS_VIEW,
+    Permission.REVIEWS_MODERATE,
+    Permission.REPORTS_VIEW,
+    Permission.REPORTS_RESOLVE,
+  ],
+
+  [AdminRole.SUPPORT_AGENT]: [
+    Permission.DASHBOARD_VIEW,
+    Permission.USERS_VIEW,
+    Permission.USERS_MANAGE,
+    Permission.HOSTS_VIEW,
+    Permission.LISTINGS_VIEW,
+    Permission.REVIEWS_VIEW,
+    Permission.REPORTS_VIEW,
+    Permission.REPORTS_RESOLVE,
+  ],
+
+  [AdminRole.BOOKING_MANAGER]: [
+    Permission.DASHBOARD_VIEW,
+    Permission.USERS_VIEW,
+    Permission.HOSTS_VIEW,
+    Permission.LISTINGS_VIEW,
+    Permission.REVIEWS_VIEW,
+    Permission.REPORTS_VIEW,
+  ],
+
+  [AdminRole.FINANCE_MANAGER]: [
+    Permission.DASHBOARD_VIEW,
+    Permission.USERS_VIEW,
+    Permission.HOSTS_VIEW,
+    Permission.LISTINGS_VIEW,
+    Permission.AUDIT_VIEW,
+  ],
+};
+
+type AdminIdentity = Pick<User, 'role' | 'adminRole'>;
+
+/**
+ * Returns the effective permission set for an account.
+ *
+ * Non-admins always receive an empty set. Legacy admin accounts without an
+ * `adminRole` are treated as Super Admins so the migration cannot lock the
+ * existing administrator out during deployment.
+ */
+export function getAdminPermissions(user: AdminIdentity | null | undefined): Permission[] {
+  if (!user || user.role !== UserRole.ADMIN) {
+    return [];
+  }
+
+  if (!user.adminRole) {
+    return [...ALL_PERMISSIONS];
+  }
+
+  return [...(ADMIN_ROLE_PERMISSIONS[user.adminRole] || [])];
+}
+
+export function hasPermission(
+  user: AdminIdentity | null | undefined,
+  permission: Permission,
+): boolean {
+  return getAdminPermissions(user).includes(permission);
+}
+
+export function hasAnyPermission(
+  user: AdminIdentity | null | undefined,
+  permissions: Permission[],
+): boolean {
+  if (permissions.length === 0) return true;
+  const granted = new Set(getAdminPermissions(user));
+  return permissions.some((permission) => granted.has(permission));
+}

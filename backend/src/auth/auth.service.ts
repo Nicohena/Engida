@@ -15,6 +15,11 @@ import { RefreshToken } from './entities/refresh-token.entity';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { GoogleProfile } from './google-auth.service';
+import { getAdminPermissions } from '../modules/admin/rbac/permissions';
+
+export interface AuthSessionUser extends Partial<User> {
+  permissions?: string[];
+}
 
 export interface AuthTokens {
   accessToken: string;
@@ -67,7 +72,7 @@ export class AuthService {
     loginDto: LoginDto,
     userAgent?: string,
     ipAddress?: string,
-  ): Promise<{ accessToken: string; refreshToken: string; user: Partial<User> }> {
+  ): Promise<{ accessToken: string; refreshToken: string; user: AuthSessionUser }> {
     const { email, password } = loginDto;
 
     const user = await this.usersService.findByEmail(email);
@@ -96,6 +101,8 @@ export class AuthService {
         name: user.name,
         email: user.email,
         role: user.role,
+        adminRole: user.adminRole || null,
+        permissions: getAdminPermissions(user),
         avatar: user.avatar || null,
         createdAt: user.createdAt,
         hostProfile: user.hostProfile || undefined,
@@ -203,7 +210,7 @@ export class AuthService {
   ): Promise<{
     accessToken: string;
     refreshToken: string;
-    user: Partial<User>;
+    user: AuthSessionUser;
     created: boolean;
   }> {
     const email = profile.email.toLowerCase().trim();
@@ -273,6 +280,8 @@ export class AuthService {
         name: user.name,
         email: user.email,
         role: user.role,
+        adminRole: user.adminRole || null,
+        permissions: getAdminPermissions(user),
         createdAt: user.createdAt,
         avatar: user.avatar || null,
         hostProfile: user.hostProfile || undefined,

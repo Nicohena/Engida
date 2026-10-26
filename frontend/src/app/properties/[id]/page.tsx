@@ -9,6 +9,13 @@ import { apiFetch } from '@/lib/api';
 import type { Property } from '@/types';
 import AppHeader from '@/components/layout/AppHeader';
 import AppFooter from '@/components/layout/AppFooter';
+import ReportDialog from '@/components/reports/ReportDialog';
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function isUuid(value: string): boolean {
+  return UUID_PATTERN.test(value);
+}
 
 // Curated luxury architectural properties from the Stitch design catalog
 interface DetailedProperty {
@@ -56,6 +63,8 @@ interface DetailedProperty {
     icon: string;
   }[];
   reviews: {
+    id?: string;
+    authorId?: string;
     author: string;
     date: string;
     rating: number;
@@ -322,6 +331,8 @@ export default function PropertyDetailsPage() {
   const [loading, setLoading] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [activePhotoModal, setActivePhotoModal] = useState<number | null>(null);
+  const [reportListingOpen, setReportListingOpen] = useState(false);
+  const [reportReview, setReportReview] = useState<{ id: string; author: string } | null>(null);
 
   // Message Host Modal state
   const [messageModalOpen, setMessageModalOpen] = useState(false);
@@ -398,6 +409,8 @@ export default function PropertyDetailsPage() {
             category: 'Features',
           })),
           reviews: (data.reviews || []).map((r) => ({
+            id: r.id,
+            authorId: r.user?.id,
             author: r.user?.name || 'Curated Traveler',
             date: 'Recent Stay',
             rating: r.rating || 5,
@@ -444,6 +457,23 @@ export default function PropertyDetailsPage() {
   const [bookingError, setBookingError] = useState<string | null>(null);
   const { user } = useAuth();
 
+  const openListingReport = () => {
+    if (!property || !isUuid(property.id)) return;
+    if (!user) {
+      router.push(`/login?next=${encodeURIComponent(`/properties/${id}`)}`);
+      return;
+    }
+    setReportListingOpen(true);
+  };
+
+  const openReviewReport = (reviewId: string, author: string) => {
+    if (!user) {
+      router.push(`/login?next=${encodeURIComponent(`/properties/${id}`)}`);
+      return;
+    }
+    setReportReview({ id: reviewId, author });
+  };
+
   const handleBooking = async () => {
     if (nightsCount < 1 || !property) return;
     setBookingError(null);
@@ -456,8 +486,7 @@ export default function PropertyDetailsPage() {
 
     setIsBookingLoading(true);
     try {
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(property.id);
-      if (isUuid) {
+      if (isUuid(property.id)) {
         await apiFetch('/bookings', {
           method: 'POST',
           body: JSON.stringify({
@@ -548,6 +577,17 @@ export default function PropertyDetailsPage() {
               </span>
               <span>{isWishlisted ? 'Saved' : 'Save'}</span>
             </button>
+
+            {isUuid(property.id) && (
+              <button
+                type="button"
+                onClick={openListingReport}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white border border-[#d8d0c8]/60 text-xs font-semibold text-[#3a302a] hover:bg-[#f2ece4] hover:text-[#a84d16] transition active:scale-95 shadow-2xs cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-sm">flag</span>
+                <span>Report</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -821,6 +861,18 @@ export default function PropertyDetailsPage() {
                     <p className="text-sm text-[#3a302a] leading-relaxed italic text-pretty max-w-[65ch]">
                       &ldquo;{rev.comment}&rdquo;
                     </p>
+                    {rev.id && rev.authorId !== user?.id && (
+                      <div className="mt-3 flex justify-end border-t border-[#d8d0c8]/50 pt-3">
+                        <button
+                          type="button"
+                          onClick={() => openReviewReport(rev.id as string, rev.author)}
+                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#605850] transition hover:text-[#a84d16]"
+                        >
+                          <span className="material-symbols-outlined text-sm">flag</span>
+                          Report review
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -1149,6 +1201,26 @@ export default function PropertyDetailsPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {reportListingOpen && property && (
+        <ReportDialog
+          open={reportListingOpen}
+          onClose={() => setReportListingOpen(false)}
+          targetType="LISTING"
+          targetId={property.id}
+          targetLabel={property.title}
+        />
+      )}
+
+      {reportReview && (
+        <ReportDialog
+          open={Boolean(reportReview)}
+          onClose={() => setReportReview(null)}
+          targetType="REVIEW"
+          targetId={reportReview.id}
+          targetLabel={`${reportReview.author}'s review`}
+        />
       )}
 
       <AppFooter />

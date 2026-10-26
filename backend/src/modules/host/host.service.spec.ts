@@ -30,6 +30,7 @@ import { ListingModerationService } from '../properties/listing-moderation.servi
 import { Review } from '../reviews/entities/review.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/entities/notification.entity';
+import { AuditService } from '../audit/audit.service';
 
 // ─────────────────────────────────────────────────────────
 // Test fixtures
@@ -302,6 +303,7 @@ describe('HostService', () => {
         { provide: ListingModerationService, useValue: mockListingModerationService },
         { provide: CloudinaryService, useValue: { deletePropertyImages: jest.fn().mockResolvedValue(undefined) } },
         { provide: NotificationsService, useValue: mockNotificationsService },
+        { provide: AuditService, useValue: { record: jest.fn().mockResolvedValue(undefined) } },
       ],
     }).compile();
 
