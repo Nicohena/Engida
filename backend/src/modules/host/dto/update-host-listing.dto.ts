@@ -5,6 +5,7 @@ import {
   IsInt,
   IsOptional,
   IsArray,
+  IsBoolean,
   Min,
   Max,
   MaxLength,
@@ -73,6 +74,10 @@ export class UpdateHostListingDto {
   @IsOptional()
   @Type(() => Number)
   parkingSpaces?: number;
+
+  @IsBoolean()
+  @IsOptional()
+  isAvailable?: boolean;
 
   @IsString()
   @IsOptional()

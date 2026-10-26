@@ -9,6 +9,24 @@ export type ListingStatus = 'DRAFT' | 'PUBLISHED' | 'PAUSED' | 'ARCHIVED' | 'SOL
 export type BookingStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED';
 export type PropertyType = 'HOUSE' | 'APARTMENT' | 'VILLA' | 'BEDROOM' | 'STUDIO';
 
+export type ReviewSubmissionType = 'INITIAL_PUBLISH' | 'IMPORTANT_EDIT';
+export type ReviewStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'WITHDRAWN';
+
+export interface ListingReviewItem {
+  id: string;
+  propertyId: string;
+  submissionType: ReviewSubmissionType;
+  status: ReviewStatus;
+  proposedChanges: Record<string, unknown> | null;
+  submittedByHostId: string;
+  submittedAt: string;
+  reviewedByAdminId: string | null;
+  reviewedAt: string | null;
+  rejectionReason: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Amenity {
   id: string;
   name: string;
@@ -98,6 +116,13 @@ export interface HostListingDetail {
   images: string[];
   amenities?: Amenity[];
   rooms?: import('./index').Room[];
+  adminHidden?: boolean;
+  adminHiddenReason?: string | null;
+  adminHiddenAt?: string | null;
+  activeReview?: ListingReviewItem | null;
+  reviewHistory?: ListingReviewItem[];
+  moderationMessage?: string | null;
+  isPendingReview?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -124,6 +149,14 @@ export interface HostProfile {
   bio: string | null;
   phone: string | null;
   verificationStatus: HostVerificationStatus;
+  user?: {
+    id: string;
+    name: string;
+    email: string;
+    avatar: string | null;
+    role: string;
+  };
+  rejectionReason?: string | null;
   payoutProvider?: PayoutProvider | null;
   payoutAccountName?: string | null;
   payoutAccountNumber?: string | null;
@@ -134,6 +167,21 @@ export interface HostProfile {
   payoutCurrency?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface AdminHostVerificationsResponse {
+  data: HostProfile[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface UpdateHostProfilePayload {
+  displayName?: string;
+  phone?: string | null;
+  bio?: string | null;
+  avatar?: string | null;
 }
 
 // ──────────────────────────────────────
@@ -174,6 +222,11 @@ export interface HostListingRow {
   bedrooms: number;
   bathrooms: number;
   isAvailable: boolean;
+  adminHidden?: boolean;
+  adminHiddenReason?: string | null;
+  hasPendingReview?: boolean;
+  pendingReviewType?: ReviewSubmissionType | null;
+  rejectionReason?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -237,3 +290,115 @@ export interface HostReservationsResponse {
   limit: number;
   totalPages: number;
 }
+
+export type PaymentStatus = 'PENDING' | 'PAID' | 'ON_ARRIVAL' | 'REFUNDED' | 'FAILED';
+export type PaymentMethod =
+  | 'CHAPA'
+  | 'TELEBIRR'
+  | 'CBE_BIRR'
+  | 'INTERNATIONAL_CARD'
+  | 'PAYPAL'
+  | 'WISE'
+  | 'CASH_ON_ARRIVAL';
+
+export interface MonthlyEarningItem {
+  yearMonth: string;
+  label: string;
+  bookingCount: number;
+  totalBookingValue: number;
+  confirmedPaidAmount: number;
+  confirmedPaidCount: number;
+  onArrivalAmount: number;
+  onArrivalCount: number;
+  refundedAmount: number;
+  refundedCount: number;
+  cancelledCount: number;
+}
+
+export interface HostEarningsSummary {
+  currency: string;
+  totalBookingsCount: number;
+  totalBookingValue: number;
+  confirmedPaidAmount: number;
+  confirmedPaidCount: number;
+  onArrivalAmount: number;
+  onArrivalCount: number;
+  pendingPaymentAmount: number;
+  pendingPaymentCount: number;
+  refundedAmount: number;
+  refundedCount: number;
+  cancelledCount: number;
+  cancelledBookingValue: number;
+  monthlyBreakdown: MonthlyEarningItem[];
+}
+
+export interface HostTransactionItem {
+  id: string;
+  propertyId: string;
+  propertyTitle: string;
+  propertyCity: string;
+  guestName: string;
+  guestEmail: string;
+  checkInDate: string;
+  checkOutDate: string;
+  guestCount: number;
+  totalPrice: number;
+  paymentCurrency: string;
+  bookingStatus: BookingStatus;
+  paymentStatus: PaymentStatus;
+  paymentMethod: PaymentMethod;
+  paymentReference: string | null;
+  paidAt: string | null;
+  createdAt: string;
+}
+
+export interface HostTransactionsResponse {
+  data: HostTransactionItem[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  currency: string;
+}
+
+export interface HostReviewItem {
+  id: string;
+  propertyId: string;
+  propertyTitle: string;
+  propertyCity: string;
+  guestName: string;
+  rating: number;
+  comment: string | null;
+  createdAt: string;
+}
+
+export interface HostReviewsPage {
+  data: HostReviewItem[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface PropertyReviewSummary {
+  propertyId: string;
+  propertyTitle: string;
+  propertyCity: string;
+  coverImage: string | null;
+  reviewCount: number;
+  averageRating: number;
+}
+
+export interface HostReviewsSummary {
+  totalReviews: number;
+  averageRating: number;
+  ratingDistribution: {
+    5: number;
+    4: number;
+    3: number;
+    2: number;
+    1: number;
+  };
+  propertySummaries: PropertyReviewSummary[];
+}
+

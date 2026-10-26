@@ -31,6 +31,11 @@ export class UpdateHostProfileDto {
   })
   phone?: string;
 
+  @IsString()
+  @IsOptional()
+  @MaxLength(500)
+  avatar?: string;
+
   // ─────────────────────────────────────────
   // Payout & Banking
   // ─────────────────────────────────────────

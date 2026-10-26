@@ -17,6 +17,8 @@ import { QueryPropertyDto } from './dto/query-property.dto';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { UserRole } from '../../users/entities/user.entity';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { HostService } from '../host/host.service';
+import { ListingModerationService } from './listing-moderation.service';
 
 @Injectable()
 export class PropertiesService {
@@ -32,6 +34,8 @@ export class PropertiesService {
     @InjectRepository(AvailabilityBlock)
     private readonly availabilityBlockRepository: Repository<AvailabilityBlock>,
     private readonly cloudinaryService: CloudinaryService,
+    private readonly hostService: HostService,
+    private readonly listingModerationService: ListingModerationService,
   ) {}
 
   async findAll(query: QueryPropertyDto): Promise<{
@@ -53,8 +57,9 @@ export class PropertiesService {
       .leftJoinAndSelect('property.rooms', 'rooms')
       .where('property.isAvailable = :available', { available: true });
 
-    // Public discovery must never reveal drafts, paused, archived, or sold listings.
+    // Public discovery must never reveal drafts, paused, archived, or sold listings, or listings hidden by admin.
     qb.andWhere('property.status = :publishedStatus', { publishedStatus: ListingStatus.PUBLISHED });
+    qb.andWhere('property.adminHidden = false');
 
     // Listing type filter (RENTAL or SALE)
     if (query.listingType) {
@@ -149,7 +154,8 @@ export class PropertiesService {
 
     if (publicOnly) {
       qb.andWhere('property.status = :publishedStatus', { publishedStatus: ListingStatus.PUBLISHED })
-        .andWhere('property.isAvailable = :available', { available: true });
+        .andWhere('property.isAvailable = :available', { available: true })
+        .andWhere('property.adminHidden = false');
     }
 
     const property = await qb.getOne();
@@ -163,7 +169,7 @@ export class PropertiesService {
 
   async findRelated(id: string, limit = 4): Promise<Property[]> {
     const property = await this.propertyRepository.findOne({
-      where: { id, status: ListingStatus.PUBLISHED, isAvailable: true },
+      where: { id, status: ListingStatus.PUBLISHED, isAvailable: true, adminHidden: false },
     });
     if (!property) {
       throw new NotFoundException(`Property with ID "${id}" not found`);
@@ -178,6 +184,7 @@ export class PropertiesService {
       .where('property.id != :id', { id })
       .andWhere('property.status = :status', { status: ListingStatus.PUBLISHED })
       .andWhere('property.isAvailable = :available', { available: true })
+      .andWhere('property.adminHidden = false')
       .orderBy('property.createdAt', 'DESC')
       .take(limit);
 
@@ -190,6 +197,7 @@ export class PropertiesService {
     const property = this.propertyRepository.create({
       ...propertyData,
       hostId,
+      status: ListingStatus.DRAFT,
     });
 
     if (amenityIds && amenityIds.length > 0) {
@@ -207,33 +215,8 @@ export class PropertiesService {
     updatePropertyDto: UpdatePropertyDto,
     userId: string,
     userRole: UserRole,
-  ): Promise<Property> {
-    const property = await this.propertyRepository.findOne({ where: { id } });
-
-    if (!property) {
-      throw new NotFoundException(`Property with ID "${id}" not found`);
-    }
-
-    if (property.hostId !== userId && userRole !== UserRole.ADMIN) {
-      throw new ForbiddenException('You can only update your own properties');
-    }
-
-    const { amenityIds, ...updateData } = updatePropertyDto;
-
-    // Listing lifecycle fields are managed only by the host workflow endpoints.
-    delete updateData.status;
-    delete updateData.listingType;
-    delete updateData.isAvailable;
-
-    Object.assign(property, updateData);
-
-    if (amenityIds !== undefined) {
-      const amenities = await this.amenityRepository.findByIds(amenityIds);
-      property.amenities = amenities;
-    }
-
-    await this.propertyRepository.save(property);
-    return this.findOne(id);
+  ): Promise<any> {
+    return this.hostService.updateListing(id, updatePropertyDto, userId, userRole);
   }
 
   async remove(id: string, userId: string, userRole: UserRole): Promise<void> {
@@ -283,14 +266,16 @@ export class PropertiesService {
   }
 
   /**
-   * Upload and update the cover image for a property
+   * Upload and update the cover image for a property.
+   * For PUBLISHED / PAUSED listings, stages the cover image in moderation review.
+   * For DRAFT listings, updates directly.
    */
   async uploadCoverImage(
     propertyId: string,
     file: Express.Multer.File,
     userId: string,
     userRole: UserRole,
-  ): Promise<Property> {
+  ): Promise<any> {
     const property = await this.propertyRepository.findOne({ where: { id: propertyId } });
 
     if (!property) {
@@ -301,31 +286,59 @@ export class PropertiesService {
       throw new ForbiddenException('You can only update your own properties');
     }
 
-    const previousCover = property.coverImage;
     const uploadResult = await this.cloudinaryService.uploadImage(
       file,
       `engida/properties/${propertyId}`,
     );
 
+    // Published or paused listings must stage cover image changes in moderation review
+    if (property.status === ListingStatus.PUBLISHED || property.status === ListingStatus.PAUSED) {
+      const pendingReview = await this.listingModerationService.findPendingReview(propertyId);
+      const previousProposedCover = pendingReview?.proposedChanges?.coverImage;
+
+      const moderationResult = await this.listingModerationService.processListingUpdate(
+        propertyId,
+        { coverImage: uploadResult.secureUrl },
+        userId,
+        userRole,
+      );
+
+      if (previousProposedCover && previousProposedCover !== uploadResult.secureUrl) {
+        await this.listingModerationService.cleanOrphanImages(propertyId, [previousProposedCover]);
+      }
+
+      this.logger.log(`Staged cover image update for published property "${propertyId}"`);
+      const currentProperty = await this.findOne(propertyId);
+      return Object.assign(currentProperty, {
+        activeReview: moderationResult.review,
+        moderationMessage: moderationResult.message,
+        isPendingReview: moderationResult.isPendingReview,
+      });
+    }
+
+    // For DRAFT listings: direct update
+    const previousCover = property.coverImage;
     property.coverImage = uploadResult.secureUrl;
     await this.propertyRepository.save(property);
     if (previousCover && previousCover !== property.coverImage && !property.images?.includes(previousCover)) {
       await this.cloudinaryService.deletePropertyImages(propertyId, [previousCover]);
     }
-    this.logger.log(`Updated cover image for property "${propertyId}"`);
+    this.logger.log(`Updated cover image for draft property "${propertyId}"`);
 
     return this.findOne(propertyId);
   }
 
   /**
-   * Upload multiple gallery images and append to existing property images
+   * Upload multiple gallery images and append to existing property images.
+   * For PUBLISHED / PAUSED listings, stages proposed gallery in moderation review.
+   * For DRAFT listings, updates directly.
    */
   async uploadGalleryImages(
     propertyId: string,
     files: Express.Multer.File[],
     userId: string,
     userRole: UserRole,
-  ): Promise<Property> {
+  ): Promise<any> {
     const property = await this.propertyRepository.findOne({ where: { id: propertyId } });
 
     if (!property) {
@@ -336,7 +349,16 @@ export class PropertiesService {
       throw new ForbiddenException('You can only update your own properties');
     }
 
-    const currentImages = property.images || [];
+    // Determine current effective gallery (if published, check pending review proposal first)
+    let currentImages = property.images || [];
+    let pendingReview = null;
+    if (property.status === ListingStatus.PUBLISHED || property.status === ListingStatus.PAUSED) {
+      pendingReview = await this.listingModerationService.findPendingReview(propertyId);
+      if (Array.isArray(pendingReview?.proposedChanges?.images)) {
+        currentImages = pendingReview.proposedChanges.images;
+      }
+    }
+
     if (currentImages.length + files.length > 20) {
       throw new BadRequestException('A property can have a maximum of 20 gallery images');
     }
@@ -347,22 +369,45 @@ export class PropertiesService {
     );
 
     const newUrls = uploadResults.map((res) => res.secureUrl);
-    property.images = [...currentImages, ...newUrls];
+    const updatedImages = [...currentImages, ...newUrls];
+
+    // Published or paused listings must stage gallery image changes in moderation review
+    if (property.status === ListingStatus.PUBLISHED || property.status === ListingStatus.PAUSED) {
+      const moderationResult = await this.listingModerationService.processListingUpdate(
+        propertyId,
+        { images: updatedImages },
+        userId,
+        userRole,
+      );
+
+      this.logger.log(`Staged ${newUrls.length} gallery images for published property "${propertyId}"`);
+      const currentProperty = await this.findOne(propertyId);
+      return Object.assign(currentProperty, {
+        activeReview: moderationResult.review,
+        moderationMessage: moderationResult.message,
+        isPendingReview: moderationResult.isPendingReview,
+      });
+    }
+
+    // For DRAFT listings: direct update
+    property.images = updatedImages;
     await this.propertyRepository.save(property);
-    this.logger.log(`Added ${newUrls.length} gallery images to property "${propertyId}"`);
+    this.logger.log(`Added ${newUrls.length} gallery images to draft property "${propertyId}"`);
 
     return this.findOne(propertyId);
   }
 
   /**
-   * Remove a single image from a property gallery
+   * Remove a single image from a property gallery.
+   * For PUBLISHED / PAUSED listings, stages gallery image removal in moderation review.
+   * For DRAFT listings, removes directly.
    */
   async removeGalleryImage(
     propertyId: string,
     imageUrl: string,
     userId: string,
     userRole: UserRole,
-  ): Promise<Property> {
+  ): Promise<any> {
     const property = await this.propertyRepository.findOne({ where: { id: propertyId } });
 
     if (!property) {
@@ -373,6 +418,38 @@ export class PropertiesService {
       throw new ForbiddenException('You can only update your own properties');
     }
 
+    // Published or paused listings must stage gallery image removal in moderation review
+    if (property.status === ListingStatus.PUBLISHED || property.status === ListingStatus.PAUSED) {
+      const pendingReview = await this.listingModerationService.findPendingReview(propertyId);
+      const currentImages = Array.isArray(pendingReview?.proposedChanges?.images)
+        ? pendingReview.proposedChanges.images
+        : (property.images || []);
+
+      if (!currentImages.includes(imageUrl)) {
+        throw new NotFoundException('Image URL not found in property gallery');
+      }
+
+      const updatedImages = currentImages.filter((url) => url !== imageUrl);
+      const moderationResult = await this.listingModerationService.processListingUpdate(
+        propertyId,
+        { images: updatedImages },
+        userId,
+        userRole,
+      );
+
+      // Clean up only if it was a staged-only image (never delete if retained by live listing or another proposal)
+      await this.listingModerationService.cleanOrphanImages(propertyId, [imageUrl]);
+
+      this.logger.log(`Staged removal of gallery image for published property "${propertyId}"`);
+      const currentProperty = await this.findOne(propertyId);
+      return Object.assign(currentProperty, {
+        activeReview: moderationResult.review,
+        moderationMessage: moderationResult.message,
+        isPendingReview: moderationResult.isPendingReview,
+      });
+    }
+
+    // For DRAFT listings: direct removal
     const currentImages = property.images || [];
     if (!currentImages.includes(imageUrl)) {
       throw new NotFoundException('Image URL not found in property gallery');
@@ -383,7 +460,7 @@ export class PropertiesService {
     if (property.coverImage !== imageUrl) {
       await this.cloudinaryService.deletePropertyImages(propertyId, [imageUrl]);
     }
-    this.logger.log(`Removed gallery image from property "${propertyId}"`);
+    this.logger.log(`Removed gallery image from draft property "${propertyId}"`);
 
     return this.findOne(propertyId);
   }

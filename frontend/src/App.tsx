@@ -3,15 +3,15 @@ import { Navbar } from "./components/layout/Navbar";
 import { Footer } from "./components/layout/Footer";
 import { AvatarProvider } from "./context/AvatarContext";
 
-import Home from "./pages/Home";
-import Search from "./pages/Search";
-import PropertyDetails from "./pages/PropertyDetails";
-import Booking from "./pages/Booking";
-import Payment from "./pages/Payment";
-import MyTrips from "./pages/MyTrips";
-import Messages from "./pages/Messages";
-import Profile from "./pages/Profile";
-import Notifications from "./pages/Notifications";
+import Home from "./guest-pages/Home";
+import Search from "./guest-pages/Search";
+import PropertyDetails from "./guest-pages/PropertyDetails";
+import Booking from "./guest-pages/Booking";
+import Payment from "./guest-pages/Payment";
+import MyTrips from "./guest-pages/MyTrips";
+import Messages from "./guest-pages/Messages";
+import Profile from "./guest-pages/Profile";
+import Notifications from "./guest-pages/Notifications";
 
 // NOTE: Register/Login are intentionally NOT implemented here — that flow
 // is owned by another team and this module assumes an already-authenticated

@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   CalendarDays,
   Check,
@@ -220,6 +220,7 @@ export default function HostReservationsPage() {
     null,
   );
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [refreshVersion, setRefreshVersion] = useState(0);
 
   const query = useMemo(() => {
     const params = new URLSearchParams({
@@ -232,24 +233,37 @@ export default function HostReservationsPage() {
     return params.toString();
   }, [fromDate, page, status, toDate]);
 
-  const fetchReservations = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await apiFetch<HostReservationsResponse>(`/host/reservations?${query}`);
-      setReservations(response.data || []);
-      setTotal(response.total || 0);
-      setTotalPages(response.totalPages || 0);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to load reservations.');
-    } finally {
-      setLoading(false);
-    }
-  }, [query]);
-
   useEffect(() => {
-    fetchReservations();
-  }, [fetchReservations]);
+    let active = true;
+
+    const loadReservations = async () => {
+      try {
+        const response = await apiFetch<HostReservationsResponse>(`/host/reservations?${query}`);
+        if (!active) return;
+        setReservations(response.data || []);
+        setTotal(response.total || 0);
+        setTotalPages(response.totalPages || 0);
+      } catch (err: unknown) {
+        if (!active) return;
+        setError(err instanceof Error ? err.message : 'Failed to load reservations.');
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    queueMicrotask(() => {
+      if (active) {
+        setLoading(true);
+        setError(null);
+      }
+    });
+
+    void loadReservations();
+
+    return () => {
+      active = false;
+    };
+  }, [query, refreshVersion]);
 
   const handleFilterChange = (callback: () => void) => {
     setPage(1);
@@ -268,7 +282,7 @@ export default function HostReservationsPage() {
       await apiFetch(`/host/reservations/${reservation.id}/${action}`, { method: 'PATCH' });
       const actionLabel = action === 'confirm' ? 'confirmed' : action === 'complete' ? 'completed' : 'cancelled';
       setFeedback({ type: 'success', message: `Reservation ${actionLabel} successfully.` });
-      await fetchReservations();
+      setRefreshVersion((v) => v + 1);
     } catch (err: unknown) {
       setFeedback({
         type: 'error',
@@ -363,7 +377,7 @@ export default function HostReservationsPage() {
           <p className="mx-auto mt-2 max-w-md text-sm text-[#64748B]">{error}</p>
           <button
             type="button"
-            onClick={fetchReservations}
+            onClick={() => setRefreshVersion((v) => v + 1)}
             className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#33599E] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#234079]"
           >
             <RotateCcw className="h-4 w-4" />

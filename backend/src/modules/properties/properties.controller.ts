@@ -79,6 +79,9 @@ export class PropertiesController {
 
   /**
    * Protected: Update a property listing (owner or admin only)
+   * Deprecation notice: Prefer PUT /host/listings/:id.
+   * Routes through HostService.updateListing to ensure that important changes
+   * to published listings cannot bypass ListingModerationService.
    */
   @Put(':id')
   @UseGuards(JwtAuthGuard)
@@ -87,7 +90,7 @@ export class PropertiesController {
     @Body() updatePropertyDto: UpdatePropertyDto,
     @GetUser() user: User,
   ) {
-    return this.propertiesService.update(id, updatePropertyDto, user.id, user.role);
+    return this.hostService.updateListing(id, updatePropertyDto, user.id, user.role);
   }
 
   /**

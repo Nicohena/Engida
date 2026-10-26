@@ -8,6 +8,8 @@ import { Amenity } from '../amenities/entities/amenity.entity';
 import { AvailabilityBlock } from './entities/availability-block.entity';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { UserRole } from '../../users/entities/user.entity';
+import { HostService } from '../host/host.service';
+import { ListingModerationService } from './listing-moderation.service';
 
 describe('PropertiesService', () => {
   let service: PropertiesService;
@@ -38,6 +40,10 @@ describe('PropertiesService', () => {
     areaSqm: 120,
     parkingSpaces: 1,
     isAvailable: true,
+    adminHidden: false,
+    adminHiddenReason: null,
+    adminHiddenAt: null,
+    adminHiddenById: null,
     coverImage: 'https://example.com/cover.jpg',
     images: [],
     createdAt: new Date(),
@@ -103,7 +109,18 @@ describe('PropertiesService', () => {
     uploadImage: jest.fn(),
     uploadImages: jest.fn(),
     deleteImage: jest.fn(),
+    deletePropertyImages: jest.fn(),
     extractPublicId: jest.fn(),
+  };
+
+  const mockHostService = {
+    updateListing: jest.fn(),
+  };
+
+  const mockListingModerationService = {
+    findPendingReview: jest.fn(),
+    processListingUpdate: jest.fn(),
+    cleanOrphanImages: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -130,11 +147,28 @@ describe('PropertiesService', () => {
           provide: CloudinaryService,
           useValue: mockCloudinaryService,
         },
+        {
+          provide: HostService,
+          useValue: mockHostService,
+        },
+        {
+          provide: ListingModerationService,
+          useValue: mockListingModerationService,
+        },
       ],
     }).compile();
 
     service = module.get<PropertiesService>(PropertiesService);
     jest.clearAllMocks();
+    mockPropertyRepository.findOne.mockReset();
+    mockPropertyRepository.createQueryBuilder.mockReset();
+    mockPropertyRepository.createQueryBuilder.mockImplementation(() => createMockQueryBuilder());
+    mockListingModerationService.findPendingReview.mockReset();
+    mockListingModerationService.processListingUpdate.mockReset();
+    mockListingModerationService.cleanOrphanImages.mockReset();
+    mockCloudinaryService.uploadImage.mockReset();
+    mockCloudinaryService.uploadImages.mockReset();
+    mockCloudinaryService.deletePropertyImages.mockReset();
   });
 
   it('should be defined', () => {
@@ -216,6 +250,386 @@ describe('PropertiesService', () => {
         }),
       );
       expect(result.listingType).toBe(ListingType.SALE);
+    });
+  });
+
+  describe('update', () => {
+    it('should delegate to hostService.updateListing canonically', async () => {
+      mockHostService.updateListing.mockResolvedValue({ ...mockProperty, title: 'Delegated Title' });
+
+      const result = await service.update(
+        'prop-uuid-1',
+        { title: 'Delegated Title' },
+        'host-uuid-1',
+        UserRole.USER,
+      );
+
+      expect(mockHostService.updateListing).toHaveBeenCalledWith(
+        'prop-uuid-1',
+        { title: 'Delegated Title' },
+        'host-uuid-1',
+        UserRole.USER,
+      );
+      expect(result.title).toBe('Delegated Title');
+    });
+  });
+
+  describe('uploadCoverImage', () => {
+    const mockFile: any = {
+      fieldname: 'file',
+      originalname: 'new-cover.jpg',
+      mimetype: 'image/jpeg',
+      buffer: Buffer.from('fake'),
+      size: 1024,
+    };
+    const uploadedUrl = 'https://cloudinary.com/new-cover-uploaded.jpg';
+
+    it('should stage cover image in moderation proposal when listing is PUBLISHED and leave live cover unchanged', async () => {
+      const liveProperty = {
+        ...mockProperty,
+        status: ListingStatus.PUBLISHED,
+        coverImage: 'https://cloudinary.com/approved-cover.jpg',
+      };
+      mockPropertyRepository.findOne.mockResolvedValue({ ...liveProperty });
+      mockPropertyRepository.createQueryBuilder.mockImplementation(() =>
+        createMockQueryBuilder({ ...liveProperty }),
+      );
+      mockCloudinaryService.uploadImage.mockResolvedValue({ secureUrl: uploadedUrl });
+      mockListingModerationService.findPendingReview.mockResolvedValue(null);
+      mockListingModerationService.processListingUpdate.mockResolvedValue({
+        property: liveProperty,
+        review: { id: 'rev-1', proposedChanges: { coverImage: uploadedUrl } },
+        isPendingReview: true,
+        message: 'Important changes submitted for review.',
+      });
+
+      const result = await service.uploadCoverImage(
+        'prop-uuid-1',
+        mockFile,
+        'host-uuid-1',
+        UserRole.USER,
+      );
+
+      expect(mockCloudinaryService.uploadImage).toHaveBeenCalled();
+      expect(mockListingModerationService.processListingUpdate).toHaveBeenCalledWith(
+        'prop-uuid-1',
+        { coverImage: uploadedUrl },
+        'host-uuid-1',
+        UserRole.USER,
+      );
+      expect(mockPropertyRepository.save).not.toHaveBeenCalled();
+      expect(result.coverImage).toBe('https://cloudinary.com/approved-cover.jpg');
+      expect(result.isPendingReview).toBe(true);
+      expect(result.activeReview.proposedChanges.coverImage).toBe(uploadedUrl);
+    });
+
+    it('should stage cover image in moderation proposal when listing is PAUSED', async () => {
+      const pausedProperty = {
+        ...mockProperty,
+        status: ListingStatus.PAUSED,
+        coverImage: 'https://cloudinary.com/approved-cover.jpg',
+      };
+      mockPropertyRepository.findOne.mockResolvedValue({ ...pausedProperty });
+      mockPropertyRepository.createQueryBuilder.mockImplementation(() =>
+        createMockQueryBuilder({ ...pausedProperty }),
+      );
+      mockCloudinaryService.uploadImage.mockResolvedValue({ secureUrl: uploadedUrl });
+      mockListingModerationService.findPendingReview.mockResolvedValue(null);
+      mockListingModerationService.processListingUpdate.mockResolvedValue({
+        property: pausedProperty,
+        review: { id: 'rev-1', proposedChanges: { coverImage: uploadedUrl } },
+        isPendingReview: true,
+        message: 'Important changes submitted for review.',
+      });
+
+      const result = await service.uploadCoverImage(
+        'prop-uuid-1',
+        mockFile,
+        'host-uuid-1',
+        UserRole.USER,
+      );
+
+      expect(mockListingModerationService.processListingUpdate).toHaveBeenCalledWith(
+        'prop-uuid-1',
+        { coverImage: uploadedUrl },
+        'host-uuid-1',
+        UserRole.USER,
+      );
+      expect(result.isPendingReview).toBe(true);
+    });
+
+    it('should clean up superseded proposed cover image if another was already staged', async () => {
+      const liveProperty = {
+        ...mockProperty,
+        status: ListingStatus.PUBLISHED,
+        coverImage: 'https://cloudinary.com/approved-cover.jpg',
+      };
+      const previouslyStagedCover = 'https://cloudinary.com/superseded-staged-cover.jpg';
+      mockPropertyRepository.findOne.mockResolvedValue({ ...liveProperty });
+      mockPropertyRepository.createQueryBuilder.mockImplementation(() =>
+        createMockQueryBuilder({ ...liveProperty }),
+      );
+      mockCloudinaryService.uploadImage.mockResolvedValue({ secureUrl: uploadedUrl });
+      mockListingModerationService.findPendingReview.mockResolvedValue({
+        id: 'rev-1',
+        proposedChanges: { coverImage: previouslyStagedCover },
+      });
+      mockListingModerationService.processListingUpdate.mockResolvedValue({
+        property: liveProperty,
+        review: { id: 'rev-1', proposedChanges: { coverImage: uploadedUrl } },
+        isPendingReview: true,
+        message: 'Important changes submitted for review.',
+      });
+
+      await service.uploadCoverImage(
+        'prop-uuid-1',
+        mockFile,
+        'host-uuid-1',
+        UserRole.USER,
+      );
+
+      expect(mockListingModerationService.cleanOrphanImages).toHaveBeenCalledWith(
+        'prop-uuid-1',
+        [previouslyStagedCover],
+      );
+    });
+
+    it('should update directly on DRAFT listing and delete detached old cover', async () => {
+      const draftProperty = {
+        ...mockProperty,
+        status: ListingStatus.DRAFT,
+        coverImage: 'https://cloudinary.com/old-draft-cover.jpg',
+      };
+      mockPropertyRepository.findOne.mockResolvedValue({ ...draftProperty });
+      mockPropertyRepository.createQueryBuilder.mockImplementation(() =>
+        createMockQueryBuilder({ ...draftProperty, coverImage: uploadedUrl }),
+      );
+      mockCloudinaryService.uploadImage.mockResolvedValue({ secureUrl: uploadedUrl });
+
+      const result = await service.uploadCoverImage(
+        'prop-uuid-1',
+        mockFile,
+        'host-uuid-1',
+        UserRole.USER,
+      );
+
+      expect(mockPropertyRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({ coverImage: uploadedUrl }),
+      );
+      expect(mockCloudinaryService.deletePropertyImages).toHaveBeenCalledWith(
+        'prop-uuid-1',
+        ['https://cloudinary.com/old-draft-cover.jpg'],
+      );
+      expect(result.coverImage).toBe(uploadedUrl);
+    });
+
+    it('should throw ForbiddenException if user is not property owner or admin', async () => {
+      mockPropertyRepository.findOne.mockResolvedValue({ ...mockProperty, hostId: 'host-uuid-1' });
+
+      await expect(
+        service.uploadCoverImage(
+          'prop-uuid-1',
+          mockFile,
+          'stranger-uuid',
+          UserRole.USER,
+        ),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should throw NotFoundException if property does not exist', async () => {
+      mockPropertyRepository.findOne.mockResolvedValue(null);
+
+      await expect(
+        service.uploadCoverImage(
+          'nonexistent-uuid',
+          mockFile,
+          'host-uuid-1',
+          UserRole.USER,
+        ),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('uploadGalleryImages', () => {
+    const mockFiles: any[] = [
+      { fieldname: 'files', originalname: 'g1.jpg', size: 1024 },
+      { fieldname: 'files', originalname: 'g2.jpg', size: 1024 },
+    ];
+    const newUrls = ['https://cloudinary.com/g1.jpg', 'https://cloudinary.com/g2.jpg'];
+
+    it('should stage gallery images in moderation review when listing is PUBLISHED and leave live gallery unchanged', async () => {
+      const liveProperty = {
+        ...mockProperty,
+        status: ListingStatus.PUBLISHED,
+        images: ['https://cloudinary.com/live-g1.jpg'],
+      };
+      mockPropertyRepository.findOne.mockResolvedValue({ ...liveProperty });
+      mockPropertyRepository.createQueryBuilder.mockImplementation(() =>
+        createMockQueryBuilder({ ...liveProperty }),
+      );
+      mockListingModerationService.findPendingReview.mockResolvedValue(null);
+      mockCloudinaryService.uploadImages.mockResolvedValue(newUrls.map((secureUrl) => ({ secureUrl })));
+      mockListingModerationService.processListingUpdate.mockResolvedValue({
+        property: liveProperty,
+        review: { id: 'rev-1', proposedChanges: { images: ['https://cloudinary.com/live-g1.jpg', ...newUrls] } },
+        isPendingReview: true,
+        message: 'Important changes submitted for review.',
+      });
+
+      const result = await service.uploadGalleryImages(
+        'prop-uuid-1',
+        mockFiles,
+        'host-uuid-1',
+        UserRole.USER,
+      );
+
+      expect(mockListingModerationService.processListingUpdate).toHaveBeenCalledWith(
+        'prop-uuid-1',
+        { images: ['https://cloudinary.com/live-g1.jpg', ...newUrls] },
+        'host-uuid-1',
+        UserRole.USER,
+      );
+      expect(mockPropertyRepository.save).not.toHaveBeenCalled();
+      expect(result.images).toEqual(['https://cloudinary.com/live-g1.jpg']);
+      expect(result.activeReview.proposedChanges.images).toEqual(['https://cloudinary.com/live-g1.jpg', ...newUrls]);
+    });
+
+    it('should enforce max 20 images limit on published listings considering staged images', async () => {
+      const liveProperty = {
+        ...mockProperty,
+        status: ListingStatus.PUBLISHED,
+        images: ['https://cloudinary.com/live-g1.jpg'],
+      };
+      const existing19Images = Array.from({ length: 19 }, (_, i) => `https://cloudinary.com/staged-${i}.jpg`);
+      mockPropertyRepository.findOne.mockResolvedValue({ ...liveProperty });
+      mockListingModerationService.findPendingReview.mockResolvedValue({
+        id: 'rev-1',
+        proposedChanges: { images: existing19Images },
+      });
+
+      await expect(
+        service.uploadGalleryImages(
+          'prop-uuid-1',
+          mockFiles,
+          'host-uuid-1',
+          UserRole.USER,
+        ),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should update gallery directly on DRAFT listing', async () => {
+      const draftProperty = {
+        ...mockProperty,
+        status: ListingStatus.DRAFT,
+        images: ['https://cloudinary.com/draft-g1.jpg'],
+      };
+      mockPropertyRepository.findOne.mockResolvedValue({ ...draftProperty });
+      mockPropertyRepository.createQueryBuilder.mockImplementation(() =>
+        createMockQueryBuilder({ ...draftProperty, images: ['https://cloudinary.com/draft-g1.jpg', ...newUrls] }),
+      );
+      mockCloudinaryService.uploadImages.mockResolvedValue(newUrls.map((secureUrl) => ({ secureUrl })));
+
+      const result = await service.uploadGalleryImages(
+        'prop-uuid-1',
+        mockFiles,
+        'host-uuid-1',
+        UserRole.USER,
+      );
+
+      expect(mockPropertyRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          images: ['https://cloudinary.com/draft-g1.jpg', ...newUrls],
+        }),
+      );
+      expect(result.images).toEqual(['https://cloudinary.com/draft-g1.jpg', ...newUrls]);
+    });
+  });
+
+  describe('removeGalleryImage', () => {
+    it('should stage gallery image removal in review on PUBLISHED listing without deleting live image', async () => {
+      const liveProperty = {
+        ...mockProperty,
+        status: ListingStatus.PUBLISHED,
+        images: ['https://cloudinary.com/g1.jpg', 'https://cloudinary.com/g2.jpg'],
+      };
+      mockPropertyRepository.findOne.mockResolvedValue({ ...liveProperty });
+      mockPropertyRepository.createQueryBuilder.mockImplementation(() =>
+        createMockQueryBuilder({ ...liveProperty }),
+      );
+      mockListingModerationService.findPendingReview.mockResolvedValue(null);
+      mockListingModerationService.processListingUpdate.mockResolvedValue({
+        property: liveProperty,
+        review: { id: 'rev-1', proposedChanges: { images: ['https://cloudinary.com/g1.jpg'] } },
+        isPendingReview: true,
+        message: 'Important changes submitted for review.',
+      });
+
+      const result = await service.removeGalleryImage(
+        'prop-uuid-1',
+        'https://cloudinary.com/g2.jpg',
+        'host-uuid-1',
+        UserRole.USER,
+      );
+
+      expect(mockListingModerationService.processListingUpdate).toHaveBeenCalledWith(
+        'prop-uuid-1',
+        { images: ['https://cloudinary.com/g1.jpg'] },
+        'host-uuid-1',
+        UserRole.USER,
+      );
+      expect(mockListingModerationService.cleanOrphanImages).toHaveBeenCalledWith(
+        'prop-uuid-1',
+        ['https://cloudinary.com/g2.jpg'],
+      );
+      expect(mockPropertyRepository.save).not.toHaveBeenCalled();
+      expect(result.images).toEqual(['https://cloudinary.com/g1.jpg', 'https://cloudinary.com/g2.jpg']);
+    });
+
+    it('should remove gallery image directly and delete from Cloudinary on DRAFT listing', async () => {
+      const draftProperty = {
+        ...mockProperty,
+        status: ListingStatus.DRAFT,
+        coverImage: 'https://cloudinary.com/draft-cover.jpg',
+        images: ['https://cloudinary.com/g1.jpg', 'https://cloudinary.com/g2.jpg'],
+      };
+      mockPropertyRepository.findOne.mockResolvedValue({ ...draftProperty });
+      mockPropertyRepository.createQueryBuilder.mockImplementation(() =>
+        createMockQueryBuilder({ ...draftProperty, images: ['https://cloudinary.com/g1.jpg'] }),
+      );
+
+      const result = await service.removeGalleryImage(
+        'prop-uuid-1',
+        'https://cloudinary.com/g2.jpg',
+        'host-uuid-1',
+        UserRole.USER,
+      );
+
+      expect(mockPropertyRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({ images: ['https://cloudinary.com/g1.jpg'] }),
+      );
+      expect(mockCloudinaryService.deletePropertyImages).toHaveBeenCalledWith(
+        'prop-uuid-1',
+        ['https://cloudinary.com/g2.jpg'],
+      );
+      expect(result.images).toEqual(['https://cloudinary.com/g1.jpg']);
+    });
+
+    it('should throw NotFoundException if image is not present in gallery', async () => {
+      mockPropertyRepository.findOne.mockResolvedValue({
+        ...mockProperty,
+        status: ListingStatus.PUBLISHED,
+        images: ['https://cloudinary.com/g1.jpg'],
+      });
+      mockListingModerationService.findPendingReview.mockResolvedValue(null);
+
+      await expect(
+        service.removeGalleryImage(
+          'prop-uuid-1',
+          'https://cloudinary.com/nonexistent.jpg',
+          'host-uuid-1',
+          UserRole.USER,
+        ),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 

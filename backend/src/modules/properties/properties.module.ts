@@ -10,12 +10,14 @@ import { PropertiesController } from './properties.controller';
 import { AmenitiesModule } from '../amenities/amenities.module';
 import { CloudinaryModule } from '../cloudinary/cloudinary.module';
 import { HostModule } from '../host/host.module';
+import { ListingModerationModule } from './listing-moderation.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Property, Room, Amenity, AvailabilityBlock]),
     CloudinaryModule,
     HostModule,
+    ListingModerationModule,
   ],
   controllers: [PropertiesController],
   providers: [PropertiesService],

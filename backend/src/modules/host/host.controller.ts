@@ -19,9 +19,18 @@ import { UpdateHostProfileDto } from './dto/update-host-profile.dto';
 import { CreateHostListingDto } from './dto/create-host-listing.dto';
 import { UpdateHostListingDto } from './dto/update-host-listing.dto';
 import { QueryHostListingsDto, QueryHostReservationsDto } from './dto/query-host.dto';
+import {
+  QueryHostEarningsSummaryDto,
+  QueryHostTransactionsDto,
+} from './dto/query-host-earnings.dto';
+import {
+  QueryHostReviewsDto,
+  QueryHostReviewsSummaryDto,
+} from './dto/query-host-reviews.dto';
 import { CreateAvailabilityBlockDto } from './dto/create-host-availability-block.dto';
 import { CreateRoomDto } from '../properties/dto/create-room.dto';
 import { UpdateHostRoomDto } from './dto/update-host-room.dto';
+import { SubmitReviewDto } from '../properties/dto/moderation-review.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { GetUser } from '../../auth/decorators/get-user.decorator';
 import { User } from '../../users/entities/user.entity';
@@ -63,7 +72,7 @@ export class HostController {
 
   /**
    * PUT /host/profile
-   * Update displayName, bio, or phone. verificationStatus is read-only for hosts.
+   * Update displayName, bio, phone, or avatar. verificationStatus is read-only for hosts.
    */
   @Put('profile')
   async updateProfile(
@@ -71,6 +80,16 @@ export class HostController {
     @Body() dto: UpdateHostProfileDto,
   ) {
     return this.hostService.updateHostProfile(user.id, dto);
+  }
+
+  /**
+   * POST /host/profile/request-verification
+   * Request host identity verification (transitions UNVERIFIED/REJECTED -> PENDING).
+   * Host cannot approve or set VERIFIED.
+   */
+  @Post('profile/request-verification')
+  async requestVerification(@GetUser() user: User) {
+    return this.hostService.requestVerification(user.id);
   }
 
   // ─────────────────────────────────────────
@@ -174,8 +193,45 @@ export class HostController {
   // ─────────────────────────────────────────
 
   /**
+   * POST /host/listings/:id/submit-review
+   * Submits a draft or changes for admin review after automated validation checks.
+   */
+  @Post('listings/:id/submit-review')
+  async submitForReview(
+    @Param('id', ParseUUIDPipe) id: string,
+    @GetUser() user: User,
+    @Body() dto?: SubmitReviewDto,
+  ) {
+    return this.hostService.submitListingForReview(id, user.id, user.role, dto?.notes);
+  }
+
+  /**
+   * POST /host/listings/:id/withdraw-review
+   * Withdraws a pending review proposal; live listing stays unchanged.
+   */
+  @Post('listings/:id/withdraw-review')
+  async withdrawReview(
+    @Param('id', ParseUUIDPipe) id: string,
+    @GetUser() user: User,
+  ) {
+    return this.hostService.withdrawListingReview(id, user.id, user.role);
+  }
+
+  /**
+   * GET /host/listings/:id/reviews
+   * View active review status and history for this listing.
+   */
+  @Get('listings/:id/reviews')
+  async getListingReviews(
+    @Param('id', ParseUUIDPipe) id: string,
+    @GetUser() user: User,
+  ) {
+    return this.hostService.getListingReviews(id, user.id, user.role);
+  }
+
+  /**
    * PATCH /host/listings/:id/publish
-   * DRAFT → PUBLISHED. Validates minimum required fields first.
+   * Submits listing for admin review under the mandatory moderation policy.
    */
   @Patch('listings/:id/publish')
   async publishListing(
@@ -334,5 +390,62 @@ export class HostController {
   @Get(['dashboard', 'dashboard/summary'])
   async getDashboard(@GetUser() user: User) {
     return this.hostService.getDashboardSummary(user.id, user.role);
+  }
+
+  // ─────────────────────────────────────────
+  // 11. EARNINGS & FINANCIAL REPORTING
+  // ─────────────────────────────────────────
+
+  /**
+   * GET /host/earnings/summary
+   * Aggregates real stored financial metrics for host properties.
+   */
+  @Get('earnings/summary')
+  async getEarningsSummary(
+    @GetUser() user: User,
+    @Query() query: QueryHostEarningsSummaryDto,
+  ) {
+    return this.hostService.getEarningsSummary(user.id, query, user.role);
+  }
+
+  /**
+   * GET /host/earnings/transactions
+   * Returns paginated financial transaction records for host properties.
+   */
+  @Get('earnings/transactions')
+  async getFinancialTransactions(
+    @GetUser() user: User,
+    @Query() query: QueryHostTransactionsDto,
+  ) {
+    return this.hostService.getFinancialTransactions(user.id, query, user.role);
+  }
+
+  // ─────────────────────────────────────────
+  // 12. REVIEWS & REPUTATION MANAGEMENT
+  // ─────────────────────────────────────────
+
+  /**
+   * GET /host/reviews/summary
+   * Returns overall rating average, total review count, rating distribution,
+   * and per-property review summaries for host listings.
+   */
+  @Get('reviews/summary')
+  async getHostReviewsSummary(
+    @GetUser() user: User,
+    @Query() query: QueryHostReviewsSummaryDto,
+  ) {
+    return this.hostService.getHostReviewsSummary(user.id, query, user.role);
+  }
+
+  /**
+   * GET /host/reviews
+   * Returns paginated reviews for properties owned by the authenticated host.
+   */
+  @Get('reviews')
+  async getHostReviews(
+    @GetUser() user: User,
+    @Query() query: QueryHostReviewsDto,
+  ) {
+    return this.hostService.getHostReviews(user.id, query, user.role);
   }
 }

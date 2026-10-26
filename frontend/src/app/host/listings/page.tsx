@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { apiFetch } from '../../../lib/api';
@@ -57,7 +57,57 @@ const STATUS_STYLES: Record<ListingStatus, { bg: string; text: string; dot: stri
   SOLD:      { bg: 'bg-violet-50',  text: 'text-violet-700', dot: 'bg-violet-500' },
 };
 
-function StatusBadge({ status }: { status: ListingStatus }) {
+function StatusBadge({
+  status,
+  adminHidden,
+  hasPendingReview,
+  pendingReviewType,
+  rejectionReason,
+}: {
+  status: ListingStatus;
+  adminHidden?: boolean;
+  hasPendingReview?: boolean;
+  pendingReviewType?: 'INITIAL_PUBLISH' | 'IMPORTANT_EDIT' | null;
+  rejectionReason?: string | null;
+}) {
+  if (adminHidden) {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wide bg-rose-50 text-rose-700 border border-rose-200">
+        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse flex-shrink-0" />
+        Admin Hidden
+      </span>
+    );
+  }
+
+  if (hasPendingReview) {
+    if (pendingReviewType === 'INITIAL_PUBLISH' || status === 'DRAFT') {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wide bg-amber-50 text-amber-700 border border-amber-200">
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse flex-shrink-0" />
+          Pending Review
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wide bg-blue-50 text-blue-700 border border-blue-200">
+        <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse flex-shrink-0" />
+        Changes Pending
+      </span>
+    );
+  }
+
+  if (rejectionReason) {
+    return (
+      <span
+        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wide bg-rose-50 text-rose-700 border border-rose-200"
+        title={rejectionReason}
+      >
+        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 flex-shrink-0" />
+        Needs Correction
+      </span>
+    );
+  }
+
   const styles = STATUS_STYLES[status] ?? STATUS_STYLES.DRAFT;
   return (
     <span
@@ -338,7 +388,13 @@ function TableRow({
       </td>
       {/* Status */}
       <td className="py-3 px-4">
-        <StatusBadge status={listing.status} />
+        <StatusBadge
+          status={listing.status}
+          adminHidden={listing.adminHidden}
+          hasPendingReview={listing.hasPendingReview}
+          pendingReviewType={listing.pendingReviewType}
+          rejectionReason={listing.rejectionReason}
+        />
       </td>
       {/* Updated */}
       <td className="py-3 px-4">
@@ -377,7 +433,13 @@ function MobileCard({
             <p className="text-sm font-bold text-[#000000] leading-tight truncate">
               {listing.title}
             </p>
-            <StatusBadge status={listing.status} />
+            <StatusBadge
+              status={listing.status}
+              adminHidden={listing.adminHidden}
+              hasPendingReview={listing.hasPendingReview}
+              pendingReviewType={listing.pendingReviewType}
+              rejectionReason={listing.rejectionReason}
+            />
           </div>
           <div className="flex items-center gap-2 mt-1">
             <TypeBadge type={listing.listingType} />
@@ -425,33 +487,47 @@ export default function HostListingsPage() {
   // Archive modal
   const [archivingListing, setArchivingListing] = useState<HostListingRow | null>(null);
   const [archiveLoading, setArchiveLoading] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // ── Fetch listings ──
-  const fetchListings = useCallback(async (q: HostListingsQuery) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const params = new URLSearchParams();
-      if (q.listingType) params.set('listingType', q.listingType);
-      if (q.status)      params.set('status', q.status);
-      if (q.city?.trim())    params.set('city', q.city.trim());
-      if (q.subCity?.trim()) params.set('subCity', q.subCity.trim());
-      if (q.search?.trim())  params.set('search', q.search.trim());
-      params.set('page', String(q.page ?? 1));
-      params.set('limit', String(q.limit ?? LIMIT));
-
-      const data = await apiFetch<HostListingsResponse>(`/host/listings?${params.toString()}`);
-      setResponse(data);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to load listings.');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    fetchListings(query);
-  }, [query, fetchListings]);
+    let active = true;
+
+    const loadListings = async () => {
+      try {
+        const params = new URLSearchParams();
+        if (query.listingType) params.set('listingType', query.listingType);
+        if (query.status)      params.set('status', query.status);
+        if (query.city?.trim())    params.set('city', query.city.trim());
+        if (query.subCity?.trim()) params.set('subCity', query.subCity.trim());
+        if (query.search?.trim())  params.set('search', query.search.trim());
+        params.set('page', String(query.page ?? 1));
+        params.set('limit', String(query.limit ?? LIMIT));
+
+        const data = await apiFetch<HostListingsResponse>(`/host/listings?${params.toString()}`);
+        if (!active) return;
+        setResponse(data);
+      } catch (err: unknown) {
+        if (!active) return;
+        setError(err instanceof Error ? err.message : 'Failed to load listings.');
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    queueMicrotask(() => {
+      if (active) {
+        setLoading(true);
+        setError(null);
+      }
+    });
+
+    void loadListings();
+
+    return () => {
+      active = false;
+    };
+  }, [query, refreshKey]);
 
   // ── Debounced search ──
   const handleSearchChange = (value: string) => {
@@ -480,7 +556,7 @@ export default function HostListingsPage() {
       await apiFetch(`/host/listings/${archivingListing.id}/archive`, { method: 'PATCH' });
       setArchivingListing(null);
       showToast('Listing archived successfully.', 'success');
-      fetchListings(query);
+      setRefreshKey((k) => k + 1);
     } catch (err: unknown) {
       setArchivingListing(null);
       showToast(err instanceof Error ? err.message : 'Failed to archive listing.', 'error');
@@ -644,7 +720,7 @@ export default function HostListingsPage() {
           <h3 className="text-base font-bold text-[#000000] mb-2">Failed to load listings</h3>
           <p className="text-sm text-[#64748B] mb-5">{error}</p>
           <button
-            onClick={() => fetchListings(query)}
+            onClick={() => setRefreshKey((k) => k + 1)}
             className="inline-flex items-center gap-2 bg-[#33599E] hover:bg-[#234079] text-white text-sm font-bold px-5 py-2.5 rounded-xl transition"
           >
             <RotateCcw className="w-4 h-4" /> Retry
