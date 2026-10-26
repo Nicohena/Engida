@@ -97,7 +97,9 @@ export default function Step3IdentityVerification({
     if (selectedDocConfig.allowedCountries?.length === 1) {
       const allowed = selectedDocConfig.allowedCountries[0];
       if (data.issuingCountry !== allowed) {
-        updateData({ issuingCountry: allowed });
+        queueMicrotask(() => {
+          updateData({ issuingCountry: allowed });
+        });
       }
     }
   }, [selectedDocConfig, data.issuingCountry, updateData]);

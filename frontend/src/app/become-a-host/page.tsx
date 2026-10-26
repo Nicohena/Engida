@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { Building2, Save, HelpCircle, ArrowRight, Clock, AlertTriangle } from 'lucide-react';
@@ -29,7 +29,14 @@ export default function BecomeAHostWizardPage() {
     try {
       const saved = sessionStorage.getItem('engida_host_onboarding_state');
       if (saved) {
-        setFormData((prev) => ({ ...prev, ...JSON.parse(saved) }));
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object') {
+          setFormData((prev) => ({
+            ...prev,
+            ...parsed,
+            verificationChannel: 'EMAIL',
+          }));
+        }
       }
     } catch {
       // ignore storage errors
@@ -63,7 +70,7 @@ export default function BecomeAHostWizardPage() {
     }
   };
 
-  const updateFormData = (fields: Partial<OnboardingFormData>) => {
+  const updateFormData = useCallback((fields: Partial<OnboardingFormData>) => {
     setFormData((prev) => {
       const updated = { ...prev, ...fields };
       try {
@@ -73,7 +80,7 @@ export default function BecomeAHostWizardPage() {
       }
       return updated;
     });
-  };
+  }, []);
 
   const handleNextStep = (stepNumber: number) => {
     setCompletedSteps((prev) => (prev.includes(currentStep) ? prev : [...prev, currentStep]));

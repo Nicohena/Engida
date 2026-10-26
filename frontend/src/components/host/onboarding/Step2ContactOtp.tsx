@@ -42,25 +42,14 @@ export default function Step2ContactOtp({
 
   const targetEmail = data.email?.trim() || '';
 
-  // Ensure verification channel is set to EMAIL
-  useEffect(() => {
-    if (data.verificationChannel !== 'EMAIL') {
-      updateData({ verificationChannel: 'EMAIL' });
-    }
-  }, [data.verificationChannel, updateData]);
-
-  // Handle countdown timer for resend throttling
+  // Handle countdown timer for resend throttling cleanly without mutating parent during render
   useEffect(() => {
     if (cooldown <= 0) return;
     const timer = setInterval(() => {
-      setCooldown((prev) => {
-        const next = prev - 1;
-        updateData({ otpCooldownSeconds: next });
-        return next;
-      });
+      setCooldown((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
     return () => clearInterval(timer);
-  }, [cooldown, updateData]);
+  }, [cooldown]);
 
   // Request real email OTP from backend via Gmail SMTP
   const handleSendCode = async () => {
