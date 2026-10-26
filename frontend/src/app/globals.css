@@ -258,4 +258,223 @@ body {
   scrollbar-width: none;
 }
 
+/* ============================================================ */
+/* OPERATIONS CONSOLE                                           */
+/* A quiet, warm work surface built on the Engida system.       */
+/* ============================================================ */
 
+.admin-shell {
+  --admin-canvas: #faf5ee;
+  --admin-surface: #f2ece4;
+  --admin-surface-low: #f6f0e8;
+  --admin-surface-high: #ece6dc;
+  --admin-ink: #3a302a;
+  --admin-muted: #605850;
+  --admin-subtle: #78706a;
+  --admin-outline: #d8d0c8;
+  --admin-outline-strong: #c9bdb1;
+  --admin-primary: #b3541e;
+  --admin-primary-hover: #934313;
+  --admin-primary-soft: #f5e4d7;
+  --admin-success: #536b4a;
+  --admin-success-soft: #edf1e8;
+  --admin-warning: #95631f;
+  --admin-warning-soft: #f7ebda;
+  --admin-danger: #9a3f33;
+  --admin-danger-soft: #f8e9e5;
+
+  min-height: 100vh;
+  background-color: var(--admin-canvas);
+  color: var(--admin-ink);
+  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.admin-shell ::selection {
+  background: #e9c8b3;
+  color: #3a302a;
+}
+
+.admin-shell ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.admin-shell ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.admin-shell ::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 9999px;
+  background: #cbbcb0;
+  background-clip: content-box;
+}
+
+.admin-shell h1,
+.admin-shell h2 {
+  font-family: 'EB Garamond', Georgia, serif;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+.admin-shell p {
+  text-wrap: pretty;
+}
+
+.admin-shell input,
+.admin-shell select,
+.admin-shell textarea,
+.admin-shell button {
+  font-family: inherit;
+}
+
+.admin-shell input::placeholder,
+.admin-shell textarea::placeholder {
+  color: #7a6b5f;
+  opacity: 1;
+}
+
+.admin-shell :focus-visible {
+  outline: 2px solid rgba(179, 84, 30, 0.75);
+  outline-offset: 2px;
+}
+
+.admin-page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  border-bottom: 1px solid var(--admin-outline);
+  padding-bottom: 1.5rem;
+}
+
+.admin-page-title {
+  color: var(--admin-ink);
+  font-family: 'EB Garamond', Georgia, serif;
+  font-size: clamp(2rem, 3vw, 2.75rem);
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+.admin-page-description {
+  max-width: 46rem;
+  margin-top: 0.55rem;
+  color: var(--admin-muted);
+  font-size: 0.875rem;
+  line-height: 1.65;
+}
+
+.admin-page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.admin-panel {
+  border: 1px solid var(--admin-outline);
+  border-radius: 1rem;
+  background: #ffffff;
+  box-shadow: 0 4px 20px -2px rgba(58, 48, 42, 0.05);
+}
+
+.admin-panel-muted {
+  border: 1px solid var(--admin-outline);
+  border-radius: 1rem;
+  background: var(--admin-surface-low);
+}
+
+.admin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+  border: 1px solid transparent;
+  border-radius: 0.625rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.admin-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.admin-btn-primary {
+  background: var(--admin-primary);
+  color: #ffffff;
+  box-shadow: 0 8px 20px -14px rgba(179, 84, 30, 0.9);
+}
+
+.admin-btn-primary:hover:not(:disabled) {
+  background: var(--admin-primary-hover);
+  box-shadow: 0 10px 24px -14px rgba(147, 67, 19, 0.9);
+}
+
+.admin-btn-secondary {
+  border-color: var(--admin-outline);
+  background: #ffffff;
+  color: var(--admin-ink);
+}
+
+.admin-btn-secondary:hover:not(:disabled) {
+  border-color: var(--admin-outline-strong);
+  background: var(--admin-surface-low);
+}
+
+.admin-btn-ghost {
+  background: transparent;
+  color: var(--admin-muted);
+}
+
+.admin-btn-ghost:hover:not(:disabled) {
+  background: var(--admin-surface);
+  color: var(--admin-ink);
+}
+
+.admin-shell .admin-numeric {
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-shell table .rounded-full {
+  white-space: nowrap;
+}
+
+.admin-shell table button {
+  white-space: nowrap;
+}
+
+.admin-shell .admin-divider {
+  border-color: var(--admin-outline);
+}
+
+.admin-shell .admin-muted {
+  color: var(--admin-muted);
+}
+
+.admin-shell .admin-subtle {
+  color: var(--admin-subtle);
+}
+
+@media (min-width: 640px) {
+  .admin-page-header {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 2rem;
+  }
+}

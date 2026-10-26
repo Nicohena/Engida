@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import ProtectedRoute from '../../../components/ProtectedRoute';
+import AdminPageHeader from '../../../components/admin/AdminPageHeader';
 import { apiFetch } from '../../../lib/api';
 import type {
   ReviewSubmissionType,
@@ -471,148 +472,144 @@ export default function AdminModerationPage() {
 
   return (
     <ProtectedRoute requiredRole="ADMIN">
-      <div className="py-6 space-y-6 max-w-7xl mx-auto px-4 sm:px-6">
-        {/* ── Page Header ── */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-[#CBD5E1]">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="bg-[#E3EAF5] text-[#33599E] text-xs font-black px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5" /> Administrative Console
-              </span>
-              <span className="text-xs text-[#64748B] font-semibold">ENGIDA Trust & Safety</span>
-            </div>
-            <h1 className="text-3xl font-black text-[#000000] tracking-tight mt-1">
-              Listing Review & Moderation
-            </h1>
-            <p className="text-sm text-[#64748B] mt-0.5">
-              Review new property publications, inspect live edit proposals, and enforce safety holds.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3">
+      <div className="space-y-8">
+        <AdminPageHeader
+          title="Moderation"
+          description="Review new property publications, inspect live edit proposals, and enforce safety holds."
+          actions={
             <button
               onClick={() => fetchReviews()}
               disabled={loading}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-[#CBD5E1] bg-white text-xs font-bold text-[#000000] hover:bg-[#F4F7FC] transition disabled:opacity-50"
+              className="admin-btn admin-btn-secondary"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-              Refresh Queue
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} strokeWidth={1.8} />
+              Refresh queue
             </button>
-          </div>
-        </div>
+          }
+        />
 
-        {/* ── Metric Cards Bar ── */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-          <div className="bg-white border border-[#CBD5E1] rounded-2xl p-4 shadow-sm">
-            <div className="flex items-center justify-between text-xs font-bold text-[#64748B]">
-              <span>Pending Reviews</span>
-              <Clock className="w-4 h-4 text-amber-500" />
+        {/* ── Moderation summary ── */}
+        <section className="admin-panel overflow-hidden" aria-label="Moderation summary">
+          <div className="grid grid-cols-2 gap-px bg-[#ece4d9] md:grid-cols-4">
+            <div className="bg-white px-5 py-5">
+              <div className="flex items-center justify-between gap-2 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7a6b5f]">
+                <span>Pending reviews</span>
+                <Clock className="h-4 w-4 text-[#b37936]" strokeWidth={1.8} />
+              </div>
+              <p className="admin-numeric mt-3 font-headline text-3xl font-semibold leading-none text-[#3a302a]">
+                {stats.pendingTotal}
+              </p>
+              <p className="mt-2 text-xs font-semibold text-[#9a671f]">
+                Requires admin decision
+              </p>
             </div>
-            <div className="text-2xl font-black text-[#000000] mt-1.5">
-              {stats.pendingTotal}
-            </div>
-            <div className="text-xs text-amber-600 font-semibold mt-0.5">
-              Requires admin decision
-            </div>
-          </div>
 
-          <div className="bg-white border border-[#CBD5E1] rounded-2xl p-4 shadow-sm">
-            <div className="flex items-center justify-between text-xs font-bold text-[#64748B]">
-              <span>New Publications</span>
-              <Building2 className="w-4 h-4 text-[#33599E]" />
+            <div className="bg-white px-5 py-5">
+              <div className="flex items-center justify-between gap-2 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7a6b5f]">
+                <span>New publications</span>
+                <Building2 className="h-4 w-4 text-[#b3541e]" strokeWidth={1.8} />
+              </div>
+              <p className="admin-numeric mt-3 font-headline text-3xl font-semibold leading-none text-[#3a302a]">
+                {stats.pendingInitial}
+              </p>
+              <p className="mt-2 text-xs text-[#7a6b5f]">Initial property launches</p>
             </div>
-            <div className="text-2xl font-black text-[#000000] mt-1.5">
-              {stats.pendingInitial}
-            </div>
-            <div className="text-xs text-[#64748B] font-semibold mt-0.5">
-              Initial property launches
-            </div>
-          </div>
 
-          <div className="bg-white border border-[#CBD5E1] rounded-2xl p-4 shadow-sm">
-            <div className="flex items-center justify-between text-xs font-bold text-[#64748B]">
-              <span>Important Edits</span>
-              <Layers className="w-4 h-4 text-purple-600" />
+            <div className="bg-white px-5 py-5">
+              <div className="flex items-center justify-between gap-2 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7a6b5f]">
+                <span>Important edits</span>
+                <Layers className="h-4 w-4 text-[#8b4b2c]" strokeWidth={1.8} />
+              </div>
+              <p className="admin-numeric mt-3 font-headline text-3xl font-semibold leading-none text-[#3a302a]">
+                {stats.pendingEdits}
+              </p>
+              <p className="mt-2 text-xs text-[#7a6b5f]">Live listings pending updates</p>
             </div>
-            <div className="text-2xl font-black text-[#000000] mt-1.5">
-              {stats.pendingEdits}
-            </div>
-            <div className="text-xs text-[#64748B] font-semibold mt-0.5">
-              Live listings pending updates
-            </div>
-          </div>
 
-          <div className="bg-white border border-[#CBD5E1] rounded-2xl p-4 shadow-sm">
-            <div className="flex items-center justify-between text-xs font-bold text-[#64748B]">
-              <span>Action Complete</span>
-              <CheckCircle2 className="w-4 h-4 text-green-600" />
-            </div>
-            <div className="text-2xl font-black text-[#000000] mt-1.5">
-              {stats.approvedTotal + stats.rejectedTotal}
-            </div>
-            <div className="text-xs text-green-600 font-semibold mt-0.5">
-              Processed submissions
+            <div className="bg-white px-5 py-5">
+              <div className="flex items-center justify-between gap-2 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7a6b5f]">
+                <span>Action complete</span>
+                <CheckCircle2 className="h-4 w-4 text-[#4f6648]" strokeWidth={1.8} />
+              </div>
+              <p className="admin-numeric mt-3 font-headline text-3xl font-semibold leading-none text-[#3a302a]">
+                {stats.approvedTotal + stats.rejectedTotal}
+              </p>
+              <p className="mt-2 text-xs font-semibold text-[#4f6648]">
+                Processed submissions
+              </p>
             </div>
           </div>
-        </div>
+        </section>
 
         {/* ── Main Console Tabs ── */}
-        <div className="flex items-center gap-2 border-b border-[#CBD5E1]">
+        <div className="flex flex-wrap items-center gap-2" role="tablist" aria-label="Moderation queues">
           <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'pending'}
             onClick={() => {
               setActiveTab('pending');
               setStatusFilter('PENDING');
             }}
-            className={`px-4 py-2.5 text-sm font-bold border-b-2 transition flex items-center gap-2 ${
+            className={`inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg border px-3.5 py-2 text-[13px] font-semibold transition ${
               activeTab === 'pending'
-                ? 'border-[#33599E] text-[#33599E]'
-                : 'border-transparent text-[#64748B] hover:text-[#000000]'
+                ? 'border-[#e0c3ae] bg-[#f8ebe0] text-[#9f4a19]'
+                : 'border-[#d8d0c8] bg-white text-[#5a4c42] hover:border-[#c9bdb1] hover:bg-[#fbf7f1]'
             }`}
           >
-            <Clock className="w-4 h-4" /> Pending Queue
+            <Clock className="h-4 w-4" strokeWidth={1.8} /> Pending queue
             {stats.pendingTotal > 0 && (
-              <span className="bg-amber-100 text-amber-800 text-xs px-2 py-0.5 rounded-full font-black">
+              <span className="rounded-full bg-[#f4e6d5] px-2 py-0.5 text-xs font-bold text-[#7a531c]">
                 {stats.pendingTotal}
               </span>
             )}
           </button>
 
           <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'all'}
             onClick={() => {
               setActiveTab('all');
               setStatusFilter('');
             }}
-            className={`px-4 py-2.5 text-sm font-bold border-b-2 transition flex items-center gap-2 ${
+            className={`inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg border px-3.5 py-2 text-[13px] font-semibold transition ${
               activeTab === 'all'
-                ? 'border-[#33599E] text-[#33599E]'
-                : 'border-transparent text-[#64748B] hover:text-[#000000]'
+                ? 'border-[#e0c3ae] bg-[#f8ebe0] text-[#9f4a19]'
+                : 'border-[#d8d0c8] bg-white text-[#5a4c42] hover:border-[#c9bdb1] hover:bg-[#fbf7f1]'
             }`}
           >
-            <FileText className="w-4 h-4" /> Moderation History
+            <FileText className="h-4 w-4" strokeWidth={1.8} /> Moderation history
           </button>
 
           <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'takedowns'}
             onClick={() => setActiveTab('takedowns')}
-            className={`px-4 py-2.5 text-sm font-bold border-b-2 transition flex items-center gap-2 ${
+            className={`inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg border px-3.5 py-2 text-[13px] font-semibold transition ${
               activeTab === 'takedowns'
-                ? 'border-red-600 text-red-600'
-                : 'border-transparent text-[#64748B] hover:text-red-600'
+                ? 'border-[#e4beb5] bg-[#f8e9e5] text-[#8f4035]'
+                : 'border-[#d8d0c8] bg-white text-[#5a4c42] hover:border-[#c9bdb1] hover:bg-[#fbf7f1]'
             }`}
           >
-            <ShieldAlert className="w-4 h-4" /> Safety Hold & Takedown
+            <ShieldAlert className="h-4 w-4" strokeWidth={1.8} /> Safety holds
           </button>
 
           <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'host-verifications'}
             onClick={() => setActiveTab('host-verifications')}
-            className={`px-4 py-2.5 text-sm font-bold border-b-2 transition flex items-center gap-2 ${
+            className={`inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg border px-3.5 py-2 text-[13px] font-semibold transition ${
               activeTab === 'host-verifications'
-                ? 'border-[#33599E] text-[#33599E]'
-                : 'border-transparent text-[#64748B] hover:text-[#000000]'
+                ? 'border-[#e0c3ae] bg-[#f8ebe0] text-[#9f4a19]'
+                : 'border-[#d8d0c8] bg-white text-[#5a4c42] hover:border-[#c9bdb1] hover:bg-[#fbf7f1]'
             }`}
           >
-            <ShieldCheck className="w-4 h-4" /> Host Verifications
+            <ShieldCheck className="h-4 w-4" strokeWidth={1.8} /> Host verifications
             {pendingHostCount > 0 && (
-              <span className="bg-blue-100 text-[#1e40af] text-xs px-2 py-0.5 rounded-full font-black">
+              <span className="rounded-full bg-[#efe2ce] px-2 py-0.5 text-xs font-bold text-[#8f3f13]">
                 {pendingHostCount}
               </span>
             )}
@@ -623,15 +620,15 @@ export default function AdminModerationPage() {
         {activeTab !== 'takedowns' && activeTab !== 'host-verifications' && (
           <div className="space-y-4">
             {/* Filter Bar */}
-            <div className="bg-white border border-[#CBD5E1] rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm">
+            <div className="bg-white border border-[#d8d0c8] rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm">
               <div className="relative flex-1 max-w-md">
-                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#94A3B8]" />
+                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9b8c80]" />
                 <input
                   type="text"
                   placeholder="Filter by listing title, host, or ID..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 rounded-xl border border-[#CBD5E1] text-xs font-semibold text-[#000000] focus:outline-none focus:ring-2 focus:ring-[#33599E]/20 focus:border-[#33599E]"
+                  className="w-full pl-10 pr-4 py-2 rounded-xl border border-[#d8d0c8] text-xs font-semibold text-[#3a302a] focus:outline-none focus:ring-2 focus:ring-[#b3541e]/20 focus:border-[#b3541e]"
                 />
               </div>
 
@@ -640,7 +637,7 @@ export default function AdminModerationPage() {
                 <select
                   value={typeFilter}
                   onChange={(e) => setTypeFilter(e.target.value)}
-                  className="px-3 py-2 rounded-xl border border-[#CBD5E1] text-xs font-semibold text-[#000000] bg-white focus:outline-none focus:ring-2 focus:ring-[#33599E]/20"
+                  className="px-3 py-2 rounded-xl border border-[#d8d0c8] text-xs font-semibold text-[#3a302a] bg-white focus:outline-none focus:ring-2 focus:ring-[#b3541e]/20"
                 >
                   <option value="">All Submission Types</option>
                   <option value="INITIAL_PUBLISH">Initial Publications</option>
@@ -652,7 +649,7 @@ export default function AdminModerationPage() {
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="px-3 py-2 rounded-xl border border-[#CBD5E1] text-xs font-semibold text-[#000000] bg-white focus:outline-none focus:ring-2 focus:ring-[#33599E]/20"
+                    className="px-3 py-2 rounded-xl border border-[#d8d0c8] text-xs font-semibold text-[#3a302a] bg-white focus:outline-none focus:ring-2 focus:ring-[#b3541e]/20"
                   >
                     <option value="">All Statuses</option>
                     <option value="PENDING">Pending</option>
@@ -666,31 +663,35 @@ export default function AdminModerationPage() {
 
             {/* Queue List Table / Cards */}
             {loading ? (
-              <div className="bg-white border border-[#CBD5E1] rounded-2xl p-12 text-center text-[#64748B] space-y-3">
-                <div className="w-8 h-8 border-3 border-[#33599E] border-t-transparent rounded-full animate-spin mx-auto" />
+              <div className="bg-white border border-[#d8d0c8] rounded-2xl p-12 text-center text-[#7a6b5f] space-y-3">
+                <div className="w-8 h-8 border-3 border-[#b3541e] border-t-transparent rounded-full animate-spin mx-auto" />
                 <p className="text-sm font-semibold">Loading listing moderation queue…</p>
               </div>
             ) : error ? (
-              <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center text-red-700 space-y-2">
-                <AlertTriangle className="w-8 h-8 text-red-500 mx-auto" />
+              <div className="bg-[#f8e9e5] border border-[#ecd0c9] rounded-2xl p-6 text-center text-[#8f4035] space-y-2">
+                <AlertTriangle className="w-8 h-8 text-[#a24b3e] mx-auto" />
                 <p className="text-sm font-bold">Error loading review queue</p>
                 <p className="text-xs">{error}</p>
               </div>
             ) : filteredReviews.length === 0 ? (
-              <div className="bg-white border border-[#CBD5E1] rounded-2xl p-12 text-center space-y-3">
-                <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center mx-auto text-[#64748B]">
-                  <CheckCircle2 className="w-6 h-6 text-green-600" />
+              <div className="bg-white border border-[#d8d0c8] rounded-2xl p-10">
+                <div className="mx-auto flex max-w-md items-center gap-4">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#edf1e8] text-[#5d7554]">
+                    <CheckCircle2 className="h-5 w-5" strokeWidth={1.8} />
+                  </span>
+                  <div>
+                    <h2 className="font-headline text-xl font-semibold tracking-[-0.01em] text-[#3a302a]">Queue is clear</h2>
+                    <p className="mt-1 text-xs leading-5 text-[#7a6b5f]">
+                      {activeTab === 'pending'
+                        ? 'There are currently no listings or proposals awaiting administrative review.'
+                        : 'No moderation records found matching the selected filters.'}
+                    </p>
+                  </div>
                 </div>
-                <h3 className="text-base font-bold text-[#000000]">Queue is Clear</h3>
-                <p className="text-xs text-[#64748B] max-w-sm mx-auto">
-                  {activeTab === 'pending'
-                    ? 'There are currently no listings or proposals awaiting administrative review.'
-                    : 'No moderation records found matching the selected filters.'}
-                </p>
               </div>
             ) : (
-              <div className="bg-white border border-[#CBD5E1] rounded-2xl overflow-hidden shadow-sm">
-                <div className="divide-y divide-[#F1F5F9]">
+              <div className="bg-white border border-[#d8d0c8] rounded-2xl overflow-hidden shadow-sm">
+                <div className="divide-y divide-[#f1eae0]">
                   {filteredReviews.map((rev) => {
                     const isPending = rev.status === 'PENDING';
                     const isInitial = rev.submissionType === 'INITIAL_PUBLISH';
@@ -699,12 +700,12 @@ export default function AdminModerationPage() {
                     return (
                       <div
                         key={rev.id}
-                        className="p-4 md:p-5 hover:bg-[#F8FAFD] transition flex flex-col lg:flex-row lg:items-center justify-between gap-4"
+                        className="p-4 md:p-5 hover:bg-[#fbf7f1] transition flex flex-col lg:flex-row lg:items-center justify-between gap-4"
                       >
                         {/* Left: Thumbnail & Info */}
                         <div className="flex items-start gap-3.5">
                           {/* Property Cover / Thumbnail */}
-                          <div className="w-16 h-16 rounded-xl bg-slate-100 border border-[#CBD5E1] overflow-hidden flex-shrink-0 flex items-center justify-center">
+                          <div className="w-16 h-16 rounded-xl bg-[#efe7dc] border border-[#d8d0c8] overflow-hidden flex-shrink-0 flex items-center justify-center">
                             {prop?.coverImage ? (
                               // eslint-disable-next-line @next/next/no-img-element
                               <img
@@ -713,7 +714,7 @@ export default function AdminModerationPage() {
                                 className="w-full h-full object-cover"
                               />
                             ) : (
-                              <Building2 className="w-6 h-6 text-[#94A3B8]" />
+                              <Building2 className="w-6 h-6 text-[#9b8c80]" />
                             )}
                           </div>
 
@@ -722,10 +723,10 @@ export default function AdminModerationPage() {
                             <div className="flex flex-wrap items-center gap-2">
                               {/* Submission Type Badge */}
                               <span
-                                className={`text-[11px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                                className={`text-xs font-black px-2 py-0.5 rounded-full uppercase tracking-wider ${
                                   isInitial
-                                    ? 'bg-blue-100 text-blue-800 border border-blue-200'
-                                    : 'bg-purple-100 text-purple-800 border border-purple-200'
+                                    ? 'bg-[#efe2ce] text-[#7b5c33] border border-[#e3d5c1]'
+                                    : 'bg-[#f3e7df] text-[#7d352b] border border-[#ecdbcf]'
                                 }`}
                               >
                                 {isInitial ? 'Initial Publication' : 'Important Edit Proposal'}
@@ -733,56 +734,56 @@ export default function AdminModerationPage() {
 
                               {/* Status Badge */}
                               <span
-                                className={`text-[11px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                                className={`text-xs font-black px-2 py-0.5 rounded-full uppercase tracking-wider ${
                                   rev.status === 'PENDING'
-                                    ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                                    ? 'bg-[#f4e6d5] text-[#7a531c] border border-[#ecd9c2]'
                                     : rev.status === 'APPROVED'
-                                    ? 'bg-green-100 text-green-800 border border-green-200'
+                                    ? 'bg-[#e3e9dc] text-[#405a3a] border border-[#d6dfcd]'
                                     : rev.status === 'REJECTED'
-                                    ? 'bg-red-100 text-red-800 border border-red-200'
-                                    : 'bg-slate-100 text-slate-800 border border-slate-200'
+                                    ? 'bg-[#f3dcd6] text-[#7d352b] border border-[#ecd0c9]'
+                                    : 'bg-[#efe7dc] text-[#4a3e35] border border-[#d8d0c8]'
                                 }`}
                               >
                                 {rev.status}
                               </span>
 
                               {prop?.adminHidden && (
-                                <span className="bg-red-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded">
+                                <span className="bg-[#a24b3e] text-white text-[11px] font-black px-1.5 py-0.5 rounded">
                                   ADMIN HOLD
                                 </span>
                               )}
                             </div>
 
-                            <h3 className="text-base font-bold text-[#000000] leading-snug">
+                            <p className="text-base font-bold text-[#3a302a] leading-snug">
                               {prop?.title || 'Untitled Property'}
-                            </h3>
+                            </p>
 
-                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[#64748B]">
-                              <span className="flex items-center gap-1 font-semibold text-[#000000]">
-                                <MapPin className="w-3.5 h-3.5 text-[#33599E]" />
+                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[#7a6b5f]">
+                              <span className="flex items-center gap-1 font-semibold text-[#3a302a]">
+                                <MapPin className="w-3.5 h-3.5 text-[#b3541e]" />
                                 {prop?.city || 'Unknown City'}
                               </span>
 
-                              <span className="flex items-center gap-1 font-semibold text-[#000000]">
-                                <User className="w-3.5 h-3.5 text-[#64748B]" />
+                              <span className="flex items-center gap-1 font-semibold text-[#3a302a]">
+                                <User className="w-3.5 h-3.5 text-[#7a6b5f]" />
                                 Host: {rev.submittedByHost?.fullName || 'Host'} (
                                 {rev.submittedByHost?.email || 'N/A'})
                               </span>
 
                               <span className="flex items-center gap-1">
-                                <Calendar className="w-3.5 h-3.5 text-[#94A3B8]" />
+                                <Calendar className="w-3.5 h-3.5 text-[#9b8c80]" />
                                 Submitted:{' '}
                                 {rev.submittedAt
-                                  ? new Date(rev.submittedAt).toLocaleDateString()
+                                  ? new Date(rev.submittedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
                                   : rev.createdAt
-                                  ? new Date(rev.createdAt).toLocaleDateString()
+                                  ? new Date(rev.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
                                   : 'N/A'}
                               </span>
                             </div>
 
                             {/* Rejection notice snippet if rejected */}
                             {rev.status === 'REJECTED' && rev.rejectionReason && (
-                              <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg p-2 mt-1">
+                              <p className="text-xs text-[#8f4035] bg-[#f8e9e5] border border-[#ecd0c9] rounded-lg p-2 mt-1">
                                 <strong>Rejection Reason:</strong> {rev.rejectionReason}
                               </p>
                             )}
@@ -793,9 +794,9 @@ export default function AdminModerationPage() {
                         <div className="flex items-center gap-2 flex-shrink-0 self-end lg:self-center">
                           <button
                             onClick={() => openReviewDetail(rev.id)}
-                            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#CBD5E1] bg-white text-xs font-bold text-[#000000] hover:bg-[#E3EAF5]/50 transition shadow-sm"
+                            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#d8d0c8] bg-white text-xs font-bold text-[#3a302a] hover:bg-[#f1e5d8]/50 transition shadow-sm"
                           >
-                            <Eye className="w-3.5 h-3.5 text-[#33599E]" /> Inspect & Decide
+                            <Eye className="w-3.5 h-3.5 text-[#b3541e]" /> Inspect & Decide
                           </button>
 
                           {isPending && (
@@ -803,7 +804,7 @@ export default function AdminModerationPage() {
                               <button
                                 onClick={() => handleApprove(rev.id)}
                                 disabled={actionInProgress === rev.id}
-                                className="inline-flex items-center gap-1 px-3.5 py-2 rounded-xl bg-green-600 hover:bg-green-700 text-white text-xs font-bold transition shadow-sm disabled:opacity-50"
+                                className="inline-flex items-center gap-1 px-3.5 py-2 rounded-xl bg-[#5d7554] hover:bg-[#4f6648] text-white text-xs font-bold transition shadow-sm disabled:opacity-50"
                               >
                                 <Check className="w-3.5 h-3.5" /> Approve
                               </button>
@@ -814,7 +815,7 @@ export default function AdminModerationPage() {
                                   setRejectionModalOpen(true);
                                 }}
                                 disabled={actionInProgress === rev.id}
-                                className="inline-flex items-center gap-1 px-3.5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition shadow-sm disabled:opacity-50"
+                                className="inline-flex items-center gap-1 px-3.5 py-2 rounded-xl bg-[#a24b3e] hover:bg-[#8f4035] text-white text-xs font-bold transition shadow-sm disabled:opacity-50"
                               >
                                 <X className="w-3.5 h-3.5" /> Reject…
                               </button>
@@ -833,14 +834,14 @@ export default function AdminModerationPage() {
         {/* ── TAB 3: Takedown / Administrative Hold Console ── */}
         {activeTab === 'takedowns' && (
           <div className="space-y-6 max-w-3xl">
-            <div className="bg-white border border-[#CBD5E1] rounded-2xl p-6 shadow-sm space-y-4">
-              <div className="flex items-center gap-2.5 pb-3 border-b border-[#F1F5F9]">
-                <ShieldAlert className="w-5 h-5 text-red-600" />
+            <div className="bg-white border border-[#d8d0c8] rounded-2xl p-6 shadow-sm space-y-4">
+              <div className="flex items-center gap-2.5 pb-3 border-b border-[#f1eae0]">
+                <ShieldAlert className="w-5 h-5 text-[#a24b3e]" />
                 <div>
-                  <h2 className="text-lg font-black text-[#000000]">
-                    Emergency Takedown & Safety Hold Console
+                  <h2 className="font-headline text-2xl font-semibold tracking-[-0.015em] text-[#3a302a]">
+                    Emergency takedown & safety hold
                   </h2>
-                  <p className="text-xs text-[#64748B]">
+                  <p className="text-xs text-[#7a6b5f]">
                     Instantly hide any property from search discovery and booking reservations in
                     cases of safety violations, dispute, fraud, or policy infringement.
                   </p>
@@ -854,13 +855,13 @@ export default function AdminModerationPage() {
                   placeholder="Enter Property UUID (e.g. 1a2b3c4d-...)"
                   value={takedownPropertyId}
                   onChange={(e) => setTakedownPropertyId(e.target.value)}
-                  className="flex-1 px-4 py-2.5 rounded-xl border border-[#CBD5E1] text-xs font-semibold text-[#000000] focus:outline-none focus:ring-2 focus:ring-[#33599E]/20"
+                  className="flex-1 px-4 py-2.5 rounded-xl border border-[#d8d0c8] text-xs font-semibold text-[#3a302a] focus:outline-none focus:ring-2 focus:ring-[#b3541e]/20"
                 />
                 <button
                   type="button"
                   onClick={handleLookupListing}
                   disabled={takedownLoading || !takedownPropertyId.trim()}
-                  className="px-5 py-2.5 rounded-xl bg-[#33599E] hover:bg-[#234079] text-white text-xs font-bold transition disabled:opacity-50 flex items-center gap-1.5"
+                  className="px-5 py-2.5 rounded-xl bg-[#b3541e] hover:bg-[#8f3f13] text-white text-xs font-bold transition disabled:opacity-50 flex items-center gap-1.5"
                 >
                   <Search className="w-3.5 h-3.5" /> Lookup
                 </button>
@@ -868,42 +869,42 @@ export default function AdminModerationPage() {
 
               {/* Takedown Status messages */}
               {takedownMessage && (
-                <div className="p-3.5 rounded-xl bg-green-50 border border-green-200 text-xs font-bold text-green-800 flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
+                <div className="p-3.5 rounded-xl bg-[#edf1e8] border border-[#d6dfcd] text-xs font-bold text-[#405a3a] flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-[#5d7554] flex-shrink-0" />
                   {takedownMessage}
                 </div>
               )}
               {takedownError && (
-                <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-xs font-bold text-red-800 flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0" />
+                <div className="p-3.5 rounded-xl bg-[#f8e9e5] border border-[#ecd0c9] text-xs font-bold text-[#7d352b] flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-[#a24b3e] flex-shrink-0" />
                   {takedownError}
                 </div>
               )}
 
               {/* Takedown Listing Result Card */}
               {takedownListing && (
-                <div className="bg-[#F8FAFD] border border-[#CBD5E1] rounded-xl p-5 space-y-4">
+                <div className="bg-[#fbf7f1] border border-[#d8d0c8] rounded-xl p-5 space-y-4">
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <span className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider block">
+                      <span className="text-xs font-bold text-[#7a6b5f] uppercase tracking-wider block">
                         Listing ID: {takedownListing.id}
                       </span>
-                      <h3 className="text-base font-black text-[#000000] mt-0.5">
+                      <p className="text-base font-semibold text-[#3a302a] mt-0.5">
                         {takedownListing.title}
-                      </h3>
-                      <p className="text-xs text-[#64748B]">
+                      </p>
+                      <p className="text-xs text-[#7a6b5f]">
                         {takedownListing.address}, {takedownListing.city} • Status:{' '}
-                        <strong className="text-[#000000]">{takedownListing.status}</strong>
+                        <strong className="text-[#3a302a]">{takedownListing.status}</strong>
                       </p>
                     </div>
 
                     <div>
                       {takedownListing.adminHidden ? (
-                        <span className="bg-red-600 text-white text-xs font-black px-2.5 py-1 rounded-full uppercase tracking-wider">
+                        <span className="bg-[#a24b3e] text-white text-xs font-black px-2.5 py-1 rounded-full uppercase tracking-wider">
                           ADMIN HOLD ACTIVE
                         </span>
                       ) : (
-                        <span className="bg-green-100 text-green-800 border border-green-200 text-xs font-black px-2.5 py-1 rounded-full uppercase tracking-wider">
+                        <span className="bg-[#e3e9dc] text-[#405a3a] border border-[#d6dfcd] text-xs font-black px-2.5 py-1 rounded-full uppercase tracking-wider">
                           PUBLIC / ACCESSIBLE
                         </span>
                       )}
@@ -912,17 +913,17 @@ export default function AdminModerationPage() {
 
                   {/* If currently hidden */}
                   {takedownListing.adminHidden ? (
-                    <div className="space-y-3 pt-3 border-t border-[#CBD5E1]/60">
-                      <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-xs text-red-900 space-y-1">
+                    <div className="space-y-3 pt-3 border-t border-[#d8d0c8]/60">
+                      <div className="bg-[#f8e9e5] border border-[#ecd0c9] rounded-xl p-3 text-xs text-[#5e2a24] space-y-1">
                         <p className="font-bold flex items-center gap-1.5">
-                          <AlertOctagon className="w-4 h-4 text-red-600" /> Administrative Hold
+                          <AlertOctagon className="w-4 h-4 text-[#a24b3e]" /> Administrative Hold
                           Details:
                         </p>
                         <p>
                           <strong>Reason:</strong> {takedownListing.adminHiddenReason || 'No reason specified'}
                         </p>
                         {takedownListing.adminHiddenAt && (
-                          <p className="text-red-700">
+                          <p className="text-[#8f4035]">
                             <strong>Date Enforced:</strong>{' '}
                             {new Date(takedownListing.adminHiddenAt).toLocaleString()}
                           </p>
@@ -932,28 +933,28 @@ export default function AdminModerationPage() {
                       <button
                         onClick={handleRestoreListing}
                         disabled={takedownLoading}
-                        className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-green-600 hover:bg-green-700 text-white text-xs font-bold transition shadow-sm"
+                        className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#5d7554] hover:bg-[#4f6648] text-white text-xs font-bold transition shadow-sm"
                       >
                         <CheckCircle2 className="w-4 h-4" /> Restore Listing to Public
                       </button>
                     </div>
                   ) : (
                     /* If active, allow takedown */
-                    <div className="space-y-3 pt-3 border-t border-[#CBD5E1]/60">
-                      <label className="block text-xs font-bold text-[#000000]">
-                        Mandatory Reason for Administrative Hold <span className="text-red-600">*</span>
+                    <div className="space-y-3 pt-3 border-t border-[#d8d0c8]/60">
+                      <label className="block text-xs font-bold text-[#3a302a]">
+                        Mandatory Reason for Administrative Hold <span className="text-[#a24b3e]">*</span>
                       </label>
                       <textarea
                         rows={3}
                         value={takedownReason}
                         onChange={(e) => setTakedownReason(e.target.value)}
                         placeholder="Explain specifically why this listing is being pulled down (e.g. Host identity fraud investigation, Safety hazard reported by guest, Unverified ownership)..."
-                        className="w-full px-3 py-2 rounded-xl border border-[#CBD5E1] text-xs font-medium text-[#000000] focus:outline-none focus:ring-2 focus:ring-red-400"
+                        className="w-full px-3 py-2 rounded-xl border border-[#d8d0c8] text-xs font-medium text-[#3a302a] focus:outline-none focus:ring-2 focus:ring-[#b56a5d]"
                       />
                       <button
                         onClick={handleHideListing}
                         disabled={takedownLoading || !takedownReason.trim()}
-                        className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition shadow-sm disabled:opacity-50"
+                        className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#a24b3e] hover:bg-[#8f4035] text-white text-xs font-bold transition shadow-sm disabled:opacity-50"
                       >
                         <ShieldAlert className="w-4 h-4" /> Enforce Immediate Administrative Hold
                       </button>
@@ -969,14 +970,14 @@ export default function AdminModerationPage() {
         {activeTab === 'host-verifications' && (
           <div className="space-y-4">
             {hostVerifSuccess && (
-              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs sm:text-sm font-semibold flex items-center justify-between">
+              <div className="p-4 rounded-2xl bg-[#edf1e8] border border-[#d6dfcd] text-[#405a3a] text-xs sm:text-sm font-semibold flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                  <CheckCircle2 className="w-5 h-5 text-[#5d7554] shrink-0" />
                   <span>{hostVerifSuccess}</span>
                 </div>
                 <button
                   onClick={() => setHostVerifSuccess(null)}
-                  className="text-emerald-700 hover:text-emerald-900 text-xs font-bold cursor-pointer"
+                  className="text-[#4f6648] hover:text-[#3f5338] text-xs font-bold cursor-pointer"
                 >
                   Dismiss
                 </button>
@@ -984,14 +985,14 @@ export default function AdminModerationPage() {
             )}
 
             {hostVerifError && (
-              <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-800 text-xs sm:text-sm font-semibold flex items-center justify-between">
+              <div className="p-4 rounded-2xl bg-[#f8e9e5] border border-[#ecd0c9] text-[#7d352b] text-xs sm:text-sm font-semibold flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <AlertTriangle className="w-5 h-5 text-red-600 shrink-0" />
+                  <AlertTriangle className="w-5 h-5 text-[#a24b3e] shrink-0" />
                   <span>{hostVerifError}</span>
                 </div>
                 <button
                   onClick={() => setHostVerifError(null)}
-                  className="text-red-700 hover:text-red-900 text-xs font-bold cursor-pointer"
+                  className="text-[#8f4035] hover:text-[#5e2a24] text-xs font-bold cursor-pointer"
                 >
                   Dismiss
                 </button>
@@ -999,15 +1000,15 @@ export default function AdminModerationPage() {
             )}
 
             {/* Filter & Search Bar */}
-            <div className="bg-white border border-[#CBD5E1] rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm">
+            <div className="bg-white border border-[#d8d0c8] rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm">
               <div className="relative flex-1 max-w-md">
-                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#94A3B8]" />
+                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9b8c80]" />
                 <input
                   type="text"
                   placeholder="Search by host display name, legal name, email, or phone..."
                   value={hostVerifSearch}
                   onChange={(e) => setHostVerifSearch(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 rounded-xl border border-[#CBD5E1] text-xs font-semibold text-[#000000] focus:outline-none focus:ring-2 focus:ring-[#33599E]/20 focus:border-[#33599E]"
+                  className="w-full pl-10 pr-4 py-2 rounded-xl border border-[#d8d0c8] text-xs font-semibold text-[#3a302a] focus:outline-none focus:ring-2 focus:ring-[#b3541e]/20 focus:border-[#b3541e]"
                 />
               </div>
 
@@ -1015,7 +1016,7 @@ export default function AdminModerationPage() {
                 <select
                   value={hostVerifStatusFilter}
                   onChange={(e) => setHostVerifStatusFilter(e.target.value)}
-                  className="px-3 py-2 rounded-xl border border-[#CBD5E1] text-xs font-bold text-[#000000] bg-white focus:outline-none focus:border-[#33599E]"
+                  className="px-3 py-2 rounded-xl border border-[#d8d0c8] text-xs font-bold text-[#3a302a] bg-white focus:outline-none focus:border-[#b3541e]"
                 >
                   <option value="PENDING">Status: Pending Review</option>
                   <option value="VERIFIED">Status: Verified</option>
@@ -1027,7 +1028,7 @@ export default function AdminModerationPage() {
                   type="button"
                   onClick={() => fetchHostVerifications()}
                   disabled={loadingHostVerif}
-                  className="p-2 rounded-xl border border-[#CBD5E1] hover:bg-slate-50 text-[#64748B] transition cursor-pointer"
+                  className="p-2 rounded-xl border border-[#d8d0c8] hover:bg-[#f6f0e8] text-[#7a6b5f] transition cursor-pointer"
                   title="Refresh"
                 >
                   <RefreshCw className={`w-4 h-4 ${loadingHostVerif ? 'animate-spin' : ''}`} />
@@ -1037,15 +1038,15 @@ export default function AdminModerationPage() {
 
             {/* Verifications List */}
             {loadingHostVerif ? (
-              <div className="py-20 text-center bg-white border border-[#CBD5E1] rounded-2xl">
-                <div className="w-8 h-8 border-3 border-[#33599E] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-                <p className="text-xs font-bold text-[#64748B]">Loading host verification requests...</p>
+              <div className="py-20 text-center bg-white border border-[#d8d0c8] rounded-2xl">
+                <div className="w-8 h-8 border-3 border-[#b3541e] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                <p className="text-xs font-bold text-[#7a6b5f]">Loading host verification requests...</p>
               </div>
             ) : hostVerifications.length === 0 ? (
-              <div className="py-16 text-center bg-white border border-[#CBD5E1] rounded-2xl">
-                <ShieldCheck className="w-12 h-12 text-[#94A3B8] mx-auto mb-3" />
-                <h3 className="text-sm font-black text-[#000000]">No Host Verification Requests</h3>
-                <p className="text-xs text-[#64748B] mt-1 max-w-sm mx-auto">
+              <div className="py-16 text-center bg-white border border-[#d8d0c8] rounded-2xl">
+                <ShieldCheck className="w-12 h-12 text-[#9b8c80] mx-auto mb-3" />
+                <h2 className="font-headline text-xl font-semibold tracking-[-0.01em] text-[#3a302a]">No host verification requests</h2>
+                <p className="text-xs text-[#7a6b5f] mt-1 max-w-sm mx-auto">
                   There are no host verification requests matching the selected filter criteria.
                 </p>
               </div>
@@ -1059,10 +1060,10 @@ export default function AdminModerationPage() {
                   return (
                     <div
                       key={host.id}
-                      className="bg-white border border-[#CBD5E1] rounded-2xl p-5 shadow-sm hover:border-slate-300 transition flex flex-col md:flex-row md:items-center justify-between gap-4"
+                      className="bg-white border border-[#d8d0c8] rounded-2xl p-5 shadow-sm hover:border-[#c9bdb1] transition flex flex-col md:flex-row md:items-center justify-between gap-4"
                     >
                       <div className="flex items-start gap-4 flex-1">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#33599E] to-blue-600 text-white flex items-center justify-center text-sm font-black shrink-0 shadow-inner overflow-hidden">
+                        <div className="w-12 h-12 rounded-2xl bg-[#b3541e] text-white flex items-center justify-center text-sm font-black shrink-0 shadow-inner overflow-hidden">
                           {host.user?.avatar ? (
                             /* eslint-disable-next-line @next/next/no-img-element */
                             <img
@@ -1079,41 +1080,41 @@ export default function AdminModerationPage() {
 
                         <div className="space-y-1.5 flex-1 min-w-0">
                           <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="text-sm font-black text-[#000000] truncate">
+                            <p className="truncate text-sm font-semibold text-[#3a302a]">
                               {host.displayName || 'Unnamed Host'}
-                            </h3>
+                            </p>
                             <span
-                              className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full border ${
+                              className={`text-[11px] font-black uppercase px-2 py-0.5 rounded-full border ${
                                 isVerified
-                                  ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                                  ? 'bg-[#edf1e8] text-[#405a3a] border-[#d6dfcd]'
                                   : isPending
-                                  ? 'bg-amber-50 text-amber-800 border-amber-200'
+                                  ? 'bg-[#f7ebda] text-[#7a531c] border-[#ecd9c2]'
                                   : isRejected
-                                  ? 'bg-rose-50 text-rose-800 border-rose-200'
-                                  : 'bg-slate-50 text-slate-700 border-slate-200'
+                                  ? 'bg-[#f8e9e5] text-[#7d352b] border-[#ecd0c9]'
+                                  : 'bg-[#f6f0e8] text-[#5a4c42] border-[#d8d0c8]'
                               }`}
                             >
                               {host.verificationStatus}
                             </span>
                           </div>
 
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs text-[#64748B]">
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs text-[#7a6b5f]">
                             <div className="flex items-center gap-1.5">
-                              <User className="w-3.5 h-3.5 text-[#94A3B8] shrink-0" />
+                              <User className="w-3.5 h-3.5 text-[#9b8c80] shrink-0" />
                               <span className="truncate">{host.user?.name || 'N/A'}</span>
                             </div>
                             <div className="flex items-center gap-1.5">
-                              <Mail className="w-3.5 h-3.5 text-[#94A3B8] shrink-0" />
+                              <Mail className="w-3.5 h-3.5 text-[#9b8c80] shrink-0" />
                               <span className="truncate">{host.user?.email || 'N/A'}</span>
                             </div>
                             <div className="flex items-center gap-1.5">
-                              <Phone className="w-3.5 h-3.5 text-[#94A3B8] shrink-0" />
+                              <Phone className="w-3.5 h-3.5 text-[#9b8c80] shrink-0" />
                               <span className="truncate">{host.phone || 'No phone'}</span>
                             </div>
                           </div>
 
                           {host.bio && (
-                            <p className="text-xs text-slate-600 line-clamp-2 pt-1 border-t border-slate-100">
+                            <p className="text-xs text-[#6c5d52] line-clamp-2 pt-1 border-t border-[#ece4d9]">
                               {host.bio}
                             </p>
                           )}
@@ -1132,7 +1133,7 @@ export default function AdminModerationPage() {
                                 setHostRejectionModalError(null);
                               }}
                               disabled={approvingHostId !== null}
-                              className="px-3.5 py-2 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                              className="px-3.5 py-2 rounded-xl border border-[#ecd0c9] bg-[#f8e9e5] hover:bg-[#f3dcd6] text-[#8f4035] text-xs font-bold transition cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
                             >
                               <XCircle className="w-4 h-4" /> Reject…
                             </button>
@@ -1141,7 +1142,7 @@ export default function AdminModerationPage() {
                               type="button"
                               onClick={() => handleApproveHost(host.id)}
                               disabled={approvingHostId !== null}
-                              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                              className="px-4 py-2 rounded-xl bg-[#5d7554] hover:bg-[#4f6648] text-white text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
                             >
                               {approvingHostId === host.id ? (
                                 <RefreshCw className="w-4 h-4 animate-spin" />
@@ -1152,12 +1153,12 @@ export default function AdminModerationPage() {
                             </button>
                           </>
                         ) : isVerified ? (
-                          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200">
+                          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#edf1e8] text-[#4f6648] text-xs font-bold border border-[#d6dfcd]">
                             <BadgeCheck className="w-4 h-4" />
                             <span>Verified Host</span>
                           </div>
                         ) : (
-                          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-50 text-rose-700 text-xs font-bold border border-rose-200">
+                          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#f8e9e5] text-[#8f4035] text-xs font-bold border border-[#ecd0c9]">
                             <XCircle className="w-4 h-4" />
                             <span>Rejected</span>
                           </div>
@@ -1173,19 +1174,19 @@ export default function AdminModerationPage() {
 
         {/* ── MODAL: Side-by-Side Review & Diff Inspection ── */}
         {selectedReviewId && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-            <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl border border-[#CBD5E1]">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#2f2722]/55 backdrop-blur-xs">
+            <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl border border-[#d8d0c8]">
               {/* Modal Header */}
-              <div className="px-6 py-4 border-b border-[#CBD5E1] flex items-center justify-between bg-[#F8FAFD]">
+              <div className="px-6 py-4 border-b border-[#d8d0c8] flex items-center justify-between bg-[#fbf7f1]">
                 <div className="flex items-center gap-3">
-                  <span className="p-2 rounded-xl bg-[#E3EAF5] text-[#33599E]">
+                  <span className="p-2 rounded-xl bg-[#f1e5d8] text-[#b3541e]">
                     <ShieldCheck className="w-5 h-5" />
                   </span>
                   <div>
-                    <h2 className="text-lg font-black text-[#000000]">
-                      Review Listing Submission
+                    <h2 className="font-headline text-2xl font-semibold tracking-[-0.015em] text-[#3a302a]">
+                      Review listing submission
                     </h2>
-                    <p className="text-xs text-[#64748B]">
+                    <p className="text-xs text-[#7a6b5f]">
                       {reviewDetail?.review?.submissionType === 'INITIAL_PUBLISH'
                         ? 'New Listing Publication Approval'
                         : 'Proposed Edits vs. Approved Live Version'}
@@ -1195,7 +1196,7 @@ export default function AdminModerationPage() {
 
                 <button
                   onClick={closeReviewDetail}
-                  className="p-1.5 rounded-xl text-[#94A3B8] hover:text-[#000000] hover:bg-slate-100 transition"
+                  className="p-1.5 rounded-xl text-[#9b8c80] hover:text-[#3a302a] hover:bg-[#efe7dc] transition"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -1204,36 +1205,36 @@ export default function AdminModerationPage() {
               {/* Modal Content */}
               <div className="p-6 overflow-y-auto space-y-6 flex-1">
                 {loadingDetail ? (
-                  <div className="py-16 text-center text-[#64748B] space-y-3">
-                    <div className="w-8 h-8 border-3 border-[#33599E] border-t-transparent rounded-full animate-spin mx-auto" />
+                  <div className="py-16 text-center text-[#7a6b5f] space-y-3">
+                    <div className="w-8 h-8 border-3 border-[#b3541e] border-t-transparent rounded-full animate-spin mx-auto" />
                     <p className="text-sm font-semibold">Loading inspection diff…</p>
                   </div>
                 ) : detailError ? (
-                  <div className="p-6 rounded-2xl bg-red-50 border border-red-200 text-red-800 text-xs font-bold">
+                  <div className="p-6 rounded-2xl bg-[#f8e9e5] border border-[#ecd0c9] text-[#7d352b] text-xs font-bold">
                     {detailError}
                   </div>
                 ) : reviewDetail ? (
                   <>
                     {/* Basic Property Header */}
-                    <div className="bg-[#F8FAFD] border border-[#CBD5E1] rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="bg-[#fbf7f1] border border-[#d8d0c8] rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-[#64748B] uppercase">
+                          <span className="text-xs font-bold text-[#7a6b5f] uppercase">
                             Property:
                           </span>
-                          <span className="text-sm font-black text-[#000000]">
+                          <span className="text-sm font-black text-[#3a302a]">
                             {reviewDetail.property?.title}
                           </span>
                         </div>
-                        <p className="text-xs text-[#64748B] mt-0.5">
+                        <p className="text-xs text-[#7a6b5f] mt-0.5">
                           {reviewDetail.property?.address}, {reviewDetail.property?.city} •{' '}
                           {reviewDetail.property?.propertyType}
                         </p>
                       </div>
 
                       <div className="text-right">
-                        <span className="text-xs font-bold text-[#64748B] block">Current Status:</span>
-                        <span className="text-xs font-black px-2 py-0.5 rounded-full bg-slate-200 text-slate-800 uppercase">
+                        <span className="text-xs font-bold text-[#7a6b5f] block">Current Status:</span>
+                        <span className="text-xs font-black px-2 py-0.5 rounded-full bg-[#e7ded2] text-[#4a3e35] uppercase">
                           {reviewDetail.property?.status}
                         </span>
                       </div>
@@ -1242,7 +1243,7 @@ export default function AdminModerationPage() {
                     {/* Scenario A: IMPORTANT EDIT DIFF VIEW */}
                     {reviewDetail.review.submissionType === 'IMPORTANT_EDIT' && (
                       <div className="space-y-4">
-                        <div className="bg-sky-50 border border-sky-200 rounded-xl p-3.5 text-xs text-sky-900 leading-relaxed">
+                        <div className="bg-[#f2eadf] border border-[#e3d5c1] rounded-xl p-3.5 text-xs text-[#73532f] leading-relaxed">
                           <span className="font-bold">Important Changes Proposed:</span> The table
                           below contrasts the currently live, bookable version of this listing against
                           the changes submitted by the host. The approved public version remains
@@ -1250,16 +1251,16 @@ export default function AdminModerationPage() {
                         </div>
 
                         {reviewDetail.diff && Object.keys(reviewDetail.diff).length > 0 ? (
-                          <div className="border border-[#CBD5E1] rounded-xl overflow-hidden text-xs">
+                          <div className="border border-[#d8d0c8] rounded-xl overflow-hidden text-xs">
                             <table className="w-full text-left">
-                              <thead className="bg-[#F1F5F9] font-black text-[#000000] border-b border-[#CBD5E1]">
+                              <thead className="bg-[#f1eae0] font-black text-[#3a302a] border-b border-[#d8d0c8]">
                                 <tr>
                                   <th className="p-3 w-1/4">Field</th>
-                                  <th className="p-3 w-3/8 text-slate-600">Current Live Value</th>
-                                  <th className="p-3 w-3/8 text-green-700">Proposed New Value</th>
+                                  <th className="p-3 w-3/8 text-[#6c5d52]">Current Live Value</th>
+                                  <th className="p-3 w-3/8 text-[#4f6648]">Proposed New Value</th>
                                 </tr>
                               </thead>
-                              <tbody className="divide-y divide-[#CBD5E1]/60 font-medium">
+                              <tbody className="divide-y divide-[#d8d0c8]/60 font-medium">
                                 {Object.entries(reviewDetail.diff).map(([key, item]) => {
                                   const isDifferent =
                                     JSON.stringify(item.current) !== JSON.stringify(item.proposed);
@@ -1267,17 +1268,17 @@ export default function AdminModerationPage() {
                                   return (
                                     <tr
                                       key={key}
-                                      className={isDifferent ? 'bg-amber-50/50' : 'bg-white'}
+                                      className={isDifferent ? 'bg-[#f7ebda]/50' : 'bg-white'}
                                     >
-                                      <td className="p-3 font-bold text-[#000000] capitalize">
+                                      <td className="p-3 font-bold text-[#3a302a] capitalize">
                                         {key.replace(/([A-Z])/g, ' $1')}
                                       </td>
-                                      <td className="p-3 text-slate-600 font-mono text-[11px] break-all">
+                                      <td className="p-3 text-[#6c5d52] font-mono text-xs break-all">
                                         {Array.isArray(item.current)
                                           ? `[${item.current.length} items]`
                                           : String(item.current ?? '—')}
                                       </td>
-                                      <td className="p-3 text-green-700 font-bold font-mono text-[11px] break-all bg-green-50/40">
+                                      <td className="p-3 text-[#4f6648] font-bold font-mono text-xs break-all bg-[#edf1e8]/40">
                                         {Array.isArray(item.proposed)
                                           ? `[${item.proposed.length} items]`
                                           : String(item.proposed ?? '—')}
@@ -1289,7 +1290,7 @@ export default function AdminModerationPage() {
                             </table>
                           </div>
                         ) : (
-                          <p className="text-xs text-[#64748B]">No specific field diffs detected.</p>
+                          <p className="text-xs text-[#7a6b5f]">No specific field diffs detected.</p>
                         )}
                       </div>
                     )}
@@ -1297,7 +1298,7 @@ export default function AdminModerationPage() {
                     {/* Scenario B: INITIAL PUBLISH REVIEW */}
                     {reviewDetail.review.submissionType === 'INITIAL_PUBLISH' && (
                       <div className="space-y-4">
-                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-3.5 text-xs text-blue-900 leading-relaxed">
+                        <div className="bg-[#f2eadf] border border-[#e3d5c1] rounded-xl p-3.5 text-xs text-[#73532f] leading-relaxed">
                           <span className="font-bold">Initial Publication Quality Check:</span> Verify
                           that this property meets ENGIDA listing standards before making it
                           publicly searchable.
@@ -1305,37 +1306,37 @@ export default function AdminModerationPage() {
 
                         {/* Property summary grid */}
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
-                          <div className="p-3 bg-[#F8FAFD] rounded-xl border border-[#CBD5E1]">
-                            <span className="text-[#64748B] font-bold block">Nightly / Sale Price:</span>
-                            <span className="text-sm font-black text-[#000000]">
+                          <div className="p-3 bg-[#fbf7f1] rounded-xl border border-[#d8d0c8]">
+                            <span className="text-[#7a6b5f] font-bold block">Nightly / Sale Price:</span>
+                            <span className="text-sm font-black text-[#3a302a]">
                               {reviewDetail.property?.pricePerNight
                                 ? `${reviewDetail.property.pricePerNight} ETB / night`
                                 : `${reviewDetail.property?.salePrice || 0} ETB`}
                             </span>
                           </div>
 
-                          <div className="p-3 bg-[#F8FAFD] rounded-xl border border-[#CBD5E1]">
-                            <span className="text-[#64748B] font-bold block">Capacity & Rooms:</span>
-                            <span className="text-sm font-black text-[#000000]">
+                          <div className="p-3 bg-[#fbf7f1] rounded-xl border border-[#d8d0c8]">
+                            <span className="text-[#7a6b5f] font-bold block">Capacity & Rooms:</span>
+                            <span className="text-sm font-black text-[#3a302a]">
                               {reviewDetail.property?.maxGuests || 2} Guests •{' '}
                               {reviewDetail.property?.bedrooms || 1} Beds
                             </span>
                           </div>
 
-                          <div className="p-3 bg-[#F8FAFD] rounded-xl border border-[#CBD5E1]">
-                            <span className="text-[#64748B] font-bold block">Property Type:</span>
-                            <span className="text-sm font-black text-[#000000]">
+                          <div className="p-3 bg-[#fbf7f1] rounded-xl border border-[#d8d0c8]">
+                            <span className="text-[#7a6b5f] font-bold block">Property Type:</span>
+                            <span className="text-sm font-black text-[#3a302a]">
                               {reviewDetail.property?.propertyType}
                             </span>
                           </div>
                         </div>
 
                         {/* Description */}
-                        <div className="p-4 bg-white rounded-xl border border-[#CBD5E1] space-y-1">
-                          <span className="text-xs font-bold text-[#000000] block">
+                        <div className="p-4 bg-white rounded-xl border border-[#d8d0c8] space-y-1">
+                          <span className="text-xs font-bold text-[#3a302a] block">
                             Description:
                           </span>
-                          <p className="text-xs text-[#64748B] leading-relaxed whitespace-pre-line">
+                          <p className="text-xs text-[#7a6b5f] leading-relaxed whitespace-pre-line">
                             {reviewDetail.property?.description}
                           </p>
                         </div>
@@ -1344,14 +1345,14 @@ export default function AdminModerationPage() {
                         {Array.isArray(reviewDetail.property?.images) &&
                           reviewDetail.property.images.length > 0 && (
                             <div className="space-y-2">
-                              <span className="text-xs font-bold text-[#000000] block">
+                              <span className="text-xs font-bold text-[#3a302a] block">
                                 Property Photos ({reviewDetail.property.images.length}):
                               </span>
                               <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                                 {reviewDetail.property.images.map((img: string, i: number) => (
                                   <div
                                     key={i}
-                                    className="h-24 rounded-lg bg-slate-100 border border-[#CBD5E1] overflow-hidden"
+                                    className="h-24 rounded-lg bg-[#efe7dc] border border-[#d8d0c8] overflow-hidden"
                                   >
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                     <img
@@ -1369,11 +1370,11 @@ export default function AdminModerationPage() {
 
                     {/* Rejection Reason Form (if rejection triggered) */}
                     {rejectionModalOpen && (
-                      <div className="p-4 rounded-2xl bg-red-50 border border-red-200 space-y-3">
-                        <label className="block text-xs font-bold text-red-900">
-                          Mandatory Rejection Explanation <span className="text-red-600">*</span>
+                      <div className="p-4 rounded-2xl bg-[#f8e9e5] border border-[#ecd0c9] space-y-3">
+                        <label className="block text-xs font-bold text-[#5e2a24]">
+                          Mandatory Rejection Explanation <span className="text-[#a24b3e]">*</span>
                         </label>
-                        <p className="text-xs text-red-700">
+                        <p className="text-xs text-[#8f4035]">
                           Explain clearly to the host what needs correction before resubmission
                           (minimum 5 characters).
                         </p>
@@ -1385,16 +1386,16 @@ export default function AdminModerationPage() {
                             setRejectionError(null);
                           }}
                           placeholder="e.g. Please provide clearer photos of the bathroom, or correct the night rate..."
-                          className="w-full px-3 py-2 rounded-xl border border-red-300 text-xs font-medium text-[#000000] focus:outline-none focus:ring-2 focus:ring-red-400 bg-white"
+                          className="w-full px-3 py-2 rounded-xl border border-[#e3b9b0] text-xs font-medium text-[#3a302a] focus:outline-none focus:ring-2 focus:ring-[#b56a5d] bg-white"
                         />
                         {rejectionError && (
-                          <p className="text-xs font-bold text-red-600">{rejectionError}</p>
+                          <p className="text-xs font-bold text-[#a24b3e]">{rejectionError}</p>
                         )}
                         <div className="flex justify-end gap-2">
                           <button
                             type="button"
                             onClick={() => setRejectionModalOpen(false)}
-                            className="px-4 py-2 rounded-xl border border-[#CBD5E1] text-xs font-bold text-[#000000] bg-white hover:bg-slate-100"
+                            className="px-4 py-2 rounded-xl border border-[#d8d0c8] text-xs font-bold text-[#3a302a] bg-white hover:bg-[#efe7dc]"
                           >
                             Cancel
                           </button>
@@ -1402,7 +1403,7 @@ export default function AdminModerationPage() {
                             type="button"
                             onClick={handleRejectSubmit}
                             disabled={actionInProgress !== null}
-                            className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition shadow-sm disabled:opacity-50"
+                            className="px-4 py-2 rounded-xl bg-[#a24b3e] hover:bg-[#8f4035] text-white text-xs font-bold transition shadow-sm disabled:opacity-50"
                           >
                             Confirm Rejection
                           </button>
@@ -1414,11 +1415,11 @@ export default function AdminModerationPage() {
               </div>
 
               {/* Modal Footer */}
-              <div className="px-6 py-4 border-t border-[#CBD5E1] bg-[#F8FAFD] flex items-center justify-between">
+              <div className="px-6 py-4 border-t border-[#d8d0c8] bg-[#fbf7f1] flex items-center justify-between">
                 <button
                   type="button"
                   onClick={closeReviewDetail}
-                  className="px-4 py-2 rounded-xl border border-[#CBD5E1] text-xs font-bold text-[#000000] hover:bg-white transition"
+                  className="px-4 py-2 rounded-xl border border-[#d8d0c8] text-xs font-bold text-[#3a302a] hover:bg-white transition"
                 >
                   Close
                 </button>
@@ -1429,7 +1430,7 @@ export default function AdminModerationPage() {
                       type="button"
                       onClick={() => setRejectionModalOpen(true)}
                       disabled={actionInProgress !== null}
-                      className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition shadow-sm disabled:opacity-50 flex items-center gap-1.5"
+                      className="px-4 py-2 rounded-xl bg-[#a24b3e] hover:bg-[#8f4035] text-white text-xs font-bold transition shadow-sm disabled:opacity-50 flex items-center gap-1.5"
                     >
                       <X className="w-3.5 h-3.5" /> Reject with Reason…
                     </button>
@@ -1438,7 +1439,7 @@ export default function AdminModerationPage() {
                       type="button"
                       onClick={() => handleApprove(selectedReviewId)}
                       disabled={actionInProgress !== null}
-                      className="px-5 py-2 rounded-xl bg-green-600 hover:bg-green-700 text-white text-xs font-bold transition shadow-sm disabled:opacity-50 flex items-center gap-1.5"
+                      className="px-5 py-2 rounded-xl bg-[#5d7554] hover:bg-[#4f6648] text-white text-xs font-bold transition shadow-sm disabled:opacity-50 flex items-center gap-1.5"
                     >
                       <Check className="w-3.5 h-3.5" /> Approve & Publish
                     </button>
@@ -1451,15 +1452,15 @@ export default function AdminModerationPage() {
 
         {/* ── MODAL: Host Verification Rejection ── */}
         {rejectingHostProfile && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-            <div className="bg-white rounded-3xl max-w-lg w-full border border-slate-200 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#2f2722]/55 backdrop-blur-xs">
+            <div className="bg-white rounded-2xl max-w-lg w-full border border-[#d8d0c8] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
               {/* Modal Header */}
-              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-rose-50/50">
-                <div className="flex items-center gap-2 text-rose-700">
-                  <XCircle className="w-5 h-5 text-rose-600" />
-                  <h3 className="text-base font-black text-rose-950">
-                    Reject Host Verification
-                  </h3>
+              <div className="px-6 py-4 border-b border-[#ece4d9] flex items-center justify-between bg-[#f8e9e5]/50">
+                <div className="flex items-center gap-2 text-[#8f4035]">
+                  <XCircle className="w-5 h-5 text-[#a24b3e]" />
+                  <h2 className="font-headline text-2xl font-semibold tracking-[-0.015em] text-[#5e2a24]">
+                    Reject host verification
+                  </h2>
                 </div>
                 <button
                   type="button"
@@ -1469,7 +1470,7 @@ export default function AdminModerationPage() {
                     setHostRejectionModalError(null);
                   }}
                   disabled={submittingHostRejection}
-                  className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition"
+                  className="p-1 rounded-lg text-[#7a6b5f] hover:text-[#6c5d52] hover:bg-[#efe7dc] transition"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -1477,20 +1478,20 @@ export default function AdminModerationPage() {
 
               {/* Modal Body */}
               <form onSubmit={handleRejectHostSubmit} className="p-6 space-y-4">
-                <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
-                  <div className="text-xs font-black text-slate-900">
+                <div className="p-3.5 rounded-2xl bg-[#f6f0e8] border border-[#d8d0c8] space-y-1">
+                  <div className="text-xs font-black text-[#3a302a]">
                     Host: {rejectingHostProfile.displayName || rejectingHostProfile.user?.name || 'Unnamed Host'}
                   </div>
-                  <div className="text-xs text-slate-500">
+                  <div className="text-xs text-[#7a6b5f]">
                     Email: {rejectingHostProfile.user?.email || 'N/A'} • Phone: {rejectingHostProfile.phone || 'N/A'}
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="host-rejection-explanation" className="block text-xs font-bold text-slate-900">
-                    Required Explanation for Host <span className="text-rose-600">*</span>
+                  <label htmlFor="host-rejection-explanation" className="block text-xs font-bold text-[#3a302a]">
+                    Required Explanation for Host <span className="text-[#a24b3e]">*</span>
                   </label>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-[#7a6b5f]">
                     Provide clear, constructive feedback detailing what identity documentation or profile information requires correction before resubmission (minimum 5 characters).
                   </p>
                   <textarea
@@ -1502,16 +1503,16 @@ export default function AdminModerationPage() {
                       if (hostRejectionModalError) setHostRejectionModalError(null);
                     }}
                     placeholder="e.g. The government ID image is blurry or expired. Please upload a clear photo of your unexpired Ethiopian passport or National ID."
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 bg-white shadow-xs"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#c9bdb1] text-xs font-medium text-[#3a302a] focus:outline-none focus:ring-2 focus:ring-[#a24b3e] focus:border-[#a24b3e] bg-white shadow-xs"
                     disabled={submittingHostRejection}
                   />
                   {hostRejectionModalError && (
-                    <p className="text-xs font-bold text-rose-600">{hostRejectionModalError}</p>
+                    <p className="text-xs font-bold text-[#a24b3e]">{hostRejectionModalError}</p>
                   )}
                 </div>
 
                 {/* Modal Actions */}
-                <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
+                <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[#ece4d9]">
                   <button
                     type="button"
                     onClick={() => {
@@ -1520,14 +1521,14 @@ export default function AdminModerationPage() {
                       setHostRejectionModalError(null);
                     }}
                     disabled={submittingHostRejection}
-                    className="px-4 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-50 transition cursor-pointer disabled:opacity-50"
+                    className="px-4 py-2 rounded-xl border border-[#c9bdb1] text-xs font-bold text-[#5a4c42] hover:bg-[#f6f0e8] transition cursor-pointer disabled:opacity-50"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={submittingHostRejection || hostRejectionExplanation.trim().length < 5}
-                    className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                    className="px-4 py-2 rounded-xl bg-[#a24b3e] hover:bg-[#8f4035] text-white text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
                   >
                     {submittingHostRejection ? (
                       <>

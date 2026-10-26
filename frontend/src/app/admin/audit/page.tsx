@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { apiFetch } from '../../../lib/api';
 import { useAuth } from '../../../context/AuthContext';
+import AdminPageHeader from '../../../components/admin/AdminPageHeader';
 import {
   ADMIN_PERMISSIONS,
   can,
@@ -75,10 +76,10 @@ function metadataReason(entry: AuditLogEntry): string | null {
 
 function JsonBlock({ value }: { value: unknown }) {
   if (value === null || value === undefined) {
-    return <p className="text-xs text-slate-400">No data recorded.</p>;
+    return <p className="text-xs text-[#7a6b5f]">No data recorded.</p>;
   }
   return (
-    <pre className="max-h-64 overflow-auto rounded-xl bg-slate-950 p-3 text-[11px] leading-relaxed text-slate-200">
+    <pre className="max-h-64 overflow-auto rounded-xl bg-[#2f2722] p-3 text-xs leading-relaxed text-[#ddd4c8]">
       {JSON.stringify(value, null, 2)}
     </pre>
   );
@@ -162,42 +163,36 @@ export default function AdminAuditPage() {
     Boolean(applied.action || applied.entityType || applied.entityId || applied.from || applied.to);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#33599E]">
-            Accountability
-          </p>
-          <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-900">Audit log</h2>
-          <p className="mt-1 max-w-2xl text-sm text-slate-500">
-            Append-only history of privileged actions. Credentials and session tokens are
-            redacted before storage.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => setRefreshTick((tick) => tick + 1)}
-          disabled={loading || !canViewAudit}
-          className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-50"
-        >
-          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
-        </button>
-      </div>
+    <div className="space-y-8">
+      <AdminPageHeader
+        title="Audit log"
+        description="Append-only history of privileged actions. Credentials and session tokens are redacted before storage."
+        actions={
+          <button
+            type="button"
+            onClick={() => setRefreshTick((tick) => tick + 1)}
+            disabled={loading || !canViewAudit}
+            className="admin-btn admin-btn-secondary"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} strokeWidth={1.8} />
+            Refresh
+          </button>
+        }
+      />
 
       {!canViewAudit ? (
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-800">
+        <div className="rounded-2xl border border-[#ecd9c2] bg-[#f7ebda] p-6 text-sm text-[#7a531c]">
           Your role does not include permission to view the audit log.
         </div>
       ) : (
         <>
           <form
             onSubmit={applyFilters}
-            className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5"
+            className="rounded-2xl border border-[#d8d0c8] bg-white p-4 shadow-sm sm:p-5"
           >
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(170px,1fr)_145px_minmax(160px,1fr)_minmax(220px,auto)_auto]">
               <div>
-                <label htmlFor="audit-action" className="text-[11px] font-bold text-slate-600">
+                <label htmlFor="audit-action" className="text-xs font-bold text-[#6c5d52]">
                   Action
                 </label>
                 <input
@@ -207,12 +202,12 @@ export default function AdminAuditPage() {
                     setDraft((current) => ({ ...current, action: event.target.value }))
                   }
                   placeholder="e.g. user.suspend"
-                  className="mt-1 h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-800 outline-none focus:border-[#33599E] focus:bg-white focus:ring-2 focus:ring-[#33599E]/15"
+                  className="mt-1 h-10 w-full rounded-xl border border-[#d8d0c8] bg-[#f6f0e8] px-3 text-sm text-[#4a3e35] outline-none focus:border-[#b3541e] focus:bg-white focus:ring-2 focus:ring-[#b3541e]/15"
                 />
               </div>
 
               <div>
-                <label htmlFor="audit-entity" className="text-[11px] font-bold text-slate-600">
+                <label htmlFor="audit-entity" className="text-xs font-bold text-[#6c5d52]">
                   Entity type
                 </label>
                 <select
@@ -221,7 +216,7 @@ export default function AdminAuditPage() {
                   onChange={(event) =>
                     setDraft((current) => ({ ...current, entityType: event.target.value }))
                   }
-                  className="mt-1 h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-800 outline-none focus:border-[#33599E] focus:bg-white focus:ring-2 focus:ring-[#33599E]/15"
+                  className="mt-1 h-10 w-full rounded-xl border border-[#d8d0c8] bg-[#f6f0e8] px-3 text-sm font-medium text-[#4a3e35] outline-none focus:border-[#b3541e] focus:bg-white focus:ring-2 focus:ring-[#b3541e]/15"
                 >
                   {ENTITY_TYPES.map((type) => (
                     <option key={type.value} value={type.value}>
@@ -232,7 +227,7 @@ export default function AdminAuditPage() {
               </div>
 
               <div>
-                <label htmlFor="audit-entity-id" className="text-[11px] font-bold text-slate-600">
+                <label htmlFor="audit-entity-id" className="text-xs font-bold text-[#6c5d52]">
                   Entity ID
                 </label>
                 <input
@@ -242,13 +237,13 @@ export default function AdminAuditPage() {
                     setDraft((current) => ({ ...current, entityId: event.target.value }))
                   }
                   placeholder="UUID or reference"
-                  className="mt-1 h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-800 outline-none focus:border-[#33599E] focus:bg-white focus:ring-2 focus:ring-[#33599E]/15"
+                  className="mt-1 h-10 w-full rounded-xl border border-[#d8d0c8] bg-[#f6f0e8] px-3 text-sm text-[#4a3e35] outline-none focus:border-[#b3541e] focus:bg-white focus:ring-2 focus:ring-[#b3541e]/15"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2 md:col-span-2 xl:col-span-1">
                 <div>
-                  <label htmlFor="audit-from" className="text-[11px] font-bold text-slate-600">
+                  <label htmlFor="audit-from" className="text-xs font-bold text-[#6c5d52]">
                     From
                   </label>
                   <input
@@ -258,11 +253,11 @@ export default function AdminAuditPage() {
                     onChange={(event) =>
                       setDraft((current) => ({ ...current, from: event.target.value }))
                     }
-                    className="mt-1 h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-2.5 text-xs text-slate-800 outline-none focus:border-[#33599E] focus:bg-white focus:ring-2 focus:ring-[#33599E]/15"
+                    className="mt-1 h-10 w-full rounded-xl border border-[#d8d0c8] bg-[#f6f0e8] px-2.5 text-xs text-[#4a3e35] outline-none focus:border-[#b3541e] focus:bg-white focus:ring-2 focus:ring-[#b3541e]/15"
                   />
                 </div>
                 <div>
-                  <label htmlFor="audit-to" className="text-[11px] font-bold text-slate-600">
+                  <label htmlFor="audit-to" className="text-xs font-bold text-[#6c5d52]">
                     To
                   </label>
                   <input
@@ -272,15 +267,15 @@ export default function AdminAuditPage() {
                     onChange={(event) =>
                       setDraft((current) => ({ ...current, to: event.target.value }))
                     }
-                    className="mt-1 h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-2.5 text-xs text-slate-800 outline-none focus:border-[#33599E] focus:bg-white focus:ring-2 focus:ring-[#33599E]/15"
+                    className="mt-1 h-10 w-full rounded-xl border border-[#d8d0c8] bg-[#f6f0e8] px-2.5 text-xs text-[#4a3e35] outline-none focus:border-[#b3541e] focus:bg-white focus:ring-2 focus:ring-[#b3541e]/15"
                   />
                 </div>
               </div>
 
-              <div className="flex items-end gap-2">
+              <div className="flex items-end gap-2 md:col-span-2 xl:col-span-1">
                 <button
                   type="submit"
-                  className="inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#33599E] px-3 text-sm font-semibold text-white hover:bg-[#284A86]"
+                  className="inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#b3541e] px-3 text-sm font-semibold text-white hover:bg-[#934313]"
                 >
                   <Filter className="h-4 w-4" />
                   Apply
@@ -289,7 +284,7 @@ export default function AdminAuditPage() {
                   type="button"
                   onClick={clearFilters}
                   disabled={!hasFilters && !draft.action && !draft.entityType && !draft.entityId && !draft.from && !draft.to}
-                  className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-40"
+                  className="inline-flex h-10 items-center justify-center rounded-xl border border-[#d8d0c8] bg-white px-3 text-sm font-semibold text-[#6c5d52] hover:bg-[#f6f0e8] disabled:opacity-40"
                 >
                   Clear
                 </button>
@@ -298,57 +293,57 @@ export default function AdminAuditPage() {
           </form>
 
           {error && (
-            <div className="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+            <div className="flex items-start gap-3 rounded-2xl border border-[#ecd0c9] bg-[#f8e9e5] p-4 text-sm text-[#8f4035]">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
               <div className="flex-1">
                 <p className="font-semibold">Could not load the audit log</p>
-                <p className="mt-0.5 text-rose-600">{error}</p>
+                <p className="mt-0.5 text-[#a24b3e]">{error}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setRefreshTick((tick) => tick + 1)}
-                className="rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-100"
+                className="rounded-lg border border-[#ecd0c9] bg-white px-3 py-1.5 text-xs font-bold text-[#8f4035] hover:bg-[#f3dcd6]"
               >
                 Retry
               </button>
             </div>
           )}
 
-          <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <section className="overflow-hidden rounded-2xl border border-[#d8d0c8] bg-white shadow-sm">
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-slate-200">
-                <thead className="bg-slate-50">
+              <table className="min-w-full divide-y divide-[#d8d0c8]">
+                <thead className="bg-[#f6f0e8]">
                   <tr>
-                    <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">
+                    <th className="px-5 py-3 text-left text-[11px] font-bold uppercase tracking-[0.12em] text-[#7a6b5f]">
                       When
                     </th>
-                    <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">
+                    <th className="px-5 py-3 text-left text-[11px] font-bold uppercase tracking-[0.12em] text-[#7a6b5f]">
                       Actor
                     </th>
-                    <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">
+                    <th className="px-5 py-3 text-left text-[11px] font-bold uppercase tracking-[0.12em] text-[#7a6b5f]">
                       Action
                     </th>
-                    <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">
+                    <th className="px-5 py-3 text-left text-[11px] font-bold uppercase tracking-[0.12em] text-[#7a6b5f]">
                       Entity
                     </th>
-                    <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">
+                    <th className="px-5 py-3 text-left text-[11px] font-bold uppercase tracking-[0.12em] text-[#7a6b5f]">
                       Context
                     </th>
-                    <th className="px-5 py-3 text-right text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">
+                    <th className="px-5 py-3 text-right text-[11px] font-bold uppercase tracking-[0.12em] text-[#7a6b5f]">
                       Details
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-[#ece4d9]">
                   {loading && entries.length === 0
                     ? Array.from({ length: 7 }).map((_, index) => (
                         <tr key={index}>
                           <td colSpan={6} className="px-5 py-4">
                             <div className="flex items-center gap-3">
-                              <div className="h-8 w-8 animate-pulse rounded-lg bg-slate-100" />
+                              <div className="h-8 w-8 animate-pulse rounded-lg bg-[#efe7dc]" />
                               <div className="flex-1 space-y-2">
-                                <div className="h-3 w-1/3 animate-pulse rounded bg-slate-100" />
-                                <div className="h-2.5 w-1/2 animate-pulse rounded bg-slate-100" />
+                                <div className="h-3 w-1/3 animate-pulse rounded bg-[#efe7dc]" />
+                                <div className="h-2.5 w-1/2 animate-pulse rounded bg-[#efe7dc]" />
                               </div>
                             </div>
                           </td>
@@ -357,47 +352,47 @@ export default function AdminAuditPage() {
                     : entries.map((entry) => {
                         const reason = metadataReason(entry);
                         return (
-                          <tr key={entry.id} className="hover:bg-slate-50/70">
-                            <td className="whitespace-nowrap px-5 py-4 text-xs text-slate-500">
+                          <tr key={entry.id} className="hover:bg-[#f6f0e8]/70">
+                            <td className="whitespace-nowrap px-5 py-4 text-xs text-[#7a6b5f]">
                               <span className="inline-flex items-center gap-1.5">
-                                <Clock3 className="h-3.5 w-3.5 text-slate-400" />
+                                <Clock3 className="h-3.5 w-3.5 text-[#7a6b5f]" />
                                 {formatDateTime(entry.createdAt)}
                               </span>
                             </td>
                             <td className="px-5 py-4">
-                              <p className="text-xs font-semibold text-slate-800">
+                              <p className="text-xs font-semibold text-[#4a3e35]">
                                 {entry.actorEmail || 'System'}
                               </p>
-                              <p className="mt-0.5 text-[11px] text-slate-400">
+                              <p className="mt-0.5 text-xs text-[#7a6b5f]">
                                 {entry.actorRole || 'automated'}
                               </p>
                             </td>
                             <td className="px-5 py-4">
-                              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#33599E]/5 px-2.5 py-1 font-mono text-[11px] font-semibold text-[#33599E]">
+                              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#b3541e]/5 px-2.5 py-1 font-mono text-xs font-semibold text-[#9f4a19]">
                                 <ShieldCheck className="h-3 w-3" />
                                 {entry.action}
                               </span>
                             </td>
                             <td className="px-5 py-4">
-                              <p className="text-xs font-semibold text-slate-700">
+                              <p className="text-xs font-semibold text-[#5a4c42]">
                                 {entry.entityType}
                               </p>
                               {entry.entityId && (
-                                <p className="mt-0.5 max-w-[180px] truncate font-mono text-[10px] text-slate-400">
+                                <p className="mt-0.5 max-w-[180px] truncate font-mono text-[11px] text-[#7a6b5f]">
                                   {entry.entityId}
                                 </p>
                               )}
                             </td>
                             <td className="max-w-[260px] px-5 py-4">
                               {reason ? (
-                                <p className="truncate text-xs text-slate-600" title={reason}>
+                                <p className="truncate text-xs text-[#6c5d52]" title={reason}>
                                   {reason}
                                 </p>
                               ) : (
-                                <span className="text-xs text-slate-400">—</span>
+                                <span className="text-xs text-[#7a6b5f]">—</span>
                               )}
                               {entry.ipAddress && (
-                                <p className="mt-0.5 font-mono text-[10px] text-slate-400">
+                                <p className="mt-0.5 font-mono text-[11px] text-[#7a6b5f]">
                                   {entry.ipAddress}
                                 </p>
                               )}
@@ -406,7 +401,7 @@ export default function AdminAuditPage() {
                               <button
                                 type="button"
                                 onClick={() => setSelected(entry)}
-                                className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-bold text-[#33599E] hover:bg-[#33599E]/5"
+                                className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-bold text-[#b3541e] hover:bg-[#b3541e]/5"
                               >
                                 <Eye className="h-3.5 w-3.5" />
                                 View
@@ -421,9 +416,9 @@ export default function AdminAuditPage() {
 
             {!loading && entries.length === 0 && !error && (
               <div className="px-6 py-14 text-center">
-                <ScrollText className="mx-auto h-10 w-10 text-slate-300" />
-                <h3 className="mt-3 text-base font-bold text-slate-700">No audit entries</h3>
-                <p className="mt-1 text-sm text-slate-500">
+                <ScrollText className="mx-auto h-10 w-10 text-[#c2b6aa]" />
+                <h2 className="mt-3 font-headline text-xl font-semibold tracking-[-0.01em] text-[#3a302a]">No audit entries</h2>
+                <p className="mt-1 text-sm text-[#7a6b5f]">
                   {hasFilters
                     ? 'No entries match these filters.'
                     : 'Privileged actions will be recorded here as your team works.'}
@@ -432,7 +427,7 @@ export default function AdminAuditPage() {
                   <button
                     type="button"
                     onClick={clearFilters}
-                    className="mt-4 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                    className="mt-4 rounded-xl border border-[#d8d0c8] bg-white px-4 py-2 text-sm font-semibold text-[#5a4c42] hover:bg-[#f6f0e8]"
                   >
                     Clear filters
                   </button>
@@ -440,17 +435,23 @@ export default function AdminAuditPage() {
               </div>
             )}
 
-            <div className="flex flex-col gap-3 border-t border-slate-200 bg-slate-50/60 px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-xs font-medium text-slate-500">
-                Page {page} of {totalPages} · {total.toLocaleString()} entr
-                {total === 1 ? 'y' : 'ies'}
+            <div className="flex flex-col gap-3 border-t border-[#d8d0c8] bg-[#f6f0e8]/60 px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs font-medium text-[#7a6b5f]">
+                {total === 0 ? (
+                  'No audit entries to display'
+                ) : (
+                  <>
+                    Page {page} of {totalPages} · {total.toLocaleString()} entr
+                    {total === 1 ? 'y' : 'ies'}
+                  </>
+                )}
               </p>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setPage((current) => Math.max(1, current - 1))}
                   disabled={page <= 1 || loading}
-                  className="inline-flex h-8 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-40"
+                  className="inline-flex h-8 items-center gap-1 rounded-lg border border-[#d8d0c8] bg-white px-2.5 text-xs font-bold text-[#6c5d52] hover:bg-[#f6f0e8] disabled:opacity-40"
                 >
                   <ChevronLeft className="h-3.5 w-3.5" />
                   Previous
@@ -459,7 +460,7 @@ export default function AdminAuditPage() {
                   type="button"
                   onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
                   disabled={page >= totalPages || loading}
-                  className="inline-flex h-8 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-40"
+                  className="inline-flex h-8 items-center gap-1 rounded-lg border border-[#d8d0c8] bg-white px-2.5 text-xs font-bold text-[#6c5d52] hover:bg-[#f6f0e8] disabled:opacity-40"
                 >
                   Next
                   <ChevronRight className="h-3.5 w-3.5" />
@@ -475,7 +476,7 @@ export default function AdminAuditPage() {
           <button
             type="button"
             aria-label="Close audit details"
-            className="absolute inset-0 bg-slate-950/50"
+            className="absolute inset-0 bg-[#2f2722]/55"
             onClick={() => setSelected(null)}
           />
           <div
@@ -484,19 +485,19 @@ export default function AdminAuditPage() {
             aria-labelledby="audit-detail-title"
             className="relative flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-2xl bg-white shadow-2xl sm:max-w-3xl sm:rounded-2xl"
           >
-            <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-5 py-4">
+            <div className="flex items-start justify-between gap-4 border-b border-[#d8d0c8] px-5 py-4">
               <div>
-                <h2 id="audit-detail-title" className="text-base font-bold text-slate-900">
+                <h2 id="audit-detail-title" className="text-base font-bold text-[#3a302a]">
                   Audit entry
                 </h2>
-                <p className="mt-0.5 text-xs text-slate-500">
+                <p className="mt-0.5 text-xs text-[#7a6b5f]">
                   {formatDateTime(selected.createdAt)} · {selected.action}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setSelected(null)}
-                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                className="rounded-lg p-1.5 text-[#7a6b5f] hover:bg-[#efe7dc] hover:text-[#6c5d52]"
                 aria-label="Close"
               >
                 <X className="h-5 w-5" />
@@ -505,34 +506,34 @@ export default function AdminAuditPage() {
 
             <div className="flex-1 space-y-5 overflow-y-auto px-5 py-5">
               <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                <div className="rounded-xl border border-[#d8d0c8] bg-[#f6f0e8] p-3">
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-[#7a6b5f]">
                     Actor
                   </p>
-                  <p className="mt-1 text-sm font-semibold text-slate-800">
+                  <p className="mt-1 text-sm font-semibold text-[#4a3e35]">
                     {selected.actorEmail || 'System'}
                   </p>
-                  <p className="text-xs text-slate-500">{selected.actorRole || 'automated'}</p>
+                  <p className="text-xs text-[#7a6b5f]">{selected.actorRole || 'automated'}</p>
                   {selected.actorId && (
-                    <p className="mt-1 truncate font-mono text-[10px] text-slate-400">
+                    <p className="mt-1 truncate font-mono text-[11px] text-[#7a6b5f]">
                       {selected.actorId}
                     </p>
                   )}
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                <div className="rounded-xl border border-[#d8d0c8] bg-[#f6f0e8] p-3">
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-[#7a6b5f]">
                     Entity
                   </p>
-                  <p className="mt-1 text-sm font-semibold text-slate-800">
+                  <p className="mt-1 text-sm font-semibold text-[#4a3e35]">
                     {selected.entityType}
                   </p>
                   {selected.entityId && (
-                    <p className="mt-1 truncate font-mono text-[10px] text-slate-400">
+                    <p className="mt-1 truncate font-mono text-[11px] text-[#7a6b5f]">
                       {selected.entityId}
                     </p>
                   )}
                   {selected.ipAddress && (
-                    <p className="mt-1 font-mono text-[10px] text-slate-400">
+                    <p className="mt-1 font-mono text-[11px] text-[#7a6b5f]">
                       IP {selected.ipAddress}
                     </p>
                   )}
@@ -541,8 +542,8 @@ export default function AdminAuditPage() {
 
               {metadataReason(selected) && (
                 <div>
-                  <p className="text-xs font-bold text-slate-700">Reason</p>
-                  <p className="mt-1.5 rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-700">
+                  <p className="text-xs font-bold text-[#5a4c42]">Reason</p>
+                  <p className="mt-1.5 rounded-xl border border-[#d8d0c8] bg-white p-3 text-sm text-[#5a4c42]">
                     {metadataReason(selected)}
                   </p>
                 </div>
@@ -550,24 +551,24 @@ export default function AdminAuditPage() {
 
               <div className="grid gap-4 lg:grid-cols-2">
                 <div>
-                  <p className="mb-1.5 text-xs font-bold text-slate-700">Before</p>
+                  <p className="mb-1.5 text-xs font-bold text-[#5a4c42]">Before</p>
                   <JsonBlock value={selected.beforeState} />
                 </div>
                 <div>
-                  <p className="mb-1.5 text-xs font-bold text-slate-700">After</p>
+                  <p className="mb-1.5 text-xs font-bold text-[#5a4c42]">After</p>
                   <JsonBlock value={selected.afterState} />
                 </div>
               </div>
 
               <div>
-                <p className="mb-1.5 text-xs font-bold text-slate-700">Metadata</p>
+                <p className="mb-1.5 text-xs font-bold text-[#5a4c42]">Metadata</p>
                 <JsonBlock value={selected.metadata} />
               </div>
 
               {selected.userAgent && (
                 <div>
-                  <p className="mb-1.5 text-xs font-bold text-slate-700">User agent</p>
-                  <p className="break-all rounded-xl border border-slate-200 bg-slate-50 p-3 font-mono text-[10px] text-slate-500">
+                  <p className="mb-1.5 text-xs font-bold text-[#5a4c42]">User agent</p>
+                  <p className="break-all rounded-xl border border-[#d8d0c8] bg-[#f6f0e8] p-3 font-mono text-[11px] text-[#7a6b5f]">
                     {selected.userAgent}
                   </p>
                 </div>

@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { apiFetch } from '../../../lib/api';
 import { useAuth } from '../../../context/AuthContext';
+import AdminPageHeader from '../../../components/admin/AdminPageHeader';
 import {
   ADMIN_PERMISSIONS,
   REPORT_REASON_LABELS,
@@ -42,13 +43,13 @@ function formatDate(value: string): string {
 function reportStatusClasses(status: ReportStatus): string {
   switch (status) {
     case 'OPEN':
-      return 'bg-amber-50 text-amber-700 border-amber-200';
+      return 'bg-[#f7ebda] text-[#8a5e20] border-[#ecd9c2]';
     case 'INVESTIGATING':
-      return 'bg-blue-50 text-blue-700 border-blue-200';
+      return 'bg-[#f2eadf] text-[#8a5e20] border-[#e3d5c1]';
     case 'RESOLVED':
-      return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      return 'bg-[#edf1e8] text-[#4f6648] border-[#d6dfcd]';
     default:
-      return 'bg-slate-100 text-slate-600 border-slate-200';
+      return 'bg-[#efe7dc] text-[#6c5d52] border-[#d8d0c8]';
   }
 }
 
@@ -59,7 +60,7 @@ function Rating({ value }: { value: number }) {
         <Star
           key={index}
           className={`h-3.5 w-3.5 ${
-            index < value ? 'fill-amber-400 text-amber-400' : 'text-slate-300'
+            index < value ? 'fill-amber-400 text-[#c89658]' : 'text-[#c2b6aa]'
           }`}
         />
       ))}
@@ -85,7 +86,7 @@ function Modal({ open, onClose, title, description, children, footer, wide }: Mo
       <button
         type="button"
         aria-label="Close dialog"
-        className="absolute inset-0 bg-slate-950/50 backdrop-blur-[1px]"
+        className="absolute inset-0 bg-[#2f2722]/55 backdrop-blur-[1px]"
         onClick={onClose}
       />
       <div
@@ -96,24 +97,24 @@ function Modal({ open, onClose, title, description, children, footer, wide }: Mo
           wide ? 'sm:max-w-3xl' : 'sm:max-w-lg'
         }`}
       >
-        <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-5 py-4">
+        <div className="flex items-start justify-between gap-4 border-b border-[#d8d0c8] px-5 py-4">
           <div>
-            <h2 id="review-dialog-title" className="text-base font-bold text-slate-900">
+            <h2 id="review-dialog-title" className="text-base font-bold text-[#3a302a]">
               {title}
             </h2>
-            {description && <p className="mt-0.5 text-xs text-slate-500">{description}</p>}
+            {description && <p className="mt-0.5 text-xs text-[#7a6b5f]">{description}</p>}
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+            className="rounded-lg p-1.5 text-[#7a6b5f] hover:bg-[#efe7dc] hover:text-[#6c5d52]"
             aria-label="Close"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
         <div className="flex-1 overflow-y-auto px-5 py-5">{children}</div>
-        {footer && <div className="border-t border-slate-200 bg-slate-50/80 px-5 py-3.5">{footer}</div>}
+        {footer && <div className="border-t border-[#d8d0c8] bg-[#f6f0e8]/80 px-5 py-3.5">{footer}</div>}
       </div>
     </div>
   );
@@ -264,42 +265,36 @@ export default function AdminGuestReviewsPage() {
     Boolean(applied.q) || applied.status !== 'all' || applied.reported;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#33599E]">
-            Guest feedback
-          </p>
-          <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-900">Guest reviews</h2>
-          <p className="mt-1 max-w-2xl text-sm text-slate-500">
-            Hide reviews that break platform standards or restore them after review. Hidden
-            reviews disappear from public listings and host dashboards.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => setRefreshTick((tick) => tick + 1)}
-          disabled={loading || !canView}
-          className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-50"
-        >
-          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
-        </button>
-      </div>
+    <div className="space-y-8">
+      <AdminPageHeader
+        title="Guest reviews"
+        description="Hide reviews that break platform standards or restore them after review. Hidden reviews disappear from public listings and host dashboards."
+        actions={
+          <button
+            type="button"
+            onClick={() => setRefreshTick((tick) => tick + 1)}
+            disabled={loading || !canView}
+            className="admin-btn admin-btn-secondary"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} strokeWidth={1.8} />
+            Refresh
+          </button>
+        }
+      />
 
       {!canView ? (
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-800">
+        <div className="rounded-2xl border border-[#ecd9c2] bg-[#f7ebda] p-6 text-sm text-[#7a531c]">
           Your role does not include permission to view guest reviews.
         </div>
       ) : (
         <>
           <form
             onSubmit={applyFilters}
-            className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5"
+            className="rounded-2xl border border-[#d8d0c8] bg-white p-4 shadow-sm sm:p-5"
           >
             <div className="grid gap-3 lg:grid-cols-[minmax(240px,1fr)_180px_auto_auto]">
               <div className="relative">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7a6b5f]" />
                 <input
                   type="search"
                   value={draft.q}
@@ -307,7 +302,7 @@ export default function AdminGuestReviewsPage() {
                     setDraft((current) => ({ ...current, q: event.target.value }))
                   }
                   placeholder="Search comment, author or listing"
-                  className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 text-sm text-slate-800 outline-none transition focus:border-[#33599E] focus:bg-white focus:ring-2 focus:ring-[#33599E]/15"
+                  className="h-10 w-full rounded-xl border border-[#d8d0c8] bg-[#f6f0e8] pl-9 pr-3 text-sm text-[#4a3e35] outline-none transition focus:border-[#b3541e] focus:bg-white focus:ring-2 focus:ring-[#b3541e]/15"
                 />
               </div>
 
@@ -316,7 +311,7 @@ export default function AdminGuestReviewsPage() {
                 onChange={(event) =>
                   setDraft((current) => ({ ...current, status: event.target.value }))
                 }
-                className="h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-700 outline-none focus:border-[#33599E] focus:bg-white focus:ring-2 focus:ring-[#33599E]/15"
+                className="h-10 rounded-xl border border-[#d8d0c8] bg-[#f6f0e8] px-3 text-sm font-medium text-[#5a4c42] outline-none focus:border-[#b3541e] focus:bg-white focus:ring-2 focus:ring-[#b3541e]/15"
                 aria-label="Filter by visibility"
               >
                 <option value="all">All visibility</option>
@@ -324,14 +319,14 @@ export default function AdminGuestReviewsPage() {
                 <option value="HIDDEN">Hidden</option>
               </select>
 
-              <label className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-700">
+              <label className="inline-flex h-10 items-center gap-2 rounded-xl border border-[#d8d0c8] bg-[#f6f0e8] px-3 text-sm font-medium text-[#5a4c42]">
                 <input
                   type="checkbox"
                   checked={draft.reported}
                   onChange={(event) =>
                     setDraft((current) => ({ ...current, reported: event.target.checked }))
                   }
-                  className="h-4 w-4 accent-[#33599E]"
+                  className="h-4 w-4 accent-[#b3541e]"
                 />
                 Has open reports
               </label>
@@ -339,7 +334,7 @@ export default function AdminGuestReviewsPage() {
               <div className="flex items-center gap-2">
                 <button
                   type="submit"
-                  className="inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#33599E] px-4 text-sm font-semibold text-white hover:bg-[#284A86]"
+                  className="inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#b3541e] px-4 text-sm font-semibold text-white hover:bg-[#934313]"
                 >
                   Apply
                 </button>
@@ -347,7 +342,7 @@ export default function AdminGuestReviewsPage() {
                   type="button"
                   onClick={clearFilters}
                   disabled={!hasFilters && !draft.q && draft.status === 'all' && !draft.reported}
-                  className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-40"
+                  className="inline-flex h-10 items-center justify-center rounded-xl border border-[#d8d0c8] bg-white px-3 text-sm font-semibold text-[#6c5d52] hover:bg-[#f6f0e8] disabled:opacity-40"
                 >
                   Clear
                 </button>
@@ -355,14 +350,14 @@ export default function AdminGuestReviewsPage() {
             </div>
 
             <div className="mt-3 flex items-center justify-between">
-              <p className="text-xs font-semibold text-slate-500">
+              <p className="text-xs font-semibold text-[#7a6b5f]">
                 {total.toLocaleString()} review{total === 1 ? '' : 's'}
               </p>
               {hasFilters && (
                 <button
                   type="button"
                   onClick={clearFilters}
-                  className="text-xs font-bold text-[#33599E] hover:text-[#284A86]"
+                  className="text-xs font-bold text-[#b3541e] hover:text-[#934313]"
                 >
                   Clear all filters
                 </button>
@@ -371,32 +366,32 @@ export default function AdminGuestReviewsPage() {
           </form>
 
           {error && (
-            <div className="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+            <div className="flex items-start gap-3 rounded-2xl border border-[#ecd0c9] bg-[#f8e9e5] p-4 text-sm text-[#8f4035]">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
               <div className="flex-1">
                 <p className="font-semibold">Could not load guest reviews</p>
-                <p className="mt-0.5 text-rose-600">{error}</p>
+                <p className="mt-0.5 text-[#a24b3e]">{error}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setRefreshTick((tick) => tick + 1)}
-                className="rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-100"
+                className="rounded-lg border border-[#ecd0c9] bg-white px-3 py-1.5 text-xs font-bold text-[#8f4035] hover:bg-[#f3dcd6]"
               >
                 Retry
               </button>
             </div>
           )}
 
-          <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <section className="overflow-hidden rounded-2xl border border-[#d8d0c8] bg-white shadow-sm">
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-slate-200">
-                <thead className="bg-slate-50">
+              <table className="min-w-full divide-y divide-[#d8d0c8]">
+                <thead className="bg-[#f6f0e8]">
                   <tr>
                     {['Review', 'Listing', 'Reports', 'Visibility', 'Written', 'Actions'].map(
                       (heading) => (
                         <th
                           key={heading}
-                          className={`px-5 py-3 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500 ${
+                          className={`px-5 py-3 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7a6b5f] ${
                             heading === 'Actions' ? 'text-right' : 'text-left'
                           }`}
                         >
@@ -406,65 +401,65 @@ export default function AdminGuestReviewsPage() {
                     )}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-[#ece4d9]">
                   {loading && reviews.length === 0
                     ? Array.from({ length: 6 }).map((_, index) => (
                         <tr key={index}>
                           <td colSpan={6} className="px-5 py-4">
                             <div className="flex items-center gap-3">
-                              <div className="h-9 w-9 animate-pulse rounded-lg bg-slate-100" />
+                              <div className="h-9 w-9 animate-pulse rounded-lg bg-[#efe7dc]" />
                               <div className="flex-1 space-y-2">
-                                <div className="h-3 w-1/3 animate-pulse rounded bg-slate-100" />
-                                <div className="h-2.5 w-1/2 animate-pulse rounded bg-slate-100" />
+                                <div className="h-3 w-1/3 animate-pulse rounded bg-[#efe7dc]" />
+                                <div className="h-2.5 w-1/2 animate-pulse rounded bg-[#efe7dc]" />
                               </div>
                             </div>
                           </td>
                         </tr>
                       ))
                     : reviews.map((review) => (
-                        <tr key={review.id} className="hover:bg-slate-50/70">
+                        <tr key={review.id} className="hover:bg-[#f6f0e8]/70">
                           <td className="max-w-[360px] px-5 py-4">
                             <div className="flex items-start gap-3">
-                              <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-50 text-amber-700">
+                              <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#f7ebda] text-[#8a5e20]">
                                 <Star className="h-4 w-4" />
                               </div>
                               <div className="min-w-0">
                                 <div className="flex flex-wrap items-center gap-2">
                                   <Rating value={review.rating} />
-                                  <span className="text-xs font-semibold text-slate-700">
+                                  <span className="text-xs font-semibold text-[#5a4c42]">
                                     {review.author?.name || 'Deleted user'}
                                   </span>
                                 </div>
-                                <p className="mt-1 line-clamp-2 text-xs text-slate-500">
+                                <p className="mt-1 line-clamp-2 text-xs text-[#7a6b5f]">
                                   {review.comment || 'No comment provided.'}
                                 </p>
                               </div>
                             </div>
                           </td>
                           <td className="px-5 py-4">
-                            <p className="max-w-[220px] truncate text-xs font-semibold text-slate-700">
+                            <p className="max-w-[220px] truncate text-xs font-semibold text-[#5a4c42]">
                               {review.property?.title || 'Listing unavailable'}
                             </p>
-                            <p className="mt-0.5 text-[11px] text-slate-400">
+                            <p className="mt-0.5 text-xs text-[#7a6b5f]">
                               {review.property?.city || '—'}
                             </p>
                           </td>
                           <td className="px-5 py-4">
                             {review.openReportCount > 0 ? (
-                              <span className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-[11px] font-bold text-rose-700">
+                              <span className="inline-flex items-center gap-1 rounded-full border border-[#ecd0c9] bg-[#f8e9e5] px-2.5 py-1 text-xs font-bold text-[#8f4035]">
                                 <Flag className="h-3 w-3" />
                                 {review.openReportCount} open
                               </span>
                             ) : (
-                              <span className="text-xs text-slate-400">None</span>
+                              <span className="text-xs text-[#7a6b5f]">None</span>
                             )}
                           </td>
                           <td className="px-5 py-4">
                             <span
-                              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold ${
+                              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${
                                 review.moderationStatus === 'VISIBLE'
-                                  ? 'bg-emerald-50 text-emerald-700'
-                                  : 'bg-slate-100 text-slate-600'
+                                  ? 'bg-[#edf1e8] text-[#4f6648]'
+                                  : 'bg-[#efe7dc] text-[#6c5d52]'
                               }`}
                             >
                               {review.moderationStatus === 'VISIBLE' ? (
@@ -475,7 +470,7 @@ export default function AdminGuestReviewsPage() {
                               {review.moderationStatus === 'VISIBLE' ? 'Visible' : 'Hidden'}
                             </span>
                           </td>
-                          <td className="whitespace-nowrap px-5 py-4 text-xs font-medium text-slate-500">
+                          <td className="whitespace-nowrap px-5 py-4 text-xs font-medium text-[#7a6b5f]">
                             {formatDate(review.createdAt)}
                           </td>
                           <td className="px-5 py-4">
@@ -483,7 +478,7 @@ export default function AdminGuestReviewsPage() {
                               <button
                                 type="button"
                                 onClick={() => openDetail(review.id)}
-                                className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-bold text-[#33599E] hover:bg-[#33599E]/5"
+                                className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-bold text-[#b3541e] hover:bg-[#b3541e]/5"
                               >
                                 <Eye className="h-3.5 w-3.5" />
                                 View
@@ -494,8 +489,8 @@ export default function AdminGuestReviewsPage() {
                                   onClick={() => openModerateDialog(review)}
                                   className={`inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-bold ${
                                     review.moderationStatus === 'VISIBLE'
-                                      ? 'text-rose-600 hover:bg-rose-50'
-                                      : 'text-emerald-600 hover:bg-emerald-50'
+                                      ? 'text-[#a24b3e] hover:bg-[#f8e9e5]'
+                                      : 'text-[#5d7554] hover:bg-[#edf1e8]'
                                   }`}
                                 >
                                   {review.moderationStatus === 'VISIBLE' ? (
@@ -516,16 +511,16 @@ export default function AdminGuestReviewsPage() {
 
             {!loading && reviews.length === 0 && !error && (
               <div className="px-6 py-14 text-center">
-                <Star className="mx-auto h-10 w-10 text-slate-300" />
-                <h3 className="mt-3 text-base font-bold text-slate-700">No reviews found</h3>
-                <p className="mt-1 text-sm text-slate-500">
+                <Star className="mx-auto h-10 w-10 text-[#c2b6aa]" />
+                <h2 className="mt-3 font-headline text-xl font-semibold tracking-[-0.01em] text-[#3a302a]">No reviews found</h2>
+                <p className="mt-1 text-sm text-[#7a6b5f]">
                   {hasFilters ? 'No reviews match these filters.' : 'Guest reviews will appear here.'}
                 </p>
                 {hasFilters && (
                   <button
                     type="button"
                     onClick={clearFilters}
-                    className="mt-4 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                    className="mt-4 rounded-xl border border-[#d8d0c8] bg-white px-4 py-2 text-sm font-semibold text-[#5a4c42] hover:bg-[#f6f0e8]"
                   >
                     Clear filters
                   </button>
@@ -533,17 +528,23 @@ export default function AdminGuestReviewsPage() {
               </div>
             )}
 
-            <div className="flex flex-col gap-3 border-t border-slate-200 bg-slate-50/60 px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-xs font-medium text-slate-500">
-                Page {page} of {totalPages} · {total.toLocaleString()} review
-                {total === 1 ? '' : 's'}
+            <div className="flex flex-col gap-3 border-t border-[#d8d0c8] bg-[#f6f0e8]/60 px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs font-medium text-[#7a6b5f]">
+                {total === 0 ? (
+                  'No reviews to display'
+                ) : (
+                  <>
+                    Page {page} of {totalPages} · {total.toLocaleString()} review
+                    {total === 1 ? '' : 's'}
+                  </>
+                )}
               </p>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setPage((current) => Math.max(1, current - 1))}
                   disabled={page <= 1 || loading}
-                  className="inline-flex h-8 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-40"
+                  className="inline-flex h-8 items-center gap-1 rounded-lg border border-[#d8d0c8] bg-white px-2.5 text-xs font-bold text-[#6c5d52] hover:bg-[#f6f0e8] disabled:opacity-40"
                 >
                   <ChevronLeft className="h-3.5 w-3.5" />
                   Previous
@@ -552,7 +553,7 @@ export default function AdminGuestReviewsPage() {
                   type="button"
                   onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
                   disabled={page >= totalPages || loading}
-                  className="inline-flex h-8 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-40"
+                  className="inline-flex h-8 items-center gap-1 rounded-lg border border-[#d8d0c8] bg-white px-2.5 text-xs font-bold text-[#6c5d52] hover:bg-[#f6f0e8] disabled:opacity-40"
                 >
                   Next
                   <ChevronRight className="h-3.5 w-3.5" />
@@ -574,7 +575,7 @@ export default function AdminGuestReviewsPage() {
             <button
               type="button"
               onClick={() => setDetailOpen(false)}
-              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              className="rounded-xl border border-[#d8d0c8] bg-white px-4 py-2 text-sm font-semibold text-[#5a4c42] hover:bg-[#f6f0e8]"
             >
               Close
             </button>
@@ -584,8 +585,8 @@ export default function AdminGuestReviewsPage() {
                 onClick={() => openModerateDialog(detail)}
                 className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold text-white ${
                   detail.moderationStatus === 'VISIBLE'
-                    ? 'bg-rose-600 hover:bg-rose-700'
-                    : 'bg-emerald-600 hover:bg-emerald-700'
+                    ? 'bg-[#a24b3e] hover:bg-[#8f4035]'
+                    : 'bg-[#5d7554] hover:bg-[#4f6648]'
                 }`}
               >
                 {detail.moderationStatus === 'VISIBLE' ? (
@@ -600,38 +601,38 @@ export default function AdminGuestReviewsPage() {
         }
       >
         {detailLoading ? (
-          <div className="flex flex-col items-center justify-center py-14 text-slate-500">
-            <Loader2 className="h-6 w-6 animate-spin text-[#33599E]" />
+          <div className="flex flex-col items-center justify-center py-14 text-[#7a6b5f]">
+            <Loader2 className="h-6 w-6 animate-spin text-[#b3541e]" />
             <p className="mt-2 text-sm font-medium">Loading review…</p>
           </div>
         ) : detailError ? (
-          <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+          <div className="rounded-xl border border-[#ecd0c9] bg-[#f8e9e5] p-4 text-sm text-[#8f4035]">
             <p className="font-semibold">Could not load review</p>
             <p className="mt-1">{detailError}</p>
           </div>
         ) : detail ? (
           <div className="space-y-5">
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <div className="rounded-xl border border-[#d8d0c8] bg-[#f6f0e8] p-4">
               <div className="flex flex-wrap items-center gap-2">
                 <Rating value={detail.rating} />
                 <span
-                  className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${
+                  className={`rounded-full px-2.5 py-1 text-xs font-bold ${
                     detail.moderationStatus === 'VISIBLE'
-                      ? 'bg-emerald-50 text-emerald-700'
-                      : 'bg-slate-200 text-slate-700'
+                      ? 'bg-[#edf1e8] text-[#4f6648]'
+                      : 'bg-[#e7ded2] text-[#5a4c42]'
                   }`}
                 >
                   {detail.moderationStatus === 'VISIBLE' ? 'Visible' : 'Hidden'}
                 </span>
-                <span className="text-xs text-slate-500">
+                <span className="text-xs text-[#7a6b5f]">
                   {detail.author?.name || 'Deleted user'}
                   {detail.author?.email ? ` · ${detail.author.email}` : ''}
                 </span>
               </div>
-              <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-slate-700">
+              <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-[#5a4c42]">
                 {detail.comment || 'No comment provided.'}
               </p>
-              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-500">
+              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[#7a6b5f]">
                 <span>Written {formatDate(detail.createdAt)}</span>
                 {detail.property && (
                   <span>
@@ -643,11 +644,11 @@ export default function AdminGuestReviewsPage() {
             </div>
 
             {detail.moderationStatus === 'HIDDEN' && (
-              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-800">
+              <div className="rounded-xl border border-[#ecd9c2] bg-[#f7ebda] p-4 text-xs text-[#7a531c]">
                 <p className="font-bold">Moderation note</p>
                 <p className="mt-1">{detail.moderationReason || 'No reason recorded.'}</p>
                 {detail.moderatedAt && (
-                  <p className="mt-1.5 text-amber-700">
+                  <p className="mt-1.5 text-[#8a5e20]">
                     Hidden {formatDate(detail.moderatedAt)}
                     {detail.moderatedBy ? ` by ${detail.moderatedBy.name}` : ''}
                   </p>
@@ -657,41 +658,41 @@ export default function AdminGuestReviewsPage() {
 
             <div>
               <div className="flex items-center justify-between gap-3">
-                <h3 className="text-sm font-bold text-slate-800">Reports on this review</h3>
-                <span className="text-xs font-semibold text-slate-500">
+                <h3 className="text-sm font-bold text-[#4a3e35]">Reports on this review</h3>
+                <span className="text-xs font-semibold text-[#7a6b5f]">
                   {detail.reports.length} report{detail.reports.length === 1 ? '' : 's'}
                 </span>
               </div>
 
               <div className="mt-2 space-y-2">
                 {detail.reports.length === 0 ? (
-                  <p className="rounded-xl border border-slate-200 p-3 text-xs text-slate-500">
+                  <p className="rounded-xl border border-[#d8d0c8] p-3 text-xs text-[#7a6b5f]">
                     No reports have been filed for this review.
                   </p>
                 ) : (
                   detail.reports.map((report) => (
-                    <div key={report.id} className="rounded-xl border border-slate-200 p-3">
+                    <div key={report.id} className="rounded-xl border border-[#d8d0c8] p-3">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-xs font-bold text-slate-800">
+                        <span className="text-xs font-bold text-[#4a3e35]">
                           {REPORT_REASON_LABELS[report.reason] || report.reason}
                         </span>
                         <span
-                          className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${reportStatusClasses(
+                          className={`rounded-full border px-2 py-0.5 text-[11px] font-bold ${reportStatusClasses(
                             report.status,
                           )}`}
                         >
                           {REPORT_STATUS_LABELS[report.status] || report.status}
                         </span>
-                        <span className="text-[11px] text-slate-400">
+                        <span className="text-xs text-[#7a6b5f]">
                           {report.reporterEmail || 'Unknown reporter'} ·{' '}
                           {formatDate(report.createdAt)}
                         </span>
                       </div>
                       {report.details && (
-                        <p className="mt-1.5 text-xs text-slate-600">{report.details}</p>
+                        <p className="mt-1.5 text-xs text-[#6c5d52]">{report.details}</p>
                       )}
                       {report.resolutionNote && (
-                        <p className="mt-1.5 rounded-lg bg-slate-50 px-2.5 py-2 text-[11px] text-slate-600">
+                        <p className="mt-1.5 rounded-lg bg-[#f6f0e8] px-2.5 py-2 text-xs text-[#6c5d52]">
                           Resolution: {report.resolutionNote}
                         </p>
                       )}
@@ -721,7 +722,7 @@ export default function AdminGuestReviewsPage() {
               type="button"
               onClick={() => setModerateTarget(null)}
               disabled={moderateSubmitting}
-              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+              className="rounded-xl border border-[#d8d0c8] bg-white px-4 py-2 text-sm font-semibold text-[#5a4c42] hover:bg-[#f6f0e8] disabled:opacity-50"
             >
               Cancel
             </button>
@@ -731,8 +732,8 @@ export default function AdminGuestReviewsPage() {
               disabled={moderateSubmitting || moderateReason.trim().length < 5}
               className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 ${
                 moderateAction === 'hide'
-                  ? 'bg-rose-600 hover:bg-rose-700'
-                  : 'bg-emerald-600 hover:bg-emerald-700'
+                  ? 'bg-[#a24b3e] hover:bg-[#8f4035]'
+                  : 'bg-[#5d7554] hover:bg-[#4f6648]'
               }`}
             >
               {moderateSubmitting ? (
@@ -751,8 +752,8 @@ export default function AdminGuestReviewsPage() {
           <div
             className={`flex items-start gap-2 rounded-xl p-3 text-xs ${
               moderateAction === 'hide'
-                ? 'bg-rose-50 text-rose-700'
-                : 'bg-emerald-50 text-emerald-700'
+                ? 'bg-[#f8e9e5] text-[#8f4035]'
+                : 'bg-[#edf1e8] text-[#4f6648]'
             }`}
           >
             {moderateAction === 'hide' ? (
@@ -768,8 +769,8 @@ export default function AdminGuestReviewsPage() {
           </div>
 
           <div>
-            <label htmlFor="moderation-reason" className="text-xs font-bold text-slate-700">
-              Reason <span className="text-rose-500">*</span>
+            <label htmlFor="moderation-reason" className="text-xs font-bold text-[#5a4c42]">
+              Reason <span className="text-[#a24b3e]">*</span>
             </label>
             <textarea
               id="moderation-reason"
@@ -778,16 +779,16 @@ export default function AdminGuestReviewsPage() {
               rows={3}
               maxLength={500}
               placeholder="What policy does this review break? This goes to the audit log."
-              className="mt-1.5 w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-[#33599E] focus:bg-white focus:ring-2 focus:ring-[#33599E]/15"
+              className="mt-1.5 w-full resize-none rounded-xl border border-[#d8d0c8] bg-[#f6f0e8] px-3 py-2.5 text-sm text-[#4a3e35] outline-none focus:border-[#b3541e] focus:bg-white focus:ring-2 focus:ring-[#b3541e]/15"
             />
-            <div className="mt-1 flex justify-between text-[11px] text-slate-400">
+            <div className="mt-1 flex justify-between text-xs text-[#7a6b5f]">
               <span>Minimum 5 characters</span>
               <span>{moderateReason.length}/500</span>
             </div>
           </div>
 
           {moderateError && (
-            <p className="rounded-lg bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">
+            <p className="rounded-lg bg-[#f8e9e5] px-3 py-2 text-xs font-medium text-[#8f4035]">
               {moderateError}
             </p>
           )}
@@ -799,20 +800,20 @@ export default function AdminGuestReviewsPage() {
           role="status"
           className={`fixed bottom-5 right-5 z-[70] flex max-w-sm items-start gap-2 rounded-xl border px-4 py-3 text-sm shadow-lg ${
             toast.type === 'success'
-              ? 'border-emerald-200 bg-white text-emerald-800'
-              : 'border-rose-200 bg-white text-rose-800'
+              ? 'border-[#d6dfcd] bg-white text-[#405a3a]'
+              : 'border-[#ecd0c9] bg-white text-[#7d352b]'
           }`}
         >
           {toast.type === 'success' ? (
-            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#5d7554]" />
           ) : (
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[#a24b3e]" />
           )}
           <p className="font-medium">{toast.message}</p>
           <button
             type="button"
             onClick={() => setToast(null)}
-            className="ml-1 rounded p-0.5 text-slate-400 hover:text-slate-600"
+            className="ml-1 rounded p-0.5 text-[#7a6b5f] hover:text-[#6c5d52]"
             aria-label="Dismiss notification"
           >
             <X className="h-4 w-4" />
