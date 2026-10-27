@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -109,11 +109,11 @@ export default function HostDashboardPage() {
           <div className="w-12 h-12 rounded-xl bg-red-50 text-red-600 flex items-center justify-center mx-auto mb-3">
             <XCircle className="w-6 h-6" />
           </div>
-          <h2 className="text-lg font-bold text-[#3a302a] mb-1">Could not load Host Dashboard</h2>
-          <p className="text-xs text-[#605850] mb-5 max-w-md mx-auto">{error}</p>
+          <h2 className="text-lg font-bold text-[#252923] mb-1">Could not load Host Dashboard</h2>
+          <p className="text-xs text-[#73776F] mb-5 max-w-md mx-auto">{error}</p>
           <button
             onClick={() => setRefreshKey((k) => k + 1)}
-            className="inline-flex items-center gap-2 bg-[#c2652a] hover:bg-[#e08850] active:bg-[#a65320] text-white text-xs font-bold px-5 py-2.5 rounded-xl transition cursor-pointer shadow-sm"
+            className="inline-flex items-center gap-2 bg-[#234B36] hover:bg-[#2D5E43] active:bg-[#1A3828] text-white text-xs font-bold px-5 py-2.5 rounded-xl transition cursor-pointer shadow-sm"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             Retry Connection
@@ -126,13 +126,13 @@ export default function HostDashboardPage() {
   if (authLoading || loading) {
     return (
       <div className="p-4 sm:p-6 md:p-8 space-y-6 max-w-7xl mx-auto animate-pulse">
-        <div className="h-16 rounded-2xl bg-[#f2ece4]" />
+        <div className="h-16 rounded-2xl bg-[#EEF3EF]" />
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-32 rounded-2xl bg-[#f2ece4]" />
+            <div key={i} className="h-32 rounded-2xl bg-[#EEF3EF]" />
           ))}
         </div>
-        <div className="h-72 rounded-2xl bg-[#f2ece4]" />
+        <div className="h-72 rounded-2xl bg-[#EEF3EF]" />
       </div>
     );
   }
@@ -164,8 +164,8 @@ export default function HostDashboardPage() {
         );
       case 'PENDING':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#f2ece4] text-[#c2652a] border border-[#d8d0c8]">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#c2652a] animate-pulse" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#EEF3EF] text-[#234B36] border border-[#E5E0D5]">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#234B36] animate-pulse" />
             Verification Under Review
           </span>
         );
@@ -188,7 +188,7 @@ export default function HostDashboardPage() {
   };
 
   return (
-    <div className="p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8 max-w-7xl mx-auto text-[#3a302a]">
+    <div className="p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8 max-w-7xl mx-auto text-[#252923]">
       
       {/* ── 1. CLEAN NATIVE SAAS HEADER ── */}
       <section className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-1 pb-2">
@@ -196,13 +196,13 @@ export default function HostDashboardPage() {
         <div className="space-y-1">
           <div className="flex items-center gap-2.5">
             {user && <HostAvatar src={user.avatar} name={user.name} size={36} />}
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#3a302a] font-headline">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#252923] font-headline">
               Host Dashboard
             </h1>
             {renderStatusBadge()}
           </div>
-          <p className="text-xs sm:text-sm text-[#605850]">
-            Welcome back, <span className="font-semibold text-[#3a302a]">{hostDisplayName}</span> • Managing {totalListings} active properties across Ethiopia
+          <p className="text-xs sm:text-sm text-[#73776F]">
+            Welcome back, <span className="font-semibold text-[#252923]">{hostDisplayName}</span> • Managing {totalListings} active properties across Ethiopia
           </p>
         </div>
 
@@ -210,7 +210,7 @@ export default function HostDashboardPage() {
         <div className="flex flex-wrap items-center gap-2.5 shrink-0">
           <Link
             href="/host/listings/new"
-            className="inline-flex items-center gap-1.5 bg-[#c2652a] hover:bg-[#e08850] active:bg-[#a65320] text-white text-xs sm:text-sm font-bold px-4 py-2.5 rounded-xl shadow-xs hover:shadow-sm transition cursor-pointer"
+            className="inline-flex items-center gap-1.5 bg-[#234B36] hover:bg-[#2D5E43] active:bg-[#1A3828] text-white text-xs sm:text-sm font-bold px-4 py-2.5 rounded-xl shadow-xs hover:shadow-sm transition cursor-pointer"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
             <span>Add New Property</span>
@@ -218,17 +218,17 @@ export default function HostDashboardPage() {
 
           <Link
             href="/host/availability"
-            className="inline-flex items-center gap-1.5 bg-white hover:bg-[#f2ece4] text-[#3a302a] border border-[#d8d0c8] text-xs sm:text-sm font-semibold px-3.5 py-2.5 rounded-xl shadow-2xs hover:border-[#c2652a]/40 transition cursor-pointer"
+            className="inline-flex items-center gap-1.5 bg-white hover:bg-[#EEF3EF] text-[#252923] border border-[#E5E0D5] text-xs sm:text-sm font-semibold px-3.5 py-2.5 rounded-xl shadow-2xs hover:border-[#234B36]/40 transition cursor-pointer"
           >
-            <CalendarRange className="w-3.5 h-3.5 text-[#c2652a]" />
+            <CalendarRange className="w-3.5 h-3.5 text-[#234B36]" />
             <span>Calendar & Rates</span>
           </Link>
 
           <Link
             href="/dashboard?view=guest"
-            className="inline-flex items-center gap-1.5 bg-white hover:bg-[#f2ece4] text-[#605850] hover:text-[#3a302a] border border-[#d8d0c8] text-xs sm:text-sm font-medium px-3.5 py-2.5 rounded-xl shadow-2xs hover:border-[#c2652a]/40 transition cursor-pointer"
+            className="inline-flex items-center gap-1.5 bg-white hover:bg-[#EEF3EF] text-[#73776F] hover:text-[#252923] border border-[#E5E0D5] text-xs sm:text-sm font-medium px-3.5 py-2.5 rounded-xl shadow-2xs hover:border-[#234B36]/40 transition cursor-pointer"
           >
-            <ExternalLink className="w-3.5 h-3.5 text-[#605850]" />
+            <ExternalLink className="w-3.5 h-3.5 text-[#73776F]" />
             <span>Guest Mode</span>
           </Link>
         </div>
@@ -257,7 +257,7 @@ export default function HostDashboardPage() {
           <div className="shrink-0 sm:self-center">
             <Link
               href="/host/profile"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#c2652a] hover:bg-[#e08850] text-white text-xs font-bold transition shadow-xs cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#234B36] hover:bg-[#2D5E43] text-white text-xs font-bold transition shadow-xs cursor-pointer"
             >
               <ShieldCheck className="w-4 h-4" />
               <span>Complete &amp; Submit Verification</span>
@@ -270,17 +270,17 @@ export default function HostDashboardPage() {
         <section
           role="region"
           aria-label="Verification status banner"
-          className="p-4 sm:p-5 rounded-2xl border border-[#d8d0c8] bg-[#f2ece4] text-[#3a302a] flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xs"
+          className="p-4 sm:p-5 rounded-2xl border border-[#E5E0D5] bg-[#EEF3EF] text-[#252923] flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xs"
         >
           <div className="flex items-start gap-3.5">
-            <div className="w-10 h-10 rounded-xl bg-white text-[#c2652a] flex items-center justify-center shrink-0 mt-0.5 border border-[#d8d0c8]">
-              <Clock className="w-5 h-5 text-[#c2652a] animate-pulse" />
+            <div className="w-10 h-10 rounded-xl bg-white text-[#234B36] flex items-center justify-center shrink-0 mt-0.5 border border-[#E5E0D5]">
+              <Clock className="w-5 h-5 text-[#234B36] animate-pulse" />
             </div>
             <div className="space-y-1">
-              <h2 className="text-sm font-bold text-[#3a302a]">
+              <h2 className="text-sm font-bold text-[#252923]">
                 Verification Request Awaiting Review
               </h2>
-              <p className="text-xs text-[#605850] max-w-2xl leading-relaxed">
+              <p className="text-xs text-[#73776F] max-w-2xl leading-relaxed">
                 Your verification submission is currently being reviewed by the ENGIDA compliance team. You can continue creating properties, setting rates, and blocking dates while your review is processed.
               </p>
             </div>
@@ -288,7 +288,7 @@ export default function HostDashboardPage() {
           <div className="shrink-0 sm:self-center">
             <Link
               href="/host/profile"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-[#d8d0c8] text-[#3a302a] hover:bg-[#faf5ee] text-xs font-bold transition shadow-2xs cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-[#E5E0D5] text-[#252923] hover:bg-[#F8F5ED] text-xs font-bold transition shadow-2xs cursor-pointer"
             >
               <span>View Profile Details</span>
               <ChevronRight className="w-3.5 h-3.5" />
@@ -317,7 +317,7 @@ export default function HostDashboardPage() {
               {rejectionReason && (
                 <div className="p-3 rounded-xl bg-white/90 border border-rose-200 text-xs text-rose-950 max-w-2xl">
                   <span className="font-bold">Compliance Feedback: </span>
-                  <span className="font-medium text-[#3a302a]">{rejectionReason}</span>
+                  <span className="font-medium text-[#252923]">{rejectionReason}</span>
                 </div>
               )}
             </div>
@@ -367,98 +367,98 @@ export default function HostDashboardPage() {
       <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5" aria-label="Key performance indicators">
         
         {/* KPI 1: Active Portfolio */}
-        <div className="bg-white border border-[#d8d0c8] rounded-2xl p-5 sm:p-6 shadow-xs hover:shadow-md transition-shadow">
+        <div className="bg-white border border-[#E5E0D5] rounded-2xl p-5 sm:p-6 shadow-xs hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-xl bg-[#f2ece4] text-[#c2652a] flex items-center justify-center font-bold">
+            <div className="w-10 h-10 rounded-xl bg-[#EEF3EF] text-[#234B36] flex items-center justify-center font-bold">
               <Building2 className="w-5 h-5 stroke-[2.2]" />
             </div>
             <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
               100% Active
             </span>
           </div>
-          <p className="text-xs font-semibold text-[#605850] uppercase tracking-wider">
+          <p className="text-xs font-semibold text-[#73776F] uppercase tracking-wider">
             Total Properties
           </p>
           <div className="mt-1 flex items-baseline gap-1.5">
-            <span className="text-3xl font-black text-[#3a302a] tracking-tight tabular-nums">
+            <span className="text-3xl font-black text-[#252923] tracking-tight tabular-nums">
               {totalListings}
             </span>
-            <span className="text-xs text-[#605850] font-medium">units online</span>
+            <span className="text-xs text-[#73776F] font-medium">units online</span>
           </div>
-          <p className="mt-2 text-xs text-[#605850] font-medium pt-2 border-t border-[#d8d0c8]/40">
+          <p className="mt-2 text-xs text-[#73776F] font-medium pt-2 border-t border-[#E5E0D5]/40">
             {summary?.rentalListings || 0} Rentals • {summary?.saleListings || 0} For Sale
           </p>
         </div>
 
         {/* KPI 2: Gross Booking Value */}
-        <div className="bg-white border border-[#d8d0c8] rounded-2xl p-5 sm:p-6 shadow-xs hover:shadow-md transition-shadow">
+        <div className="bg-white border border-[#E5E0D5] rounded-2xl p-5 sm:p-6 shadow-xs hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-3">
             <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
               <BadgeDollarSign className="w-5 h-5 stroke-[2.2]" />
             </div>
-            <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#f2ece4] text-[#c2652a] border border-[#d8d0c8]/60">
+            <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#EEF3EF] text-[#234B36] border border-[#E5E0D5]/60">
               Escrow Protected
             </span>
           </div>
-          <p className="text-xs font-semibold text-[#605850] uppercase tracking-wider">
+          <p className="text-xs font-semibold text-[#73776F] uppercase tracking-wider">
             Gross Booking Value
           </p>
           <div className="mt-1 flex items-baseline">
-            <span className="text-3xl font-black text-[#3a302a] tracking-tight tabular-nums">
+            <span className="text-3xl font-black text-[#252923] tracking-tight tabular-nums">
               {formatETB(totalBookingValue)}
             </span>
           </div>
-          <p className="mt-2 text-xs text-[#605850] font-medium pt-2 border-t border-[#d8d0c8]/40">
+          <p className="mt-2 text-xs text-[#73776F] font-medium pt-2 border-t border-[#E5E0D5]/40">
             Direct Chapa & CBE Settlement
           </p>
         </div>
 
         {/* KPI 3: Reservations Pipeline */}
-        <div className="bg-white border border-[#d8d0c8] rounded-2xl p-5 sm:p-6 shadow-xs hover:shadow-md transition-shadow">
+        <div className="bg-white border border-[#E5E0D5] rounded-2xl p-5 sm:p-6 shadow-xs hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-3">
             <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
               <CalendarCheck className="w-5 h-5 stroke-[2.2]" />
             </div>
             <Link
               href="/host/reservations"
-              className="text-xs font-bold text-[#c2652a] hover:underline"
+              className="text-xs font-bold text-[#234B36] hover:underline"
             >
               View All →
             </Link>
           </div>
-          <p className="text-xs font-semibold text-[#605850] uppercase tracking-wider">
+          <p className="text-xs font-semibold text-[#73776F] uppercase tracking-wider">
             Active Reservations
           </p>
           <div className="mt-1 flex items-baseline gap-1.5">
-            <span className="text-3xl font-black text-[#3a302a] tracking-tight tabular-nums">
+            <span className="text-3xl font-black text-[#252923] tracking-tight tabular-nums">
               {pendingReservations + confirmedReservations}
             </span>
-            <span className="text-xs text-[#605850] font-medium">active stays</span>
+            <span className="text-xs text-[#73776F] font-medium">active stays</span>
           </div>
-          <p className="mt-2 text-xs text-[#605850] font-medium pt-2 border-t border-[#d8d0c8]/40">
+          <p className="mt-2 text-xs text-[#73776F] font-medium pt-2 border-t border-[#E5E0D5]/40">
             {pendingReservations} Pending Approval • {confirmedReservations} Confirmed
           </p>
         </div>
 
         {/* KPI 4: Market Demand Level */}
-        <div className="bg-white border border-[#d8d0c8] rounded-2xl p-5 sm:p-6 shadow-xs hover:shadow-md transition-shadow">
+        <div className="bg-white border border-[#E5E0D5] rounded-2xl p-5 sm:p-6 shadow-xs hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-xl bg-[#f2ece4] text-[#c2652a] flex items-center justify-center font-bold">
+            <div className="w-10 h-10 rounded-xl bg-[#EEF3EF] text-[#234B36] flex items-center justify-center font-bold">
               <TrendingUp className="w-5 h-5 stroke-[2.2]" />
             </div>
-            <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#f2ece4] text-[#c2652a] border border-[#d8d0c8]/60">
+            <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#EEF3EF] text-[#234B36] border border-[#E5E0D5]/60">
               High Demand
             </span>
           </div>
-          <p className="text-xs font-semibold text-[#605850] uppercase tracking-wider">
+          <p className="text-xs font-semibold text-[#73776F] uppercase tracking-wider">
             Market Demand Level
           </p>
           <div className="mt-1 flex items-baseline">
-            <span className="text-2xl sm:text-3xl font-black text-[#3a302a] tracking-tight">
+            <span className="text-2xl sm:text-3xl font-black text-[#252923] tracking-tight">
               Peak Season
             </span>
           </div>
-          <p className="mt-2 text-xs text-[#605850] font-medium pt-2 border-t border-[#d8d0c8]/40">
+          <p className="mt-2 text-xs text-[#73776F] font-medium pt-2 border-t border-[#E5E0D5]/40">
             Addis Ababa, Kuriftu & Lake Tana
           </p>
         </div>
@@ -466,23 +466,23 @@ export default function HostDashboardPage() {
       </section>
 
       {/* ── 3. LIVE PROPERTY PORTFOLIO SHOWCASE (CLEANED HIERARCHY) ── */}
-      <section className="bg-white border border-[#d8d0c8] rounded-2xl p-5 sm:p-7 shadow-xs space-y-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#d8d0c8]/40">
+      <section className="bg-white border border-[#E5E0D5] rounded-2xl p-5 sm:p-7 shadow-xs space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#E5E0D5]/40">
           <div>
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[#c2652a] animate-pulse" />
-              <h2 className="text-lg font-bold text-[#3a302a] tracking-tight font-headline">
+              <span className="w-2 h-2 rounded-full bg-[#234B36] animate-pulse" />
+              <h2 className="text-lg font-bold text-[#252923] tracking-tight font-headline">
                 Live Property Portfolio
               </h2>
             </div>
-            <p className="text-xs text-[#605850] mt-0.5">
+            <p className="text-xs text-[#73776F] mt-0.5">
               Properties published under your host account across Ethiopian sites. Available for instant booking and buyer inquiry.
             </p>
           </div>
 
           <Link
             href="/host/listings"
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-[#c2652a] hover:text-[#e08850] bg-[#f2ece4] hover:bg-[#e8e0d6] border border-[#d8d0c8]/60 px-3.5 py-2 rounded-xl transition self-start sm:self-auto shadow-2xs"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-[#234B36] hover:text-[#2D5E43] bg-[#EEF3EF] hover:bg-[#e8e0d6] border border-[#E5E0D5]/60 px-3.5 py-2 rounded-xl transition self-start sm:self-auto shadow-2xs"
           >
             <span>View All {totalListings} Properties</span>
             <ChevronRight className="w-3.5 h-3.5" />
@@ -494,10 +494,10 @@ export default function HostDashboardPage() {
             {recentListings.map((property) => (
               <div
                 key={property.id}
-                className="group flex flex-col bg-white border border-[#d8d0c8] hover:border-[#c2652a]/40 rounded-2xl overflow-hidden shadow-2xs hover:shadow-md transition-all duration-200"
+                className="group flex flex-col bg-white border border-[#E5E0D5] hover:border-[#234B36]/40 rounded-2xl overflow-hidden shadow-2xs hover:shadow-md transition-all duration-200"
               >
                 {/* Property Cover Image with Clean Floating Badges */}
-                <div className="relative aspect-16/10 w-full overflow-hidden bg-[#f2ece4]">
+                <div className="relative aspect-16/10 w-full overflow-hidden bg-[#EEF3EF]">
                   {property.coverImage ? (
                     <Image
                       src={property.coverImage}
@@ -508,7 +508,7 @@ export default function HostDashboardPage() {
                       className="object-cover group-hover:scale-102 transition-transform duration-300"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-[#605850]">
+                    <div className="w-full h-full flex items-center justify-center text-[#73776F]">
                       <Building2 className="w-10 h-10 stroke-[1.5]" />
                     </div>
                   )}
@@ -517,8 +517,8 @@ export default function HostDashboardPage() {
                   <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between pointer-events-none">
                     <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-xs ${
                       property.listingType === 'SALE'
-                        ? 'bg-[#3a302a] text-white'
-                        : 'bg-[#c2652a] text-white'
+                        ? 'bg-[#252923] text-white'
+                        : 'bg-[#234B36] text-white'
                     }`}>
                       {property.listingType === 'SALE' ? 'For Sale' : 'Rental'}
                     </span>
@@ -533,27 +533,27 @@ export default function HostDashboardPage() {
                 <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
                   <div>
                     {/* Location */}
-                    <div className="flex items-center gap-1.5 text-xs text-[#605850] font-medium mb-1">
-                      <MapPin className="w-3.5 h-3.5 text-[#605850] shrink-0" />
+                    <div className="flex items-center gap-1.5 text-xs text-[#73776F] font-medium mb-1">
+                      <MapPin className="w-3.5 h-3.5 text-[#73776F] shrink-0" />
                       <span className="truncate">{property.city}{property.subCity ? `, ${property.subCity}` : ''}</span>
                     </div>
 
                     {/* Title */}
-                    <h3 className="font-bold text-[#3a302a] text-sm line-clamp-1 group-hover:text-[#c2652a] transition-colors" title={property.title}>
+                    <h3 className="font-bold text-[#252923] text-sm line-clamp-1 group-hover:text-[#234B36] transition-colors" title={property.title}>
                       {property.title}
                     </h3>
 
                     {/* Bedrooms / Specs */}
-                    <div className="mt-1.5 flex items-center gap-3 text-xs text-[#605850]">
+                    <div className="mt-1.5 flex items-center gap-3 text-xs text-[#73776F]">
                       {property.bedrooms !== undefined && property.bedrooms !== null && (
                         <span className="inline-flex items-center gap-1">
-                          <BedDouble className="w-3.5 h-3.5 text-[#605850]" />
+                          <BedDouble className="w-3.5 h-3.5 text-[#73776F]" />
                           <span>{property.bedrooms} Beds</span>
                         </span>
                       )}
                       {property.bathrooms !== undefined && property.bathrooms !== null && (
                         <span className="inline-flex items-center gap-1">
-                          <Bath className="w-3.5 h-3.5 text-[#605850]" />
+                          <Bath className="w-3.5 h-3.5 text-[#73776F]" />
                           <span>{property.bathrooms} Baths</span>
                         </span>
                       )}
@@ -561,24 +561,24 @@ export default function HostDashboardPage() {
                   </div>
 
                   {/* Pricing Row */}
-                  <div className="pt-2 border-t border-[#d8d0c8]/40 flex items-baseline justify-between">
-                    <div className="flex items-baseline gap-1 text-[#3a302a]">
+                  <div className="pt-2 border-t border-[#E5E0D5]/40 flex items-baseline justify-between">
+                    <div className="flex items-baseline gap-1 text-[#252923]">
                       <span className="text-base font-bold tabular-nums">
                         {property.listingType === 'SALE'
                           ? formatETB(Number(property.salePrice || 0))
                           : formatETB(Number(property.pricePerNight || 0))}
                       </span>
                       {property.listingType === 'RENTAL' && (
-                        <span className="text-[11px] font-normal text-[#605850]">/ night</span>
+                        <span className="text-[11px] font-normal text-[#73776F]">/ night</span>
                       )}
                     </div>
                   </div>
 
                   {/* Actions Toolbar */}
-                  <div className="pt-2.5 border-t border-[#d8d0c8]/40 flex items-center justify-between text-xs font-semibold">
+                  <div className="pt-2.5 border-t border-[#E5E0D5]/40 flex items-center justify-between text-xs font-semibold">
                     <Link
                       href={`/host/listings/${property.id}/edit`}
-                      className="text-[#605850] hover:text-[#c2652a] flex items-center gap-1 transition"
+                      className="text-[#73776F] hover:text-[#234B36] flex items-center gap-1 transition"
                     >
                       <FileEdit className="w-3.5 h-3.5" />
                       <span>Edit</span>
@@ -587,7 +587,7 @@ export default function HostDashboardPage() {
                     {property.listingType === 'RENTAL' && (
                       <Link
                         href={`/host/availability?propertyId=${property.id}`}
-                        className="text-[#605850] hover:text-[#c2652a] flex items-center gap-1 transition"
+                        className="text-[#73776F] hover:text-[#234B36] flex items-center gap-1 transition"
                       >
                         <CalendarRange className="w-3.5 h-3.5" />
                         <span>Calendar</span>
@@ -597,7 +597,7 @@ export default function HostDashboardPage() {
                     <Link
                       href={`/properties/${property.id}`}
                       target="_blank"
-                      className="text-[#c2652a] hover:text-[#e08850] flex items-center gap-1 transition"
+                      className="text-[#234B36] hover:text-[#2D5E43] flex items-center gap-1 transition"
                     >
                       <Eye className="w-3.5 h-3.5" />
                       <span>Live View</span>
@@ -608,15 +608,15 @@ export default function HostDashboardPage() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-10 px-4 bg-[#faf5ee] rounded-2xl border border-dashed border-[#d8d0c8]">
-            <Building2 className="w-10 h-10 text-[#605850] mx-auto mb-2" />
-            <h3 className="text-sm font-bold text-[#3a302a]">No properties available</h3>
-            <p className="text-xs text-[#605850] mt-1 max-w-sm mx-auto">
+          <div className="text-center py-10 px-4 bg-[#F8F5ED] rounded-2xl border border-dashed border-[#E5E0D5]">
+            <Building2 className="w-10 h-10 text-[#73776F] mx-auto mb-2" />
+            <h3 className="text-sm font-bold text-[#252923]">No properties available</h3>
+            <p className="text-xs text-[#73776F] mt-1 max-w-sm mx-auto">
               Create your first property listing to begin receiving reservation requests.
             </p>
             <Link
               href="/host/listings/new"
-              className="mt-3 inline-flex items-center gap-1.5 bg-[#c2652a] hover:bg-[#e08850] text-white text-xs font-bold px-3.5 py-2 rounded-xl transition shadow-xs"
+              className="mt-3 inline-flex items-center gap-1.5 bg-[#234B36] hover:bg-[#2D5E43] text-white text-xs font-bold px-3.5 py-2 rounded-xl transition shadow-xs"
             >
               <Plus className="w-3.5 h-3.5" /> Add Property
             </Link>
@@ -628,44 +628,44 @@ export default function HostDashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         
         {/* Recent Reservations Feed (2 cols) */}
-        <section className="lg:col-span-2 bg-white border border-[#d8d0c8] rounded-2xl p-5 sm:p-7 shadow-xs space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-[#d8d0c8]/40">
+        <section className="lg:col-span-2 bg-white border border-[#E5E0D5] rounded-2xl p-5 sm:p-7 shadow-xs space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-[#E5E0D5]/40">
             <div>
-              <h2 className="text-base font-bold text-[#3a302a] tracking-tight font-headline">
+              <h2 className="text-base font-bold text-[#252923] tracking-tight font-headline">
                 Recent Guest Reservations
               </h2>
-              <p className="text-xs text-[#605850] mt-0.5">
+              <p className="text-xs text-[#73776F] mt-0.5">
                 Incoming booking requests and confirmed traveler stays.
               </p>
             </div>
             <Link
               href="/host/reservations"
-              className="text-xs font-bold text-[#c2652a] hover:underline"
+              className="text-xs font-bold text-[#234B36] hover:underline"
             >
               Manage Bookings →
             </Link>
           </div>
 
           {recentReservations.length > 0 ? (
-            <div className="divide-y divide-[#d8d0c8]/40">
+            <div className="divide-y divide-[#E5E0D5]/40">
               {recentReservations.map((reservation) => (
                 <div key={reservation.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-[#f2ece4] text-[#c2652a] flex items-center justify-center font-bold text-xs uppercase shrink-0 border border-[#d8d0c8]/40">
+                    <div className="w-9 h-9 rounded-full bg-[#EEF3EF] text-[#234B36] flex items-center justify-center font-bold text-xs uppercase shrink-0 border border-[#E5E0D5]/40">
                       {reservation.guest?.name?.charAt(0) || 'G'}
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-[#3a302a]">
+                      <p className="text-xs font-bold text-[#252923]">
                         {reservation.guest?.name || 'Guest Traveler'}
                       </p>
-                      <p className="text-[11px] text-[#605850]">
+                      <p className="text-[11px] text-[#73776F]">
                         {reservation.property?.title} • {reservation.checkInDate} to {reservation.checkOutDate}
                       </p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-3 self-end sm:self-auto">
-                    <span className="text-xs font-bold text-[#3a302a] tabular-nums">
+                    <span className="text-xs font-bold text-[#252923] tabular-nums">
                       {formatETB(reservation.totalPrice)}
                     </span>
                     <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
@@ -673,7 +673,7 @@ export default function HostDashboardPage() {
                         ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                         : reservation.status === 'PENDING'
                         ? 'bg-amber-50 text-amber-800 border border-amber-200'
-                        : 'bg-[#f2ece4] text-[#605850]'
+                        : 'bg-[#EEF3EF] text-[#73776F]'
                     }`}>
                       {reservation.status}
                     </span>
@@ -682,26 +682,26 @@ export default function HostDashboardPage() {
               ))}
             </div>
           ) : (
-            <div className="py-8 text-center bg-[#faf5ee] rounded-xl border border-dashed border-[#d8d0c8] p-5">
-              <CalendarCheck className="w-8 h-8 text-[#605850] mx-auto mb-2" />
-              <h3 className="text-xs font-bold text-[#3a302a]">
+            <div className="py-8 text-center bg-[#F8F5ED] rounded-xl border border-dashed border-[#E5E0D5] p-5">
+              <CalendarCheck className="w-8 h-8 text-[#73776F] mx-auto mb-2" />
+              <h3 className="text-xs font-bold text-[#252923]">
                 All {totalListings} Properties Are Live & Ready for Stays
               </h3>
-              <p className="text-[11px] text-[#605850] mt-1 max-w-md mx-auto leading-relaxed">
+              <p className="text-[11px] text-[#73776F] mt-1 max-w-md mx-auto leading-relaxed">
                 Your listings are published across Addis Ababa, Bahir Dar, Hawassa, and Bishoftu. When domestic travelers or international diaspora guests request a reservation, instant notifications and booking actions will appear here.
               </p>
               <div className="mt-3.5 flex items-center justify-center gap-2">
                 <Link
                   href="/host/availability"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-white border border-[#d8d0c8] text-[#3a302a] hover:bg-[#f2ece4] transition shadow-xs"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-white border border-[#E5E0D5] text-[#252923] hover:bg-[#EEF3EF] transition shadow-xs"
                 >
-                  <CalendarRange className="w-3 h-3 text-[#c2652a]" />
+                  <CalendarRange className="w-3 h-3 text-[#234B36]" />
                   <span>Calendar Blackouts</span>
                 </Link>
                 <Link
                   href="/"
                   target="_blank"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#f2ece4] border border-[#d8d0c8] text-[#c2652a] hover:bg-[#c2652a] hover:text-white transition shadow-xs"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#EEF3EF] border border-[#E5E0D5] text-[#234B36] hover:bg-[#234B36] hover:text-white transition shadow-xs"
                 >
                   <Eye className="w-3 h-3" />
                   <span>Marketplace</span>
@@ -712,49 +712,49 @@ export default function HostDashboardPage() {
         </section>
 
         {/* Payout & Banking Settlement Card (1 col) */}
-        <section className="bg-white border border-[#d8d0c8] rounded-2xl p-5 sm:p-7 shadow-xs flex flex-col justify-between space-y-5">
+        <section className="bg-white border border-[#E5E0D5] rounded-2xl p-5 sm:p-7 shadow-xs flex flex-col justify-between space-y-5">
           <div className="space-y-3.5">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
                 <CreditCard className="w-5 h-5 stroke-[2.2]" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-[#3a302a] leading-tight font-headline">
+                <h3 className="text-sm font-bold text-[#252923] leading-tight font-headline">
                   Financial Payouts
                 </h3>
-                <p className="text-[11px] text-[#605850]">
+                <p className="text-[11px] text-[#73776F]">
                   Escrow settlement & disbursement
                 </p>
               </div>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-[#faf5ee] border border-[#d8d0c8]/70 space-y-2.5">
+            <div className="p-3.5 rounded-xl bg-[#F8F5ED] border border-[#E5E0D5]/70 space-y-2.5">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-[#605850] font-medium">Provider:</span>
-                <span className="font-bold text-[#3a302a]">
+                <span className="text-[#73776F] font-medium">Provider:</span>
+                <span className="font-bold text-[#252923]">
                   {user?.hostProfile?.payoutProvider || 'Chapa & CBE Direct'}
                 </span>
               </div>
               <div className="flex items-center justify-between text-xs">
-                <span className="text-[#605850] font-medium">Beneficiary:</span>
-                <span className="font-bold text-[#3a302a] truncate max-w-[140px]">
+                <span className="text-[#73776F] font-medium">Beneficiary:</span>
+                <span className="font-bold text-[#252923] truncate max-w-[140px]">
                   {user?.hostProfile?.payoutAccountName || hostDisplayName}
                 </span>
               </div>
               <div className="flex items-center justify-between text-xs">
-                <span className="text-[#605850] font-medium">Account ID:</span>
-                <span className="font-mono text-[11px] font-bold text-[#3a302a]">
+                <span className="text-[#73776F] font-medium">Account ID:</span>
+                <span className="font-mono text-[11px] font-bold text-[#252923]">
                   {user?.hostProfile?.payoutAccountNumber || 'SUB_ACCT_HABTAMU_01'}
                 </span>
               </div>
               <div className="flex items-center justify-between text-xs">
-                <span className="text-[#605850] font-medium">Currency:</span>
+                <span className="text-[#73776F] font-medium">Currency:</span>
                 <span className="font-bold text-emerald-800">ETB (Ethiopian Birr)</span>
               </div>
             </div>
 
-            <div className="flex items-start gap-2 text-[11px] text-[#605850] leading-relaxed bg-[#f2ece4] border border-[#d8d0c8]/60 rounded-xl p-2.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-[#c2652a] shrink-0 mt-0.5" />
+            <div className="flex items-start gap-2 text-[11px] text-[#73776F] leading-relaxed bg-[#EEF3EF] border border-[#E5E0D5]/60 rounded-xl p-2.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#234B36] shrink-0 mt-0.5" />
               <span>
                 Funds are protected in escrow and disbursed upon guest check-in.
               </span>
@@ -763,7 +763,7 @@ export default function HostDashboardPage() {
 
           <Link
             href="/host/profile"
-            className="w-full text-center inline-flex items-center justify-center gap-1.5 bg-[#3a302a] hover:bg-[#c2652a] text-white text-xs font-semibold py-2.5 px-3 rounded-xl transition cursor-pointer shadow-xs"
+            className="w-full text-center inline-flex items-center justify-center gap-1.5 bg-[#252923] hover:bg-[#234B36] text-white text-xs font-semibold py-2.5 px-3 rounded-xl transition cursor-pointer shadow-xs"
           >
             <Sliders className="w-3.5 h-3.5" />
             <span>Manage Banking & Payouts</span>

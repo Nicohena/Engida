@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
@@ -424,11 +424,11 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
   const progressPercent = Math.min(100, Math.round((displayedListings.length / Math.max(1, filteredListings.length)) * 100));
 
   return (
-    <div className="w-full min-h-screen bg-[#faf5ee] text-[#3a302a] font-body selection:bg-[#c2652a]/20 selection:text-[#c2652a]">
+    <div className="w-full min-h-screen bg-[#F8F5ED] text-[#252923] font-body selection:bg-[#234B36]/20 selection:text-[#234B36]">
       {/* ============================================================ */}
       {/* 1. STICKY TOP HEADER                                         */}
       {/* ============================================================ */}
-      <header className="relative z-[60] w-full bg-[#faf5ee]/95 backdrop-blur-xl border-b border-[#d8d0c8]/40 shadow-[0_1px_8px_rgba(58,48,42,0.04)] transition-all duration-300">
+      <header className="relative z-[60] w-full bg-[#F8F5ED]/95 backdrop-blur-xl border-b border-[#E5E0D5]/40 shadow-[0_1px_8px_rgba(58,48,42,0.04)] transition-all duration-300">
         <div className="h-20 w-full px-4 sm:px-6 lg:px-12 flex items-center justify-between max-w-[1440px] mx-auto">
           {/* Brand Logo */}
           <div className="flex items-center gap-6">
@@ -436,7 +436,7 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
               href="/"
               className="flex items-center gap-2 group transition-transform duration-200 hover:scale-[1.02] active:scale-95"
             >
-              <span className="text-3xl font-bold tracking-tight text-[#c2652a] font-headline transition-colors group-hover:text-[#e08850]">
+              <span className="text-3xl font-bold tracking-tight text-[#234B36] font-headline transition-colors group-hover:text-[#2D5E43]">
                 Engida
               </span>
             </Link>
@@ -446,7 +446,7 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
           <div className="flex items-center gap-4">
             <Link
               href="/become-a-host"
-              className="hidden sm:inline-flex items-center px-4 py-2 rounded-lg bg-[#f2ece4] text-[#3a302a] font-semibold text-sm hover:bg-[#c2652a] hover:text-white transition-all duration-200 active:scale-95 shadow-sm hover:shadow"
+              className="hidden sm:inline-flex items-center px-4 py-2 rounded-lg bg-[#EEF3EF] text-[#252923] font-semibold text-sm hover:bg-[#234B36] hover:text-white transition-all duration-200 active:scale-95 shadow-sm hover:shadow"
             >
               Become a Host
             </Link>
@@ -457,7 +457,7 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
                 aria-label="Global currency and language"
                 onClick={() => setCurrency((c) => (c === 'USD' ? 'ETB' : 'USD'))}
                 title={`Currency: ${currency}. Click to toggle`}
-                className="hidden md:flex items-center justify-center w-10 h-10 rounded-full hover:bg-[#f2ece4] transition-all duration-200 text-[#605850] hover:text-[#c2652a] active:scale-90"
+                className="hidden md:flex items-center justify-center w-10 h-10 rounded-full hover:bg-[#EEF3EF] transition-all duration-200 text-[#73776F] hover:text-[#234B36] active:scale-90"
               >
                 <span className="material-symbols-outlined text-lg transition-transform duration-200 hover:rotate-12">
                   language
@@ -470,38 +470,38 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
                   type="button"
                   aria-label="User menu"
                   onClick={() => setUserMenuOpen((open) => !open)}
-                  className="flex items-center gap-2 p-1.5 pl-3 rounded-full bg-white border border-[#d8d0c8]/60 shadow-[0_2px_12px_rgba(58,48,42,0.06)] hover:shadow-[0_4px_16px_rgba(194,101,42,0.14)] hover:border-[#c2652a]/40 active:scale-95 transition-all duration-200 cursor-pointer"
+                  className="flex items-center gap-2 p-1.5 pl-3 rounded-full bg-white border border-[#E5E0D5]/60 shadow-[0_2px_12px_rgba(58,48,42,0.06)] hover:shadow-[0_4px_16px_rgba(194,101,42,0.14)] hover:border-[#234B36]/40 active:scale-95 transition-all duration-200 cursor-pointer"
                 >
-                  <span className="material-symbols-outlined text-[#605850] text-base">menu</span>
-                  <div className="w-8 h-8 rounded-full bg-[#f2ece4] flex items-center justify-center overflow-hidden text-[#c2652a] font-bold text-xs">
+                  <span className="material-symbols-outlined text-[#73776F] text-base">menu</span>
+                  <div className="w-8 h-8 rounded-full bg-[#EEF3EF] flex items-center justify-center overflow-hidden text-[#234B36] font-bold text-xs">
                     {user?.name ? (
                       user.name.charAt(0).toUpperCase()
                     ) : (
-                      <span className="material-symbols-outlined text-lg text-[#605850]">person</span>
+                      <span className="material-symbols-outlined text-lg text-[#73776F]">person</span>
                     )}
                   </div>
                 </button>
 
                 {/* User Dropdown */}
                 {userMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-[#d8d0c8]/60 py-2 z-50 animate-fade-in-up">
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-[#E5E0D5]/60 py-2 z-50 animate-fade-in-up">
                     {user ? (
                       <>
-                        <div className="px-4 py-2 border-b border-[#d8d0c8]/40">
-                          <p className="text-xs text-[#605850]">Signed in as</p>
-                          <p className="text-sm font-bold text-[#3a302a] truncate">{user.name || user.email}</p>
+                        <div className="px-4 py-2 border-b border-[#E5E0D5]/40">
+                          <p className="text-xs text-[#73776F]">Signed in as</p>
+                          <p className="text-sm font-bold text-[#252923] truncate">{user.name || user.email}</p>
                         </div>
                         <Link
                           href="/dashboard"
                           onClick={() => setUserMenuOpen(false)}
-                          className="block px-4 py-2.5 text-sm text-[#3a302a] hover:bg-[#faf5ee] hover:text-[#c2652a] font-medium"
+                          className="block px-4 py-2.5 text-sm text-[#252923] hover:bg-[#F8F5ED] hover:text-[#234B36] font-medium"
                         >
                           My Dashboard
                         </Link>
                         <Link
                           href="/host"
                           onClick={() => setUserMenuOpen(false)}
-                          className="block px-4 py-2.5 text-sm text-[#3a302a] hover:bg-[#faf5ee] hover:text-[#c2652a] font-medium"
+                          className="block px-4 py-2.5 text-sm text-[#252923] hover:bg-[#F8F5ED] hover:text-[#234B36] font-medium"
                         >
                           Host Portal
                         </Link>
@@ -521,22 +521,22 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
                         <Link
                           href="/login"
                           onClick={() => setUserMenuOpen(false)}
-                          className="block px-4 py-2.5 text-sm font-semibold text-[#3a302a] hover:bg-[#faf5ee] hover:text-[#c2652a]"
+                          className="block px-4 py-2.5 text-sm font-semibold text-[#252923] hover:bg-[#F8F5ED] hover:text-[#234B36]"
                         >
                           Sign In
                         </Link>
                         <Link
                           href="/register"
                           onClick={() => setUserMenuOpen(false)}
-                          className="block px-4 py-2.5 text-sm text-[#605850] hover:bg-[#faf5ee] hover:text-[#c2652a]"
+                          className="block px-4 py-2.5 text-sm text-[#73776F] hover:bg-[#F8F5ED] hover:text-[#234B36]"
                         >
                           Create Account
                         </Link>
-                        <div className="h-[1px] bg-[#d8d0c8]/40 my-1"></div>
+                        <div className="h-[1px] bg-[#E5E0D5]/40 my-1"></div>
                         <Link
                           href="/become-a-host"
                           onClick={() => setUserMenuOpen(false)}
-                          className="block px-4 py-2.5 text-sm text-[#605850] hover:bg-[#faf5ee] hover:text-[#c2652a]"
+                          className="block px-4 py-2.5 text-sm text-[#73776F] hover:bg-[#F8F5ED] hover:text-[#234B36]"
                         >
                           Engida your home
                         </Link>
@@ -551,14 +551,14 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
 
         {/* Center Segmented Navigation Bar (Stays / Experiences / How it Works) */}
         <div className="w-full px-4 sm:px-6 lg:px-12 py-2 flex items-center justify-center">
-          <nav className="inline-flex items-center gap-1 p-1 rounded-full bg-white border border-[#d8d0c8]/60 shadow-sm transition-all">
+          <nav className="inline-flex items-center gap-1 p-1 rounded-full bg-white border border-[#E5E0D5]/60 shadow-sm transition-all">
             <button
               type="button"
               onClick={() => onNavigateTab?.('stays')}
               className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full font-semibold text-sm transition-all duration-200 active:scale-95 whitespace-nowrap cursor-pointer ${
                 activeNavTab === 'stays' || activeNavTab === 'home'
-                  ? 'bg-[#c2652a] text-white shadow-sm'
-                  : 'text-[#3a302a] hover:text-[#c2652a] hover:bg-[#f2ece4]'
+                  ? 'bg-[#234B36] text-white shadow-sm'
+                  : 'text-[#252923] hover:text-[#234B36] hover:bg-[#EEF3EF]'
               }`}
             >
               <span className="material-symbols-outlined text-base">cottage</span>
@@ -570,8 +570,8 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
               onClick={() => onNavigateTab?.('destinations')}
               className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full font-semibold text-sm transition-all duration-200 active:scale-95 whitespace-nowrap cursor-pointer ${
                 activeNavTab === 'destinations'
-                  ? 'bg-[#c2652a] text-white shadow-sm'
-                  : 'text-[#3a302a] hover:text-[#c2652a] hover:bg-[#f2ece4]'
+                  ? 'bg-[#234B36] text-white shadow-sm'
+                  : 'text-[#252923] hover:text-[#234B36] hover:bg-[#EEF3EF]'
               }`}
             >
               <span className="material-symbols-outlined text-base">local_activity</span>
@@ -583,8 +583,8 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
               onClick={() => onNavigateTab?.('how-it-works')}
               className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full font-semibold text-sm transition-all duration-200 active:scale-95 whitespace-nowrap cursor-pointer ${
                 activeNavTab === 'how-it-works'
-                  ? 'bg-[#c2652a] text-white shadow-sm'
-                  : 'text-[#3a302a] hover:text-[#c2652a] hover:bg-[#f2ece4]'
+                  ? 'bg-[#234B36] text-white shadow-sm'
+                  : 'text-[#252923] hover:text-[#234B36] hover:bg-[#EEF3EF]'
               }`}
             >
               <span className="material-symbols-outlined text-base">help_outline</span>
@@ -599,9 +599,9 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
         {/* ============================================================ */}
         {/* 2. SEARCH BAR SECTION                                        */}
         {/* ============================================================ */}
-        <section className="sticky top-0 z-[45] w-full px-4 sm:px-6 lg:px-12 pt-6 pb-6 flex flex-col items-center justify-center bg-[#faf5ee]/95 backdrop-blur-md animate-fade-in-up">
+        <section className="sticky top-0 z-[45] w-full px-4 sm:px-6 lg:px-12 pt-6 pb-6 flex flex-col items-center justify-center bg-[#F8F5ED]/95 backdrop-blur-md animate-fade-in-up">
           <div className="w-full max-w-4xl mx-auto flex justify-center relative">
-            <div className="search-bar-container inline-flex flex-wrap sm:flex-nowrap items-center bg-white rounded-full border border-[#d8d0c8] shadow-[0_4px_16px_rgba(58,48,42,0.06)] hover:shadow-[0_8px_28px_rgba(194,101,42,0.16)] hover:border-[#c2652a]/50 transition-all duration-300 pl-4 sm:pl-8 pr-2.5 py-2.5 gap-2 focus-within:ring-2 focus-within:ring-[#c2652a]/40 focus-within:border-[#c2652a]">
+            <div className="search-bar-container inline-flex flex-wrap sm:flex-nowrap items-center bg-white rounded-full border border-[#E5E0D5] shadow-[0_4px_16px_rgba(58,48,42,0.06)] hover:shadow-[0_8px_28px_rgba(194,101,42,0.16)] hover:border-[#234B36]/50 transition-all duration-300 pl-4 sm:pl-8 pr-2.5 py-2.5 gap-2 focus-within:ring-2 focus-within:ring-[#234B36]/40 focus-within:border-[#234B36]">
               {/* WHERE SEGMENT */}
               <button
                 type="button"
@@ -610,16 +610,16 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
                   setSearchPopoverOpen(true);
                 }}
                 className={`search-segment flex flex-col text-left pr-6 sm:pr-8 pl-3 py-1.5 rounded-full transition-all duration-200 focus:outline-none relative cursor-pointer ${
-                  activeSegment === 'where' ? 'bg-[#f2ece4] shadow-inner' : 'hover:bg-[#f6f0e8]'
+                  activeSegment === 'where' ? 'bg-[#EEF3EF] shadow-inner' : 'hover:bg-[#f6f0e8]'
                 }`}
               >
-                <span className="text-xs font-bold text-[#3a302a] tracking-tight">Where</span>
-                <span className="text-sm text-[#605850] font-normal truncate max-w-[140px] sm:max-w-[180px]">
+                <span className="text-xs font-bold text-[#252923] tracking-tight">Where</span>
+                <span className="text-sm text-[#73776F] font-normal truncate max-w-[140px] sm:max-w-[180px]">
                   {destinationSearch || 'Search destinations'}
                 </span>
               </button>
 
-              <div className="hidden sm:block h-8 w-[1px] bg-[#d8d0c8]/60 shrink-0"></div>
+              <div className="hidden sm:block h-8 w-[1px] bg-[#E5E0D5]/60 shrink-0"></div>
 
               {/* WHEN SEGMENT */}
               <button
@@ -629,16 +629,16 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
                   setSearchPopoverOpen(true);
                 }}
                 className={`search-segment flex flex-col text-left px-6 sm:px-8 py-1.5 rounded-full transition-all duration-200 focus:outline-none relative cursor-pointer ${
-                  activeSegment === 'when' ? 'bg-[#f2ece4] shadow-inner' : 'hover:bg-[#f6f0e8]'
+                  activeSegment === 'when' ? 'bg-[#EEF3EF] shadow-inner' : 'hover:bg-[#f6f0e8]'
                 }`}
               >
-                <span className="text-xs font-bold text-[#3a302a] tracking-tight">When</span>
-                <span className="text-sm text-[#605850] font-normal truncate max-w-[120px]">
+                <span className="text-xs font-bold text-[#252923] tracking-tight">When</span>
+                <span className="text-sm text-[#73776F] font-normal truncate max-w-[120px]">
                   {datesSelected || 'Add dates'}
                 </span>
               </button>
 
-              <div className="hidden sm:block h-8 w-[1px] bg-[#d8d0c8]/60 shrink-0"></div>
+              <div className="hidden sm:block h-8 w-[1px] bg-[#E5E0D5]/60 shrink-0"></div>
 
               {/* WHO SEGMENT */}
               <button
@@ -648,11 +648,11 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
                   setSearchPopoverOpen(true);
                 }}
                 className={`search-segment flex flex-col text-left pl-6 sm:pl-8 pr-4 sm:pr-6 py-1.5 rounded-full transition-all duration-200 focus:outline-none relative cursor-pointer ${
-                  activeSegment === 'who' ? 'bg-[#f2ece4] shadow-inner' : 'hover:bg-[#f6f0e8]'
+                  activeSegment === 'who' ? 'bg-[#EEF3EF] shadow-inner' : 'hover:bg-[#f6f0e8]'
                 }`}
               >
-                <span className="text-xs font-bold text-[#3a302a] tracking-tight">Who</span>
-                <span className="text-sm text-[#605850] font-normal">
+                <span className="text-xs font-bold text-[#252923] tracking-tight">Who</span>
+                <span className="text-sm text-[#73776F] font-normal">
                   {guestCount > 1 ? `${guestCount} guests` : 'Add guests'}
                 </span>
               </button>
@@ -667,7 +667,7 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
                   const el = document.getElementById('listings-grid');
                   if (el) el.scrollIntoView({ behavior: 'smooth' });
                 }}
-                className="search-btn search-glow w-12 h-12 rounded-full flex items-center justify-center text-white shrink-0 bg-[#c2652a] hover:bg-[#e08850] shadow-md hover:scale-105 active:scale-95 transition-all duration-200 ml-1 relative overflow-hidden cursor-pointer"
+                className="search-btn search-glow w-12 h-12 rounded-full flex items-center justify-center text-white shrink-0 bg-[#234B36] hover:bg-[#2D5E43] shadow-md hover:scale-105 active:scale-95 transition-all duration-200 ml-1 relative overflow-hidden cursor-pointer"
               >
                 <span className="material-symbols-outlined text-xl font-bold transition-transform duration-300 hover:rotate-90">
                   search
@@ -677,9 +677,9 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
 
             {/* Interactive Search Popover */}
             {searchPopoverOpen && (
-              <div className="absolute top-20 w-full max-w-xl bg-white rounded-3xl shadow-2xl border border-[#d8d0c8] p-6 z-50 animate-fade-in-up">
-                <div className="flex items-center justify-between pb-3 border-b border-[#d8d0c8]/40 mb-4">
-                  <h4 className="font-bold text-sm text-[#3a302a]">
+              <div className="absolute top-20 w-full max-w-xl bg-white rounded-3xl shadow-2xl border border-[#E5E0D5] p-6 z-50 animate-fade-in-up">
+                <div className="flex items-center justify-between pb-3 border-b border-[#E5E0D5]/40 mb-4">
+                  <h4 className="font-bold text-sm text-[#252923]">
                     {activeSegment === 'where' && 'Search by destination or property'}
                     {activeSegment === 'when' && 'Select travel window'}
                     {activeSegment === 'who' && 'Select guests'}
@@ -690,7 +690,7 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
                       setSearchPopoverOpen(false);
                       setActiveSegment(null);
                     }}
-                    className="text-[#605850] hover:text-[#c2652a]"
+                    className="text-[#73776F] hover:text-[#234B36]"
                   >
                     <span className="material-symbols-outlined text-sm">close</span>
                   </button>
@@ -704,10 +704,10 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
                       placeholder="e.g. Addis Ababa, Big Sur, Lake Como, Amalfi..."
                       value={destinationSearch}
                       onChange={(e) => setDestinationSearch(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl bg-[#faf5ee] border border-[#d8d0c8] text-sm text-[#3a302a] focus:outline-none focus:border-[#c2652a]"
+                      className="w-full px-4 py-3 rounded-xl bg-[#F8F5ED] border border-[#E5E0D5] text-sm text-[#252923] focus:outline-none focus:border-[#234B36]"
                     />
                     <div className="flex flex-wrap gap-2 pt-2">
-                      <span className="text-xs text-[#605850] self-center mr-1">Popular:</span>
+                      <span className="text-xs text-[#73776F] self-center mr-1">Popular:</span>
                       {['Addis Ababa', 'Bishoftu', 'Big Sur', 'Kyoto', 'Amalfi', 'Santorini'].map((dest) => (
                         <button
                           key={dest}
@@ -717,7 +717,7 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
                             setSearchPopoverOpen(false);
                             setActiveSegment(null);
                           }}
-                          className="px-3 py-1 rounded-full text-xs bg-[#f2ece4] hover:bg-[#c2652a] hover:text-white transition-colors"
+                          className="px-3 py-1 rounded-full text-xs bg-[#EEF3EF] hover:bg-[#234B36] hover:text-white transition-colors"
                         >
                           {dest}
                         </button>
@@ -738,7 +738,7 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
                             setSearchPopoverOpen(false);
                             setActiveSegment(null);
                           }}
-                          className="p-3 text-left border border-[#d8d0c8] rounded-xl text-sm font-medium hover:border-[#c2652a] hover:bg-[#faf5ee]"
+                          className="p-3 text-left border border-[#E5E0D5] rounded-xl text-sm font-medium hover:border-[#234B36] hover:bg-[#F8F5ED]"
                         >
                           {option}
                         </button>
@@ -750,15 +750,15 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
                 {activeSegment === 'who' && (
                   <div className="flex items-center justify-between py-2">
                     <div>
-                      <p className="text-sm font-bold text-[#3a302a]">Guests</p>
-                      <p className="text-xs text-[#605850]">Ages 13 or above</p>
+                      <p className="text-sm font-bold text-[#252923]">Guests</p>
+                      <p className="text-xs text-[#73776F]">Ages 13 or above</p>
                     </div>
                     <div className="flex items-center gap-3">
                       <button
                         type="button"
                         disabled={guestCount <= 1}
                         onClick={() => setGuestCount((c) => Math.max(1, c - 1))}
-                        className="w-8 h-8 rounded-full border border-[#d8d0c8] flex items-center justify-center text-sm font-bold disabled:opacity-30 hover:border-[#c2652a]"
+                        className="w-8 h-8 rounded-full border border-[#E5E0D5] flex items-center justify-center text-sm font-bold disabled:opacity-30 hover:border-[#234B36]"
                       >
                         -
                       </button>
@@ -766,7 +766,7 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
                       <button
                         type="button"
                         onClick={() => setGuestCount((c) => c + 1)}
-                        className="w-8 h-8 rounded-full border border-[#d8d0c8] flex items-center justify-center text-sm font-bold hover:border-[#c2652a]"
+                        className="w-8 h-8 rounded-full border border-[#E5E0D5] flex items-center justify-center text-sm font-bold hover:border-[#234B36]"
                       >
                         +
                       </button>
@@ -781,7 +781,7 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
         {/* ============================================================ */}
         {/* 3. STICKY CATEGORIES & CONTROLS BAR                          */}
         {/* ============================================================ */}
-        <section className="relative z-30 bg-[#faf5ee]/95 backdrop-blur-md border-y border-[#d8d0c8]/50 w-full py-2 px-4 sm:px-6 lg:px-12 animate-fade-in-up">
+        <section className="relative z-30 bg-[#F8F5ED]/95 backdrop-blur-md border-y border-[#E5E0D5]/50 w-full py-2 px-4 sm:px-6 lg:px-12 animate-fade-in-up">
           <div className="max-w-[1440px] mx-auto flex items-center justify-between gap-4">
             {/* Horizontal Categories Scroller */}
             <div className="flex items-center gap-6 overflow-x-auto no-scrollbar scroll-smooth flex-1 py-1">
@@ -794,8 +794,8 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
                     onClick={() => setSelectedCategory(cat.id)}
                     className={`category-btn group flex flex-col items-center gap-1 pb-2 shrink-0 border-b-2 transition-all duration-200 active:scale-95 cursor-pointer ${
                       isActive
-                        ? 'border-[#c2652a] text-[#c2652a] font-semibold'
-                        : 'border-transparent text-[#605850] hover:text-[#c2652a] hover:border-[#d8d0c8] font-medium'
+                        ? 'border-[#234B36] text-[#234B36] font-semibold'
+                        : 'border-transparent text-[#73776F] hover:text-[#234B36] hover:border-[#E5E0D5] font-medium'
                     }`}
                   >
                     <span
@@ -811,18 +811,18 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
             </div>
 
             {/* Action Controls: Filters & Sort */}
-            <div className="hidden sm:flex items-center gap-2 shrink-0 pl-4 border-l border-[#d8d0c8]/40">
+            <div className="hidden sm:flex items-center gap-2 shrink-0 pl-4 border-l border-[#E5E0D5]/40">
               <button
                 type="button"
                 onClick={() => setFilterModalOpen(true)}
-                className="filter-action-btn flex items-center gap-1.5 px-4 py-2 rounded-full bg-white border border-[#d8d0c8] text-[#3a302a] hover:text-[#c2652a] hover:border-[#c2652a]/50 shadow-[0_2px_8px_rgba(58,48,42,0.04)] hover:shadow-[0_4px_16px_rgba(194,101,42,0.15)] active:scale-95 transition-all duration-200 cursor-pointer"
+                className="filter-action-btn flex items-center gap-1.5 px-4 py-2 rounded-full bg-white border border-[#E5E0D5] text-[#252923] hover:text-[#234B36] hover:border-[#234B36]/50 shadow-[0_2px_8px_rgba(58,48,42,0.04)] hover:shadow-[0_4px_16px_rgba(194,101,42,0.15)] active:scale-95 transition-all duration-200 cursor-pointer"
               >
                 <span className="material-symbols-outlined text-lg transition-transform duration-200 hover:rotate-45">
                   tune
                 </span>
                 <span className="text-sm font-semibold">Filters</span>
                 {activeFilters.length > 0 && (
-                  <span className="inline-flex items-center justify-center w-5 h-5 ml-1 text-xs font-bold rounded-full bg-[#c2652a] text-white">
+                  <span className="inline-flex items-center justify-center w-5 h-5 ml-1 text-xs font-bold rounded-full bg-[#234B36] text-white">
                     {activeFilters.length}
                   </span>
                 )}
@@ -832,7 +832,7 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
                 <button
                   type="button"
                   onClick={() => setSortDropdownOpen((open) => !open)}
-                  className="sort-action-btn flex items-center gap-1 px-4 py-2 rounded-full bg-white border border-[#d8d0c8] text-[#3a302a] hover:text-[#c2652a] hover:border-[#c2652a]/50 shadow-[0_2px_8px_rgba(58,48,42,0.04)] hover:shadow-[0_4px_16px_rgba(194,101,42,0.15)] active:scale-95 transition-all duration-200 cursor-pointer"
+                  className="sort-action-btn flex items-center gap-1 px-4 py-2 rounded-full bg-white border border-[#E5E0D5] text-[#252923] hover:text-[#234B36] hover:border-[#234B36]/50 shadow-[0_2px_8px_rgba(58,48,42,0.04)] hover:shadow-[0_4px_16px_rgba(194,101,42,0.15)] active:scale-95 transition-all duration-200 cursor-pointer"
                 >
                   <span className="text-sm font-semibold capitalize">
                     {sortOption === 'recommended' && 'Sort: Recommended'}
@@ -846,7 +846,7 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
                 </button>
 
                 {sortDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-[#d8d0c8] py-1.5 z-50 animate-fade-in-up">
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-[#E5E0D5] py-1.5 z-50 animate-fade-in-up">
                     {[
                       { id: 'recommended', label: 'Recommended' },
                       { id: 'price-asc', label: 'Price: Low to High' },
@@ -860,8 +860,8 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
                           setSortOption(opt.id as any);
                           setSortDropdownOpen(false);
                         }}
-                        className={`w-full text-left px-4 py-2 text-xs font-semibold hover:bg-[#faf5ee] hover:text-[#c2652a] ${
-                          sortOption === opt.id ? 'text-[#c2652a] font-bold' : 'text-[#3a302a]'
+                        className={`w-full text-left px-4 py-2 text-xs font-semibold hover:bg-[#F8F5ED] hover:text-[#234B36] ${
+                          sortOption === opt.id ? 'text-[#234B36] font-bold' : 'text-[#252923]'
                         }`}
                       >
                         {opt.label}
@@ -880,10 +880,10 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
         <section className="w-full px-4 sm:px-6 lg:px-12 pt-6 pb-2 max-w-[1440px] mx-auto animate-fade-in-up">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <h2 className="text-xl md:text-2xl font-bold font-headline text-[#3a302a]">
+              <h2 className="text-xl md:text-2xl font-bold font-headline text-[#252923]">
                 Over {filteredListings.length} verified stays available
               </h2>
-              <span className="hidden md:inline-flex items-center px-3 py-0.5 rounded-full bg-[#eae2da] text-[#605850] font-semibold text-xs border border-[#d8d0c8]/50 transition-all hover:bg-[#fbe8d8] hover:text-[#401a08] cursor-default">
+              <span className="hidden md:inline-flex items-center px-3 py-0.5 rounded-full bg-[#eae2da] text-[#73776F] font-semibold text-xs border border-[#E5E0D5]/50 transition-all hover:bg-[#fbe8d8] hover:text-[#401a08] cursor-default">
                 Updated today
               </span>
             </div>
@@ -893,14 +893,14 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
               {activeFilters.map((chip) => (
                 <span
                   key={chip}
-                  className="filter-chip inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f2ece4] border border-[#d8d0c8]/60 text-[#3a302a] font-medium text-xs hover:border-[#c2652a] hover:bg-[#ece6dc] transition-all duration-200 shadow-sm"
+                  className="filter-chip inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EEF3EF] border border-[#E5E0D5]/60 text-[#252923] font-medium text-xs hover:border-[#234B36] hover:bg-[#ece6dc] transition-all duration-200 shadow-sm"
                 >
                   {chip}
                   <button
                     type="button"
                     aria-label={`Remove filter ${chip}`}
                     onClick={() => removeFilterChip(chip)}
-                    className="hover:text-[#c2652a] transition-transform duration-150 hover:scale-125 cursor-pointer"
+                    className="hover:text-[#234B36] transition-transform duration-150 hover:scale-125 cursor-pointer"
                   >
                     <span className="material-symbols-outlined text-sm leading-none">close</span>
                   </button>
@@ -911,7 +911,7 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
                 <button
                   type="button"
                   onClick={clearAllFilters}
-                  className="clear-all-btn text-xs font-semibold text-[#605850] hover:text-[#c2652a] underline ml-1 active:scale-95 transition-all duration-150 cursor-pointer"
+                  className="clear-all-btn text-xs font-semibold text-[#73776F] hover:text-[#234B36] underline ml-1 active:scale-95 transition-all duration-150 cursor-pointer"
                 >
                   Clear all
                 </button>
@@ -925,14 +925,14 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
         {/* ============================================================ */}
         <section id="listings-grid" className="w-full px-4 sm:px-6 lg:px-12 py-4 max-w-[1440px] mx-auto">
           {displayedListings.length === 0 ? (
-            <div className="py-20 text-center bg-white rounded-3xl border border-[#d8d0c8] p-8 max-w-xl mx-auto shadow-sm">
-              <span className="material-symbols-outlined text-4xl text-[#c2652a]">cottage</span>
-              <h3 className="text-xl font-bold font-headline mt-3 text-[#3a302a]">No stays match your criteria</h3>
-              <p className="text-sm text-[#605850] mt-1">Try clearing some filters or searching for another destination.</p>
+            <div className="py-20 text-center bg-white rounded-3xl border border-[#E5E0D5] p-8 max-w-xl mx-auto shadow-sm">
+              <span className="material-symbols-outlined text-4xl text-[#234B36]">cottage</span>
+              <h3 className="text-xl font-bold font-headline mt-3 text-[#252923]">No stays match your criteria</h3>
+              <p className="text-sm text-[#73776F] mt-1">Try clearing some filters or searching for another destination.</p>
               <button
                 type="button"
                 onClick={clearAllFilters}
-                className="mt-5 px-5 py-2.5 rounded-full bg-[#c2652a] text-white font-semibold text-xs shadow-md hover:bg-[#e08850]"
+                className="mt-5 px-5 py-2.5 rounded-full bg-[#234B36] text-white font-semibold text-xs shadow-md hover:bg-[#2D5E43]"
               >
                 Reset filters
               </button>
@@ -944,11 +944,11 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
                 return (
                   <article
                     key={property.id}
-                    className="property-card group relative flex flex-col bg-white rounded-xl border border-[#d8d0c8]/70 overflow-hidden shadow-[0_4px_20px_-2px_rgba(58,48,42,0.05)] hover:shadow-[0_16px_36px_-4px_rgba(194,101,42,0.18)] hover:-translate-y-1.5 transition-all duration-300 animate-fade-in-up"
+                    className="property-card group relative flex flex-col bg-white rounded-xl border border-[#E5E0D5]/70 overflow-hidden shadow-[0_4px_20px_-2px_rgba(58,48,42,0.05)] hover:shadow-[0_16px_36px_-4px_rgba(194,101,42,0.18)] hover:-translate-y-1.5 transition-all duration-300 animate-fade-in-up"
                     style={{ animationDelay: `${0.1 + (idx % 8) * 0.05}s` }}
                   >
                     {/* Media Container with 4:3 Aspect Ratio */}
-                    <div className="relative w-full aspect-[4/3] overflow-hidden bg-[#f2ece4]">
+                    <div className="relative w-full aspect-[4/3] overflow-hidden bg-[#EEF3EF]">
                       <img
                         src={property.images[0]}
                         alt={property.title}
@@ -961,9 +961,9 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
                           <span
                             className={`inline-flex items-center px-2.5 py-1 rounded-full text-white font-semibold text-[11px] uppercase tracking-wider shadow-sm transition-transform duration-200 group-hover:scale-105 ${
                               property.badge === 'Superhost'
-                                ? 'bg-[#c2652a]'
+                                ? 'bg-[#234B36]'
                                 : property.badge === 'Guest Favorite'
-                                ? 'bg-[#e08850]'
+                                ? 'bg-[#2D5E43]'
                                 : 'bg-[#8c3c3c]'
                             }`}
                           >
@@ -977,8 +977,8 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
                         type="button"
                         aria-label="Add to wishlist"
                         onClick={(e) => toggleWishlist(property.id, e)}
-                        className={`wishlist-btn absolute top-2.5 right-2.5 z-10 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm border border-[#d8d0c8]/60 flex items-center justify-center shadow-sm hover:scale-110 active:scale-95 transition-all duration-200 cursor-pointer ${
-                          isSaved ? 'text-[#c2652a]' : 'text-[#3a302a]'
+                        className={`wishlist-btn absolute top-2.5 right-2.5 z-10 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm border border-[#E5E0D5]/60 flex items-center justify-center shadow-sm hover:scale-110 active:scale-95 transition-all duration-200 cursor-pointer ${
+                          isSaved ? 'text-[#234B36]' : 'text-[#252923]'
                         }`}
                       >
                         <span
@@ -1000,7 +1000,7 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
                     {/* Card Content Details */}
                     <div className="flex flex-col p-4 flex-1">
                       <div className="flex items-start justify-between gap-1">
-                        <h3 className="font-headline text-lg font-bold text-[#3a302a] truncate group-hover:text-[#c2652a] transition-colors duration-200">
+                        <h3 className="font-headline text-lg font-bold text-[#252923] truncate group-hover:text-[#234B36] transition-colors duration-200">
                           <Link
                             href={`/properties/${property.id}`}
                             className="focus:outline-hidden after:absolute after:inset-0 after:z-0"
@@ -1010,29 +1010,29 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
                         </h3>
                         <div className="flex items-center gap-1 shrink-0">
                           <span
-                            className="material-symbols-outlined text-base text-[#c2652a]"
+                            className="material-symbols-outlined text-base text-[#234B36]"
                             style={{ fontVariationSettings: "'FILL' 1" }}
                           >
                             star
                           </span>
-                          <span className="text-xs font-bold text-[#3a302a]">{property.rating.toFixed(2)}</span>
-                          <span className="text-xs text-[#605850]">({property.reviewsCount})</span>
+                          <span className="text-xs font-bold text-[#252923]">{property.rating.toFixed(2)}</span>
+                          <span className="text-xs text-[#73776F]">({property.reviewsCount})</span>
                         </div>
                       </div>
 
-                      <p className="text-sm font-medium text-[#c2652a] mt-0.5 truncate">{property.location}</p>
-                      <p className="text-xs text-[#605850] mt-1 truncate">{property.details}</p>
-                      <p className="text-xs text-[#605850]/80 mt-1">
+                      <p className="text-sm font-medium text-[#234B36] mt-0.5 truncate">{property.location}</p>
+                      <p className="text-xs text-[#73776F] mt-1 truncate">{property.details}</p>
+                      <p className="text-xs text-[#73776F]/80 mt-1">
                         {property.dates} · {property.subLocation}
                       </p>
 
-                      <div className="mt-4 pt-2 flex items-baseline justify-between border-t border-[#d8d0c8]/40">
+                      <div className="mt-4 pt-2 flex items-baseline justify-between border-t border-[#E5E0D5]/40">
                         <div>
-                          <span className="text-lg font-bold text-[#3a302a] font-headline">
+                          <span className="text-lg font-bold text-[#252923] font-headline">
                             {formatPrice(property.pricePerNight)}
                           </span>
-                          <span className="text-xs text-[#605850]"> / night</span>
-                          <span className="block text-[11px] text-[#605850]/80">
+                          <span className="text-xs text-[#73776F]"> / night</span>
+                          <span className="block text-[11px] text-[#73776F]/80">
                             {formatPrice(property.totalBeforeTaxes)} total before taxes
                           </span>
                         </div>
@@ -1049,14 +1049,14 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
         {/* 6. PAGINATION & LOAD MORE SECTION                            */}
         {/* ============================================================ */}
         <section className="w-full px-4 sm:px-6 lg:px-12 py-10 flex flex-col items-center justify-center gap-4 animate-fade-in-up">
-          <p className="text-sm text-[#605850] font-medium">
+          <p className="text-sm text-[#73776F] font-medium">
             Showing {displayedListings.length} of {filteredListings.length} properties
           </p>
 
           {/* Progress Indicator Bar */}
           <div className="w-48 h-1.5 bg-[#ece6dc] rounded-full overflow-hidden">
             <div
-              className="h-full bg-[#c2652a] rounded-full transition-all duration-700 ease-out"
+              className="h-full bg-[#234B36] rounded-full transition-all duration-700 ease-out"
               style={{ width: `${progressPercent}%` }}
             ></div>
           </div>
@@ -1065,7 +1065,7 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
             type="button"
             disabled={isLoadingMore}
             onClick={handleLoadMore}
-            className="show-more-btn mt-2 inline-flex items-center gap-2 px-8 py-3 rounded-lg bg-[#c2652a] text-white font-semibold text-sm shadow-md hover:bg-[#e08850] hover:shadow-lg active:scale-95 transition-all duration-200 relative overflow-hidden group cursor-pointer disabled:opacity-75"
+            className="show-more-btn mt-2 inline-flex items-center gap-2 px-8 py-3 rounded-lg bg-[#234B36] text-white font-semibold text-sm shadow-md hover:bg-[#2D5E43] hover:shadow-lg active:scale-95 transition-all duration-200 relative overflow-hidden group cursor-pointer disabled:opacity-75"
           >
             {isLoadingMore ? (
               <>
@@ -1106,13 +1106,13 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
       {/* ============================================================ */}
       {filterModalOpen && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in-up">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-[#d8d0c8] relative max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-4 border-b border-[#d8d0c8]/50">
-              <h3 className="text-lg font-bold font-headline text-[#3a302a]">Filters</h3>
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-[#E5E0D5] relative max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-4 border-b border-[#E5E0D5]/50">
+              <h3 className="text-lg font-bold font-headline text-[#252923]">Filters</h3>
               <button
                 type="button"
                 onClick={() => setFilterModalOpen(false)}
-                className="text-[#605850] hover:text-[#c2652a] p-1 rounded-full hover:bg-[#faf5ee]"
+                className="text-[#73776F] hover:text-[#234B36] p-1 rounded-full hover:bg-[#F8F5ED]"
               >
                 <span className="material-symbols-outlined text-lg">close</span>
               </button>
@@ -1122,8 +1122,8 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
               {/* Filter: Instant Book */}
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-bold text-sm text-[#3a302a]">Instant Book</p>
-                  <p className="text-xs text-[#605850]">Listings you can book without host approval wait</p>
+                  <p className="font-bold text-sm text-[#252923]">Instant Book</p>
+                  <p className="text-xs text-[#73776F]">Listings you can book without host approval wait</p>
                 </div>
                 <input
                   type="checkbox"
@@ -1135,15 +1135,15 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
                       setActiveFilters((prev) => prev.filter((f) => f !== 'Instant Book'));
                     }
                   }}
-                  className="w-5 h-5 accent-[#c2652a] rounded cursor-pointer"
+                  className="w-5 h-5 accent-[#234B36] rounded cursor-pointer"
                 />
               </div>
 
               {/* Filter: Superhost */}
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-bold text-sm text-[#3a302a]">Superhost</p>
-                  <p className="text-xs text-[#605850]">Stay with recognized high-rated hosts</p>
+                  <p className="font-bold text-sm text-[#252923]">Superhost</p>
+                  <p className="text-xs text-[#73776F]">Stay with recognized high-rated hosts</p>
                 </div>
                 <input
                   type="checkbox"
@@ -1155,15 +1155,15 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
                       setActiveFilters((prev) => prev.filter((f) => f !== 'Superhost'));
                     }
                   }}
-                  className="w-5 h-5 accent-[#c2652a] rounded cursor-pointer"
+                  className="w-5 h-5 accent-[#234B36] rounded cursor-pointer"
                 />
               </div>
 
               {/* Filter: Entire home */}
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-bold text-sm text-[#3a302a]">Entire home</p>
-                  <p className="text-xs text-[#605850]">Have a whole place to yourself</p>
+                  <p className="font-bold text-sm text-[#252923]">Entire home</p>
+                  <p className="text-xs text-[#73776F]">Have a whole place to yourself</p>
                 </div>
                 <input
                   type="checkbox"
@@ -1175,23 +1175,23 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
                       setActiveFilters((prev) => prev.filter((f) => f !== 'Entire home'));
                     }
                   }}
-                  className="w-5 h-5 accent-[#c2652a] rounded cursor-pointer"
+                  className="w-5 h-5 accent-[#234B36] rounded cursor-pointer"
                 />
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-4 border-t border-[#d8d0c8]/50">
+            <div className="flex items-center justify-between pt-4 border-t border-[#E5E0D5]/50">
               <button
                 type="button"
                 onClick={() => setActiveFilters([])}
-                className="text-xs font-bold text-[#605850] underline hover:text-[#c2652a]"
+                className="text-xs font-bold text-[#73776F] underline hover:text-[#234B36]"
               >
                 Clear all
               </button>
               <button
                 type="button"
                 onClick={() => setFilterModalOpen(false)}
-                className="px-6 py-2.5 rounded-xl bg-[#c2652a] text-white text-sm font-semibold shadow hover:bg-[#e08850]"
+                className="px-6 py-2.5 rounded-xl bg-[#234B36] text-white text-sm font-semibold shadow hover:bg-[#2D5E43]"
               >
                 Show stays
               </button>
@@ -1203,100 +1203,100 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
       {/* ============================================================ */}
       {/* 8. EDITORIAL FOOTER                                          */}
       {/* ============================================================ */}
-      <footer className="w-full bg-[#f6f0e8] border-t border-[#d8d0c8]/50 mt-12 pt-12 pb-8">
+      <footer className="w-full bg-[#f6f0e8] border-t border-[#E5E0D5]/50 mt-12 pt-12 pb-8">
         <div className="w-full px-4 sm:px-6 lg:px-12 max-w-[1440px] mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 pb-10">
             {/* Support */}
             <div className="flex flex-col gap-2">
-              <span className="text-xs font-bold text-[#3a302a] uppercase tracking-wider">Support</span>
-              <a href="#" className="text-xs text-[#605850] hover:text-[#c2652a] transition-colors duration-150">
+              <span className="text-xs font-bold text-[#252923] uppercase tracking-wider">Support</span>
+              <a href="#" className="text-xs text-[#73776F] hover:text-[#234B36] transition-colors duration-150">
                 Help Center
               </a>
-              <a href="#" className="text-xs text-[#605850] hover:text-[#c2652a] transition-colors duration-150">
+              <a href="#" className="text-xs text-[#73776F] hover:text-[#234B36] transition-colors duration-150">
                 Safety &amp; AirCover
               </a>
-              <a href="#" className="text-xs text-[#605850] hover:text-[#c2652a] transition-colors duration-150">
+              <a href="#" className="text-xs text-[#73776F] hover:text-[#234B36] transition-colors duration-150">
                 Cancellation Options
               </a>
-              <a href="#" className="text-xs text-[#605850] hover:text-[#c2652a] transition-colors duration-150">
+              <a href="#" className="text-xs text-[#73776F] hover:text-[#234B36] transition-colors duration-150">
                 Neighborhood Support
               </a>
             </div>
 
             {/* Hosting */}
             <div className="flex flex-col gap-2">
-              <span className="text-xs font-bold text-[#3a302a] uppercase tracking-wider">Hosting</span>
-              <Link href="/become-a-host" className="text-xs text-[#605850] hover:text-[#c2652a] transition-colors duration-150">
+              <span className="text-xs font-bold text-[#252923] uppercase tracking-wider">Hosting</span>
+              <Link href="/become-a-host" className="text-xs text-[#73776F] hover:text-[#234B36] transition-colors duration-150">
                 Engida your home
               </Link>
-              <a href="#" className="text-xs text-[#605850] hover:text-[#c2652a] transition-colors duration-150">
+              <a href="#" className="text-xs text-[#73776F] hover:text-[#234B36] transition-colors duration-150">
                 Host Cover
               </a>
-              <a href="#" className="text-xs text-[#605850] hover:text-[#c2652a] transition-colors duration-150">
+              <a href="#" className="text-xs text-[#73776F] hover:text-[#234B36] transition-colors duration-150">
                 Hosting Resources
               </a>
-              <a href="#" className="text-xs text-[#605850] hover:text-[#c2652a] transition-colors duration-150">
+              <a href="#" className="text-xs text-[#73776F] hover:text-[#234B36] transition-colors duration-150">
                 Community Forum
               </a>
             </div>
 
             {/* Discover */}
             <div className="flex flex-col gap-2">
-              <span className="text-xs font-bold text-[#3a302a] uppercase tracking-wider">Discover</span>
-              <a href="#" className="text-xs text-[#605850] hover:text-[#c2652a] transition-colors duration-150">
+              <span className="text-xs font-bold text-[#252923] uppercase tracking-wider">Discover</span>
+              <a href="#" className="text-xs text-[#73776F] hover:text-[#234B36] transition-colors duration-150">
                 Curated Stays
               </a>
-              <a href="#" className="text-xs text-[#605850] hover:text-[#c2652a] transition-colors duration-150">
+              <a href="#" className="text-xs text-[#73776F] hover:text-[#234B36] transition-colors duration-150">
                 Local Guides
               </a>
-              <a href="#" className="text-xs text-[#605850] hover:text-[#c2652a] transition-colors duration-150">
+              <a href="#" className="text-xs text-[#73776F] hover:text-[#234B36] transition-colors duration-150">
                 Architectural Digest
               </a>
-              <a href="#" className="text-xs text-[#605850] hover:text-[#c2652a] transition-colors duration-150">
+              <a href="#" className="text-xs text-[#73776F] hover:text-[#234B36] transition-colors duration-150">
                 Gift Cards
               </a>
             </div>
 
             {/* Engida */}
             <div className="flex flex-col gap-2">
-              <span className="text-xs font-bold text-[#3a302a] uppercase tracking-wider">Engida</span>
-              <a href="#" className="text-xs text-[#605850] hover:text-[#c2652a] transition-colors duration-150">
+              <span className="text-xs font-bold text-[#252923] uppercase tracking-wider">Engida</span>
+              <a href="#" className="text-xs text-[#73776F] hover:text-[#234B36] transition-colors duration-150">
                 Newsroom
               </a>
-              <a href="#" className="text-xs text-[#605850] hover:text-[#c2652a] transition-colors duration-150">
+              <a href="#" className="text-xs text-[#73776F] hover:text-[#234B36] transition-colors duration-150">
                 Careers
               </a>
-              <a href="#" className="text-xs text-[#605850] hover:text-[#c2652a] transition-colors duration-150">
+              <a href="#" className="text-xs text-[#73776F] hover:text-[#234B36] transition-colors duration-150">
                 Investors
               </a>
-              <a href="#" className="text-xs text-[#605850] hover:text-[#c2652a] transition-colors duration-150">
+              <a href="#" className="text-xs text-[#73776F] hover:text-[#234B36] transition-colors duration-150">
                 Sustainability
               </a>
             </div>
           </div>
 
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-6 border-t border-[#d8d0c8]/40">
-            <div className="flex flex-wrap items-center gap-4 text-xs text-[#605850]">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-6 border-t border-[#E5E0D5]/40">
+            <div className="flex flex-wrap items-center gap-4 text-xs text-[#73776F]">
               <span>&copy; {new Date().getFullYear()} Engida. All rights reserved.</span>
               <span>&middot;</span>
-              <a href="#" className="hover:text-[#c2652a] transition-colors duration-150">
+              <a href="#" className="hover:text-[#234B36] transition-colors duration-150">
                 Privacy
               </a>
               <span>&middot;</span>
-              <a href="#" className="hover:text-[#c2652a] transition-colors duration-150">
+              <a href="#" className="hover:text-[#234B36] transition-colors duration-150">
                 Terms
               </a>
               <span>&middot;</span>
-              <a href="#" className="hover:text-[#c2652a] transition-colors duration-150">
+              <a href="#" className="hover:text-[#234B36] transition-colors duration-150">
                 Sitemap
               </a>
             </div>
 
-            <div className="flex items-center gap-6 text-[#605850]">
-              <span className="material-symbols-outlined text-base cursor-pointer hover:text-[#c2652a] hover:scale-110 active:scale-90 transition-all duration-200">
+            <div className="flex items-center gap-6 text-[#73776F]">
+              <span className="material-symbols-outlined text-base cursor-pointer hover:text-[#234B36] hover:scale-110 active:scale-90 transition-all duration-200">
                 share
               </span>
-              <span className="material-symbols-outlined text-base cursor-pointer hover:text-[#c2652a] hover:scale-110 active:scale-90 transition-all duration-200">
+              <span className="material-symbols-outlined text-base cursor-pointer hover:text-[#234B36] hover:scale-110 active:scale-90 transition-all duration-200">
                 mail
               </span>
             </div>

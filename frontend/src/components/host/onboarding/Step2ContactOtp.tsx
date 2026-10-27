@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { Mail, Phone, ShieldCheck, AlertCircle, RefreshCw, CheckCircle2, Lock } from 'lucide-react';
@@ -125,17 +125,17 @@ export default function Step2ContactOtp({
       {/* Header */}
       <div>
         <div className="flex items-center gap-2">
-          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#f2ece4] text-[#c2652a] uppercase tracking-wider border border-[#d8d0c8]/60">
+          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#EEF3EF] text-[#234B36] uppercase tracking-wider border border-[#E5E0D5]/60">
             Mandatory Step
           </span>
-          <span className="text-xs text-[#605850] font-medium flex items-center gap-1">
-            <Lock className="w-3 h-3 text-[#605850]" /> Account Security
+          <span className="text-xs text-[#73776F] font-medium flex items-center gap-1">
+            <Lock className="w-3 h-3 text-[#73776F]" /> Account Security
           </span>
         </div>
-        <h2 className="text-xl font-bold tracking-tight text-[#3a302a] font-headline mt-2">
+        <h2 className="text-xl font-bold tracking-tight text-[#252923] font-headline mt-2">
           Email Verification
         </h2>
-        <p className="text-xs text-[#605850] mt-1 leading-relaxed">
+        <p className="text-xs text-[#73776F] mt-1 leading-relaxed">
           Email verification is required to confirm your identity and ensure you receive booking inquiries, reservation payouts, and official platform notifications.
         </p>
       </div>
@@ -143,45 +143,45 @@ export default function Step2ContactOtp({
       {/* Contact Channels Status Overview */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {/* Email Card (Active & Mandatory) */}
-        <div className="p-4 rounded-xl border border-[#c2652a] bg-[#faf5ee] ring-2 ring-[#c2652a]/20 flex items-start gap-3 shadow-xs">
-          <div className="p-2 rounded-lg bg-[#c2652a] text-white shrink-0 mt-0.5 shadow-2xs">
+        <div className="p-4 rounded-xl border border-[#234B36] bg-[#F8F5ED] ring-2 ring-[#234B36]/20 flex items-start gap-3 shadow-xs">
+          <div className="p-2 rounded-lg bg-[#234B36] text-white shrink-0 mt-0.5 shadow-2xs">
             <Mail className="w-4 h-4" />
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center justify-between gap-1">
-              <span className="block text-xs font-bold text-[#3a302a]">Email Address</span>
+              <span className="block text-xs font-bold text-[#252923]">Email Address</span>
               {data.contactVerified ? (
                 <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full flex items-center gap-1">
                   <CheckCircle2 className="w-3 h-3" /> Verified
                 </span>
               ) : (
-                <span className="text-[10px] font-bold text-[#c2652a] bg-[#f2ece4] px-2 py-0.5 rounded-full border border-[#d8d0c8]/40">
+                <span className="text-[10px] font-bold text-[#234B36] bg-[#EEF3EF] px-2 py-0.5 rounded-full border border-[#E5E0D5]/40">
                   Mandatory
                 </span>
               )}
             </div>
-            <span className="block text-xs text-[#3a302a] font-mono font-medium truncate mt-0.5">
+            <span className="block text-xs text-[#252923] font-mono font-medium truncate mt-0.5">
               {targetEmail || 'No email provided'}
             </span>
           </div>
         </div>
 
         {/* Phone Card (Recorded on Profile, SMS on Hold) */}
-        <div className="p-4 rounded-xl border border-[#d8d0c8] bg-white flex items-start gap-3 shadow-xs">
-          <div className="p-2 rounded-lg bg-[#f2ece4] text-[#605850] shrink-0 mt-0.5">
+        <div className="p-4 rounded-xl border border-[#E5E0D5] bg-white flex items-start gap-3 shadow-xs">
+          <div className="p-2 rounded-lg bg-[#EEF3EF] text-[#73776F] shrink-0 mt-0.5">
             <Phone className="w-4 h-4" />
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center justify-between gap-1">
-              <span className="block text-xs font-bold text-[#3a302a]">Mobile Phone</span>
-              <span className="text-[10px] font-semibold text-[#605850] bg-[#f2ece4] px-2 py-0.5 rounded-full border border-[#d8d0c8]/40">
+              <span className="block text-xs font-bold text-[#252923]">Mobile Phone</span>
+              <span className="text-[10px] font-semibold text-[#73776F] bg-[#EEF3EF] px-2 py-0.5 rounded-full border border-[#E5E0D5]/40">
                 On Profile
               </span>
             </div>
-            <span className="block text-xs text-[#605850] font-mono truncate mt-0.5">
+            <span className="block text-xs text-[#73776F] font-mono truncate mt-0.5">
               {data.phone || 'Phone not set'}
             </span>
-            <span className="block text-[11px] text-[#605850]/70 mt-1">
+            <span className="block text-[11px] text-[#73776F]/70 mt-1">
               SMS verification on hold for this release
             </span>
           </div>
@@ -211,7 +211,7 @@ export default function Step2ContactOtp({
           <button
             type="button"
             onClick={onContinue}
-            className="w-full sm:w-auto px-6 py-2.5 bg-[#c2652a] hover:bg-[#e08850] active:bg-[#a65320] text-white text-xs font-bold rounded-lg transition cursor-pointer flex items-center justify-center gap-2 shadow-sm"
+            className="w-full sm:w-auto px-6 py-2.5 bg-[#234B36] hover:bg-[#2D5E43] active:bg-[#1A3828] text-white text-xs font-bold rounded-lg transition cursor-pointer flex items-center justify-center gap-2 shadow-sm"
           >
             <span>Proceed to Host Details →</span>
           </button>
@@ -220,14 +220,14 @@ export default function Step2ContactOtp({
         <>
           {/* Send Verification Code State */}
           {deliveryStatus === 'IDLE' && (
-            <div className="p-5 bg-white border border-[#d8d0c8] rounded-xl space-y-4 shadow-sm">
+            <div className="p-5 bg-white border border-[#E5E0D5] rounded-xl space-y-4 shadow-sm">
               <div className="flex items-start gap-3">
-                <ShieldCheck className="w-5 h-5 text-[#c2652a] mt-0.5 shrink-0" />
+                <ShieldCheck className="w-5 h-5 text-[#234B36] mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-xs font-bold text-[#3a302a]">Request Email Verification Code</p>
-                  <p className="text-xs text-[#605850] mt-0.5 leading-relaxed">
+                  <p className="text-xs font-bold text-[#252923]">Request Email Verification Code</p>
+                  <p className="text-xs text-[#73776F] mt-0.5 leading-relaxed">
                     Click the button below to dispatch a secure 6-digit one-time code to{' '}
-                    <strong className="text-[#3a302a] font-mono">{targetEmail}</strong>. The code is valid for 10 minutes.
+                    <strong className="text-[#252923] font-mono">{targetEmail}</strong>. The code is valid for 10 minutes.
                   </p>
                 </div>
               </div>
@@ -236,7 +236,7 @@ export default function Step2ContactOtp({
                 type="button"
                 onClick={handleSendCode}
                 disabled={loading || !targetEmail}
-                className="w-full sm:w-auto px-6 py-2.5 bg-[#c2652a] hover:bg-[#e08850] active:bg-[#a65320] text-white text-xs font-bold rounded-lg transition disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 shadow-sm"
+                className="w-full sm:w-auto px-6 py-2.5 bg-[#234B36] hover:bg-[#2D5E43] active:bg-[#1A3828] text-white text-xs font-bold rounded-lg transition disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 shadow-sm"
               >
                 {loading ? (
                   <>
@@ -255,12 +255,12 @@ export default function Step2ContactOtp({
 
           {/* Active Code Verification Form */}
           {deliveryStatus === 'DISPATCHED' && (
-            <form onSubmit={handleVerifyCode} className="p-5 bg-white border border-[#d8d0c8] rounded-xl space-y-4 shadow-sm">
+            <form onSubmit={handleVerifyCode} className="p-5 bg-white border border-[#E5E0D5] rounded-xl space-y-4 shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-bold text-[#3a302a]">Enter 6-Digit Verification Code</p>
-                  <p className="text-xs text-[#605850] mt-0.5">
-                    Sent to <strong className="font-mono text-[#3a302a]">{targetEmail}</strong>
+                  <p className="text-xs font-bold text-[#252923]">Enter 6-Digit Verification Code</p>
+                  <p className="text-xs text-[#73776F] mt-0.5">
+                    Sent to <strong className="font-mono text-[#252923]">{targetEmail}</strong>
                   </p>
                 </div>
                 {statusMessage && (
@@ -281,40 +281,40 @@ export default function Step2ContactOtp({
                   value={data.otpCode}
                   onChange={(e) => updateData({ otpCode: e.target.value.replace(/[^\d]/g, '') })}
                   placeholder="123456"
-                  className="w-full text-center tracking-[0.5em] text-lg font-mono font-bold py-3 border border-[#d8d0c8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#c2652a]/30 focus:border-[#c2652a] bg-[#faf5ee] text-[#3a302a]"
+                  className="w-full text-center tracking-[0.5em] text-lg font-mono font-bold py-3 border border-[#E5E0D5] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#234B36]/30 focus:border-[#234B36] bg-[#F8F5ED] text-[#252923]"
                   autoFocus
                   required
                 />
-                <p className="text-[11px] text-[#605850] text-center mt-1.5">
+                <p className="text-[11px] text-[#73776F] text-center mt-1.5">
                   Check your Gmail inbox and spam folder. Code expires in 10 minutes.
                 </p>
               </div>
 
-              <div className="flex items-center justify-between text-xs pt-1 border-t border-[#d8d0c8]/40">
-                <span className="text-[#605850]">
+              <div className="flex items-center justify-between text-xs pt-1 border-t border-[#E5E0D5]/40">
+                <span className="text-[#73776F]">
                   {cooldown > 0 ? (
                     <>
-                      Resend available in <strong className="font-mono text-[#3a302a]">{cooldown}s</strong>
+                      Resend available in <strong className="font-mono text-[#252923]">{cooldown}s</strong>
                     </>
                   ) : (
                     <button
                       type="button"
                       onClick={handleSendCode}
                       disabled={loading}
-                      className="text-[#c2652a] font-bold hover:underline cursor-pointer"
+                      className="text-[#234B36] font-bold hover:underline cursor-pointer"
                     >
                       Resend Code
                     </button>
                   )}
                 </span>
-                <span className="text-[#605850]/70">Max 5 attempts allowed</span>
+                <span className="text-[#73776F]/70">Max 5 attempts allowed</span>
               </div>
 
               <div className="pt-2">
                 <button
                   type="submit"
                   disabled={verifyLoading || data.otpCode.length !== 6}
-                  className="w-full py-2.5 bg-[#c2652a] hover:bg-[#e08850] active:bg-[#a65320] text-white text-xs font-bold rounded-lg transition disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 shadow-sm"
+                  className="w-full py-2.5 bg-[#234B36] hover:bg-[#2D5E43] active:bg-[#1A3828] text-white text-xs font-bold rounded-lg transition disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 shadow-sm"
                 >
                   {verifyLoading ? (
                     <>
@@ -335,11 +335,11 @@ export default function Step2ContactOtp({
       )}
 
       {/* Navigation Footer */}
-      <div className="pt-4 border-t border-[#d8d0c8]/60 flex items-center justify-between">
+      <div className="pt-4 border-t border-[#E5E0D5]/60 flex items-center justify-between">
         <button
           type="button"
           onClick={onBack}
-          className="px-4 py-2 border border-[#d8d0c8] bg-white hover:bg-[#f2ece4] text-[#3a302a] text-xs font-bold rounded-lg transition cursor-pointer shadow-xs"
+          className="px-4 py-2 border border-[#E5E0D5] bg-white hover:bg-[#EEF3EF] text-[#252923] text-xs font-bold rounded-lg transition cursor-pointer shadow-xs"
         >
           ← Back to Account Details
         </button>
@@ -348,7 +348,7 @@ export default function Step2ContactOtp({
           <button
             type="button"
             onClick={onContinue}
-            className="px-6 py-2.5 bg-[#c2652a] hover:bg-[#e08850] active:bg-[#a65320] text-white text-xs font-bold rounded-lg transition cursor-pointer shadow-sm"
+            className="px-6 py-2.5 bg-[#234B36] hover:bg-[#2D5E43] active:bg-[#1A3828] text-white text-xs font-bold rounded-lg transition cursor-pointer shadow-sm"
           >
             Continue to Host Details →
           </button>

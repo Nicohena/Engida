@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import Link from 'next/link';
@@ -115,52 +115,52 @@ export default function Step5ReviewSubmit({
   // SUCCESS CONFIRMATION SCREEN
   if (isSubmitted) {
     return (
-      <div className="w-full max-w-2xl mx-auto p-6 sm:p-8 bg-white border border-[#d8d0c8] rounded-2xl shadow-xs space-y-6">
+      <div className="w-full max-w-2xl mx-auto p-6 sm:p-8 bg-white border border-[#E5E0D5] rounded-2xl shadow-xs space-y-6">
         <div className="text-center space-y-2">
-          <div className="w-14 h-14 rounded-full bg-[#f2ece4] text-[#c2652a] flex items-center justify-center mx-auto border border-[#d8d0c8]/60 shadow-xs">
+          <div className="w-14 h-14 rounded-full bg-[#EEF3EF] text-[#234B36] flex items-center justify-center mx-auto border border-[#E5E0D5]/60 shadow-xs">
             <CheckCircle2 className="w-8 h-8 stroke-[2.2]" />
           </div>
-          <span className="inline-block px-3 py-1 bg-[#f2ece4] border border-[#d8d0c8] text-[#c2652a] rounded-full text-xs font-bold uppercase tracking-wider">
+          <span className="inline-block px-3 py-1 bg-[#EEF3EF] border border-[#E5E0D5] text-[#234B36] rounded-full text-xs font-bold uppercase tracking-wider">
             Host Account Active &amp; Verified
           </span>
-          <h2 className="text-2xl font-extrabold text-[#3a302a] tracking-tight font-headline">
+          <h2 className="text-2xl font-extrabold text-[#252923] tracking-tight font-headline">
             Welcome to Hosting on Engida!
           </h2>
-          <p className="text-xs text-[#605850] max-w-md mx-auto leading-relaxed">
+          <p className="text-xs text-[#73776F] max-w-md mx-auto leading-relaxed">
             Your email has been successfully verified and your host account is fully active. You can now immediately create your first property listing and welcome guests to Ethiopia.
           </p>
         </div>
 
         {/* Verification Summary Card */}
-        <div className="p-4 bg-[#faf5ee] border border-[#d8d0c8] rounded-xl space-y-2 text-xs">
-          <div className="flex justify-between py-1 border-b border-[#d8d0c8]/60">
-            <span className="text-[#605850]">Host Profile Name</span>
-            <span className="font-bold text-[#3a302a]">{createdProfile?.displayName || data.displayName}</span>
+        <div className="p-4 bg-[#F8F5ED] border border-[#E5E0D5] rounded-xl space-y-2 text-xs">
+          <div className="flex justify-between py-1 border-b border-[#E5E0D5]/60">
+            <span className="text-[#73776F]">Host Profile Name</span>
+            <span className="font-bold text-[#252923]">{createdProfile?.displayName || data.displayName}</span>
           </div>
-          <div className="flex justify-between py-1 border-b border-[#d8d0c8]/60">
-            <span className="text-[#605850]">Verified Contact Email</span>
+          <div className="flex justify-between py-1 border-b border-[#E5E0D5]/60">
+            <span className="text-[#73776F]">Verified Contact Email</span>
             <span className="font-medium text-emerald-800 flex items-center gap-1 font-mono">
               <CheckCircle2 className="w-3.5 h-3.5" />
               {currentUser ? currentUser.email : data.email}
             </span>
           </div>
-          <div className="flex justify-between py-1 border-b border-[#d8d0c8]/60">
-            <span className="text-[#605850]">Operating Location</span>
-            <span className="font-medium text-[#3a302a]">{data.city}, {data.region}</span>
+          <div className="flex justify-between py-1 border-b border-[#E5E0D5]/60">
+            <span className="text-[#73776F]">Operating Location</span>
+            <span className="font-medium text-[#252923]">{data.city}, {data.region}</span>
           </div>
           <div className="flex justify-between py-1">
-            <span className="text-[#605850]">Host Account Status</span>
-            <span className="font-bold text-[#c2652a]">ACTIVE &amp; VERIFIED</span>
+            <span className="text-[#73776F]">Host Account Status</span>
+            <span className="font-bold text-[#234B36]">ACTIVE &amp; VERIFIED</span>
           </div>
         </div>
 
         {/* What You Can Do Right Now */}
-        <div className="p-4 bg-[#faf5ee] border border-[#c2652a]/40 rounded-xl space-y-2 text-xs text-[#3a302a]">
-          <p className="font-bold flex items-center gap-2 text-[#c2652a]">
-            <CheckCircle2 className="w-4 h-4 text-[#c2652a]" />
+        <div className="p-4 bg-[#F8F5ED] border border-[#234B36]/40 rounded-xl space-y-2 text-xs text-[#252923]">
+          <p className="font-bold flex items-center gap-2 text-[#234B36]">
+            <CheckCircle2 className="w-4 h-4 text-[#234B36]" />
             <span>Full Hosting Privileges Unlocked</span>
           </p>
-          <p className="text-[#605850] leading-relaxed text-[11px]">
+          <p className="text-[#73776F] leading-relaxed text-[11px]">
             You have full access to create property listings, manage nightly rates, configure booking calendars, and accept reservations from travelers worldwide.
           </p>
         </div>
@@ -169,14 +169,14 @@ export default function Step5ReviewSubmit({
         <div className="pt-2 flex flex-col sm:flex-row gap-3">
           <Link
             href="/host/listings/new"
-            className="flex-1 py-3 bg-[#c2652a] hover:bg-[#e08850] active:bg-[#a65320] text-white text-xs font-bold rounded-xl transition text-center shadow-xs flex items-center justify-center gap-2"
+            className="flex-1 py-3 bg-[#234B36] hover:bg-[#2D5E43] active:bg-[#1A3828] text-white text-xs font-bold rounded-xl transition text-center shadow-xs flex items-center justify-center gap-2"
           >
             <span>Create Your First Listing</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
             href="/host/dashboard"
-            className="py-3 px-6 bg-[#f2ece4] hover:bg-[#e8e0d6] text-[#3a302a] text-xs font-bold rounded-xl transition text-center border border-[#d8d0c8]"
+            className="py-3 px-6 bg-[#EEF3EF] hover:bg-[#e8e0d6] text-[#252923] text-xs font-bold rounded-xl transition text-center border border-[#E5E0D5]"
           >
             Go to Host Dashboard
           </Link>
@@ -189,10 +189,10 @@ export default function Step5ReviewSubmit({
   return (
     <div className="w-full max-w-2xl mx-auto space-y-6">
       <div>
-        <h2 className="text-xl font-bold tracking-tight text-[#3a302a] font-headline">
+        <h2 className="text-xl font-bold tracking-tight text-[#252923] font-headline">
           Review &amp; Activate Host Account
         </h2>
-        <p className="text-xs text-[#605850] mt-1">
+        <p className="text-xs text-[#73776F] mt-1">
           Review your host profile and contact details before activating your hosting status.
         </p>
       </div>
@@ -207,35 +207,35 @@ export default function Step5ReviewSubmit({
       {/* Review Sections */}
       <div className="space-y-4">
         {/* Section 1: Account & Contact */}
-        <div className="p-4 bg-white border border-[#d8d0c8] rounded-xl space-y-3 shadow-xs">
-          <div className="flex items-center justify-between border-b border-[#d8d0c8]/40 pb-2">
-            <span className="text-xs font-bold text-[#3a302a] flex items-center gap-2">
-              <User className="w-4 h-4 text-[#c2652a]" />
+        <div className="p-4 bg-white border border-[#E5E0D5] rounded-xl space-y-3 shadow-xs">
+          <div className="flex items-center justify-between border-b border-[#E5E0D5]/40 pb-2">
+            <span className="text-xs font-bold text-[#252923] flex items-center gap-2">
+              <User className="w-4 h-4 text-[#234B36]" />
               Account &amp; Legal Identity
             </span>
             <button
               type="button"
               onClick={() => onEditStep(1)}
-              className="text-xs font-bold text-[#c2652a] hover:underline cursor-pointer"
+              className="text-xs font-bold text-[#234B36] hover:underline cursor-pointer"
             >
               Edit
             </button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
             <div>
-              <span className="text-[#605850] block">Full Legal Name</span>
-              <span className="font-semibold text-[#3a302a]">{currentUser ? currentUser.name : data.fullName}</span>
+              <span className="text-[#73776F] block">Full Legal Name</span>
+              <span className="font-semibold text-[#252923]">{currentUser ? currentUser.name : data.fullName}</span>
             </div>
             <div>
-              <span className="text-[#605850] block">Email Address</span>
-              <span className="font-semibold text-[#3a302a]">{currentUser ? currentUser.email : data.email}</span>
+              <span className="text-[#73776F] block">Email Address</span>
+              <span className="font-semibold text-[#252923]">{currentUser ? currentUser.email : data.email}</span>
             </div>
             <div>
-              <span className="text-[#605850] block">Mobile Phone</span>
-              <span className="font-semibold text-[#3a302a] font-mono">{data.phone}</span>
+              <span className="text-[#73776F] block">Mobile Phone</span>
+              <span className="font-semibold text-[#252923] font-mono">{data.phone}</span>
             </div>
             <div>
-              <span className="text-[#605850] block">Contact Verification</span>
+              <span className="text-[#73776F] block">Contact Verification</span>
               <span className="font-medium text-emerald-800 flex items-center gap-1">
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 {data.contactVerified ? 'Email Verified via OTP' : 'Pending Email Verification'}
@@ -245,46 +245,46 @@ export default function Step5ReviewSubmit({
         </div>
 
         {/* Section 2: Host Profile & Operating Location */}
-        <div className="p-4 bg-white border border-[#d8d0c8] rounded-xl space-y-3 shadow-xs">
-          <div className="flex items-center justify-between border-b border-[#d8d0c8]/40 pb-2">
-            <span className="text-xs font-bold text-[#3a302a] flex items-center gap-2">
-              <Building2 className="w-4 h-4 text-[#c2652a]" />
+        <div className="p-4 bg-white border border-[#E5E0D5] rounded-xl space-y-3 shadow-xs">
+          <div className="flex items-center justify-between border-b border-[#E5E0D5]/40 pb-2">
+            <span className="text-xs font-bold text-[#252923] flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-[#234B36]" />
               Host Profile &amp; Operating Location
             </span>
             <button
               type="button"
               onClick={() => onEditStep(3)}
-              className="text-xs font-bold text-[#c2652a] hover:underline cursor-pointer"
+              className="text-xs font-bold text-[#234B36] hover:underline cursor-pointer"
             >
               Edit
             </button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
             <div>
-              <span className="text-[#605850] block">Public Display Name</span>
-              <span className="font-semibold text-[#3a302a]">{data.displayName}</span>
+              <span className="text-[#73776F] block">Public Display Name</span>
+              <span className="font-semibold text-[#252923]">{data.displayName}</span>
             </div>
             <div>
-              <span className="text-[#605850] block">Host Type</span>
-              <span className="font-semibold text-[#3a302a]">
+              <span className="text-[#73776F] block">Host Type</span>
+              <span className="font-semibold text-[#252923]">
                 {data.hostType === 'BUSINESS' ? 'Corporate / Business Host' : 'Individual Host'}
               </span>
             </div>
             {data.hostType === 'BUSINESS' && (
               <>
                 <div>
-                  <span className="text-[#605850] block">Company Name</span>
-                  <span className="font-semibold text-[#3a302a]">{data.businessName}</span>
+                  <span className="text-[#73776F] block">Company Name</span>
+                  <span className="font-semibold text-[#252923]">{data.businessName}</span>
                 </div>
                 <div>
-                  <span className="text-[#605850] block">TIN</span>
-                  <span className="font-mono font-semibold text-[#3a302a]">{data.businessTin}</span>
+                  <span className="text-[#73776F] block">TIN</span>
+                  <span className="font-mono font-semibold text-[#252923]">{data.businessTin}</span>
                 </div>
               </>
             )}
             <div className="sm:col-span-2">
-              <span className="text-[#605850] block">Operating Address</span>
-              <span className="font-medium text-[#3a302a]">
+              <span className="text-[#73776F] block">Operating Address</span>
+              <span className="font-medium text-[#252923]">
                 {data.streetAddress}, {data.woreda ? data.woreda + ', ' : ''}
                 {data.subCity ? data.subCity + ', ' : ''}
                 {data.city}, {data.region}
@@ -296,17 +296,17 @@ export default function Step5ReviewSubmit({
 
       {/* Host Code of Conduct & Standards Agreement */}
       <form onSubmit={handleFinalSubmit} className="space-y-5">
-        <div className="p-4 rounded-xl bg-[#faf5ee] border border-[#d8d0c8]">
+        <div className="p-4 rounded-xl bg-[#F8F5ED] border border-[#E5E0D5]">
           <label className="flex items-start gap-3 cursor-pointer select-none">
             <input
               type="checkbox"
               checked={data.agreedToHostStandards}
               onChange={(e) => updateData({ agreedToHostStandards: e.target.checked })}
-              className="mt-1 w-4 h-4 rounded text-[#c2652a] border-[#d8d0c8] focus:ring-[#c2652a]"
+              className="mt-1 w-4 h-4 rounded text-[#234B36] border-[#E5E0D5] focus:ring-[#234B36]"
             />
-            <span className="text-xs text-[#3a302a] leading-relaxed">
+            <span className="text-xs text-[#252923] leading-relaxed">
               I agree to abide by the{' '}
-              <a href="/host/standards" target="_blank" className="text-[#c2652a] font-semibold hover:underline">
+              <a href="/host/standards" target="_blank" className="text-[#234B36] font-semibold hover:underline">
                 Ethiopian Hospitality Standards
               </a>
               , guest safety guidelines, tax compliance laws, and Engida&apos;s Host Code of Conduct.
@@ -315,19 +315,19 @@ export default function Step5ReviewSubmit({
         </div>
 
         {/* Navigation / Submit CTA */}
-        <div className="pt-2 border-t border-[#d8d0c8]/60 flex items-center justify-between">
+        <div className="pt-2 border-t border-[#E5E0D5]/60 flex items-center justify-between">
           <button
             type="button"
             onClick={onBack}
             disabled={submitting}
-            className="px-4 py-2 border border-[#d8d0c8] bg-white hover:bg-[#f2ece4] text-[#3a302a] text-xs font-bold rounded-lg transition disabled:opacity-50 cursor-pointer shadow-xs"
+            className="px-4 py-2 border border-[#E5E0D5] bg-white hover:bg-[#EEF3EF] text-[#252923] text-xs font-bold rounded-lg transition disabled:opacity-50 cursor-pointer shadow-xs"
           >
             ← Back
           </button>
           <button
             type="submit"
             disabled={submitting || !data.agreedToHostStandards}
-            className="px-6 py-2.5 bg-[#c2652a] hover:bg-[#e08850] active:bg-[#a65320] text-white text-xs font-bold rounded-lg shadow-sm hover:shadow transition disabled:opacity-50 cursor-pointer flex items-center gap-2"
+            className="px-6 py-2.5 bg-[#234B36] hover:bg-[#2D5E43] active:bg-[#1A3828] text-white text-xs font-bold rounded-lg shadow-sm hover:shadow transition disabled:opacity-50 cursor-pointer flex items-center gap-2"
           >
             {submitting ? (
               <>

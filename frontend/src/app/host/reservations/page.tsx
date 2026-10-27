@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Image from 'next/image';
 import { useEffect, useMemo, useState } from 'react';
@@ -70,17 +70,17 @@ function StatusBadge({ status }: { status: BookingStatus }) {
 
 function ReservationSkeleton() {
   return (
-    <div className="animate-pulse rounded-2xl border border-[#d8d0c8] bg-white p-5">
+    <div className="animate-pulse rounded-2xl border border-[#E5E0D5] bg-white p-5">
       <div className="mb-4 flex gap-3">
-        <div className="h-14 w-14 rounded-xl bg-[#f2ece4]" />
+        <div className="h-14 w-14 rounded-xl bg-[#EEF3EF]" />
         <div className="flex-1 space-y-2">
-          <div className="h-4 w-2/3 rounded bg-[#f2ece4]" />
-          <div className="h-3 w-1/2 rounded bg-[#faf5ee]" />
+          <div className="h-4 w-2/3 rounded bg-[#EEF3EF]" />
+          <div className="h-3 w-1/2 rounded bg-[#F8F5ED]" />
         </div>
       </div>
       <div className="space-y-2">
-        <div className="h-3 w-full rounded bg-[#faf5ee]" />
-        <div className="h-3 w-3/4 rounded bg-[#faf5ee]" />
+        <div className="h-3 w-full rounded bg-[#F8F5ED]" />
+        <div className="h-3 w-3/4 rounded bg-[#F8F5ED]" />
       </div>
     </div>
   );
@@ -96,38 +96,38 @@ function ReservationDetails({
   return (
     <div className={`grid gap-3 text-sm ${compact ? 'grid-cols-2' : 'sm:grid-cols-5'}`}>
       <div>
-        <p className="text-xs font-bold uppercase tracking-wide text-[#605850]">Guest</p>
-        <p className="mt-1 flex items-center gap-1.5 font-semibold text-[#3a302a]">
-          <UserRound className="h-4 w-4 text-[#605850]" />
+        <p className="text-xs font-bold uppercase tracking-wide text-[#73776F]">Guest</p>
+        <p className="mt-1 flex items-center gap-1.5 font-semibold text-[#252923]">
+          <UserRound className="h-4 w-4 text-[#73776F]" />
           {reservation.guest?.name || 'Guest details unavailable'}
         </p>
         {reservation.guest?.email && (
-          <p className="mt-0.5 truncate text-xs text-[#605850]">{reservation.guest.email}</p>
+          <p className="mt-0.5 truncate text-xs text-[#73776F]">{reservation.guest.email}</p>
         )}
       </div>
       <div>
-        <p className="text-xs font-bold uppercase tracking-wide text-[#605850]">Stay dates</p>
-        <p className="mt-1 font-semibold text-[#3a302a]">
+        <p className="text-xs font-bold uppercase tracking-wide text-[#73776F]">Stay dates</p>
+        <p className="mt-1 font-semibold text-[#252923]">
           {formatDate(reservation.checkInDate)} — {formatDate(reservation.checkOutDate)}
         </p>
       </div>
       {reservation.room && (
         <div>
-          <p className="text-xs font-bold uppercase tracking-wide text-[#605850]">Room</p>
-          <p className="mt-1 font-semibold text-[#3a302a]">{reservation.room.title} · {reservation.room.roomNumber}</p>
+          <p className="text-xs font-bold uppercase tracking-wide text-[#73776F]">Room</p>
+          <p className="mt-1 font-semibold text-[#252923]">{reservation.room.title} · {reservation.room.roomNumber}</p>
         </div>
       )}
       <div>
-        <p className="text-xs font-bold uppercase tracking-wide text-[#605850]">Guests</p>
-        <p className="mt-1 font-semibold text-[#3a302a]">
+        <p className="text-xs font-bold uppercase tracking-wide text-[#73776F]">Guests</p>
+        <p className="mt-1 font-semibold text-[#252923]">
           {reservation.guestCount} {reservation.guestCount === 1 ? 'guest' : 'guests'}
         </p>
       </div>
       <div>
-        <p className="text-xs font-bold uppercase tracking-wide text-[#605850]">Payment & Total</p>
-        <p className="mt-1 font-bold text-[#3a302a]">{formatAmount(reservation.totalPrice)}</p>
+        <p className="text-xs font-bold uppercase tracking-wide text-[#73776F]">Payment & Total</p>
+        <p className="mt-1 font-bold text-[#252923]">{formatAmount(reservation.totalPrice)}</p>
         <div className="mt-1 flex items-center gap-1 flex-wrap">
-          <span className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#f2ece4] text-[#3a302a] border border-[#d8d0c8]">
+          <span className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#EEF3EF] text-[#252923] border border-[#E5E0D5]">
             {reservation.paymentMethod?.replace(/_/g, ' ') || 'Cash on Arrival'}
           </span>
           <span className={`inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded ${
@@ -159,7 +159,7 @@ function ReservationActions({
       action: 'confirm',
       label: 'Confirm',
       icon: Check,
-      className: 'bg-[#c2652a] text-white hover:bg-[#e08850] active:bg-[#a65320] shadow-sm',
+      className: 'bg-[#234B36] text-white hover:bg-[#2D5E43] active:bg-[#1A3828] shadow-sm',
     });
   }
   const today = new Date().toISOString().slice(0, 10);
@@ -170,7 +170,7 @@ function ReservationActions({
       action: 'complete',
       label: 'Complete',
       icon: CircleCheck,
-      className: 'bg-[#c2652a] text-white hover:bg-[#e08850] active:bg-[#a65320] shadow-sm',
+      className: 'bg-[#234B36] text-white hover:bg-[#2D5E43] active:bg-[#1A3828] shadow-sm',
     });
   }
   if (reservation.status === 'PENDING' || reservation.status === 'CONFIRMED') {
@@ -187,7 +187,7 @@ function ReservationActions({
   return (
     <div className="flex flex-wrap items-center gap-2">
       {reservation.status === 'CONFIRMED' && !stayHasEnded && (
-        <span className="text-xs text-[#605850]">Completion is available after check-out.</span>
+        <span className="text-xs text-[#73776F]">Completion is available after check-out.</span>
       )}
       {actions.map(({ action, label, icon: Icon, className }) => (
         <button
@@ -296,27 +296,27 @@ export default function HostReservationsPage() {
     <div className="p-6 md:p-10">
       <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <h1 className="text-2xl font-black text-[#3a302a]">Reservations</h1>
-          <p className="mt-2 text-sm text-[#605850]">
+          <h1 className="text-2xl font-black text-[#252923]">Reservations</h1>
+          <p className="mt-2 text-sm text-[#73776F]">
             Review and manage bookings made on your properties.
           </p>
         </div>
-        <div className="flex items-center gap-2 text-sm font-semibold text-[#605850]">
-          <CalendarDays className="h-4 w-4 text-[#c2652a]" />
+        <div className="flex items-center gap-2 text-sm font-semibold text-[#73776F]">
+          <CalendarDays className="h-4 w-4 text-[#234B36]" />
           {total} {total === 1 ? 'reservation' : 'reservations'}
         </div>
       </div>
 
-      <div className="mb-6 rounded-2xl border border-[#d8d0c8] bg-white p-4">
+      <div className="mb-6 rounded-2xl border border-[#E5E0D5] bg-white p-4">
         <div className="grid gap-4 md:grid-cols-3">
-          <label className="text-xs font-bold uppercase tracking-wide text-[#605850]">
+          <label className="text-xs font-bold uppercase tracking-wide text-[#73776F]">
             Status
             <select
               value={status}
               onChange={(event) =>
                 handleFilterChange(() => setStatus(event.target.value as BookingStatus | ''))
               }
-              className="mt-2 block w-full rounded-xl border border-[#d8d0c8] bg-white px-3 py-2.5 text-sm font-medium normal-case tracking-normal text-[#3a302a] outline-none focus:border-[#c2652a] focus:ring-2 focus:ring-[#c2652a]/20 transition-all"
+              className="mt-2 block w-full rounded-xl border border-[#E5E0D5] bg-white px-3 py-2.5 text-sm font-medium normal-case tracking-normal text-[#252923] outline-none focus:border-[#234B36] focus:ring-2 focus:ring-[#234B36]/20 transition-all"
             >
               {STATUS_OPTIONS.map((option) => (
                 <option key={option.label} value={option.value}>
@@ -325,24 +325,24 @@ export default function HostReservationsPage() {
               ))}
             </select>
           </label>
-          <label className="text-xs font-bold uppercase tracking-wide text-[#605850]">
+          <label className="text-xs font-bold uppercase tracking-wide text-[#73776F]">
             Check-in from
             <input
               type="date"
               value={fromDate}
               max={toDate || undefined}
               onChange={(event) => handleFilterChange(() => setFromDate(event.target.value))}
-              className="mt-2 block w-full rounded-xl border border-[#d8d0c8] bg-white px-3 py-2.5 text-sm font-medium normal-case tracking-normal text-[#3a302a] outline-none focus:border-[#c2652a] focus:ring-2 focus:ring-[#c2652a]/20 transition-all"
+              className="mt-2 block w-full rounded-xl border border-[#E5E0D5] bg-white px-3 py-2.5 text-sm font-medium normal-case tracking-normal text-[#252923] outline-none focus:border-[#234B36] focus:ring-2 focus:ring-[#234B36]/20 transition-all"
             />
           </label>
-          <label className="text-xs font-bold uppercase tracking-wide text-[#605850]">
+          <label className="text-xs font-bold uppercase tracking-wide text-[#73776F]">
             Check-out through
             <input
               type="date"
               value={toDate}
               min={fromDate || undefined}
               onChange={(event) => handleFilterChange(() => setToDate(event.target.value))}
-              className="mt-2 block w-full rounded-xl border border-[#d8d0c8] bg-white px-3 py-2.5 text-sm font-medium normal-case tracking-normal text-[#3a302a] outline-none focus:border-[#c2652a] focus:ring-2 focus:ring-[#c2652a]/20 transition-all"
+              className="mt-2 block w-full rounded-xl border border-[#E5E0D5] bg-white px-3 py-2.5 text-sm font-medium normal-case tracking-normal text-[#252923] outline-none focus:border-[#234B36] focus:ring-2 focus:ring-[#234B36]/20 transition-all"
             />
           </label>
         </div>
@@ -372,12 +372,12 @@ export default function HostReservationsPage() {
       {error ? (
         <div className="rounded-2xl border border-red-200 bg-white p-10 text-center">
           <CircleX className="mx-auto mb-4 h-10 w-10 text-red-500" />
-          <h2 className="text-lg font-bold text-[#3a302a]">Could not load reservations</h2>
-          <p className="mx-auto mt-2 max-w-md text-sm text-[#605850]">{error}</p>
+          <h2 className="text-lg font-bold text-[#252923]">Could not load reservations</h2>
+          <p className="mx-auto mt-2 max-w-md text-sm text-[#73776F]">{error}</p>
           <button
             type="button"
             onClick={() => setRefreshVersion((v) => v + 1)}
-            className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#c2652a] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#e08850] active:bg-[#a65320] shadow-sm"
+            className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#234B36] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#2D5E43] active:bg-[#1A3828] shadow-sm"
           >
             <RotateCcw className="h-4 w-4" />
             Try again
@@ -390,20 +390,20 @@ export default function HostReservationsPage() {
           ))}
         </div>
       ) : reservations.length === 0 ? (
-        <div className="rounded-2xl border border-[#d8d0c8] bg-white p-10 text-center">
-          <CalendarDays className="mx-auto mb-4 h-12 w-12 text-[#c2652a]/50" />
-          <h2 className="text-lg font-bold text-[#3a302a]">No reservations found</h2>
-          <p className="mx-auto mt-2 max-w-md text-sm text-[#605850]">
+        <div className="rounded-2xl border border-[#E5E0D5] bg-white p-10 text-center">
+          <CalendarDays className="mx-auto mb-4 h-12 w-12 text-[#234B36]/50" />
+          <h2 className="text-lg font-bold text-[#252923]">No reservations found</h2>
+          <p className="mx-auto mt-2 max-w-md text-sm text-[#73776F]">
             There are no reservations matching the selected filters.
           </p>
         </div>
       ) : (
         <>
-          <div className="hidden overflow-hidden rounded-2xl border border-[#d8d0c8] bg-white lg:block">
+          <div className="hidden overflow-hidden rounded-2xl border border-[#E5E0D5] bg-white lg:block">
             <div className="overflow-x-auto">
               <table className="w-full min-w-[860px] text-left">
-                <thead className="border-b border-[#d8d0c8] bg-[#faf5ee]">
-                  <tr className="text-xs font-black uppercase tracking-wide text-[#605850]">
+                <thead className="border-b border-[#E5E0D5] bg-[#F8F5ED]">
+                  <tr className="text-xs font-black uppercase tracking-wide text-[#73776F]">
                     <th className="px-5 py-4">Property / guest</th>
                     <th className="px-5 py-4">Dates</th>
                     <th className="px-5 py-4">Amount</th>
@@ -413,7 +413,7 @@ export default function HostReservationsPage() {
                 </thead>
                 <tbody>
                   {reservations.map((reservation) => (
-                    <tr key={reservation.id} className="border-b border-[#f2ece4] last:border-0 hover:bg-[#faf5ee]/50 transition-colors">
+                    <tr key={reservation.id} className="border-b border-[#EEF3EF] last:border-0 hover:bg-[#F8F5ED]/50 transition-colors">
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
                           {reservation.property?.coverImage ? (
@@ -426,15 +426,15 @@ export default function HostReservationsPage() {
                               className="h-12 w-12 rounded-xl object-cover"
                             />
                           ) : (
-                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#f2ece4]">
-                              <CalendarDays className="h-5 w-5 text-[#c2652a]" />
+                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#EEF3EF]">
+                              <CalendarDays className="h-5 w-5 text-[#234B36]" />
                             </div>
                           )}
                           <div className="min-w-0">
-                            <p className="max-w-[220px] truncate font-bold text-[#3a302a]">
+                            <p className="max-w-[220px] truncate font-bold text-[#252923]">
                               {reservation.property?.title || 'Property unavailable'}
                             </p>
-                            <p className="mt-0.5 text-xs text-[#605850]">
+                            <p className="mt-0.5 text-xs text-[#73776F]">
                               {reservation.guest?.name || 'Guest details unavailable'}
                               {reservation.property?.city ? ` · ${reservation.property.city}` : ''}
                               {reservation.room ? ` · ${reservation.room.title} (${reservation.room.roomNumber})` : ''}
@@ -442,13 +442,13 @@ export default function HostReservationsPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-5 py-4 text-sm font-semibold text-[#3a302a]">
+                      <td className="px-5 py-4 text-sm font-semibold text-[#252923]">
                         <div>{formatDate(reservation.checkInDate)}</div>
-                        <div className="text-xs font-medium text-[#605850]">
+                        <div className="text-xs font-medium text-[#73776F]">
                           to {formatDate(reservation.checkOutDate)}
                         </div>
                       </td>
-                      <td className="px-5 py-4 text-sm font-bold text-[#3a302a]">
+                      <td className="px-5 py-4 text-sm font-bold text-[#252923]">
                         {formatAmount(reservation.totalPrice)}
                       </td>
                       <td className="px-5 py-4">
@@ -472,7 +472,7 @@ export default function HostReservationsPage() {
 
           <div className="grid gap-4 lg:hidden">
             {reservations.map((reservation) => (
-              <article key={reservation.id} className="rounded-2xl border border-[#d8d0c8] bg-white p-5">
+              <article key={reservation.id} className="rounded-2xl border border-[#E5E0D5] bg-white p-5">
                 <div className="mb-5 flex items-start justify-between gap-3">
                   <div className="flex min-w-0 gap-3">
                     {reservation.property?.coverImage ? (
@@ -485,15 +485,15 @@ export default function HostReservationsPage() {
                         className="h-14 w-14 rounded-xl object-cover"
                       />
                     ) : (
-                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-[#f2ece4]">
-                        <CalendarDays className="h-5 w-5 text-[#c2652a]" />
+                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-[#EEF3EF]">
+                        <CalendarDays className="h-5 w-5 text-[#234B36]" />
                       </div>
                     )}
                     <div className="min-w-0">
-                      <h2 className="truncate font-bold text-[#3a302a]">
+                      <h2 className="truncate font-bold text-[#252923]">
                         {reservation.property?.title || 'Property unavailable'}
                       </h2>
-                      <p className="mt-1 truncate text-xs text-[#605850]">
+                      <p className="mt-1 truncate text-xs text-[#73776F]">
                         {reservation.property?.city || 'Location unavailable'}
                       </p>
                     </div>
@@ -501,7 +501,7 @@ export default function HostReservationsPage() {
                   <StatusBadge status={reservation.status} />
                 </div>
                 <ReservationDetails reservation={reservation} compact />
-                <div className="mt-5 border-t border-[#f2ece4] pt-4">
+                <div className="mt-5 border-t border-[#EEF3EF] pt-4">
                   <ReservationActions
                     reservation={reservation}
                     processing={processingId === reservation.id}
@@ -516,7 +516,7 @@ export default function HostReservationsPage() {
 
       {!loading && !error && reservations.length > 0 && (
         <div className="mt-6 flex items-center justify-between gap-4">
-          <p className="text-sm text-[#605850]">
+          <p className="text-sm text-[#73776F]">
             Page {page} of {Math.max(totalPages, 1)}
           </p>
           <div className="flex gap-2">
@@ -524,7 +524,7 @@ export default function HostReservationsPage() {
               type="button"
               disabled={page <= 1}
               onClick={() => setPage((current) => current - 1)}
-              className="inline-flex items-center gap-1 rounded-xl border border-[#d8d0c8] bg-white px-3 py-2 text-sm font-bold text-[#3a302a] hover:bg-[#faf5ee] disabled:cursor-not-allowed disabled:opacity-40 transition-colors"
+              className="inline-flex items-center gap-1 rounded-xl border border-[#E5E0D5] bg-white px-3 py-2 text-sm font-bold text-[#252923] hover:bg-[#F8F5ED] disabled:cursor-not-allowed disabled:opacity-40 transition-colors"
             >
               <ChevronLeft className="h-4 w-4" />
               Previous
@@ -533,7 +533,7 @@ export default function HostReservationsPage() {
               type="button"
               disabled={page >= totalPages}
               onClick={() => setPage((current) => current + 1)}
-              className="inline-flex items-center gap-1 rounded-xl border border-[#d8d0c8] bg-white px-3 py-2 text-sm font-bold text-[#3a302a] hover:bg-[#faf5ee] disabled:cursor-not-allowed disabled:opacity-40 transition-colors"
+              className="inline-flex items-center gap-1 rounded-xl border border-[#E5E0D5] bg-white px-3 py-2 text-sm font-bold text-[#252923] hover:bg-[#F8F5ED] disabled:cursor-not-allowed disabled:opacity-40 transition-colors"
             >
               Next
               <ChevronRight className="h-4 w-4" />

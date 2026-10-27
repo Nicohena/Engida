@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useMemo, useState, type FormEvent } from 'react';
 import Link from 'next/link';
@@ -349,14 +349,14 @@ export default function HostAvailabilityPage() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f2ece4] text-[#c2652a] border border-[#d8d0c8] text-xs font-black uppercase tracking-wider mb-2">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EEF3EF] text-[#234B36] border border-[#E5E0D5] text-xs font-black uppercase tracking-wider mb-2">
             <CalendarDays className="w-3.5 h-3.5" />
             <span>Interactive Availability Manager</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-[#3a302a] tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-black text-[#252923] tracking-tight">
             Property Calendar & Blockouts
           </h1>
-          <p className="text-xs sm:text-sm text-[#605850] font-medium mt-1">
+          <p className="text-xs sm:text-sm text-[#73776F] font-medium mt-1">
             Visually manage unavailable dates, view upcoming guest stays, and block maintenance windows.
           </p>
         </div>
@@ -368,7 +368,7 @@ export default function HostAvailabilityPage() {
             setLoadingData(true);
             setReloadVersion((v) => v + 1);
           }}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-[#d8d0c8] bg-white hover:bg-[#faf5ee] text-xs font-bold text-[#3a302a] transition cursor-pointer self-start sm:self-auto shadow-2xs"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-[#E5E0D5] bg-white hover:bg-[#F8F5ED] text-xs font-bold text-[#252923] transition cursor-pointer self-start sm:self-auto shadow-2xs"
         >
           <RotateCcw className={`w-3.5 h-3.5 ${loadingData ? 'animate-spin' : ''}`} />
           <span>Refresh Data</span>
@@ -409,20 +409,20 @@ export default function HostAvailabilityPage() {
       )}
 
       {loadingListings ? (
-        <div className="rounded-2xl border border-[#d8d0c8] bg-white p-12 text-center text-[#605850] text-sm">
-          <RotateCcw className="w-6 h-6 animate-spin mx-auto text-[#c2652a] mb-3" />
+        <div className="rounded-2xl border border-[#E5E0D5] bg-white p-12 text-center text-[#73776F] text-sm">
+          <RotateCcw className="w-6 h-6 animate-spin mx-auto text-[#234B36] mb-3" />
           Loading your rental properties...
         </div>
       ) : listings.length === 0 ? (
-        <div className="rounded-2xl border border-[#d8d0c8] bg-white p-10 text-center max-w-lg mx-auto shadow-sm">
-          <Building2 className="w-12 h-12 text-[#605850]/60 mx-auto mb-4" />
-          <h2 className="text-lg font-black text-[#3a302a]">No Rental Listings Yet</h2>
-          <p className="mt-2 text-xs sm:text-sm text-[#605850] leading-relaxed">
+        <div className="rounded-2xl border border-[#E5E0D5] bg-white p-10 text-center max-w-lg mx-auto shadow-sm">
+          <Building2 className="w-12 h-12 text-[#73776F]/60 mx-auto mb-4" />
+          <h2 className="text-lg font-black text-[#252923]">No Rental Listings Yet</h2>
+          <p className="mt-2 text-xs sm:text-sm text-[#73776F] leading-relaxed">
             Calendar and availability management is available for rental properties. Create your first rental listing to unlock date blockouts.
           </p>
           <Link
             href="/host/listings/new"
-            className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#c2652a] hover:bg-[#e08850] active:bg-[#a65320] text-white text-xs font-bold transition shadow-xs cursor-pointer"
+            className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#234B36] hover:bg-[#2D5E43] active:bg-[#1A3828] text-white text-xs font-bold transition shadow-xs cursor-pointer"
           >
             <Sparkles className="w-4 h-4 text-amber-300" />
             Create a Rental Listing
@@ -431,9 +431,9 @@ export default function HostAvailabilityPage() {
       ) : (
         <div className="space-y-6">
           {/* Selected Property Selector Banner */}
-          <div className="rounded-2xl border border-[#d8d0c8] bg-white p-4 sm:p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="rounded-2xl border border-[#E5E0D5] bg-white p-4 sm:p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-3.5 min-w-0">
-              <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-[#faf5ee] border border-[#d8d0c8] shrink-0">
+              <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-[#F8F5ED] border border-[#E5E0D5] shrink-0">
                 {selectedListing?.coverImage ? (
                   <Image
                     src={selectedListing.coverImage}
@@ -444,27 +444,27 @@ export default function HostAvailabilityPage() {
                     sizes="56px"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-[#605850]">
+                  <div className="w-full h-full flex items-center justify-center text-[#73776F]">
                     <Building2 className="w-6 h-6" />
                   </div>
                 )}
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-black uppercase tracking-wider bg-[#f2ece4] text-[#c2652a] border border-[#d8d0c8] px-2 py-0.5 rounded-full">
+                  <span className="text-[10px] font-black uppercase tracking-wider bg-[#EEF3EF] text-[#234B36] border border-[#E5E0D5] px-2 py-0.5 rounded-full">
                     Rental Property
                   </span>
-                  <span className="text-[10px] font-bold text-[#605850]">
+                  <span className="text-[10px] font-bold text-[#73776F]">
                     ID: {selectedListing?.id.slice(0, 8)}...
                   </span>
                 </div>
-                <h2 className="text-base font-black text-[#3a302a] truncate mt-0.5">
+                <h2 className="text-base font-black text-[#252923] truncate mt-0.5">
                   {selectedListing?.title}
                 </h2>
-                <p className="text-xs text-[#605850] font-medium">
+                <p className="text-xs text-[#73776F] font-medium">
                   {selectedListing?.city}
                   {selectedListing?.subCity ? `, ${selectedListing.subCity}` : ''} ·{' '}
-                  <span className="font-bold text-[#3a302a]">
+                  <span className="font-bold text-[#252923]">
                     ETB {Number(selectedListing?.pricePerNight).toLocaleString()}
                   </span>{' '}
                   / night
@@ -474,7 +474,7 @@ export default function HostAvailabilityPage() {
 
             {/* Property Dropdown Switcher */}
             <div className="flex items-center gap-2 shrink-0">
-              <label htmlFor="listing-select" className="text-xs font-bold text-[#605850] whitespace-nowrap">
+              <label htmlFor="listing-select" className="text-xs font-bold text-[#73776F] whitespace-nowrap">
                 Switch Property:
               </label>
               <select
@@ -486,7 +486,7 @@ export default function HostAvailabilityPage() {
                   setForm(EMPTY_FORM);
                   setListingId(e.target.value);
                 }}
-                className="rounded-xl border border-[#d8d0c8] bg-[#faf5ee] px-3.5 py-2 text-xs font-bold text-[#3a302a] focus:border-[#c2652a] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#c2652a]/20 cursor-pointer"
+                className="rounded-xl border border-[#E5E0D5] bg-[#F8F5ED] px-3.5 py-2 text-xs font-bold text-[#252923] focus:border-[#234B36] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#234B36]/20 cursor-pointer"
               >
                 {listings.map((l) => (
                   <option key={l.id} value={l.id}>
@@ -500,17 +500,17 @@ export default function HostAvailabilityPage() {
           {/* Main Two-Column Layout: Visual Calendar (Left) & Quick Action Manager (Right) */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             {/* Left 8 Cols: Visual Month Calendar Grid */}
-            <div className="lg:col-span-8 rounded-2xl border border-[#d8d0c8] bg-white p-5 sm:p-7 shadow-xs space-y-6">
+            <div className="lg:col-span-8 rounded-2xl border border-[#E5E0D5] bg-white p-5 sm:p-7 shadow-xs space-y-6">
               {/* Calendar Month Navigation Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#f2ece4]">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#EEF3EF]">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-xl font-black text-[#3a302a] tracking-tight">
+                  <h2 className="text-xl font-black text-[#252923] tracking-tight">
                     {monthName}
                   </h2>
                   <button
                     type="button"
                     onClick={handleJumpToday}
-                    className="ml-2 text-[11px] font-bold text-[#c2652a] hover:text-[#e08850] bg-[#f2ece4] hover:bg-[#c2652a]/15 px-2.5 py-1 rounded-full transition cursor-pointer"
+                    className="ml-2 text-[11px] font-bold text-[#234B36] hover:text-[#2D5E43] bg-[#EEF3EF] hover:bg-[#234B36]/15 px-2.5 py-1 rounded-full transition cursor-pointer"
                   >
                     Today
                   </button>
@@ -522,7 +522,7 @@ export default function HostAvailabilityPage() {
                     type="button"
                     onClick={handlePrevMonth}
                     aria-label="Previous Month"
-                    className="p-2 rounded-xl border border-[#d8d0c8] hover:border-[#c2652a] hover:bg-[#faf5ee] text-[#3a302a] transition cursor-pointer"
+                    className="p-2 rounded-xl border border-[#E5E0D5] hover:border-[#234B36] hover:bg-[#F8F5ED] text-[#252923] transition cursor-pointer"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
@@ -530,7 +530,7 @@ export default function HostAvailabilityPage() {
                     type="button"
                     onClick={handleNextMonth}
                     aria-label="Next Month"
-                    className="p-2 rounded-xl border border-[#d8d0c8] hover:border-[#c2652a] hover:bg-[#faf5ee] text-[#3a302a] transition cursor-pointer"
+                    className="p-2 rounded-xl border border-[#E5E0D5] hover:border-[#234B36] hover:bg-[#F8F5ED] text-[#252923] transition cursor-pointer"
                   >
                     <ChevronRight className="w-4 h-4" />
                   </button>
@@ -538,9 +538,9 @@ export default function HostAvailabilityPage() {
               </div>
 
               {/* Color Legend Bar */}
-              <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-xs font-bold text-[#605850] bg-[#faf5ee] p-3 rounded-xl border border-[#d8d0c8]">
+              <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-xs font-bold text-[#73776F] bg-[#F8F5ED] p-3 rounded-xl border border-[#E5E0D5]">
                 <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded-md bg-white border border-[#d8d0c8] shadow-2xs" />
+                  <span className="w-3 h-3 rounded-md bg-white border border-[#E5E0D5] shadow-2xs" />
                   <span>Available for Guests</span>
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -548,12 +548,12 @@ export default function HostAvailabilityPage() {
                   <span className="text-rose-700">Blocked by Host</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded-md bg-[#f2ece4] border border-[#d8d0c8]" />
-                  <span className="text-[#c2652a]">Guest Reservation</span>
+                  <span className="w-3 h-3 rounded-md bg-[#EEF3EF] border border-[#E5E0D5]" />
+                  <span className="text-[#234B36]">Guest Reservation</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded-md ring-2 ring-[#c2652a] bg-[#f2ece4]" />
-                  <span className="text-[#3a302a]">Selecting Range</span>
+                  <span className="w-3 h-3 rounded-md ring-2 ring-[#234B36] bg-[#EEF3EF]" />
+                  <span className="text-[#252923]">Selecting Range</span>
                 </div>
               </div>
 
@@ -564,7 +564,7 @@ export default function HostAvailabilityPage() {
                   {WEEKDAYS.map((wd) => (
                     <div
                       key={wd}
-                      className="text-[11px] font-black uppercase tracking-wider text-[#605850] py-1"
+                      className="text-[11px] font-black uppercase tracking-wider text-[#73776F] py-1"
                     >
                       {wd}
                     </div>
@@ -577,7 +577,7 @@ export default function HostAvailabilityPage() {
                   {Array.from({ length: firstDayOfWeek }).map((_, i) => (
                     <div
                       key={`empty-${i}`}
-                      className="min-h-[70px] sm:min-h-[85px] rounded-xl bg-[#faf5ee]/40 border border-transparent"
+                      className="min-h-[70px] sm:min-h-[85px] rounded-xl bg-[#F8F5ED]/40 border border-transparent"
                     />
                   ))}
 
@@ -608,16 +608,16 @@ export default function HostAvailabilityPage() {
                         onClick={() => handleDateClick(dateIso)}
                         className={`group relative min-h-[70px] sm:min-h-[85px] p-1.5 sm:p-2 rounded-xl text-left border transition-all flex flex-col justify-between ${
                           isPast
-                            ? 'bg-[#faf5ee]/60 border-[#f2ece4] text-[#605850]/40 cursor-not-allowed opacity-60'
+                            ? 'bg-[#F8F5ED]/60 border-[#EEF3EF] text-[#73776F]/40 cursor-not-allowed opacity-60'
                             : block
                             ? 'bg-rose-50/80 border-rose-200 text-rose-950 hover:bg-rose-100/80 cursor-pointer shadow-2xs'
                             : booking
-                            ? 'bg-[#f2ece4]/70 border-[#d8d0c8] text-[#3a302a] hover:bg-[#f2ece4] cursor-pointer shadow-2xs'
+                            ? 'bg-[#EEF3EF]/70 border-[#E5E0D5] text-[#252923] hover:bg-[#EEF3EF] cursor-pointer shadow-2xs'
                             : isInSelectedRange
-                            ? 'bg-[#f2ece4] border-[#c2652a] text-[#3a302a] ring-2 ring-[#c2652a]/30'
+                            ? 'bg-[#EEF3EF] border-[#234B36] text-[#252923] ring-2 ring-[#234B36]/30'
                             : isStartSelected
-                            ? 'bg-[#c2652a] border-[#c2652a] text-white shadow-xs'
-                            : 'bg-white border-[#d8d0c8] text-[#3a302a] hover:border-[#c2652a] hover:shadow-xs cursor-pointer'
+                            ? 'bg-[#234B36] border-[#234B36] text-white shadow-xs'
+                            : 'bg-white border-[#E5E0D5] text-[#252923] hover:border-[#234B36] hover:shadow-xs cursor-pointer'
                         }`}
                       >
                         {/* Day Header (Number + Badges) */}
@@ -625,10 +625,10 @@ export default function HostAvailabilityPage() {
                           <span
                             className={`text-xs font-black rounded-full w-5 h-5 flex items-center justify-center ${
                               isToday
-                                ? 'bg-[#c2652a] text-white'
+                                ? 'bg-[#234B36] text-white'
                                 : isStartSelected
-                                ? 'bg-white text-[#c2652a]'
-                                : 'text-[#3a302a]'
+                                ? 'bg-white text-[#234B36]'
+                                : 'text-[#252923]'
                             }`}
                           >
                             {dayNum}
@@ -639,7 +639,7 @@ export default function HostAvailabilityPage() {
                             <Ban className="w-3 h-3 text-rose-500 shrink-0" />
                           )}
                           {booking && (
-                            <Luggage className="w-3 h-3 text-[#c2652a] shrink-0" />
+                            <Luggage className="w-3 h-3 text-[#234B36] shrink-0" />
                           )}
                         </div>
 
@@ -650,7 +650,7 @@ export default function HostAvailabilityPage() {
                               Blocked
                             </div>
                           ) : booking ? (
-                            <div className="bg-[#f2ece4] text-[#c2652a] px-1.5 py-0.5 rounded text-[10px] font-black truncate leading-tight border border-[#d8d0c8]">
+                            <div className="bg-[#EEF3EF] text-[#234B36] px-1.5 py-0.5 rounded text-[10px] font-black truncate leading-tight border border-[#E5E0D5]">
                               {booking.guest?.name ? booking.guest.name.split(' ')[0] : 'Guest'}
                             </div>
                           ) : isStartSelected ? (
@@ -658,11 +658,11 @@ export default function HostAvailabilityPage() {
                               Start
                             </div>
                           ) : isEndSelected ? (
-                            <div className="bg-[#c2652a] text-white px-1 py-0.5 rounded text-[10px] font-bold text-center leading-none">
+                            <div className="bg-[#234B36] text-white px-1 py-0.5 rounded text-[10px] font-bold text-center leading-none">
                               End
                             </div>
                           ) : !isPast ? (
-                            <div className="text-[10px] font-medium text-[#605850] opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="text-[10px] font-medium text-[#73776F] opacity-0 group-hover:opacity-100 transition-opacity">
                               Open
                             </div>
                           ) : null}
@@ -674,12 +674,12 @@ export default function HostAvailabilityPage() {
               </div>
 
               {/* Instructions banner */}
-              <div className="flex items-start gap-2.5 p-3 rounded-xl bg-[#f2ece4]/70 border border-[#d8d0c8] text-xs text-[#3a302a]">
-                <Info className="w-4 h-4 text-[#c2652a] shrink-0 mt-0.5" />
+              <div className="flex items-start gap-2.5 p-3 rounded-xl bg-[#EEF3EF]/70 border border-[#E5E0D5] text-xs text-[#252923]">
+                <Info className="w-4 h-4 text-[#234B36] shrink-0 mt-0.5" />
                 <p>
-                  <strong className="font-bold text-[#3a302a]">How to block dates:</strong> Click any open date to set your{' '}
-                  <span className="font-extrabold underline text-[#c2652a]">Start Date</span>, then click a later date to set your{' '}
-                  <span className="font-extrabold underline text-[#c2652a]">End Date</span>. Confirm with the block button in the side panel.
+                  <strong className="font-bold text-[#252923]">How to block dates:</strong> Click any open date to set your{' '}
+                  <span className="font-extrabold underline text-[#234B36]">Start Date</span>, then click a later date to set your{' '}
+                  <span className="font-extrabold underline text-[#234B36]">End Date</span>. Confirm with the block button in the side panel.
                 </p>
               </div>
             </div>
@@ -689,10 +689,10 @@ export default function HostAvailabilityPage() {
               {/* Form Card: Block Selected Range */}
               <form
                 onSubmit={handleCreate}
-                className="rounded-2xl border border-[#d8d0c8] bg-white p-5 shadow-xs space-y-4"
+                className="rounded-2xl border border-[#E5E0D5] bg-white p-5 shadow-xs space-y-4"
               >
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-black text-[#3a302a] flex items-center gap-2">
+                  <h3 className="text-sm font-black text-[#252923] flex items-center gap-2">
                     <Ban className="w-4 h-4 text-rose-600" />
                     <span>Block Dates</span>
                   </h3>
@@ -703,7 +703,7 @@ export default function HostAvailabilityPage() {
                         setForm(EMPTY_FORM);
                         setSelectionStep('start');
                       }}
-                      className="text-[11px] font-bold text-[#605850] hover:text-[#3a302a] cursor-pointer"
+                      className="text-[11px] font-bold text-[#73776F] hover:text-[#252923] cursor-pointer"
                     >
                       Clear
                     </button>
@@ -711,9 +711,9 @@ export default function HostAvailabilityPage() {
                 </div>
 
                 {/* Selected Range Display */}
-                <div className="grid grid-cols-2 gap-2 bg-[#faf5ee] p-2.5 rounded-xl border border-[#d8d0c8]">
+                <div className="grid grid-cols-2 gap-2 bg-[#F8F5ED] p-2.5 rounded-xl border border-[#E5E0D5]">
                   <div>
-                    <label className="block text-[10px] font-black uppercase tracking-wider text-[#605850]">
+                    <label className="block text-[10px] font-black uppercase tracking-wider text-[#73776F]">
                       Start Date
                     </label>
                     <input
@@ -724,11 +724,11 @@ export default function HostAvailabilityPage() {
                       onChange={(e) =>
                         setForm((prev) => ({ ...prev, startDate: e.target.value }))
                       }
-                      className="w-full mt-1 bg-white border border-[#d8d0c8] rounded-lg px-2 py-1.5 text-xs font-bold text-[#3a302a] focus:outline-none focus:border-[#c2652a]"
+                      className="w-full mt-1 bg-white border border-[#E5E0D5] rounded-lg px-2 py-1.5 text-xs font-bold text-[#252923] focus:outline-none focus:border-[#234B36]"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black uppercase tracking-wider text-[#605850]">
+                    <label className="block text-[10px] font-black uppercase tracking-wider text-[#73776F]">
                       End Date
                     </label>
                     <input
@@ -739,14 +739,14 @@ export default function HostAvailabilityPage() {
                       onChange={(e) =>
                         setForm((prev) => ({ ...prev, endDate: e.target.value }))
                       }
-                      className="w-full mt-1 bg-white border border-[#d8d0c8] rounded-lg px-2 py-1.5 text-xs font-bold text-[#3a302a] focus:outline-none focus:border-[#c2652a]"
+                      className="w-full mt-1 bg-white border border-[#E5E0D5] rounded-lg px-2 py-1.5 text-xs font-bold text-[#252923] focus:outline-none focus:border-[#234B36]"
                     />
                   </div>
                 </div>
 
                 {/* Quick Preset Reasons */}
                 <div>
-                  <label className="block text-xs font-bold text-[#3a302a] mb-1.5">
+                  <label className="block text-xs font-bold text-[#252923] mb-1.5">
                     Reason for Blackout
                   </label>
                   <div className="flex flex-wrap gap-1.5 mb-2">
@@ -759,8 +759,8 @@ export default function HostAvailabilityPage() {
                         }
                         className={`text-[10px] font-bold px-2.5 py-1 rounded-full border transition cursor-pointer ${
                           form.reason === preset
-                            ? 'bg-[#c2652a] text-white border-[#c2652a]'
-                            : 'bg-white border-[#d8d0c8] text-[#605850] hover:bg-[#faf5ee]'
+                            ? 'bg-[#234B36] text-white border-[#234B36]'
+                            : 'bg-white border-[#E5E0D5] text-[#73776F] hover:bg-[#F8F5ED]'
                         }`}
                       >
                         {preset}
@@ -775,7 +775,7 @@ export default function HostAvailabilityPage() {
                       setForm((prev) => ({ ...prev, reason: e.target.value }))
                     }
                     placeholder="Or type a custom reason..."
-                    className="w-full rounded-xl border border-[#d8d0c8] px-3 py-2 text-xs text-[#3a302a] focus:border-[#c2652a] focus:outline-none focus:ring-2 focus:ring-[#c2652a]/20"
+                    className="w-full rounded-xl border border-[#E5E0D5] px-3 py-2 text-xs text-[#252923] focus:border-[#234B36] focus:outline-none focus:ring-2 focus:ring-[#234B36]/20"
                   />
                 </div>
 
@@ -800,16 +800,16 @@ export default function HostAvailabilityPage() {
               </form>
 
               {/* Drawer: Active Blocks vs Guest Reservations */}
-              <div className="rounded-2xl border border-[#d8d0c8] bg-white overflow-hidden shadow-xs">
+              <div className="rounded-2xl border border-[#E5E0D5] bg-white overflow-hidden shadow-xs">
                 {/* Tabs */}
-                <div className="flex border-b border-[#f2ece4] bg-[#faf5ee]">
+                <div className="flex border-b border-[#EEF3EF] bg-[#F8F5ED]">
                   <button
                     type="button"
                     onClick={() => setActiveTab('blocks')}
                     className={`flex-1 py-3 text-xs font-black text-center border-b-2 transition cursor-pointer ${
                       activeTab === 'blocks'
-                        ? 'border-[#c2652a] text-[#c2652a] bg-white'
-                        : 'border-transparent text-[#605850] hover:text-[#3a302a]'
+                        ? 'border-[#234B36] text-[#234B36] bg-white'
+                        : 'border-transparent text-[#73776F] hover:text-[#252923]'
                     }`}
                   >
                     Blocked Ranges ({blocks.length})
@@ -819,8 +819,8 @@ export default function HostAvailabilityPage() {
                     onClick={() => setActiveTab('bookings')}
                     className={`flex-1 py-3 text-xs font-black text-center border-b-2 transition cursor-pointer ${
                       activeTab === 'bookings'
-                        ? 'border-[#c2652a] text-[#c2652a] bg-white'
-                        : 'border-transparent text-[#605850] hover:text-[#3a302a]'
+                        ? 'border-[#234B36] text-[#234B36] bg-white'
+                        : 'border-transparent text-[#73776F] hover:text-[#252923]'
                     }`}
                   >
                     Guest Stays ({reservations.length})
@@ -831,20 +831,20 @@ export default function HostAvailabilityPage() {
                 <div className="p-4 max-h-[380px] overflow-y-auto space-y-3">
                   {activeTab === 'blocks' ? (
                     blocks.length === 0 ? (
-                      <p className="text-xs text-[#605850] text-center py-6">
+                      <p className="text-xs text-[#73776F] text-center py-6">
                         No dates are currently blocked for this property.
                       </p>
                     ) : (
                       blocks.map((b) => (
                         <div
                           key={b.id}
-                          className="flex items-center justify-between p-3 rounded-xl bg-[#faf5ee] border border-[#d8d0c8] gap-3"
+                          className="flex items-center justify-between p-3 rounded-xl bg-[#F8F5ED] border border-[#E5E0D5] gap-3"
                         >
                           <div className="min-w-0">
-                            <p className="text-xs font-black text-[#3a302a] truncate">
+                            <p className="text-xs font-black text-[#252923] truncate">
                               {b.startDate} → {b.endDate}
                             </p>
-                            <p className="text-[11px] text-[#605850] truncate mt-0.5">
+                            <p className="text-[11px] text-[#73776F] truncate mt-0.5">
                               {b.reason || 'Manual Blackout'}
                             </p>
                           </div>
@@ -861,27 +861,27 @@ export default function HostAvailabilityPage() {
                       ))
                     )
                   ) : reservations.length === 0 ? (
-                    <p className="text-xs text-[#605850] text-center py-6">
+                    <p className="text-xs text-[#73776F] text-center py-6">
                       No active guest reservations on this property.
                     </p>
                   ) : (
                     reservations.map((r) => (
                       <div
                         key={r.id}
-                        className="p-3 rounded-xl bg-[#f2ece4]/50 border border-[#d8d0c8] space-y-1"
+                        className="p-3 rounded-xl bg-[#EEF3EF]/50 border border-[#E5E0D5] space-y-1"
                       >
                         <div className="flex items-center justify-between">
-                          <p className="text-xs font-black text-[#3a302a]">
+                          <p className="text-xs font-black text-[#252923]">
                             {r.guest?.name || 'Guest'}
                           </p>
-                          <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-[#f2ece4] text-[#c2652a] border border-[#d8d0c8]">
+                          <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-[#EEF3EF] text-[#234B36] border border-[#E5E0D5]">
                             {r.status}
                           </span>
                         </div>
-                        <p className="text-[11px] text-[#605850] font-medium">
+                        <p className="text-[11px] text-[#73776F] font-medium">
                           {r.checkInDate} → {r.checkOutDate} · {r.guestCount} guests
                         </p>
-                        <p className="text-[11px] font-black text-[#c2652a]">
+                        <p className="text-[11px] font-black text-[#234B36]">
                           ETB {Number(r.totalPrice).toLocaleString()}
                         </p>
                       </div>

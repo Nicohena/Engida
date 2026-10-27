@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import Link from 'next/link';
@@ -71,18 +71,18 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#241e1b] border-r border-[#3a302a] text-[#f2ece4]">
+    <div className="flex flex-col h-full bg-[#1A2E21] border-r border-[#252923] text-[#EEF3EF]">
       {/* Logo */}
-      <div className="flex items-center justify-between px-5 py-5 border-b border-[#3a302a]">
+      <div className="flex items-center justify-between px-5 py-5 border-b border-[#252923]">
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-9 h-9 rounded-xl bg-[#c2652a] flex items-center justify-center text-white shadow-xs group-hover:bg-[#e08850] transition">
+          <div className="w-9 h-9 rounded-xl bg-[#234B36] flex items-center justify-center text-white shadow-xs group-hover:bg-[#2D5E43] transition">
             <Building2 className="w-4.5 h-4.5 stroke-[2.2]" />
           </div>
           <div>
             <span className="font-headline font-bold text-lg tracking-tight text-white leading-none block">
               Engida
             </span>
-            <span className="text-[10px] font-bold text-[#e08850] uppercase tracking-widest leading-none">
+            <span className="text-[10px] font-bold text-[#2D5E43] uppercase tracking-widest leading-none">
               Host Portal
             </span>
           </div>
@@ -92,7 +92,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
           {onClose && (
             <button
               onClick={onClose}
-              className="md:hidden p-1.5 rounded-lg text-[#d8d0c8] hover:text-white hover:bg-white/10 transition"
+              className="md:hidden p-1.5 rounded-lg text-[#E5E0D5] hover:text-white hover:bg-white/10 transition"
               aria-label="Close menu"
             >
               <X className="w-5 h-5" />
@@ -113,16 +113,16 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
               onClick={onClose}
               className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all ${
                 isActive
-                  ? 'bg-[#c2652a]/20 text-[#e08850] font-bold border border-[#c2652a]/40 shadow-xs'
-                  : 'text-[#d8d0c8]/80 hover:text-white hover:bg-white/5 font-semibold'
+                  ? 'bg-[#234B36]/20 text-[#2D5E43] font-bold border border-[#234B36]/40 shadow-xs'
+                  : 'text-[#E5E0D5]/80 hover:text-white hover:bg-white/5 font-semibold'
               }`}
             >
               <Icon
-                className={`w-4.5 h-4.5 flex-shrink-0 ${isActive ? 'text-[#e08850]' : 'text-[#d8d0c8]/70'}`}
+                className={`w-4.5 h-4.5 flex-shrink-0 ${isActive ? 'text-[#2D5E43]' : 'text-[#E5E0D5]/70'}`}
               />
               <span className="text-sm flex-1">{item.label}</span>
               {isActive && (
-                <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#c2652a]/30 text-[#f2ece4] border border-[#c2652a]/40">
+                <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#234B36]/30 text-[#EEF3EF] border border-[#234B36]/40">
                   active
                 </span>
               )}
@@ -131,26 +131,26 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
         })}
 
         {/* Notifications Nav Item */}
-        <div className="pt-1.5 border-t border-[#3a302a]/60 mt-2">
+        <div className="pt-1.5 border-t border-[#252923]/60 mt-2">
           <NotificationHub variant="sidebar-item" />
         </div>
       </nav>
 
       {/* Divider + User + Links */}
-      <div className="px-3 py-4 border-t border-[#3a302a] space-y-2.5">
+      <div className="px-3 py-4 border-t border-[#252923] space-y-2.5">
         {/* Public site link */}
         <Link
           href="/"
-          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[#d8d0c8]/80 hover:text-white hover:bg-white/5 transition text-xs font-semibold"
+          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[#E5E0D5]/80 hover:text-white hover:bg-white/5 transition text-xs font-semibold"
           onClick={onClose}
         >
-          <ExternalLink className="w-3.5 h-3.5 text-[#d8d0c8]/70" />
+          <ExternalLink className="w-3.5 h-3.5 text-[#E5E0D5]/70" />
           <span>View Public Site</span>
         </Link>
 
         {/* User profile card & account hub */}
         {user && (
-          <div className="bg-[#1a1513] border border-[#3a302a] hover:border-[#c2652a]/60 rounded-2xl p-2.5 flex items-center gap-2.5 group transition">
+          <div className="bg-[#1a1513] border border-[#252923] hover:border-[#234B36]/60 rounded-2xl p-2.5 flex items-center gap-2.5 group transition">
             <Link
               href="/host/profile"
               onClick={onClose}
@@ -164,19 +164,19 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
                 className="rounded-xl ring-1 ring-white/10 group-hover:scale-105 transition-transform"
               />
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-white truncate leading-snug group-hover:text-[#e08850] transition-colors">
+                <p className="text-xs font-bold text-white truncate leading-snug group-hover:text-[#2D5E43] transition-colors">
                   {user.name}
                 </p>
-                <p className="text-[11px] font-medium text-[#d8d0c8]/70 truncate">
+                <p className="text-[11px] font-medium text-[#E5E0D5]/70 truncate">
                   Account & Settings
                 </p>
               </div>
-              <ChevronRight className="w-3.5 h-3.5 text-[#605850] group-hover:text-[#e08850] transition shrink-0" />
+              <ChevronRight className="w-3.5 h-3.5 text-[#73776F] group-hover:text-[#2D5E43] transition shrink-0" />
             </Link>
             <button
               onClick={handleLogout}
               title="Sign out"
-              className="p-1.5 rounded-lg text-[#d8d0c8]/70 hover:text-rose-400 hover:bg-rose-500/10 transition shrink-0 cursor-pointer"
+              className="p-1.5 rounded-lg text-[#E5E0D5]/70 hover:text-rose-400 hover:bg-rose-500/10 transition shrink-0 cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
             </button>
@@ -216,10 +216,10 @@ export default function HostLayout({ children }: { children: React.ReactNode }) 
   // While auth is resolving, show a minimal loading state
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#faf5ee]">
+      <div className="min-h-screen flex items-center justify-center bg-[#F8F5ED]">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-4 border-[#c2652a] border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm font-semibold text-[#605850]">Loading host portal…</p>
+          <div className="w-10 h-10 border-4 border-[#234B36] border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm font-semibold text-[#73776F]">Loading host portal…</p>
         </div>
       </div>
     );
@@ -235,7 +235,7 @@ export default function HostLayout({ children }: { children: React.ReactNode }) 
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#faf5ee] selection:bg-[#c2652a]/20 selection:text-[#c2652a]">
+    <div className="flex h-screen overflow-hidden bg-[#F8F5ED] selection:bg-[#234B36]/20 selection:text-[#234B36]">
       {/* ── Desktop Sidebar ── */}
       <aside className="hidden md:flex md:flex-col md:w-64 flex-shrink-0 h-full">
         <SidebarContent />
@@ -259,16 +259,16 @@ export default function HostLayout({ children }: { children: React.ReactNode }) 
       {/* ── Main Content Area ── */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Mobile top bar */}
-        <header className="md:hidden flex items-center justify-between px-4 py-3 bg-[#241e1b] border-b border-[#3a302a] text-white flex-shrink-0 shadow-xs">
+        <header className="md:hidden flex items-center justify-between px-4 py-3 bg-[#1A2E21] border-b border-[#252923] text-white flex-shrink-0 shadow-xs">
           <button
             onClick={() => setMobileSidebarOpen(true)}
-            className="p-2 rounded-xl text-[#d8d0c8] hover:text-white hover:bg-white/10 transition"
+            className="p-2 rounded-xl text-[#E5E0D5] hover:text-white hover:bg-white/10 transition"
             aria-label="Open navigation menu"
           >
             <Menu className="w-5 h-5" />
           </button>
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-[#c2652a] flex items-center justify-center text-white">
+            <div className="w-7 h-7 rounded-lg bg-[#234B36] flex items-center justify-center text-white">
               <Building2 className="w-3.5 h-3.5 stroke-[2.2]" />
             </div>
             <span className="font-headline font-bold text-base tracking-tight text-white">Engida</span>

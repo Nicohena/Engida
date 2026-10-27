@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+﻿import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '../context/AuthContext';
@@ -36,7 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body
         suppressHydrationWarning
-        className="min-h-full flex flex-col font-sans bg-[#faf5ee] text-[#3a302a] transition-colors duration-200"
+        className="min-h-full flex flex-col font-sans bg-[#F8F5ED] text-[#252923] transition-colors duration-200"
       >
         <AuthProvider>
           <AppShell>{children}</AppShell>

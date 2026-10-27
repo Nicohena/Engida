@@ -1,30 +1,30 @@
 @import "tailwindcss";
 
 :root {
-  /* Engida Design System - Ethiopian Terracotta & Warm Linen Luxury Palette */
-  --background: #faf5ee;
-  --foreground: #3a302a;
-  --text-dark: #3a302a;
+  /* Engida Design System — Ethiopian Coffee & Highlands Brand Palette */
+  --background: #F8F5ED;
+  --foreground: #252923;
+  --text-dark: #252923;
   --card: #ffffff;
-  --card-foreground: #3a302a;
+  --card-foreground: #252923;
   
   /* Brand Terracotta & Earth Tones */
-  --brand-primary: #c2652a;
-  --brand-primary-hover: #e08850;
-  --brand-primary-active: #a65320;
-  --brand-sand: #f2ece4;
-  --brand-canvas: #faf5ee;
-  --brand-espresso: #3a302a;
-  --brand-stone: #605850;
-  --brand-border: #d8d0c8;
+  --brand-primary: #234B36;
+  --brand-primary-hover: #2D5E43;
+  --brand-primary-active: #1A3828;
+  --brand-sand: #EEF3EF;
+  --brand-canvas: #F8F5ED;
+  --brand-espresso: #252923;
+  --brand-stone: #73776F;
+  --brand-border: #E5E0D5;
   
-  --primary: #c2652a;
-  --primary-hover: #e08850;
-  --primary-light: #f2ece4;
+  --primary: #234B36;
+  --primary-hover: #2D5E43;
+  --primary-light: #EEF3EF;
   
-  --muted: #605850;
-  --border: #d8d0c8;
-  --border-light: #e8e2d9;
+  --muted: #73776F;
+  --border: #E5E0D5;
+  --border-light: #E5E0D5;
 }
 
 @theme inline {
@@ -204,9 +204,9 @@ body {
   100% { transform: scale(1); }
 }
 
-@keyframes pulseGlowTerracotta {
-  0%, 100% { box-shadow: 0 4px 14px rgba(194, 101, 42, 0.35); }
-  50% { box-shadow: 0 6px 20px rgba(194, 101, 42, 0.6); }
+@keyframes pulseGlowGreen {
+  0%, 100% { box-shadow: 0 4px 14px rgba(35, 75, 54, 0.35); }
+  50% { box-shadow: 0 6px 20px rgba(35, 75, 54, 0.6); }
 }
 
 .animate-fade-in-up {
@@ -218,7 +218,7 @@ body {
 }
 
 .search-glow:hover {
-  animation: pulseGlowTerracotta 1.8s infinite;
+  animation: pulseGlowGreen 1.8s infinite;
 }
 
 .font-headline, .font-display {

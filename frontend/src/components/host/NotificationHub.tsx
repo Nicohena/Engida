@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -64,8 +64,8 @@ function getNotificationVisuals(type: NotificationType) {
     case 'BOOKING_REQUESTED':
       return {
         icon: CalendarPlus,
-        bgColor: 'bg-[#f2ece4] text-[#c2652a] border-[#d8d0c8]',
-        badgeColor: 'bg-[#f2ece4] text-[#c2652a]',
+        bgColor: 'bg-[#EEF3EF] text-[#234B36] border-[#E5E0D5]',
+        badgeColor: 'bg-[#EEF3EF] text-[#234B36]',
         label: 'Booking Request',
       };
     case 'BOOKING_CONFIRMED':
@@ -106,8 +106,8 @@ function getNotificationVisuals(type: NotificationType) {
     default:
       return {
         icon: Building2,
-        bgColor: 'bg-[#f2ece4] text-[#605850] border-[#d8d0c8]',
-        badgeColor: 'bg-[#f2ece4] text-[#605850]',
+        bgColor: 'bg-[#EEF3EF] text-[#73776F] border-[#E5E0D5]',
+        badgeColor: 'bg-[#EEF3EF] text-[#73776F]',
         label: 'Host Alert',
       };
   }
@@ -283,20 +283,20 @@ export default function NotificationHub({
           onClick={() => setIsOpen(true)}
           className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all w-full text-left cursor-pointer ${
             isOpen
-              ? 'bg-[#c2652a]/20 text-[#e08850] font-bold border border-[#c2652a]/30 shadow-xs'
-              : 'text-[#d8d0c8]/70 hover:text-[#faf5ee] hover:bg-white/5 font-semibold'
+              ? 'bg-[#234B36]/20 text-[#2D5E43] font-bold border border-[#234B36]/30 shadow-xs'
+              : 'text-[#E5E0D5]/70 hover:text-[#F8F5ED] hover:bg-white/5 font-semibold'
           } ${triggerClassName}`}
           aria-label="Open notifications hub"
         >
           <div className="relative">
             <Bell className="w-4.5 h-4.5" />
             {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#c2652a] rounded-full ring-2 ring-[#241e1b]" />
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#234B36] rounded-full ring-2 ring-[#1A2E21]" />
             )}
           </div>
           <span className="text-sm flex-1">Notifications</span>
           {unreadCount > 0 && (
-            <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-[#c2652a] text-white min-w-5 text-center">
+            <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-[#234B36] text-white min-w-5 text-center">
               {unreadCount > 99 ? '99+' : unreadCount}
             </span>
           )}
@@ -304,13 +304,13 @@ export default function NotificationHub({
       ) : (
         <button
           onClick={() => setIsOpen((prev) => !prev)}
-          className={`relative p-2 rounded-xl text-[#d8d0c8] hover:text-[#faf5ee] hover:bg-[#2e2622] transition focus:outline-hidden focus:ring-2 focus:ring-[#c2652a] cursor-pointer ${triggerClassName}`}
+          className={`relative p-2 rounded-xl text-[#E5E0D5] hover:text-[#F8F5ED] hover:bg-[#1E3326] transition focus:outline-hidden focus:ring-2 focus:ring-[#234B36] cursor-pointer ${triggerClassName}`}
           aria-label={`Host notifications: ${unreadCount} unread`}
           title={`Notifications (${unreadCount} unread)`}
         >
           <Bell className="w-5 h-5" />
           {unreadCount > 0 && (
-            <span className="absolute top-1 right-1 flex items-center justify-center min-w-4.5 h-4.5 px-1 bg-[#c2652a] text-white text-[10px] font-black rounded-full ring-2 ring-[#241e1b] shadow-xs animate-in fade-in zoom-in">
+            <span className="absolute top-1 right-1 flex items-center justify-center min-w-4.5 h-4.5 px-1 bg-[#234B36] text-white text-[10px] font-black rounded-full ring-2 ring-[#1A2E21] shadow-xs animate-in fade-in zoom-in">
               {unreadCount > 99 ? '99+' : unreadCount}
             </span>
           )}
@@ -322,26 +322,26 @@ export default function NotificationHub({
         <div className="fixed inset-0 z-50 flex justify-end">
           {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-[#241e1b]/40 backdrop-blur-xs transition-opacity"
+            className="fixed inset-0 bg-[#1A2E21]/40 backdrop-blur-xs transition-opacity"
             onClick={() => setIsOpen(false)}
           />
 
           {/* Panel */}
           <div
             ref={panelRef}
-            className="relative w-full max-w-md bg-[#faf5ee] h-full shadow-2xl flex flex-col border-l border-[#d8d0c8] z-10 animate-in slide-in-from-right duration-200"
+            className="relative w-full max-w-md bg-[#F8F5ED] h-full shadow-2xl flex flex-col border-l border-[#E5E0D5] z-10 animate-in slide-in-from-right duration-200"
           >
             {/* Header */}
-            <div className="px-5 py-4 border-b border-[#d8d0c8] flex items-center justify-between bg-[#f2ece4]/60">
+            <div className="px-5 py-4 border-b border-[#E5E0D5] flex items-center justify-between bg-[#EEF3EF]/60">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-[#f2ece4] text-[#c2652a] flex items-center justify-center border border-[#d8d0c8]">
+                <div className="w-8 h-8 rounded-lg bg-[#EEF3EF] text-[#234B36] flex items-center justify-center border border-[#E5E0D5]">
                   <Bell className="w-4 h-4" />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-[#3a302a] leading-tight">
+                  <h2 className="text-base font-bold text-[#252923] leading-tight">
                     Notifications
                   </h2>
-                  <p className="text-xs text-[#605850]">
+                  <p className="text-xs text-[#73776F]">
                     {unreadCount > 0
                       ? `${unreadCount} unread alert${unreadCount === 1 ? '' : 's'}`
                       : 'All caught up'}
@@ -353,7 +353,7 @@ export default function NotificationHub({
                 <button
                   onClick={() => setRefreshKey((k) => k + 1)}
                   disabled={loading}
-                  className="p-1.5 rounded-lg text-[#605850] hover:text-[#3a302a] hover:bg-[#d8d0c8]/50 transition disabled:opacity-50 cursor-pointer"
+                  className="p-1.5 rounded-lg text-[#73776F] hover:text-[#252923] hover:bg-[#E5E0D5]/50 transition disabled:opacity-50 cursor-pointer"
                   title="Refresh notifications"
                   aria-label="Refresh"
                 >
@@ -361,7 +361,7 @@ export default function NotificationHub({
                 </button>
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="p-1.5 rounded-lg text-[#605850] hover:text-[#3a302a] hover:bg-[#d8d0c8]/50 transition cursor-pointer"
+                  className="p-1.5 rounded-lg text-[#73776F] hover:text-[#252923] hover:bg-[#E5E0D5]/50 transition cursor-pointer"
                   aria-label="Close notifications panel"
                 >
                   <X className="w-5 h-5" />
@@ -370,14 +370,14 @@ export default function NotificationHub({
             </div>
 
             {/* Filter Tabs & Quick Action */}
-            <div className="px-5 py-2.5 border-b border-[#d8d0c8] flex items-center justify-between gap-2 bg-[#faf5ee]">
-              <div className="flex items-center gap-1 p-0.5 bg-[#f2ece4] rounded-lg text-xs font-semibold border border-[#d8d0c8]/60">
+            <div className="px-5 py-2.5 border-b border-[#E5E0D5] flex items-center justify-between gap-2 bg-[#F8F5ED]">
+              <div className="flex items-center gap-1 p-0.5 bg-[#EEF3EF] rounded-lg text-xs font-semibold border border-[#E5E0D5]/60">
                 <button
                   onClick={() => setFilterUnreadOnly(false)}
                   className={`px-3 py-1 rounded-md transition ${
                     !filterUnreadOnly
-                      ? 'bg-white text-[#3a302a] shadow-xs'
-                      : 'text-[#605850] hover:text-[#3a302a]'
+                      ? 'bg-white text-[#252923] shadow-xs'
+                      : 'text-[#73776F] hover:text-[#252923]'
                   }`}
                 >
                   All
@@ -386,13 +386,13 @@ export default function NotificationHub({
                   onClick={() => setFilterUnreadOnly(true)}
                   className={`px-3 py-1 rounded-md transition flex items-center gap-1.5 ${
                     filterUnreadOnly
-                      ? 'bg-white text-[#3a302a] shadow-xs'
-                      : 'text-[#605850] hover:text-[#3a302a]'
+                      ? 'bg-white text-[#252923] shadow-xs'
+                      : 'text-[#73776F] hover:text-[#252923]'
                   }`}
                 >
                   <span>Unread</span>
                   {unreadCount > 0 && (
-                    <span className="w-4 h-4 rounded-full bg-[#c2652a] text-white text-[10px] flex items-center justify-center font-bold">
+                    <span className="w-4 h-4 rounded-full bg-[#234B36] text-white text-[10px] flex items-center justify-center font-bold">
                       {unreadCount}
                     </span>
                   )}
@@ -403,7 +403,7 @@ export default function NotificationHub({
                 <button
                   onClick={handleMarkAllAsRead}
                   disabled={isMarkingAll || loading}
-                  className="text-xs font-semibold text-[#c2652a] hover:text-[#e08850] flex items-center gap-1 py-1 px-2 rounded-lg hover:bg-[#f2ece4] transition disabled:opacity-50 cursor-pointer"
+                  className="text-xs font-semibold text-[#234B36] hover:text-[#2D5E43] flex items-center gap-1 py-1 px-2 rounded-lg hover:bg-[#EEF3EF] transition disabled:opacity-50 cursor-pointer"
                 >
                   <CheckCheck className="w-3.5 h-3.5" />
                   <span>Mark all read</span>
@@ -412,20 +412,20 @@ export default function NotificationHub({
             </div>
 
             {/* Content List */}
-            <div className="flex-1 overflow-y-auto divide-y divide-[#d8d0c8]/60">
+            <div className="flex-1 overflow-y-auto divide-y divide-[#E5E0D5]/60">
               {/* Loading State */}
               {loading && notifications.length === 0 && (
                 <div className="p-4 space-y-3">
                   {Array.from({ length: 4 }).map((_, i) => (
                     <div
                       key={i}
-                      className="p-3.5 rounded-xl border border-[#d8d0c8]/60 flex items-start gap-3 animate-pulse bg-[#f2ece4]/30"
+                      className="p-3.5 rounded-xl border border-[#E5E0D5]/60 flex items-start gap-3 animate-pulse bg-[#EEF3EF]/30"
                     >
-                      <div className="w-9 h-9 rounded-xl bg-[#d8d0c8]/60 shrink-0" />
+                      <div className="w-9 h-9 rounded-xl bg-[#E5E0D5]/60 shrink-0" />
                       <div className="flex-1 space-y-2">
-                        <div className="h-3.5 bg-[#d8d0c8]/60 rounded-md w-3/4" />
-                        <div className="h-3 bg-[#d8d0c8]/60 rounded-md w-full" />
-                        <div className="h-2.5 bg-[#d8d0c8]/60 rounded-md w-1/4 mt-1" />
+                        <div className="h-3.5 bg-[#E5E0D5]/60 rounded-md w-3/4" />
+                        <div className="h-3 bg-[#E5E0D5]/60 rounded-md w-full" />
+                        <div className="h-2.5 bg-[#E5E0D5]/60 rounded-md w-1/4 mt-1" />
                       </div>
                     </div>
                   ))}
@@ -438,13 +438,13 @@ export default function NotificationHub({
                   <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-2">
                     <AlertCircle className="w-5 h-5" />
                   </div>
-                  <p className="text-sm font-semibold text-[#3a302a] mb-1">
+                  <p className="text-sm font-semibold text-[#252923] mb-1">
                     Failed to load notifications
                   </p>
-                  <p className="text-xs text-[#605850] mb-4">{error}</p>
+                  <p className="text-xs text-[#73776F] mb-4">{error}</p>
                   <button
                     onClick={() => setRefreshKey((k) => k + 1)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#c2652a] hover:bg-[#e08850] active:bg-[#a65320] text-white text-xs font-bold transition cursor-pointer shadow-xs"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#234B36] hover:bg-[#2D5E43] active:bg-[#1A3828] text-white text-xs font-bold transition cursor-pointer shadow-xs"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
                     Retry
@@ -455,13 +455,13 @@ export default function NotificationHub({
               {/* Empty State */}
               {!loading && !error && displayedNotifications.length === 0 && (
                 <div className="p-8 text-center flex flex-col items-center justify-center h-64">
-                  <div className="w-12 h-12 rounded-2xl bg-[#f2ece4] text-[#605850] flex items-center justify-center mb-3">
+                  <div className="w-12 h-12 rounded-2xl bg-[#EEF3EF] text-[#73776F] flex items-center justify-center mb-3">
                     <Inbox className="w-6 h-6 stroke-[1.5]" />
                   </div>
-                  <h3 className="text-sm font-bold text-[#3a302a] mb-1">
+                  <h3 className="text-sm font-bold text-[#252923] mb-1">
                     {filterUnreadOnly ? 'No unread notifications' : 'No notifications yet'}
                   </h3>
-                  <p className="text-xs text-[#605850] max-w-xs leading-relaxed">
+                  <p className="text-xs text-[#73776F] max-w-xs leading-relaxed">
                     {filterUnreadOnly
                       ? 'You are all caught up! Switch to "All" to review past events.'
                       : 'When guests request bookings, cancel, or when your listings are reviewed, alerts appear here.'}
@@ -481,8 +481,8 @@ export default function NotificationHub({
                       onClick={() => handleNotificationClick(item)}
                       className={`p-4 transition flex items-start gap-3.5 group cursor-pointer ${
                         item.isRead
-                          ? 'bg-[#faf5ee] hover:bg-[#f2ece4]/50 text-[#3a302a]'
-                          : 'bg-[#f2ece4]/40 hover:bg-[#f2ece4]/80 border-l-3 border-[#c2652a]'
+                          ? 'bg-[#F8F5ED] hover:bg-[#EEF3EF]/50 text-[#252923]'
+                          : 'bg-[#EEF3EF]/40 hover:bg-[#EEF3EF]/80 border-l-3 border-[#234B36]'
                       }`}
                     >
                       {/* Icon */}
@@ -500,26 +500,26 @@ export default function NotificationHub({
                           >
                             {visuals.label}
                           </span>
-                          <span className="text-[11px] text-[#605850] font-medium whitespace-nowrap">
+                          <span className="text-[11px] text-[#73776F] font-medium whitespace-nowrap">
                             {formatRelativeTime(item.createdAt)}
                           </span>
                         </div>
 
                         <h4
                           className={`text-xs font-bold leading-snug mb-0.5 truncate ${
-                            item.isRead ? 'text-[#3a302a]' : 'text-[#3a302a] font-extrabold'
+                            item.isRead ? 'text-[#252923]' : 'text-[#252923] font-extrabold'
                           }`}
                         >
                           {item.title}
                         </h4>
 
-                        <p className="text-xs text-[#605850] leading-relaxed line-clamp-2">
+                        <p className="text-xs text-[#73776F] leading-relaxed line-clamp-2">
                           {item.message}
                         </p>
 
                         {/* Footer action link if present */}
                         {item.link && (
-                          <div className="mt-2 flex items-center gap-1 text-[11px] font-bold text-[#c2652a] group-hover:text-[#e08850]">
+                          <div className="mt-2 flex items-center gap-1 text-[11px] font-bold text-[#234B36] group-hover:text-[#2D5E43]">
                             <span>View details</span>
                             <ExternalLink className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
                           </div>
@@ -531,7 +531,7 @@ export default function NotificationHub({
                         <button
                           onClick={(e) => handleMarkAsRead(e, item)}
                           title="Mark as read"
-                          className="opacity-0 group-hover:opacity-100 transition p-1.5 rounded-lg text-[#605850] hover:text-[#c2652a] hover:bg-white border border-transparent hover:border-[#d8d0c8] shrink-0 cursor-pointer"
+                          className="opacity-0 group-hover:opacity-100 transition p-1.5 rounded-lg text-[#73776F] hover:text-[#234B36] hover:bg-white border border-transparent hover:border-[#E5E0D5] shrink-0 cursor-pointer"
                           aria-label="Mark notification as read"
                         >
                           <Check className="w-3.5 h-3.5" />
@@ -543,9 +543,9 @@ export default function NotificationHub({
             </div>
 
             {/* Footer */}
-            <div className="px-5 py-3 border-t border-[#d8d0c8] bg-[#f2ece4]/40 flex items-center justify-between text-xs text-[#605850]">
+            <div className="px-5 py-3 border-t border-[#E5E0D5] bg-[#EEF3EF]/40 flex items-center justify-between text-xs text-[#73776F]">
               <span className="text-[11px] font-medium">ENGIDA Host Hub</span>
-              <span className="text-[11px] text-[#605850]">Auto-refreshed</span>
+              <span className="text-[11px] text-[#73776F]">Auto-refreshed</span>
             </div>
           </div>
         </div>

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
@@ -100,33 +100,33 @@ export default function BecomeAHostWizardPage() {
   // If user is already a VERIFIED host, offer quick dashboard jump
   if (user?.hostProfile && user.hostProfile.verificationStatus === 'VERIFIED') {
     return (
-      <div className="min-h-screen bg-[#faf5ee] text-[#3a302a] flex flex-col justify-between selection:bg-[#c2652a]/20 selection:text-[#c2652a]">
-        <header className="bg-[#faf5ee]/95 backdrop-blur-md border-b border-[#d8d0c8]/60 py-3.5 px-6 lg:px-12 shadow-[0_1px_8px_rgba(58,48,42,0.04)]">
+      <div className="min-h-screen bg-[#F8F5ED] text-[#252923] flex flex-col justify-between selection:bg-[#234B36]/20 selection:text-[#234B36]">
+        <header className="bg-[#F8F5ED]/95 backdrop-blur-md border-b border-[#E5E0D5]/60 py-3.5 px-6 lg:px-12 shadow-[0_1px_8px_rgba(58,48,42,0.04)]">
           <div className="max-w-6xl mx-auto flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2.5 group">
-              <div className="w-8 h-8 rounded-lg bg-[#c2652a] flex items-center justify-center text-white shadow-xs group-hover:bg-[#e08850] transition">
+              <div className="w-8 h-8 rounded-lg bg-[#234B36] flex items-center justify-center text-white shadow-xs group-hover:bg-[#2D5E43] transition">
                 <Building2 className="w-4 h-4 stroke-[2.2]" />
               </div>
-              <span className="font-extrabold text-base text-[#3a302a] group-hover:text-[#c2652a] transition-colors">
+              <span className="font-extrabold text-base text-[#252923] group-hover:text-[#234B36] transition-colors">
                 Engida Host Portal
               </span>
             </Link>
           </div>
         </header>
 
-        <main className="max-w-lg mx-auto p-6 sm:p-8 bg-white border border-[#d8d0c8] rounded-2xl shadow-xs text-center space-y-4 my-auto">
+        <main className="max-w-lg mx-auto p-6 sm:p-8 bg-white border border-[#E5E0D5] rounded-2xl shadow-xs text-center space-y-4 my-auto">
           <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto">
             <Building2 className="w-6 h-6" />
           </div>
-          <h2 className="text-xl font-bold text-[#3a302a]">You Are Already a Verified Host</h2>
-          <p className="text-xs text-[#605850] leading-relaxed">
+          <h2 className="text-xl font-bold text-[#252923]">You Are Already a Verified Host</h2>
+          <p className="text-xs text-[#73776F] leading-relaxed">
             Your host profile is active and fully verified. You can access your listings, reservations, and financial
             reports in the Host Dashboard.
           </p>
           <div className="pt-2">
             <Link
               href="/host/dashboard"
-              className="w-full py-2.5 px-4 bg-[#c2652a] hover:bg-[#e08850] active:bg-[#a65320] text-white text-xs font-bold rounded-lg transition inline-flex items-center justify-center gap-2 shadow-xs"
+              className="w-full py-2.5 px-4 bg-[#234B36] hover:bg-[#2D5E43] active:bg-[#1A3828] text-white text-xs font-bold rounded-lg transition inline-flex items-center justify-center gap-2 shadow-xs"
             >
               <span>Go to Host Dashboard</span>
               <ArrowRight className="w-4 h-4" />
@@ -134,7 +134,7 @@ export default function BecomeAHostWizardPage() {
           </div>
         </main>
 
-        <footer className="py-4 text-center text-xs text-[#605850]">
+        <footer className="py-4 text-center text-xs text-[#73776F]">
           © {new Date().getFullYear()} Engida Ethiopia. All rights reserved.
         </footer>
       </div>
@@ -144,50 +144,50 @@ export default function BecomeAHostWizardPage() {
   // If user is already PENDING review, show clear status feedback
   if (user?.hostProfile && user.hostProfile.verificationStatus === 'PENDING') {
     return (
-      <div className="min-h-screen bg-[#faf5ee] text-[#3a302a] flex flex-col justify-between selection:bg-[#c2652a]/20 selection:text-[#c2652a]">
-        <header className="bg-[#faf5ee]/95 backdrop-blur-md border-b border-[#d8d0c8]/60 py-3.5 px-6 lg:px-12 shadow-[0_1px_8px_rgba(58,48,42,0.04)]">
+      <div className="min-h-screen bg-[#F8F5ED] text-[#252923] flex flex-col justify-between selection:bg-[#234B36]/20 selection:text-[#234B36]">
+        <header className="bg-[#F8F5ED]/95 backdrop-blur-md border-b border-[#E5E0D5]/60 py-3.5 px-6 lg:px-12 shadow-[0_1px_8px_rgba(58,48,42,0.04)]">
           <div className="max-w-6xl mx-auto flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2.5 group">
-              <div className="w-8 h-8 rounded-lg bg-[#c2652a] flex items-center justify-center text-white shadow-xs group-hover:bg-[#e08850] transition">
+              <div className="w-8 h-8 rounded-lg bg-[#234B36] flex items-center justify-center text-white shadow-xs group-hover:bg-[#2D5E43] transition">
                 <Building2 className="w-4 h-4 stroke-[2.2]" />
               </div>
-              <span className="font-extrabold text-base text-[#3a302a] group-hover:text-[#c2652a] transition-colors">
+              <span className="font-extrabold text-base text-[#252923] group-hover:text-[#234B36] transition-colors">
                 Engida Host Portal
               </span>
             </Link>
           </div>
         </header>
 
-        <main className="max-w-lg mx-auto p-6 sm:p-8 bg-white border border-[#d8d0c8] rounded-2xl shadow-xs text-center space-y-4 my-auto">
+        <main className="max-w-lg mx-auto p-6 sm:p-8 bg-white border border-[#E5E0D5] rounded-2xl shadow-xs text-center space-y-4 my-auto">
           <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center mx-auto">
             <Clock className="w-6 h-6" />
           </div>
-          <span className="inline-block px-3 py-1 bg-[#f2ece4] border border-[#d8d0c8] text-[#c2652a] rounded-full text-xs font-bold uppercase tracking-wider">
+          <span className="inline-block px-3 py-1 bg-[#EEF3EF] border border-[#E5E0D5] text-[#234B36] rounded-full text-xs font-bold uppercase tracking-wider">
             Verification Pending Review
           </span>
-          <h2 className="text-xl font-bold text-[#3a302a]">Application Under Review</h2>
-          <p className="text-xs text-[#605850] leading-relaxed">
+          <h2 className="text-xl font-bold text-[#252923]">Application Under Review</h2>
+          <p className="text-xs text-[#73776F] leading-relaxed">
             Your host profile and identity documentation have been submitted and are currently in the administrative
             verification queue. You can prepare and edit listing drafts in the meantime.
           </p>
           <div className="pt-2 flex flex-col sm:flex-row gap-2">
             <Link
               href="/host/dashboard"
-              className="flex-1 py-2.5 px-4 bg-[#c2652a] hover:bg-[#e08850] active:bg-[#a65320] text-white text-xs font-bold rounded-lg transition inline-flex items-center justify-center gap-2 shadow-xs"
+              className="flex-1 py-2.5 px-4 bg-[#234B36] hover:bg-[#2D5E43] active:bg-[#1A3828] text-white text-xs font-bold rounded-lg transition inline-flex items-center justify-center gap-2 shadow-xs"
             >
               <span>Go to Host Dashboard</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
               href="/host/profile"
-              className="py-2.5 px-4 bg-[#f2ece4] hover:bg-[#d8d0c8] text-[#3a302a] text-xs font-bold rounded-lg transition inline-flex items-center justify-center"
+              className="py-2.5 px-4 bg-[#EEF3EF] hover:bg-[#E5E0D5] text-[#252923] text-xs font-bold rounded-lg transition inline-flex items-center justify-center"
             >
               View Profile
             </Link>
           </div>
         </main>
 
-        <footer className="py-4 text-center text-xs text-[#605850]">
+        <footer className="py-4 text-center text-xs text-[#73776F]">
           © {new Date().getFullYear()} Engida Ethiopia. All rights reserved.
         </footer>
       </div>
@@ -215,19 +215,19 @@ export default function BecomeAHostWizardPage() {
     ) : null;
 
   return (
-    <div className="min-h-screen bg-[#faf5ee] text-[#3a302a] flex flex-col justify-between selection:bg-[#c2652a]/20 selection:text-[#c2652a]">
+    <div className="min-h-screen bg-[#F8F5ED] text-[#252923] flex flex-col justify-between selection:bg-[#234B36]/20 selection:text-[#234B36]">
       {/* ── Top Portal Navigation Bar ── */}
-      <header className="sticky top-0 z-40 bg-[#faf5ee]/95 backdrop-blur-md border-b border-[#d8d0c8]/60 py-3.5 px-4 sm:px-8 shadow-[0_1px_8px_rgba(58,48,42,0.04)]">
+      <header className="sticky top-0 z-40 bg-[#F8F5ED]/95 backdrop-blur-md border-b border-[#E5E0D5]/60 py-3.5 px-4 sm:px-8 shadow-[0_1px_8px_rgba(58,48,42,0.04)]">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 rounded-lg bg-[#c2652a] flex items-center justify-center text-white shadow-xs group-hover:bg-[#e08850] transition">
+            <div className="w-8 h-8 rounded-lg bg-[#234B36] flex items-center justify-center text-white shadow-xs group-hover:bg-[#2D5E43] transition">
               <Building2 className="w-4 h-4 stroke-[2.2]" />
             </div>
             <div>
-              <span className="font-extrabold text-base tracking-tight text-[#3a302a] leading-none block font-headline group-hover:text-[#c2652a] transition-colors">
+              <span className="font-extrabold text-base tracking-tight text-[#252923] leading-none block font-headline group-hover:text-[#234B36] transition-colors">
                 Engida
               </span>
-              <span className="text-[10px] font-bold text-[#c2652a] uppercase tracking-widest leading-none">
+              <span className="text-[10px] font-bold text-[#234B36] uppercase tracking-widest leading-none">
                 Host Onboarding
               </span>
             </div>
@@ -237,17 +237,17 @@ export default function BecomeAHostWizardPage() {
             <button
               type="button"
               onClick={handleSaveDraft}
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 border border-[#d8d0c8] bg-white hover:bg-[#f2ece4] rounded-lg text-xs font-semibold text-[#3a302a] transition cursor-pointer shadow-xs"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 border border-[#E5E0D5] bg-white hover:bg-[#EEF3EF] rounded-lg text-xs font-semibold text-[#252923] transition cursor-pointer shadow-xs"
               title="Save progress locally in browser"
             >
-              <Save className="w-3.5 h-3.5 text-[#605850]" />
+              <Save className="w-3.5 h-3.5 text-[#73776F]" />
               <span>Save & Resume</span>
             </button>
 
             <Link
               href="/host/guidelines"
               target="_blank"
-              className="flex items-center gap-1 text-xs font-semibold text-[#605850] hover:text-[#c2652a] transition"
+              className="flex items-center gap-1 text-xs font-semibold text-[#73776F] hover:text-[#234B36] transition"
             >
               <HelpCircle className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Hosting Standards</span>
@@ -269,12 +269,12 @@ export default function BecomeAHostWizardPage() {
 
       {/* Save Draft Toast Notice */}
       {saveToast && (
-        <div className="max-w-md mx-auto my-3 px-4 py-2 bg-[#3a302a] text-[#faf5ee] text-xs font-medium rounded-lg shadow-md transition flex items-center justify-between border border-[#d8d0c8]/40">
+        <div className="max-w-md mx-auto my-3 px-4 py-2 bg-[#252923] text-[#F8F5ED] text-xs font-medium rounded-lg shadow-md transition flex items-center justify-between border border-[#E5E0D5]/40">
           <span>{saveToast}</span>
           <button
             type="button"
             onClick={() => setSaveToast(null)}
-            className="ml-3 text-[#d8d0c8] hover:text-white"
+            className="ml-3 text-[#E5E0D5] hover:text-white"
           >
             ✕
           </button>
@@ -341,19 +341,19 @@ export default function BecomeAHostWizardPage() {
       </main>
 
       {/* ── Footer ── */}
-      <footer className="py-6 border-t border-[#d8d0c8]/60 bg-[#faf5ee] text-center text-xs text-[#605850]">
+      <footer className="py-6 border-t border-[#E5E0D5]/60 bg-[#F8F5ED] text-center text-xs text-[#73776F]">
         <div className="max-w-4xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>
             Engida Hospitality Platform · Federal Democratic Republic of Ethiopia
           </span>
-          <div className="flex gap-4 text-[#605850]">
-            <Link href="/privacy" className="hover:text-[#c2652a] transition">
+          <div className="flex gap-4 text-[#73776F]">
+            <Link href="/privacy" className="hover:text-[#234B36] transition">
               Privacy Policy
             </Link>
-            <Link href="/terms" className="hover:text-[#c2652a] transition">
+            <Link href="/terms" className="hover:text-[#234B36] transition">
               Terms of Service
             </Link>
-            <Link href="/contact" className="hover:text-[#c2652a] transition">
+            <Link href="/contact" className="hover:text-[#234B36] transition">
               Host Support
             </Link>
           </div>

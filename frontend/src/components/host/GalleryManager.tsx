@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useRef } from 'react';
 import Image from 'next/image';
@@ -369,13 +369,13 @@ export default function GalleryManager({
     <div className="space-y-6">
       {/* ── Live Listing Moderation Notice ── */}
       {isLiveListing && (
-        <div className="p-3.5 rounded-xl bg-[#faf5ee] border border-[#d8d0c8] flex items-start gap-3 text-xs text-[#3a302a]">
-          <Shield className="w-4 h-4 text-[#c2652a] shrink-0 mt-0.5" />
+        <div className="p-3.5 rounded-xl bg-[#F8F5ED] border border-[#E5E0D5] flex items-start gap-3 text-xs text-[#252923]">
+          <Shield className="w-4 h-4 text-[#234B36] shrink-0 mt-0.5" />
           <div className="space-y-0.5">
             <span className="font-bold">
               {isPendingReview ? 'Media Changes Pending Review:' : 'Live Listing Moderation:'}
             </span>
-            <p className="text-[#605850] leading-relaxed">
+            <p className="text-[#73776F] leading-relaxed">
               {isPendingReview
                 ? 'You currently have media updates submitted for administrative approval. Additional changes will update your pending review proposal.'
                 : 'Updates to cover and gallery images are staged for administrative review to protect guests. Your approved live photos remain online until new changes are approved.'}
@@ -389,7 +389,7 @@ export default function GalleryManager({
         <div
           className={`p-4 rounded-xl border flex items-start justify-between gap-3 text-xs font-semibold ${
             uploadFeedback.type === 'moderation'
-              ? 'bg-[#faf5ee] border-[#d8d0c8] text-[#3a302a]'
+              ? 'bg-[#F8F5ED] border-[#E5E0D5] text-[#252923]'
               : uploadFeedback.type === 'success'
               ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
               : 'bg-red-50 border-red-200 text-red-800'
@@ -397,7 +397,7 @@ export default function GalleryManager({
         >
           <div className="flex items-center gap-2">
             {uploadFeedback.type === 'moderation' ? (
-              <Clock className="w-4 h-4 text-[#c2652a] shrink-0 animate-pulse" />
+              <Clock className="w-4 h-4 text-[#234B36] shrink-0 animate-pulse" />
             ) : uploadFeedback.type === 'success' ? (
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
             ) : (
@@ -422,14 +422,14 @@ export default function GalleryManager({
       <div className="space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div>
-            <label htmlFor="coverImage" className="block text-sm font-bold text-[#3a302a]">
+            <label htmlFor="coverImage" className="block text-sm font-bold text-[#252923]">
               Cover Image
             </label>
-            <p className="text-xs text-[#605850]">
+            <p className="text-xs text-[#73776F]">
               Required before publishing. This is the main photo shown on search results and listing pages.
             </p>
             {!propertyId && (
-              <p className="mt-1 text-xs text-[#605850]">
+              <p className="mt-1 text-xs text-[#73776F]">
                 Enter a direct URL now, or save this draft first to enable Cloudinary file uploads.
               </p>
             )}
@@ -450,11 +450,11 @@ export default function GalleryManager({
                 type="button"
                 onClick={() => coverFileInputRef.current?.click()}
                 disabled={isUploadingCover}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#d8d0c8] bg-white hover:bg-[#faf5ee] text-xs font-bold text-[#c2652a] transition disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#E5E0D5] bg-white hover:bg-[#F8F5ED] text-xs font-bold text-[#234B36] transition disabled:opacity-50"
               >
                 {isUploadingCover ? (
                   <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin text-[#c2652a]" />
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-[#234B36]" />
                     Uploading Cover…
                   </>
                 ) : (
@@ -476,10 +476,10 @@ export default function GalleryManager({
             value={coverImage}
             onChange={(e) => onCoverImageChange(e.target.value)}
             placeholder="Paste a direct image URL (https://...)"
-            className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium text-[#3a302a] placeholder:text-[#605850] focus:outline-none focus:ring-2 transition ${
+            className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium text-[#252923] placeholder:text-[#73776F] focus:outline-none focus:ring-2 transition ${
               coverError
                 ? 'border-red-400 focus:ring-red-200'
-                : 'border-[#d8d0c8] focus:ring-[#c2652a]/20 focus:border-[#c2652a]'
+                : 'border-[#E5E0D5] focus:ring-[#234B36]/20 focus:border-[#234B36]'
             }`}
           />
           {coverImage.trim() && (
@@ -487,7 +487,7 @@ export default function GalleryManager({
               type="button"
               onClick={handleDemoteCoverToGallery}
               title="Move cover image to gallery"
-              className="px-3 py-2 rounded-xl border border-[#d8d0c8] bg-white hover:bg-[#faf5ee] text-xs font-semibold text-[#605850] shrink-0"
+              className="px-3 py-2 rounded-xl border border-[#E5E0D5] bg-white hover:bg-[#F8F5ED] text-xs font-semibold text-[#73776F] shrink-0"
             >
               Move to Gallery
             </button>
@@ -503,7 +503,7 @@ export default function GalleryManager({
             <button
               type="button"
               onClick={() => onCoverImageChange(SAMPLE_PROPERTY_IMAGES[0])}
-              className="text-[#c2652a] hover:underline font-semibold text-xs ml-auto"
+              className="text-[#234B36] hover:underline font-semibold text-xs ml-auto"
             >
               Use sample cover photo
             </button>
@@ -512,7 +512,7 @@ export default function GalleryManager({
 
         {/* Cover Preview Card */}
         {coverImage.trim() && (
-          <div className="relative w-full max-w-md aspect-[16/9] rounded-2xl overflow-hidden border border-[#d8d0c8] bg-[#faf5ee] shadow-2xs group">
+          <div className="relative w-full max-w-md aspect-[16/9] rounded-2xl overflow-hidden border border-[#E5E0D5] bg-[#F8F5ED] shadow-2xs group">
             {!brokenUrls[coverImage.trim()] ? (
               <Image
                 src={coverImage.trim()}
@@ -523,15 +523,15 @@ export default function GalleryManager({
                 onError={() => markImageBroken(coverImage.trim())}
               />
             ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center text-xs text-[#605850]">
+              <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center text-xs text-[#73776F]">
                 <AlertTriangle className="w-6 h-6 text-amber-500 mb-1" />
-                <span className="font-semibold text-[#3a302a]">Broken or inaccessible image URL</span>
-                <span className="text-[11px] text-[#605850] mt-0.5">Please check that the image link is public</span>
+                <span className="font-semibold text-[#252923]">Broken or inaccessible image URL</span>
+                <span className="text-[11px] text-[#73776F] mt-0.5">Please check that the image link is public</span>
               </div>
             )}
 
             {/* Badge overlay */}
-            <div className="absolute top-3 left-3 bg-[#c2652a] text-white text-[11px] font-bold px-2.5 py-1 rounded-full shadow-sm flex items-center gap-1">
+            <div className="absolute top-3 left-3 bg-[#234B36] text-white text-[11px] font-bold px-2.5 py-1 rounded-full shadow-sm flex items-center gap-1">
               <Star className="w-3 h-3 fill-current" /> Cover Photo
             </div>
 
@@ -561,13 +561,13 @@ export default function GalleryManager({
       {/* ═══════════════════════════════════════════════════
           SUB-SECTION 2: Gallery Photos
       ═══════════════════════════════════════════════════ */}
-      <div className="space-y-4 pt-4 border-t border-[#f2ece4]">
+      <div className="space-y-4 pt-4 border-t border-[#EEF3EF]">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div>
-            <label className="block text-sm font-bold text-[#3a302a]">
+            <label className="block text-sm font-bold text-[#252923]">
               Photo Gallery ({images.length} / {maxImages})
             </label>
-            <p className="text-xs text-[#605850]">
+            <p className="text-xs text-[#73776F]">
               Add interior, exterior, and neighborhood photos. You can paste multiple URLs or upload files.
             </p>
           </div>
@@ -588,11 +588,11 @@ export default function GalleryManager({
                 type="button"
                 onClick={() => galleryFileInputRef.current?.click()}
                 disabled={isUploadingGallery || images.length >= maxImages}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#d8d0c8] bg-white hover:bg-[#faf5ee] text-xs font-bold text-[#c2652a] transition disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#E5E0D5] bg-white hover:bg-[#F8F5ED] text-xs font-bold text-[#234B36] transition disabled:opacity-50"
               >
                 {isUploadingGallery ? (
                   <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin text-[#c2652a]" />
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-[#234B36]" />
                     Uploading to Gallery…
                   </>
                 ) : (
@@ -623,10 +623,10 @@ export default function GalleryManager({
                   }
                 }}
                 placeholder="Paste an image URL, or multiple separated by comma or spaces"
-                className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium text-[#3a302a] placeholder:text-[#605850] focus:outline-none focus:ring-2 transition ${
+                className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium text-[#252923] placeholder:text-[#73776F] focus:outline-none focus:ring-2 transition ${
                   urlError
                     ? 'border-red-400 focus:ring-red-200'
-                    : 'border-[#d8d0c8] focus:ring-[#c2652a]/20 focus:border-[#c2652a]'
+                    : 'border-[#E5E0D5] focus:ring-[#234B36]/20 focus:border-[#234B36]'
                 }`}
               />
             </div>
@@ -634,7 +634,7 @@ export default function GalleryManager({
               type="button"
               onClick={() => handleAddGalleryUrl()}
               disabled={!newUrl.trim() || images.length >= maxImages}
-              className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#c2652a] hover:bg-[#e08850] active:bg-[#a65320] text-white text-xs font-bold transition shadow-sm disabled:opacity-50 shrink-0"
+              className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#234B36] hover:bg-[#2D5E43] active:bg-[#1A3828] text-white text-xs font-bold transition shadow-sm disabled:opacity-50 shrink-0"
             >
               <Plus className="w-4 h-4" /> Add to Gallery
             </button>
@@ -644,12 +644,12 @@ export default function GalleryManager({
 
         {/* Gallery Thumbnails Grid */}
         {images.length === 0 ? (
-          <div className="p-8 rounded-2xl bg-[#faf5ee] border-2 border-dashed border-[#d8d0c8] text-center space-y-2">
-            <div className="w-12 h-12 rounded-xl bg-[#f2ece4] text-[#c2652a] flex items-center justify-center mx-auto">
+          <div className="p-8 rounded-2xl bg-[#F8F5ED] border-2 border-dashed border-[#E5E0D5] text-center space-y-2">
+            <div className="w-12 h-12 rounded-xl bg-[#EEF3EF] text-[#234B36] flex items-center justify-center mx-auto">
               <ImageIcon className="w-6 h-6" />
             </div>
-            <p className="text-sm font-bold text-[#3a302a]">No gallery photos yet</p>
-            <p className="text-xs text-[#605850] max-w-sm mx-auto">
+            <p className="text-sm font-bold text-[#252923]">No gallery photos yet</p>
+            <p className="text-xs text-[#73776F] max-w-sm mx-auto">
               {propertyId
                 ? 'Add image URLs above or upload your property photos via Cloudinary.'
                 : 'Add image URLs now, or save this draft and upload property photos from the listing editor.'}
@@ -663,7 +663,7 @@ export default function GalleryManager({
                   );
                   onImagesChange([...images, ...toAdd]);
                 }}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#d8d0c8] bg-white hover:bg-[#faf5ee] text-xs font-semibold text-[#c2652a] transition shadow-2xs"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#E5E0D5] bg-white hover:bg-[#F8F5ED] text-xs font-semibold text-[#234B36] transition shadow-2xs"
               >
                 <Plus className="w-3.5 h-3.5" /> Insert Sample Gallery Photos
               </button>
@@ -678,7 +678,7 @@ export default function GalleryManager({
               return (
                 <div
                   key={`${imgUrl}-${idx}`}
-                  className="group relative aspect-[4/3] rounded-xl overflow-hidden border border-[#d8d0c8] bg-[#faf5ee] shadow-2xs hover:shadow-sm transition"
+                  className="group relative aspect-[4/3] rounded-xl overflow-hidden border border-[#E5E0D5] bg-[#F8F5ED] shadow-2xs hover:shadow-sm transition"
                 >
                   {/* Image Thumbnail */}
                   {!isBroken ? (

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React from 'react';
 
@@ -26,7 +26,7 @@ export default function HostAvatar({
 
   return (
     <div
-      className={`rounded-full bg-[#c2652a] flex items-center justify-center text-white font-black overflow-hidden flex-shrink-0 ${className}`}
+      className={`rounded-full bg-[#234B36] flex items-center justify-center text-white font-black overflow-hidden flex-shrink-0 ${className}`}
       style={{ width: size, height: size, fontSize: Math.round(size * 0.4) }}
     >
       {showImage ? (

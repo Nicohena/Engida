@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useState } from 'react';
 import { AlertTriangle, CheckCircle2, Flag, Loader2, X } from 'lucide-react';
@@ -77,7 +77,7 @@ export default function ReportDialog({
       <button
         type="button"
         aria-label="Close report dialog"
-        className="absolute inset-0 bg-[#3a302a]/50 backdrop-blur-[2px]"
+        className="absolute inset-0 bg-[#252923]/50 backdrop-blur-[2px]"
         onClick={() => {
           if (!submitting) onClose();
         }}
@@ -88,16 +88,16 @@ export default function ReportDialog({
         aria-labelledby="report-dialog-heading"
         className="relative flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:max-w-lg sm:rounded-3xl"
       >
-        <div className="flex items-start justify-between gap-4 border-b border-[#d8d0c8]/70 px-5 py-4">
+        <div className="flex items-start justify-between gap-4 border-b border-[#E5E0D5]/70 px-5 py-4">
           <div className="flex items-start gap-3">
-            <div className="rounded-xl bg-[#f2ece4] p-2 text-[#a84d16]">
+            <div className="rounded-xl bg-[#EEF3EF] p-2 text-[#a84d16]">
               <Flag className="h-5 w-5" />
             </div>
             <div>
-              <h2 id="report-dialog-heading" className="text-base font-bold text-[#3a302a]">
+              <h2 id="report-dialog-heading" className="text-base font-bold text-[#252923]">
                 Report this {targetType === 'LISTING' ? 'listing' : 'review'}
               </h2>
-              <p className="mt-0.5 text-xs text-[#605850]">
+              <p className="mt-0.5 text-xs text-[#73776F]">
                 {targetLabel ? `About ${targetLabel}` : 'Our trust and safety team will review it.'}
               </p>
             </div>
@@ -106,7 +106,7 @@ export default function ReportDialog({
             type="button"
             onClick={onClose}
             disabled={submitting}
-            className="rounded-lg p-1.5 text-[#605850] hover:bg-[#faf5ee] disabled:opacity-40"
+            className="rounded-lg p-1.5 text-[#73776F] hover:bg-[#F8F5ED] disabled:opacity-40"
             aria-label="Close"
           >
             <X className="h-5 w-5" />
@@ -118,8 +118,8 @@ export default function ReportDialog({
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
               <CheckCircle2 className="h-7 w-7" />
             </div>
-            <h3 className="mt-4 text-lg font-bold text-[#3a302a]">Report received</h3>
-            <p className="mx-auto mt-2 max-w-sm text-sm text-[#605850]">
+            <h3 className="mt-4 text-lg font-bold text-[#252923]">Report received</h3>
+            <p className="mx-auto mt-2 max-w-sm text-sm text-[#73776F]">
               Thank you. Our trust and safety team will review the {targetType === 'LISTING' ? 'listing' : 'review'} and take action if needed. You will not be identified to the other party.
             </p>
             <button
@@ -134,14 +134,14 @@ export default function ReportDialog({
           <form onSubmit={submit} className="flex flex-col overflow-hidden">
             <div className="space-y-4 overflow-y-auto px-5 py-5">
               <div>
-                <label htmlFor="report-reason" className="text-xs font-bold text-[#3a302a]">
+                <label htmlFor="report-reason" className="text-xs font-bold text-[#252923]">
                   What is wrong? <span className="text-rose-500">*</span>
                 </label>
                 <select
                   id="report-reason"
                   value={reason}
                   onChange={(event) => setReason(event.target.value as ReportReason)}
-                  className="mt-1.5 h-11 w-full rounded-xl border border-[#d8d0c8] bg-[#faf5ee]/60 px-3 text-sm text-[#3a302a] outline-none focus:border-[#b2531b] focus:bg-white focus:ring-2 focus:ring-[#b2531b]/15"
+                  className="mt-1.5 h-11 w-full rounded-xl border border-[#E5E0D5] bg-[#F8F5ED]/60 px-3 text-sm text-[#252923] outline-none focus:border-[#b2531b] focus:bg-white focus:ring-2 focus:ring-[#b2531b]/15"
                 >
                   {REASONS.map((value) => (
                     <option key={value} value={value}>
@@ -152,12 +152,12 @@ export default function ReportDialog({
               </div>
 
               <div>
-                <label htmlFor="report-details" className="text-xs font-bold text-[#3a302a]">
+                <label htmlFor="report-details" className="text-xs font-bold text-[#252923]">
                   Details{' '}
                   {reason === 'OTHER' ? (
                     <span className="text-rose-500">*</span>
                   ) : (
-                    <span className="font-normal text-[#605850]">(optional)</span>
+                    <span className="font-normal text-[#73776F]">(optional)</span>
                   )}
                 </label>
                 <textarea
@@ -167,9 +167,9 @@ export default function ReportDialog({
                   rows={4}
                   maxLength={2000}
                   placeholder="Tell us what you noticed. Include any details that can help us investigate."
-                  className="mt-1.5 w-full resize-none rounded-xl border border-[#d8d0c8] bg-[#faf5ee]/60 px-3 py-2.5 text-sm text-[#3a302a] outline-none focus:border-[#b2531b] focus:bg-white focus:ring-2 focus:ring-[#b2531b]/15"
+                  className="mt-1.5 w-full resize-none rounded-xl border border-[#E5E0D5] bg-[#F8F5ED]/60 px-3 py-2.5 text-sm text-[#252923] outline-none focus:border-[#b2531b] focus:bg-white focus:ring-2 focus:ring-[#b2531b]/15"
                 />
-                <div className="mt-1 flex justify-between text-[11px] text-[#605850]">
+                <div className="mt-1 flex justify-between text-[11px] text-[#73776F]">
                   <span>Reports are private and reviewed by admins.</span>
                   <span>{details.length}/2000</span>
                 </div>
@@ -183,12 +183,12 @@ export default function ReportDialog({
               )}
             </div>
 
-            <div className="flex items-center justify-end gap-2 border-t border-[#d8d0c8]/70 bg-[#faf5ee]/50 px-5 py-3.5">
+            <div className="flex items-center justify-end gap-2 border-t border-[#E5E0D5]/70 bg-[#F8F5ED]/50 px-5 py-3.5">
               <button
                 type="button"
                 onClick={onClose}
                 disabled={submitting}
-                className="rounded-xl border border-[#d8d0c8] bg-white px-4 py-2 text-sm font-semibold text-[#605850] transition hover:bg-[#faf5ee] disabled:opacity-50"
+                className="rounded-xl border border-[#E5E0D5] bg-white px-4 py-2 text-sm font-semibold text-[#73776F] transition hover:bg-[#F8F5ED] disabled:opacity-50"
               >
                 Cancel
               </button>
