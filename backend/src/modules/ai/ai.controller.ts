@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { AiService } from './ai.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-import { PredictPriceDto, RecommendationsDto } from './ai.dto';
+import { PredictPriceDto, RecommendationsDto, GenerateListingContentDto } from './ai.dto';
 
 @Controller('ai')
 export class AiController {
@@ -23,6 +23,16 @@ export class AiController {
   @HttpCode(HttpStatus.OK)
   async predictPrice(@Body() request: PredictPriceDto) {
     return this.aiService.predictPrice(request);
+  }
+
+  /**
+   * Protected: Generate guest-optimized multilingual listing title & description
+   */
+  @Post('generate-listing-content')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async generateListingContent(@Body() request: GenerateListingContentDto) {
+    return this.aiService.generateListingContent(request);
   }
 
   /**

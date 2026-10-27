@@ -12,6 +12,7 @@ import type {
 import AmenitySelector from '../../../../components/host/AmenitySelector';
 import GalleryManager from '../../../../components/host/GalleryManager';
 import AiPricingWidget from '../../../../components/host/AiPricingWidget';
+import AiListingCopilot from '../../../../components/host/AiListingCopilot';
 import {
   ArrowLeft,
   Building2,
@@ -499,6 +500,52 @@ export default function CreateListingPage() {
             <Building2 className="w-5 h-5 text-[#234B36]" />
             <h2 className="text-lg font-black text-[#252923]">Basic Information</h2>
           </div>
+
+          {/* ✨ AI Multilingual Listing Copilot (English & Amharic) */}
+          <AiListingCopilot
+            propertyType={form.propertyType}
+            city={form.city}
+            subCity={form.subCity}
+            neighborhood={form.neighborhood}
+            bedrooms={form.bedrooms}
+            bathrooms={form.bathrooms}
+            maxGuests={form.maxGuests}
+            amenityIds={form.amenityIds}
+            currentTitle={form.title}
+            currentDescription={form.description}
+            onApplyTitle={(title) => {
+              setIsDirty(true);
+              setForm((prev) => ({ ...prev, title }));
+              if (errors.title) {
+                setErrors((prev) => {
+                  const next = { ...prev };
+                  delete next.title;
+                  return next;
+                });
+              }
+            }}
+            onApplyDescription={(description) => {
+              setIsDirty(true);
+              setForm((prev) => ({ ...prev, description }));
+              if (errors.description) {
+                setErrors((prev) => {
+                  const next = { ...prev };
+                  delete next.description;
+                  return next;
+                });
+              }
+            }}
+            onApplyBoth={(title, description) => {
+              setIsDirty(true);
+              setForm((prev) => ({ ...prev, title, description }));
+              setErrors((prev) => {
+                const next = { ...prev };
+                delete next.title;
+                delete next.description;
+                return next;
+              });
+            }}
+          />
 
           {/* Title */}
           <div className="space-y-1.5">

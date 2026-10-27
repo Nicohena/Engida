@@ -431,3 +431,24 @@ export interface AiPricePredictionResponse {
   };
 }
 
+export interface GenerateListingContentRequest {
+  propertyType: string;
+  city: string;
+  subCity?: string;
+  neighborhood?: string;
+  bedrooms: number;
+  bathrooms: number;
+  maxGuests: number;
+  amenities: string[];
+  language?: 'en' | 'am';
+  tone?: 'luxury' | 'warm' | 'business';
+}
+
+export interface GenerateListingContentResponse {
+  title: string;
+  description: string;
+  language: 'en' | 'am';
+  tone: 'luxury' | 'warm' | 'business';
+  highlights: string[];
+}
+
