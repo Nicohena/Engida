@@ -20,9 +20,8 @@ interface StepItem {
 const STEPS: StepItem[] = [
   { number: 1, title: 'Account Details', shortTitle: 'Account', icon: User },
   { number: 2, title: 'Email Verification', shortTitle: 'Email', icon: ShieldCheck },
-  { number: 3, title: 'Identity Verification', shortTitle: 'Identity', icon: FileText },
-  { number: 4, title: 'Host & Address', shortTitle: 'Address', icon: Home },
-  { number: 5, title: 'Review & Submit', shortTitle: 'Review', icon: Send },
+  { number: 3, title: 'Host & Address', shortTitle: 'Address', icon: Home },
+  { number: 4, title: 'Review & Submit', shortTitle: 'Review', icon: Send },
 ];
 
 export default function StepIndicator({
@@ -57,7 +56,7 @@ export default function StepIndicator({
         </div>
 
         {/* Desktop Step Nav List */}
-        <ol className="hidden sm:grid grid-cols-5 gap-2" role="list">
+        <ol className="hidden sm:grid grid-cols-4 gap-2" role="list">
           {STEPS.map((step) => {
             const isCompleted = completedSteps.includes(step.number);
             const isCurrent = currentStep === step.number;

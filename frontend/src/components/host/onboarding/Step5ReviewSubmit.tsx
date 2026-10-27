@@ -5,15 +5,13 @@ import Link from 'next/link';
 import {
   CheckCircle2,
   AlertCircle,
-  FileText,
   User,
   Building2,
   RefreshCw,
-  Clock,
   ArrowRight,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
-import { SUPPORTED_DOCUMENT_TYPES, type OnboardingFormData } from './types';
+import type { OnboardingFormData } from './types';
 import type { HostProfile } from '@/types/host';
 import type { User as AuthUser } from '@/context/AuthContext';
 
@@ -42,15 +40,6 @@ export default function Step5ReviewSubmit({
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [createdProfile, setCreatedProfile] = useState<HostProfile | null>(null);
 
-  const docLabel =
-    SUPPORTED_DOCUMENT_TYPES.find((d) => d.value === data.documentType)?.label || data.documentType;
-
-  // Masked document number display for privacy
-  const maskedDocNumber =
-    data.documentNumber.length > 4
-      ? `${'*'.repeat(Math.max(data.documentNumber.length - 4, 3))}-${data.documentNumber.slice(-4)}`
-      : '****';
-
   const handleFinalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!data.agreedToHostStandards) {
@@ -64,11 +53,11 @@ export default function Step5ReviewSubmit({
     try {
       // Step 1: If user is not yet authenticated, create account first
       if (!currentUser && onRegisterAccount) {
-        setSubmissionProgress('Creating your Engida account…');
+        setSubmissionProgress('Setting up your Engida account…');
         await onRegisterAccount(data.fullName.trim(), data.email.trim(), data.password);
       }
 
-      // Step 2: Format address and identity summary into bio notes
+      // Step 2: Format address and summary into bio notes
       const locationSummary = `${data.streetAddress}, ${data.woreda ? data.woreda + ', ' : ''}${data.subCity ? data.subCity + ', ' : ''}${data.city}, ${data.region}`;
       const businessSummary =
         data.hostType === 'BUSINESS'
@@ -77,7 +66,7 @@ export default function Step5ReviewSubmit({
       const completeBio = `${data.bio ? data.bio.trim() + ' — ' : ''}Operating Address: ${locationSummary}${businessSummary}`;
 
       // Step 3: Create Host Profile via backend API (or update existing unverified draft)
-      setSubmissionProgress('Setting up your host profile…');
+      setSubmissionProgress('Activating your host profile…');
       const hostPayload = {
         displayName: data.displayName.trim(),
         phone: data.phone.trim(),
@@ -102,75 +91,11 @@ export default function Step5ReviewSubmit({
         }
       }
 
-      // Step 3.5: Upload attached document images to secure KYC vault
-      let uploadedFrontUrl = data.documentFrontUrl || undefined;
-      let uploadedBackUrl = data.documentBackUrl || undefined;
-
-      if (!uploadedFrontUrl && data.filePreviewUrl) {
-        try {
-          setSubmissionProgress('Encrypting & uploading identity document scan…');
-          const res = await fetch(data.filePreviewUrl);
-          const blob = await res.blob();
-          const uploadForm = new FormData();
-          uploadForm.append('file', blob, data.fileName || 'identity_document.png');
-          const uploadRes = await apiFetch<{ secureUrl?: string; url?: string }>('/upload/image', {
-            method: 'POST',
-            body: uploadForm,
-          });
-          if (uploadRes?.secureUrl || uploadRes?.url) {
-            uploadedFrontUrl = uploadRes.secureUrl || uploadRes.url;
-          }
-        } catch {
-          // If upload fails, continue with document metadata
-        }
-      }
-
-      if (!uploadedBackUrl && data.backFilePreviewUrl) {
-        try {
-          const res = await fetch(data.backFilePreviewUrl);
-          const blob = await res.blob();
-          const uploadForm = new FormData();
-          uploadForm.append('file', blob, data.backFileName || 'identity_document_back.png');
-          const uploadRes = await apiFetch<{ secureUrl?: string; url?: string }>('/upload/image', {
-            method: 'POST',
-            body: uploadForm,
-          });
-          if (uploadRes?.secureUrl || uploadRes?.url) {
-            uploadedBackUrl = uploadRes.secureUrl || uploadRes.url;
-          }
-        } catch {
-          // If upload fails, continue with document metadata
-        }
-      }
-
-      // Step 4: Submit Identity Verification Request with multi-document payload
-      setSubmissionProgress('Submitting government identity verification for review…');
-      const verificationPayload = {
-        documentType: data.documentType,
-        issuingCountry: data.issuingCountry,
-        documentNumber: data.documentNumber.trim(),
-        issuingAuthority:
-          data.issuingAuthority?.trim() ||
-          (data.faydaExtractedData ? 'National ID Program (NIDP)' : undefined),
-        expirationDate: data.expirationDate || undefined,
-        verificationProvider: data.faydaExtractedData?.isLiveNidpExtract ? 'FAYDA_NIDP' : 'MANUAL_ADMIN_REVIEW',
-        verificationReference: data.faydaExtractedData?.verificationToken || `ONBOARD-${Date.now()}`,
-        documentFrontUrl: uploadedFrontUrl,
-        documentBackUrl: uploadedBackUrl,
-        documentFileName: data.fileName || undefined,
-        documentFileSize: data.fileSize || undefined,
-      };
-
-      const pendingProfile = await apiFetch<HostProfile>('/host/profile/request-verification', {
-        method: 'POST',
-        body: JSON.stringify(verificationPayload),
-      });
-
       if (onHostProfileCreated) {
-        onHostProfileCreated(pendingProfile || newProfile);
+        onHostProfileCreated(newProfile);
       }
 
-      setCreatedProfile(pendingProfile || newProfile);
+      setCreatedProfile(newProfile);
       setIsSubmitted(true);
       // Clear session storage on completed submission
       if (typeof window !== 'undefined') {
@@ -192,18 +117,17 @@ export default function Step5ReviewSubmit({
     return (
       <div className="w-full max-w-2xl mx-auto p-6 sm:p-8 bg-white border border-slate-200 rounded-2xl shadow-xs space-y-6">
         <div className="text-center space-y-2">
-          <div className="w-14 h-14 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center mx-auto">
-            <Clock className="w-7 h-7 stroke-[2.2]" />
+          <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto">
+            <CheckCircle2 className="w-8 h-8 stroke-[2.2]" />
           </div>
-          <span className="inline-block px-3 py-1 bg-amber-50 border border-amber-200 text-amber-800 rounded-full text-xs font-bold uppercase tracking-wider">
-            Verification Pending Administrative Review
+          <span className="inline-block px-3 py-1 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-full text-xs font-bold uppercase tracking-wider">
+            Host Account Active &amp; Verified
           </span>
           <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">
-            Application Received
+            Welcome to Hosting on Engida!
           </h2>
           <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
-            Your host profile and identity documentation have been securely recorded. An authorized platform
-            administrator is reviewing your identity credentials.
+            Your email has been successfully verified and your host account is fully active. You can now immediately create your first property listing and welcome guests to Ethiopia.
           </p>
         </div>
 
@@ -214,46 +138,47 @@ export default function Step5ReviewSubmit({
             <span className="font-bold text-slate-900">{createdProfile?.displayName || data.displayName}</span>
           </div>
           <div className="flex justify-between py-1 border-b border-slate-200/60">
-            <span className="text-slate-500">Identity Document</span>
-            <span className="font-medium text-slate-800">{docLabel}</span>
+            <span className="text-slate-500">Verified Contact Email</span>
+            <span className="font-medium text-emerald-700 flex items-center gap-1 font-mono">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              {currentUser ? currentUser.email : data.email}
+            </span>
           </div>
           <div className="flex justify-between py-1 border-b border-slate-200/60">
-            <span className="text-slate-500">Masked ID Number</span>
-            <span className="font-mono text-slate-800">{maskedDocNumber}</span>
+            <span className="text-slate-500">Operating Location</span>
+            <span className="font-medium text-slate-800">{data.city}, {data.region}</span>
           </div>
           <div className="flex justify-between py-1">
-            <span className="text-slate-500">Initial Verification Status</span>
-            <span className="font-bold text-amber-700">PENDING REVIEW</span>
+            <span className="text-slate-500">Host Account Status</span>
+            <span className="font-bold text-emerald-700">ACTIVE &amp; VERIFIED</span>
           </div>
         </div>
 
         {/* What You Can Do Right Now */}
-        <div className="p-4 bg-blue-50/60 border border-blue-200 rounded-xl space-y-2 text-xs text-blue-900">
+        <div className="p-4 bg-emerald-50/60 border border-emerald-200 rounded-xl space-y-2 text-xs text-emerald-950">
           <p className="font-bold flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-blue-700" />
-            <span>Draft Listings Are Unlocked Immediately</span>
+            <CheckCircle2 className="w-4 h-4 text-emerald-700" />
+            <span>Full Hosting Privileges Unlocked</span>
           </p>
-          <p className="text-blue-800 leading-relaxed text-[11px]">
-            While awaiting administrator verification, you can immediately access your Host Dashboard to create, edit,
-            and organize draft listings. In accordance with platform security policy, public listing publication will
-            become active once identity verification is approved.
+          <p className="text-emerald-800 leading-relaxed text-[11px]">
+            You have full access to create property listings, manage nightly rates, configure booking calendars, and accept reservations from travelers worldwide.
           </p>
         </div>
 
         {/* Actions */}
         <div className="pt-2 flex flex-col sm:flex-row gap-3">
           <Link
-            href="/host/dashboard"
+            href="/host/listings/new"
             className="flex-1 py-3 bg-[#1e40af] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded-xl transition text-center shadow-xs flex items-center justify-center gap-2"
           >
-            <span>Go to Host Dashboard</span>
+            <span>Create Your First Listing</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
-            href="/host/profile?onboarded=true"
+            href="/host/dashboard"
             className="py-3 px-6 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition text-center"
           >
-            View Host Profile
+            Go to Host Dashboard
           </Link>
         </div>
       </div>
@@ -265,10 +190,10 @@ export default function Step5ReviewSubmit({
     <div className="w-full max-w-2xl mx-auto space-y-6">
       <div>
         <h2 className="text-xl font-bold tracking-tight text-slate-900">
-          Review & Submit Application
+          Review &amp; Activate Host Account
         </h2>
         <p className="text-xs text-slate-600 mt-1">
-          Review your host application details before submitting for official verification.
+          Review your host profile and contact details before activating your hosting status.
         </p>
       </div>
 
@@ -286,7 +211,7 @@ export default function Step5ReviewSubmit({
           <div className="flex items-center justify-between border-b border-slate-100 pb-2">
             <span className="text-xs font-bold text-slate-900 flex items-center gap-2">
               <User className="w-4 h-4 text-[#1e40af]" />
-              Account & Legal Identity
+              Account &amp; Legal Identity
             </span>
             <button
               type="button"
@@ -319,113 +244,16 @@ export default function Step5ReviewSubmit({
           </div>
         </div>
 
-        {/* Section 2: Identity Document */}
-        <div className="p-4 bg-white border border-slate-200 rounded-xl space-y-3">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-            <span className="text-xs font-bold text-slate-900 flex items-center gap-2">
-              <FileText className="w-4 h-4 text-[#1e40af]" />
-              Government Identity Document
-            </span>
-            <button
-              type="button"
-              onClick={() => onEditStep(3)}
-              className="text-xs font-bold text-[#1e40af] hover:underline cursor-pointer"
-            >
-              Edit
-            </button>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-            <div>
-              <span className="text-slate-500 block">Document Type</span>
-              <span className="font-semibold text-slate-900">{docLabel}</span>
-            </div>
-            <div>
-              <span className="text-slate-500 block">Issuing Country</span>
-              <span className="font-semibold text-slate-900">{data.issuingCountry}</span>
-            </div>
-            <div>
-              <span className="text-slate-500 block">Masked ID Number</span>
-              <span className="font-mono font-semibold text-slate-900">{maskedDocNumber}</span>
-            </div>
-            {data.faydaExtractedData?.isLiveNidpExtract ? (
-              <div className="sm:col-span-2 pt-2 border-t border-slate-100 space-y-2">
-                <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-950 flex items-start justify-between gap-3">
-                  <div className="flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                    <div>
-                      <span className="font-bold block text-slate-900">
-                        Verified via National ID Program (NIDP / Fayda)
-                      </span>
-                      <span className="text-slate-600 text-[11px] block mt-0.5">
-                        Legal Name: <strong>{data.faydaExtractedData.fullName}</strong>
-                      </span>
-                      <span className="text-slate-500 text-[10px] block font-mono mt-0.5">
-                        Token: {data.faydaExtractedData.verificationToken}
-                      </span>
-                    </div>
-                  </div>
-                  <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full shrink-0">
-                    e-KYC Verified
-                  </span>
-                </div>
-              </div>
-            ) : (
-              <div className="sm:col-span-2 pt-2 border-t border-slate-100 flex items-center justify-between">
-                <div>
-                  <span className="text-slate-500 block text-[11px]">Attached Scans</span>
-                  <span className="font-medium text-slate-800 text-xs">
-                    {data.fileName || 'Document attached'}
-                    {data.backFileName ? ` + Back: ${data.backFileName}` : ''}
-                  </span>
-                  {data.faydaExtractedData?.verificationToken && (
-                    <span className="text-slate-500 text-[10px] block font-mono mt-0.5">
-                      Fayda Format Token: {data.faydaExtractedData.verificationToken}
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  {data.filePreviewUrl && (
-                    <div className="w-12 h-9 rounded border border-slate-200 overflow-hidden bg-slate-50 shrink-0">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={data.filePreviewUrl}
-                        alt="Front preview"
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          (e.currentTarget.parentElement as HTMLElement | null)?.style.setProperty('display', 'none');
-                        }}
-                      />
-                    </div>
-                  )}
-                  {data.backFilePreviewUrl && (
-                    <div className="w-12 h-9 rounded border border-slate-200 overflow-hidden bg-slate-50 shrink-0">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={data.backFilePreviewUrl}
-                        alt="Back preview"
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          (e.currentTarget.parentElement as HTMLElement | null)?.style.setProperty('display', 'none');
-                        }}
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Section 3: Host Profile & Address */}
+        {/* Section 2: Host Profile & Operating Location */}
         <div className="p-4 bg-white border border-slate-200 rounded-xl space-y-3">
           <div className="flex items-center justify-between border-b border-slate-100 pb-2">
             <span className="text-xs font-bold text-slate-900 flex items-center gap-2">
               <Building2 className="w-4 h-4 text-[#1e40af]" />
-              Host Profile & Operating Location
+              Host Profile &amp; Operating Location
             </span>
             <button
               type="button"
-              onClick={() => onEditStep(4)}
+              onClick={() => onEditStep(3)}
               className="text-xs font-bold text-[#1e40af] hover:underline cursor-pointer"
             >
               Edit
@@ -481,8 +309,7 @@ export default function Step5ReviewSubmit({
               <a href="/host/standards" target="_blank" className="text-[#1e40af] font-semibold hover:underline">
                 Ethiopian Hospitality Standards
               </a>
-              , tax compliance laws, and Engida&apos;s Host Code of Conduct. I understand that submitting false or forged
-              identity documentation is grounds for immediate account termination.
+              , guest safety guidelines, tax compliance laws, and Engida&apos;s Host Code of Conduct.
             </span>
           </label>
         </div>
@@ -505,10 +332,10 @@ export default function Step5ReviewSubmit({
             {submitting ? (
               <>
                 <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                <span>{submissionProgress || 'Submitting Application…'}</span>
+                <span>{submissionProgress || 'Activating Account…'}</span>
               </>
             ) : (
-              <span>Submit Host Application</span>
+              <span>Complete Registration &amp; Activate Host Account</span>
             )}
           </button>
         </div>

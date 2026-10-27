@@ -84,20 +84,6 @@ export default function Step4HostDetails({
         </p>
       </div>
 
-      {data.faydaExtractedData?.isLiveNidpExtract && (
-        <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-950 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>
-              Operating address pre-populated from your verified <strong>National Fayda ID ({data.faydaExtractedData.fin})</strong>.
-            </span>
-          </div>
-          <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full shrink-0">
-            NIDP Sync
-          </span>
-        </div>
-      )}
-
       <form onSubmit={handleSubmit} className="space-y-6" noValidate>
         {/* Host Type Selector: Individual vs Business */}
         <div>

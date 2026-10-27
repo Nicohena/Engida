@@ -7,7 +7,6 @@ import { Building2, Save, HelpCircle, ArrowRight, Clock, AlertTriangle } from 'l
 import StepIndicator from '@/components/host/onboarding/StepIndicator';
 import Step1Account from '@/components/host/onboarding/Step1Account';
 import Step2ContactOtp from '@/components/host/onboarding/Step2ContactOtp';
-import Step3IdentityVerification from '@/components/host/onboarding/Step3IdentityVerification';
 import Step4HostDetails from '@/components/host/onboarding/Step4HostDetails';
 import Step5ReviewSubmit from '@/components/host/onboarding/Step5ReviewSubmit';
 import {
@@ -304,7 +303,7 @@ export default function BecomeAHostWizardPage() {
         )}
 
         {currentStep === 3 && (
-          <Step3IdentityVerification
+          <Step4HostDetails
             data={formData}
             updateData={updateFormData}
             onBack={() => handleBackStep(2)}
@@ -313,15 +312,6 @@ export default function BecomeAHostWizardPage() {
         )}
 
         {currentStep === 4 && (
-          <Step4HostDetails
-            data={formData}
-            updateData={updateFormData}
-            onBack={() => handleBackStep(3)}
-            onContinue={() => handleNextStep(5)}
-          />
-        )}
-
-        {currentStep === 5 && (
           <Step5ReviewSubmit
             data={formData}
             updateData={updateFormData}
@@ -340,7 +330,7 @@ export default function BecomeAHostWizardPage() {
               }
             }}
             onHostProfileCreated={handleHostProfileCreated}
-            onBack={() => handleBackStep(4)}
+            onBack={() => handleBackStep(3)}
             onEditStep={(step) => setCurrentStep(step)}
           />
         )}
