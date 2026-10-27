@@ -6,6 +6,14 @@ export class PredictPriceDto {
   city: string;
 
   @IsString()
+  @IsOptional()
+  subCity?: string;
+
+  @IsString()
+  @IsOptional()
+  neighborhood?: string;
+
+  @IsString()
   propertyType: string;
 
   @IsInt()
