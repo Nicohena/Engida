@@ -12,6 +12,7 @@ import type {
 import AmenitySelector from '../../../../../components/host/AmenitySelector';
 import GalleryManager from '../../../../../components/host/GalleryManager';
 import HostRoomsManager from '../../../../../components/host/HostRoomsManager';
+import AiPricingWidget from '../../../../../components/host/AiPricingWidget';
 import {
   ArrowLeft,
   Building2,
@@ -747,32 +748,58 @@ export default function EditListingPage() {
 
           {/* Pricing Input based on listingType */}
           {listing.listingType === 'RENTAL' ? (
-            <div className="space-y-1.5 max-w-sm">
-              <label htmlFor="pricePerNight" className="block text-sm font-bold text-[#3a302a]">
-                Price Per Night (ETB) <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-black text-[#605850]">
-                  ETB
-                </span>
-                <input
-                  id="pricePerNight"
-                  name="pricePerNight"
-                  type="number"
-                  min="1"
-                  step="any"
-                  value={form.pricePerNight}
-                  onChange={handleChange}
-                  className={`w-full pl-14 pr-4 py-2.5 rounded-xl border text-sm font-medium text-[#3a302a] focus:outline-none focus:ring-2 transition ${
-                    errors.pricePerNight
-                      ? 'border-red-400 focus:ring-red-200'
-                      : 'border-[#d8d0c8] focus:ring-[#c2652a]/20 focus:border-[#c2652a]'
-                  }`}
-                />
+            <div className="space-y-4 max-w-xl">
+              <div className="space-y-1.5 max-w-sm">
+                <label htmlFor="pricePerNight" className="block text-sm font-bold text-[#3a302a]">
+                  Price Per Night (ETB) <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-black text-[#605850]">
+                    ETB
+                  </span>
+                  <input
+                    id="pricePerNight"
+                    name="pricePerNight"
+                    type="number"
+                    min="1"
+                    step="any"
+                    value={form.pricePerNight}
+                    onChange={handleChange}
+                    className={`w-full pl-14 pr-4 py-2.5 rounded-xl border text-sm font-medium text-[#3a302a] focus:outline-none focus:ring-2 transition ${
+                      errors.pricePerNight
+                        ? 'border-red-400 focus:ring-red-200'
+                        : 'border-[#d8d0c8] focus:ring-[#c2652a]/20 focus:border-[#c2652a]'
+                    }`}
+                  />
+                </div>
+                {errors.pricePerNight && (
+                  <p className="text-xs text-red-600 font-semibold">{errors.pricePerNight}</p>
+                )}
               </div>
-              {errors.pricePerNight && (
-                <p className="text-xs text-red-600 font-semibold">{errors.pricePerNight}</p>
-              )}
+
+              {/* ✨ AI Dynamic Price Recommendation (Dual-Currency ETB & USD) */}
+              <AiPricingWidget
+                city={form.city}
+                subCity={form.subCity}
+                neighborhood={form.neighborhood}
+                propertyType={form.propertyType}
+                bedrooms={form.bedrooms}
+                bathrooms={form.bathrooms}
+                maxGuests={form.maxGuests}
+                amenityIds={form.amenityIds}
+                currentPrice={form.pricePerNight}
+                onApplyPrice={(price) => {
+                  setIsDirty(true);
+                  setForm((prev) => (prev ? { ...prev, pricePerNight: String(price) } : prev));
+                  if (errors.pricePerNight) {
+                    setErrors((prev) => {
+                      const next = { ...prev };
+                      delete next.pricePerNight;
+                      return next;
+                    });
+                  }
+                }}
+              />
             </div>
           ) : (
             <div className="space-y-1.5 max-w-sm">

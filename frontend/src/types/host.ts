@@ -402,3 +402,32 @@ export interface HostReviewsSummary {
   propertySummaries: PropertyReviewSummary[];
 }
 
+export interface AiKeyPriceDriver {
+  factor: string;
+  impact: string;
+  type: 'positive' | 'neutral' | 'premium';
+}
+
+export interface AiPricePredictionResponse {
+  predictedPrice: number;
+  predictedPriceUsd: number;
+  currency: 'ETB';
+  exchangeRate: number;
+  confidence: number;
+  priceRange: {
+    min: number;
+    max: number;
+    minUsd: number;
+    maxUsd: number;
+  };
+  breakdown: {
+    baseRateEtb: number;
+    baseRateUsd: number;
+    locationMultiplier: number;
+    locationTier: string;
+    propertyTypeMultiplier: number;
+    amenitiesPremiumEtb: number;
+    keyDrivers: AiKeyPriceDriver[];
+  };
+}
+
