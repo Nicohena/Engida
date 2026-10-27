@@ -199,11 +199,11 @@ export class HostService {
       displayName: dto.displayName,
       bio: dto.bio || null,
       phone: dto.phone || null,
-      verificationStatus: HostVerificationStatus.UNVERIFIED,
+      verificationStatus: HostVerificationStatus.VERIFIED,
     });
 
     const saved = await this.hostProfileRepository.save(newProfile);
-    this.logger.log(`Host profile created for user ${userId}`);
+    this.logger.log(`Host profile created as VERIFIED for user ${userId}`);
     return saved;
   }
 

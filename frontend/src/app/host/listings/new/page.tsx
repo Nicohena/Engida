@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
@@ -415,17 +415,17 @@ export default function CreateListingPage() {
       <div className="flex items-center justify-between">
         <Link
           href="/host/listings"
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-[#64748B] hover:text-[#33599E] transition"
+          className="inline-flex items-center gap-1.5 text-xs font-bold text-[#73776F] hover:text-[#234B36] transition"
         >
           <ArrowLeft className="w-4 h-4" /> Back to My Listings
         </Link>
       </div>
 
       {/* ── Page Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-[#F1F5F9]">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-[#EEF3EF]">
         <div>
-          <h1 className="text-2xl font-black text-[#000000] tracking-tight">Create Listing</h1>
-          <p className="text-sm text-[#64748B] mt-1">
+          <h1 className="text-2xl font-black text-[#252923] tracking-tight">Create Listing</h1>
+          <p className="text-sm text-[#73776F] mt-1">
             Fill in the information below. New listings start as a{' '}
             <span className="font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded text-xs uppercase tracking-wide">
               Draft
@@ -437,7 +437,7 @@ export default function CreateListingPage() {
         <div className="flex items-center gap-3 flex-shrink-0">
           <Link
             href="/host/listings"
-            className="px-4 py-2 rounded-xl text-sm font-semibold text-[#64748B] hover:bg-[#F4F7FC] border border-[#CBD5E1] transition"
+            className="px-4 py-2 rounded-xl text-sm font-semibold text-[#73776F] hover:bg-[#F8F5ED] border border-[#E5E0D5] transition"
           >
             Cancel
           </Link>
@@ -445,7 +445,7 @@ export default function CreateListingPage() {
             type="button"
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="inline-flex items-center gap-2 bg-[#33599E] hover:bg-[#234079] text-white text-sm font-bold px-5 py-2 rounded-xl shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 bg-[#234B36] hover:bg-[#2D5E43] active:bg-[#1A3828] text-white text-sm font-bold px-5 py-2 rounded-xl shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? (
               <>
@@ -493,15 +493,15 @@ export default function CreateListingPage() {
         {/* ═══════════════════════════════════════════════════
             SECTION 1: Basic Information
         ═══════════════════════════════════════════════════ */}
-        <section className="bg-white border border-[#CBD5E1] rounded-2xl p-6 md:p-8 space-y-6">
-          <div className="flex items-center gap-2.5 pb-3 border-b border-[#F1F5F9]">
-            <Building2 className="w-5 h-5 text-[#33599E]" />
-            <h2 className="text-lg font-black text-[#000000]">Basic Information</h2>
+        <section className="bg-white border border-[#E5E0D5] rounded-2xl p-6 md:p-8 space-y-6">
+          <div className="flex items-center gap-2.5 pb-3 border-b border-[#EEF3EF]">
+            <Building2 className="w-5 h-5 text-[#234B36]" />
+            <h2 className="text-lg font-black text-[#252923]">Basic Information</h2>
           </div>
 
           {/* Title */}
           <div className="space-y-1.5">
-            <label htmlFor="title" className="block text-sm font-bold text-[#000000]">
+            <label htmlFor="title" className="block text-sm font-bold text-[#252923]">
               Listing Title <span className="text-red-500">*</span>
             </label>
             <input
@@ -512,27 +512,27 @@ export default function CreateListingPage() {
               onChange={handleChange}
               maxLength={255}
               placeholder="e.g. Modern 2-Bedroom Apartment in Bole with Balcony"
-              className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium text-[#000000] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 transition ${
+              className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium text-[#252923] placeholder:text-[#73776F] focus:outline-none focus:ring-2 transition ${
                 errors.title
                   ? 'border-red-400 focus:ring-red-200'
-                  : 'border-[#CBD5E1] focus:ring-[#33599E]/20 focus:border-[#33599E]'
+                  : 'border-[#E5E0D5] focus:ring-[#234B36]/20 focus:border-[#234B36]'
               }`}
             />
             <div className="flex justify-between items-center text-xs">
               {errors.title ? (
                 <span className="text-red-600 font-semibold">{errors.title}</span>
               ) : (
-                <span className="text-[#94A3B8]">
+                <span className="text-[#73776F]">
                   Catchy, descriptive title highlighting key property features.
                 </span>
               )}
-              <span className="text-[#94A3B8]">{form.title.length}/255</span>
+              <span className="text-[#73776F]">{form.title.length}/255</span>
             </div>
           </div>
 
           {/* Property Type */}
           <div className="space-y-2">
-            <label className="block text-sm font-bold text-[#000000]">
+            <label className="block text-sm font-bold text-[#252923]">
               Property Type <span className="text-red-500">*</span>
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -546,20 +546,20 @@ export default function CreateListingPage() {
                     onClick={() => handlePropertyTypeChange(opt.value)}
                     className={`flex items-start gap-3 p-3.5 rounded-xl border text-left transition ${
                       isSelected
-                        ? 'border-[#33599E] bg-[#E3EAF5]/40 ring-1 ring-[#33599E]'
-                        : 'border-[#CBD5E1] hover:border-[#94A3B8] bg-white'
+                        ? 'border-[#234B36] bg-[#234B36]/10 ring-1 ring-[#234B36]'
+                        : 'border-[#E5E0D5] hover:border-[#234B36]/50 bg-white'
                     }`}
                   >
                     <div
                       className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                        isSelected ? 'bg-[#33599E] text-white' : 'bg-[#F4F7FC] text-[#64748B]'
+                        isSelected ? 'bg-[#234B36] text-white' : 'bg-[#EEF3EF] text-[#73776F]'
                       }`}
                     >
                       <IconComponent className="w-4 h-4" />
                     </div>
                     <div>
-                      <div className="text-sm font-bold text-[#000000]">{opt.label}</div>
-                      <p className="text-xs text-[#64748B] leading-snug mt-0.5">
+                      <div className="text-sm font-bold text-[#252923]">{opt.label}</div>
+                      <p className="text-xs text-[#73776F] leading-snug mt-0.5">
                         {opt.description}
                       </p>
                     </div>
@@ -571,7 +571,7 @@ export default function CreateListingPage() {
 
           {/* Description */}
           <div className="space-y-1.5">
-            <label htmlFor="description" className="block text-sm font-bold text-[#000000]">
+            <label htmlFor="description" className="block text-sm font-bold text-[#252923]">
               Description <span className="text-red-500">*</span>
             </label>
             <textarea
@@ -581,10 +581,10 @@ export default function CreateListingPage() {
               value={form.description}
               onChange={handleChange}
               placeholder="Describe your property in detail. Mention space, atmosphere, neighborhood conveniences, nearby landmarks, and amenities guests or buyers will enjoy."
-              className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium text-[#000000] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 transition ${
+              className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium text-[#252923] placeholder:text-[#73776F] focus:outline-none focus:ring-2 transition ${
                 errors.description
                   ? 'border-red-400 focus:ring-red-200'
-                  : 'border-[#CBD5E1] focus:ring-[#33599E]/20 focus:border-[#33599E]'
+                  : 'border-[#E5E0D5] focus:ring-[#234B36]/20 focus:border-[#234B36]'
               }`}
             />
             {errors.description && (
@@ -596,15 +596,15 @@ export default function CreateListingPage() {
         {/* ═══════════════════════════════════════════════════
             SECTION 2: Listing Type & Pricing
         ═══════════════════════════════════════════════════ */}
-        <section className="bg-white border border-[#CBD5E1] rounded-2xl p-6 md:p-8 space-y-6">
-          <div className="flex items-center gap-2.5 pb-3 border-b border-[#F1F5F9]">
-            <Compass className="w-5 h-5 text-[#33599E]" />
-            <h2 className="text-lg font-black text-[#000000]">Listing Type & Pricing</h2>
+        <section className="bg-white border border-[#E5E0D5] rounded-2xl p-6 md:p-8 space-y-6">
+          <div className="flex items-center gap-2.5 pb-3 border-b border-[#EEF3EF]">
+            <Compass className="w-5 h-5 text-[#234B36]" />
+            <h2 className="text-lg font-black text-[#252923]">Listing Type & Pricing</h2>
           </div>
 
           {/* Listing Type Toggle */}
           <div className="space-y-2">
-            <label className="block text-sm font-bold text-[#000000]">
+            <label className="block text-sm font-bold text-[#252923]">
               Are you offering this property for Rental or Sale? <span className="text-red-500">*</span>
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -613,22 +613,22 @@ export default function CreateListingPage() {
                 onClick={() => handleListingTypeChange('RENTAL')}
                 className={`p-4 rounded-xl border text-left transition flex items-start gap-3.5 ${
                   form.listingType === 'RENTAL'
-                    ? 'border-[#33599E] bg-[#E3EAF5]/40 ring-1 ring-[#33599E]'
-                    : 'border-[#CBD5E1] hover:border-[#94A3B8] bg-white'
+                    ? 'border-[#234B36] bg-[#234B36]/10 ring-1 ring-[#234B36]'
+                    : 'border-[#E5E0D5] hover:border-[#234B36]/50 bg-white'
                 }`}
               >
                 <div
                   className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
                     form.listingType === 'RENTAL'
-                      ? 'bg-[#33599E] text-white'
-                      : 'bg-[#F4F7FC] text-[#64748B]'
+                      ? 'bg-[#234B36] text-white'
+                      : 'bg-[#EEF3EF] text-[#73776F]'
                   }`}
                 >
                   <Home className="w-5 h-5" />
                 </div>
                 <div>
-                  <div className="text-sm font-black text-[#000000]">Rental Property</div>
-                  <p className="text-xs text-[#64748B] mt-0.5">
+                  <div className="text-sm font-black text-[#252923]">Rental Property</div>
+                  <p className="text-xs text-[#73776F] mt-0.5">
                     For short-term or nightly accommodations. Priced per night in ETB.
                   </p>
                 </div>
@@ -639,22 +639,22 @@ export default function CreateListingPage() {
                 onClick={() => handleListingTypeChange('SALE')}
                 className={`p-4 rounded-xl border text-left transition flex items-start gap-3.5 ${
                   form.listingType === 'SALE'
-                    ? 'border-[#33599E] bg-[#E3EAF5]/40 ring-1 ring-[#33599E]'
-                    : 'border-[#CBD5E1] hover:border-[#94A3B8] bg-white'
+                    ? 'border-[#234B36] bg-[#234B36]/10 ring-1 ring-[#234B36]'
+                    : 'border-[#E5E0D5] hover:border-[#234B36]/50 bg-white'
                 }`}
               >
                 <div
                   className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
                     form.listingType === 'SALE'
-                      ? 'bg-[#33599E] text-white'
-                      : 'bg-[#F4F7FC] text-[#64748B]'
+                      ? 'bg-[#234B36] text-white'
+                      : 'bg-[#EEF3EF] text-[#73776F]'
                   }`}
                 >
                   <Layers className="w-5 h-5" />
                 </div>
                 <div>
-                  <div className="text-sm font-black text-[#000000]">Property For Sale</div>
-                  <p className="text-xs text-[#64748B] mt-0.5">
+                  <div className="text-sm font-black text-[#252923]">Property For Sale</div>
+                  <p className="text-xs text-[#73776F] mt-0.5">
                     For real estate purchase. Set total sale valuation in ETB.
                   </p>
                 </div>
@@ -665,11 +665,11 @@ export default function CreateListingPage() {
           {/* Pricing fields react to listingType */}
           {form.listingType === 'RENTAL' && (
             <div className="space-y-1.5 max-w-sm">
-              <label htmlFor="pricePerNight" className="block text-sm font-bold text-[#000000]">
+              <label htmlFor="pricePerNight" className="block text-sm font-bold text-[#252923]">
                 Price Per Night (ETB) <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-black text-[#64748B]">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-black text-[#73776F]">
                   ETB
                 </span>
                 <input
@@ -681,17 +681,17 @@ export default function CreateListingPage() {
                   value={form.pricePerNight}
                   onChange={handleChange}
                   placeholder="e.g. 4500"
-                  className={`w-full pl-14 pr-4 py-2.5 rounded-xl border text-sm font-medium text-[#000000] focus:outline-none focus:ring-2 transition ${
+                  className={`w-full pl-14 pr-4 py-2.5 rounded-xl border text-sm font-medium text-[#252923] focus:outline-none focus:ring-2 transition ${
                     errors.pricePerNight
                       ? 'border-red-400 focus:ring-red-200'
-                      : 'border-[#CBD5E1] focus:ring-[#33599E]/20 focus:border-[#33599E]'
+                      : 'border-[#E5E0D5] focus:ring-[#234B36]/20 focus:border-[#234B36]'
                   }`}
                 />
               </div>
               {errors.pricePerNight ? (
                 <p className="text-xs text-red-600 font-semibold">{errors.pricePerNight}</p>
               ) : (
-                <p className="text-xs text-[#94A3B8]">
+                <p className="text-xs text-[#73776F]">
                   Rate charged to guests per night in Ethiopian Birr.
                 </p>
               )}
@@ -700,11 +700,11 @@ export default function CreateListingPage() {
 
           {form.listingType === 'SALE' && (
             <div className="space-y-1.5 max-w-sm">
-              <label htmlFor="salePrice" className="block text-sm font-bold text-[#000000]">
+              <label htmlFor="salePrice" className="block text-sm font-bold text-[#252923]">
                 Total Sale Price (ETB) <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-black text-[#64748B]">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-black text-[#73776F]">
                   ETB
                 </span>
                 <input
@@ -716,17 +716,17 @@ export default function CreateListingPage() {
                   value={form.salePrice}
                   onChange={handleChange}
                   placeholder="e.g. 8500000"
-                  className={`w-full pl-14 pr-4 py-2.5 rounded-xl border text-sm font-medium text-[#000000] focus:outline-none focus:ring-2 transition ${
+                  className={`w-full pl-14 pr-4 py-2.5 rounded-xl border text-sm font-medium text-[#252923] focus:outline-none focus:ring-2 transition ${
                     errors.salePrice
                       ? 'border-red-400 focus:ring-red-200'
-                      : 'border-[#CBD5E1] focus:ring-[#33599E]/20 focus:border-[#33599E]'
+                      : 'border-[#E5E0D5] focus:ring-[#234B36]/20 focus:border-[#234B36]'
                   }`}
                 />
               </div>
               {errors.salePrice ? (
                 <p className="text-xs text-red-600 font-semibold">{errors.salePrice}</p>
               ) : (
-                <p className="text-xs text-[#94A3B8]">
+                <p className="text-xs text-[#73776F]">
                   Total purchase asking price in Ethiopian Birr.
                 </p>
               )}
@@ -737,16 +737,16 @@ export default function CreateListingPage() {
         {/* ═══════════════════════════════════════════════════
             SECTION 3: Property Details
         ═══════════════════════════════════════════════════ */}
-        <section className="bg-white border border-[#CBD5E1] rounded-2xl p-6 md:p-8 space-y-6">
-          <div className="flex items-center gap-2.5 pb-3 border-b border-[#F1F5F9]">
-            <Layers className="w-5 h-5 text-[#33599E]" />
-            <h2 className="text-lg font-black text-[#000000]">Property Details</h2>
+        <section className="bg-white border border-[#E5E0D5] rounded-2xl p-6 md:p-8 space-y-6">
+          <div className="flex items-center gap-2.5 pb-3 border-b border-[#EEF3EF]">
+            <Layers className="w-5 h-5 text-[#234B36]" />
+            <h2 className="text-lg font-black text-[#252923]">Property Details</h2>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
             {/* Max Guests */}
             <div className="space-y-1.5">
-              <label htmlFor="maxGuests" className="block text-xs font-bold text-[#000000]">
+              <label htmlFor="maxGuests" className="block text-xs font-bold text-[#252923]">
                 Max Guests
               </label>
               <input
@@ -757,10 +757,10 @@ export default function CreateListingPage() {
                 max="50"
                 value={form.maxGuests}
                 onChange={handleChange}
-                className={`w-full px-3 py-2 rounded-xl border text-sm font-semibold text-[#000000] focus:outline-none focus:ring-2 transition ${
+                className={`w-full px-3 py-2 rounded-xl border text-sm font-semibold text-[#252923] focus:outline-none focus:ring-2 transition ${
                   errors.maxGuests
                     ? 'border-red-400 focus:ring-red-200'
-                    : 'border-[#CBD5E1] focus:ring-[#33599E]/20 focus:border-[#33599E]'
+                    : 'border-[#E5E0D5] focus:ring-[#234B36]/20 focus:border-[#234B36]'
                 }`}
               />
               {errors.maxGuests && (
@@ -770,7 +770,7 @@ export default function CreateListingPage() {
 
             {/* Bedrooms */}
             <div className="space-y-1.5">
-              <label htmlFor="bedrooms" className="block text-xs font-bold text-[#000000]">
+              <label htmlFor="bedrooms" className="block text-xs font-bold text-[#252923]">
                 Bedrooms
               </label>
               <input
@@ -780,10 +780,10 @@ export default function CreateListingPage() {
                 min="0"
                 value={form.bedrooms}
                 onChange={handleChange}
-                className={`w-full px-3 py-2 rounded-xl border text-sm font-semibold text-[#000000] focus:outline-none focus:ring-2 transition ${
+                className={`w-full px-3 py-2 rounded-xl border text-sm font-semibold text-[#252923] focus:outline-none focus:ring-2 transition ${
                   errors.bedrooms
                     ? 'border-red-400 focus:ring-red-200'
-                    : 'border-[#CBD5E1] focus:ring-[#33599E]/20 focus:border-[#33599E]'
+                    : 'border-[#E5E0D5] focus:ring-[#234B36]/20 focus:border-[#234B36]'
                 }`}
               />
               {errors.bedrooms && (
@@ -793,7 +793,7 @@ export default function CreateListingPage() {
 
             {/* Bathrooms */}
             <div className="space-y-1.5">
-              <label htmlFor="bathrooms" className="block text-xs font-bold text-[#000000]">
+              <label htmlFor="bathrooms" className="block text-xs font-bold text-[#252923]">
                 Bathrooms
               </label>
               <input
@@ -803,10 +803,10 @@ export default function CreateListingPage() {
                 min="0"
                 value={form.bathrooms}
                 onChange={handleChange}
-                className={`w-full px-3 py-2 rounded-xl border text-sm font-semibold text-[#000000] focus:outline-none focus:ring-2 transition ${
+                className={`w-full px-3 py-2 rounded-xl border text-sm font-semibold text-[#252923] focus:outline-none focus:ring-2 transition ${
                   errors.bathrooms
                     ? 'border-red-400 focus:ring-red-200'
-                    : 'border-[#CBD5E1] focus:ring-[#33599E]/20 focus:border-[#33599E]'
+                    : 'border-[#E5E0D5] focus:ring-[#234B36]/20 focus:border-[#234B36]'
                 }`}
               />
               {errors.bathrooms && (
@@ -816,7 +816,7 @@ export default function CreateListingPage() {
 
             {/* Area Sqm */}
             <div className="space-y-1.5">
-              <label htmlFor="areaSqm" className="block text-xs font-bold text-[#000000]">
+              <label htmlFor="areaSqm" className="block text-xs font-bold text-[#252923]">
                 Area (m²)
               </label>
               <input
@@ -827,10 +827,10 @@ export default function CreateListingPage() {
                 value={form.areaSqm}
                 onChange={handleChange}
                 placeholder="e.g. 120"
-                className={`w-full px-3 py-2 rounded-xl border text-sm font-semibold text-[#000000] focus:outline-none focus:ring-2 transition ${
+                className={`w-full px-3 py-2 rounded-xl border text-sm font-semibold text-[#252923] focus:outline-none focus:ring-2 transition ${
                   errors.areaSqm
                     ? 'border-red-400 focus:ring-red-200'
-                    : 'border-[#CBD5E1] focus:ring-[#33599E]/20 focus:border-[#33599E]'
+                    : 'border-[#E5E0D5] focus:ring-[#234B36]/20 focus:border-[#234B36]'
                 }`}
               />
               {errors.areaSqm && <p className="text-xs text-red-600">{errors.areaSqm}</p>}
@@ -838,7 +838,7 @@ export default function CreateListingPage() {
 
             {/* Parking Spaces */}
             <div className="space-y-1.5">
-              <label htmlFor="parkingSpaces" className="block text-xs font-bold text-[#000000]">
+              <label htmlFor="parkingSpaces" className="block text-xs font-bold text-[#252923]">
                 Parking Spaces
               </label>
               <input
@@ -848,10 +848,10 @@ export default function CreateListingPage() {
                 min="0"
                 value={form.parkingSpaces}
                 onChange={handleChange}
-                className={`w-full px-3 py-2 rounded-xl border text-sm font-semibold text-[#000000] focus:outline-none focus:ring-2 transition ${
+                className={`w-full px-3 py-2 rounded-xl border text-sm font-semibold text-[#252923] focus:outline-none focus:ring-2 transition ${
                   errors.parkingSpaces
                     ? 'border-red-400 focus:ring-red-200'
-                    : 'border-[#CBD5E1] focus:ring-[#33599E]/20 focus:border-[#33599E]'
+                    : 'border-[#E5E0D5] focus:ring-[#234B36]/20 focus:border-[#234B36]'
                 }`}
               />
               {errors.parkingSpaces && (
@@ -864,16 +864,16 @@ export default function CreateListingPage() {
         {/* ═══════════════════════════════════════════════════
             SECTION 4: Location & Address
         ═══════════════════════════════════════════════════ */}
-        <section className="bg-white border border-[#CBD5E1] rounded-2xl p-6 md:p-8 space-y-6">
-          <div className="flex items-center gap-2.5 pb-3 border-b border-[#F1F5F9]">
-            <MapPin className="w-5 h-5 text-[#33599E]" />
-            <h2 className="text-lg font-black text-[#000000]">Location & Address</h2>
+        <section className="bg-white border border-[#E5E0D5] rounded-2xl p-6 md:p-8 space-y-6">
+          <div className="flex items-center gap-2.5 pb-3 border-b border-[#EEF3EF]">
+            <MapPin className="w-5 h-5 text-[#234B36]" />
+            <h2 className="text-lg font-black text-[#252923]">Location & Address</h2>
           </div>
 
           {/* Primary address and city */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="sm:col-span-2 space-y-1.5">
-              <label htmlFor="address" className="block text-sm font-bold text-[#000000]">
+              <label htmlFor="address" className="block text-sm font-bold text-[#252923]">
                 Street Address <span className="text-red-500">*</span>
               </label>
               <input
@@ -884,10 +884,10 @@ export default function CreateListingPage() {
                 onChange={handleChange}
                 maxLength={255}
                 placeholder="e.g. Cameroon St, near Edna Mall"
-                className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium text-[#000000] focus:outline-none focus:ring-2 transition ${
+                className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium text-[#252923] focus:outline-none focus:ring-2 transition ${
                   errors.address
                     ? 'border-red-400 focus:ring-red-200'
-                    : 'border-[#CBD5E1] focus:ring-[#33599E]/20 focus:border-[#33599E]'
+                    : 'border-[#E5E0D5] focus:ring-[#234B36]/20 focus:border-[#234B36]'
                 }`}
               />
               {errors.address && (
@@ -896,7 +896,7 @@ export default function CreateListingPage() {
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="city" className="block text-sm font-bold text-[#000000]">
+              <label htmlFor="city" className="block text-sm font-bold text-[#252923]">
                 City <span className="text-red-500">*</span>
               </label>
               <input
@@ -907,10 +907,10 @@ export default function CreateListingPage() {
                 onChange={handleChange}
                 maxLength={100}
                 placeholder="e.g. Addis Ababa"
-                className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium text-[#000000] focus:outline-none focus:ring-2 transition ${
+                className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium text-[#252923] focus:outline-none focus:ring-2 transition ${
                   errors.city
                     ? 'border-red-400 focus:ring-red-200'
-                    : 'border-[#CBD5E1] focus:ring-[#33599E]/20 focus:border-[#33599E]'
+                    : 'border-[#E5E0D5] focus:ring-[#234B36]/20 focus:border-[#234B36]'
                 }`}
               />
               {errors.city && <p className="text-xs text-red-600 font-semibold">{errors.city}</p>}
@@ -919,12 +919,12 @@ export default function CreateListingPage() {
 
           {/* Ethiopian Administrative Hierarchy */}
           <div className="pt-2">
-            <h3 className="text-xs font-black uppercase tracking-wider text-[#94A3B8] mb-3">
+            <h3 className="text-xs font-black uppercase tracking-wider text-[#73776F] mb-3">
               Ethiopian Administrative Hierarchy (Optional)
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               <div className="space-y-1.5">
-                <label htmlFor="subCity" className="block text-xs font-bold text-[#000000]">
+                <label htmlFor="subCity" className="block text-xs font-bold text-[#252923]">
                   Sub-City (Kifle Ketema)
                 </label>
                 <input
@@ -935,12 +935,12 @@ export default function CreateListingPage() {
                   onChange={handleChange}
                   maxLength={100}
                   placeholder="e.g. Bole"
-                  className="w-full px-3 py-2 rounded-xl border border-[#CBD5E1] text-sm font-medium text-[#000000] focus:outline-none focus:ring-2 focus:ring-[#33599E]/20 focus:border-[#33599E] transition"
+                  className="w-full px-3 py-2 rounded-xl border border-[#E5E0D5] text-sm font-medium text-[#252923] focus:outline-none focus:ring-2 focus:ring-[#234B36]/20 focus:border-[#234B36] transition"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="woreda" className="block text-xs font-bold text-[#000000]">
+                <label htmlFor="woreda" className="block text-xs font-bold text-[#252923]">
                   Woreda
                 </label>
                 <input
@@ -951,12 +951,12 @@ export default function CreateListingPage() {
                   onChange={handleChange}
                   maxLength={100}
                   placeholder="e.g. Woreda 03"
-                  className="w-full px-3 py-2 rounded-xl border border-[#CBD5E1] text-sm font-medium text-[#000000] focus:outline-none focus:ring-2 focus:ring-[#33599E]/20 focus:border-[#33599E] transition"
+                  className="w-full px-3 py-2 rounded-xl border border-[#E5E0D5] text-sm font-medium text-[#252923] focus:outline-none focus:ring-2 focus:ring-[#234B36]/20 focus:border-[#234B36] transition"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="neighborhood" className="block text-xs font-bold text-[#000000]">
+                <label htmlFor="neighborhood" className="block text-xs font-bold text-[#252923]">
                   Neighborhood / Area
                 </label>
                 <input
@@ -967,12 +967,12 @@ export default function CreateListingPage() {
                   onChange={handleChange}
                   maxLength={150}
                   placeholder="e.g. Atlas / Rwanda"
-                  className="w-full px-3 py-2 rounded-xl border border-[#CBD5E1] text-sm font-medium text-[#000000] focus:outline-none focus:ring-2 focus:ring-[#33599E]/20 focus:border-[#33599E] transition"
+                  className="w-full px-3 py-2 rounded-xl border border-[#E5E0D5] text-sm font-medium text-[#252923] focus:outline-none focus:ring-2 focus:ring-[#234B36]/20 focus:border-[#234B36] transition"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="region" className="block text-xs font-bold text-[#000000]">
+                <label htmlFor="region" className="block text-xs font-bold text-[#252923]">
                   Region / Chartered City
                 </label>
                 <input
@@ -983,12 +983,12 @@ export default function CreateListingPage() {
                   onChange={handleChange}
                   maxLength={100}
                   placeholder="e.g. Addis Ababa"
-                  className="w-full px-3 py-2 rounded-xl border border-[#CBD5E1] text-sm font-medium text-[#000000] focus:outline-none focus:ring-2 focus:ring-[#33599E]/20 focus:border-[#33599E] transition"
+                  className="w-full px-3 py-2 rounded-xl border border-[#E5E0D5] text-sm font-medium text-[#252923] focus:outline-none focus:ring-2 focus:ring-[#234B36]/20 focus:border-[#234B36] transition"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="zone" className="block text-xs font-bold text-[#000000]">
+                <label htmlFor="zone" className="block text-xs font-bold text-[#252923]">
                   Zone
                 </label>
                 <input
@@ -999,12 +999,12 @@ export default function CreateListingPage() {
                   onChange={handleChange}
                   maxLength={100}
                   placeholder="e.g. Central Zone"
-                  className="w-full px-3 py-2 rounded-xl border border-[#CBD5E1] text-sm font-medium text-[#000000] focus:outline-none focus:ring-2 focus:ring-[#33599E]/20 focus:border-[#33599E] transition"
+                  className="w-full px-3 py-2 rounded-xl border border-[#E5E0D5] text-sm font-medium text-[#252923] focus:outline-none focus:ring-2 focus:ring-[#234B36]/20 focus:border-[#234B36] transition"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="country" className="block text-xs font-bold text-[#000000]">
+                <label htmlFor="country" className="block text-xs font-bold text-[#252923]">
                   Country
                 </label>
                 <input
@@ -1014,20 +1014,20 @@ export default function CreateListingPage() {
                   value={form.country}
                   onChange={handleChange}
                   maxLength={100}
-                  className="w-full px-3 py-2 rounded-xl border border-[#CBD5E1] text-sm font-medium text-[#000000] bg-[#F8FAFD] focus:outline-none transition"
+                  className="w-full px-3 py-2 rounded-xl border border-[#E5E0D5] text-sm font-medium text-[#252923] bg-[#F8F5ED] focus:outline-none transition"
                 />
               </div>
             </div>
           </div>
 
           {/* Optional Coordinates */}
-          <div className="pt-2 border-t border-[#F1F5F9]">
-            <h3 className="text-xs font-black uppercase tracking-wider text-[#94A3B8] mb-3">
+          <div className="pt-2 border-t border-[#EEF3EF]">
+            <h3 className="text-xs font-black uppercase tracking-wider text-[#73776F] mb-3">
               Geographic Coordinates (Optional)
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg">
               <div className="space-y-1.5">
-                <label htmlFor="latitude" className="block text-xs font-bold text-[#000000]">
+                <label htmlFor="latitude" className="block text-xs font-bold text-[#252923]">
                   Latitude (-90 to 90)
                 </label>
                 <input
@@ -1038,10 +1038,10 @@ export default function CreateListingPage() {
                   value={form.latitude}
                   onChange={handleChange}
                   placeholder="e.g. 9.012345"
-                  className={`w-full px-3 py-2 rounded-xl border text-sm font-medium text-[#000000] focus:outline-none focus:ring-2 transition ${
+                  className={`w-full px-3 py-2 rounded-xl border text-sm font-medium text-[#252923] focus:outline-none focus:ring-2 transition ${
                     errors.latitude
                       ? 'border-red-400 focus:ring-red-200'
-                      : 'border-[#CBD5E1] focus:ring-[#33599E]/20 focus:border-[#33599E]'
+                      : 'border-[#E5E0D5] focus:ring-[#234B36]/20 focus:border-[#234B36]'
                   }`}
                 />
                 {errors.latitude && (
@@ -1050,7 +1050,7 @@ export default function CreateListingPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="longitude" className="block text-xs font-bold text-[#000000]">
+                <label htmlFor="longitude" className="block text-xs font-bold text-[#252923]">
                   Longitude (-180 to 180)
                 </label>
                 <input
@@ -1061,10 +1061,10 @@ export default function CreateListingPage() {
                   value={form.longitude}
                   onChange={handleChange}
                   placeholder="e.g. 38.765432"
-                  className={`w-full px-3 py-2 rounded-xl border text-sm font-medium text-[#000000] focus:outline-none focus:ring-2 transition ${
+                  className={`w-full px-3 py-2 rounded-xl border text-sm font-medium text-[#252923] focus:outline-none focus:ring-2 transition ${
                     errors.longitude
                       ? 'border-red-400 focus:ring-red-200'
-                      : 'border-[#CBD5E1] focus:ring-[#33599E]/20 focus:border-[#33599E]'
+                      : 'border-[#E5E0D5] focus:ring-[#234B36]/20 focus:border-[#234B36]'
                   }`}
                 />
                 {errors.longitude && (
@@ -1078,10 +1078,10 @@ export default function CreateListingPage() {
         {/* ═══════════════════════════════════════════════════
             SECTION 5: Photos & Gallery Management
         ═══════════════════════════════════════════════════ */}
-        <section className="bg-white border border-[#CBD5E1] rounded-2xl p-6 md:p-8 space-y-6">
-          <div className="flex items-center gap-2.5 pb-3 border-b border-[#F1F5F9]">
-            <ImageIcon className="w-5 h-5 text-[#33599E]" />
-            <h2 className="text-lg font-black text-[#000000]">Photos &amp; Gallery</h2>
+        <section className="bg-white border border-[#E5E0D5] rounded-2xl p-6 md:p-8 space-y-6">
+          <div className="flex items-center gap-2.5 pb-3 border-b border-[#EEF3EF]">
+            <ImageIcon className="w-5 h-5 text-[#234B36]" />
+            <h2 className="text-lg font-black text-[#252923]">Photos &amp; Gallery</h2>
           </div>
 
           <GalleryManager
@@ -1120,10 +1120,10 @@ export default function CreateListingPage() {
         {/* ═══════════════════════════════════════════════════
             SECTION 6: Features & Amenities
         ═══════════════════════════════════════════════════ */}
-        <section className="bg-white border border-[#CBD5E1] rounded-2xl p-6 md:p-8 space-y-6">
-          <div className="flex items-center gap-2.5 pb-3 border-b border-[#F1F5F9]">
-            <Sparkles className="w-5 h-5 text-[#33599E]" />
-            <h2 className="text-lg font-black text-[#000000]">Features &amp; Amenities</h2>
+        <section className="bg-white border border-[#E5E0D5] rounded-2xl p-6 md:p-8 space-y-6">
+          <div className="flex items-center gap-2.5 pb-3 border-b border-[#EEF3EF]">
+            <Sparkles className="w-5 h-5 text-[#234B36]" />
+            <h2 className="text-lg font-black text-[#252923]">Features &amp; Amenities</h2>
           </div>
 
           <AmenitySelector
@@ -1138,22 +1138,22 @@ export default function CreateListingPage() {
         {/* ═══════════════════════════════════════════════════
             Bottom Action Bar
         ═══════════════════════════════════════════════════ */}
-        <div className="sticky bottom-4 z-20 bg-white/95 backdrop-blur-md border border-[#CBD5E1] rounded-2xl p-4 shadow-lg flex items-center justify-between gap-4">
-          <div className="text-xs text-[#64748B]">
-            New listings are created as <strong className="text-[#000000]">Draft</strong>. You can
+        <div className="sticky bottom-4 z-20 bg-white/95 backdrop-blur-md border border-[#E5E0D5] rounded-2xl p-4 shadow-lg flex items-center justify-between gap-4">
+          <div className="text-xs text-[#73776F]">
+            New listings are created as <strong className="text-[#252923]">Draft</strong>. You can
             review and publish later.
           </div>
           <div className="flex items-center gap-3">
             <Link
               href="/host/listings"
-              className="px-4 py-2.5 rounded-xl text-sm font-semibold text-[#64748B] hover:bg-[#F4F7FC] border border-[#CBD5E1] transition"
+              className="px-4 py-2.5 rounded-xl text-sm font-semibold text-[#73776F] hover:bg-[#F8F5ED] border border-[#E5E0D5] transition"
             >
               Cancel
             </Link>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="inline-flex items-center gap-2 bg-[#33599E] hover:bg-[#234079] text-white text-sm font-bold px-6 py-2.5 rounded-xl shadow transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-2 bg-[#234B36] hover:bg-[#2D5E43] active:bg-[#1A3828] text-white text-sm font-bold px-6 py-2.5 rounded-xl shadow transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <>

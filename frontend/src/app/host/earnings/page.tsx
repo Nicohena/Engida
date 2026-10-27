@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -204,15 +204,15 @@ export default function HostEarningsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#252923]">
               Host Earnings & Financials
             </h1>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#EEF3EF] text-[#234B36] border border-[#E5E0D5]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#234B36]" />
               Verified Data
             </span>
           </div>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+          <p className="text-xs sm:text-sm text-[#73776F] mt-1">
             Real stored reservation financial metrics, confirmed gateway payments, and cash commitments.
           </p>
         </div>
@@ -222,7 +222,7 @@ export default function HostEarningsPage() {
           <button
             onClick={() => setRefreshKey((k) => k + 1)}
             disabled={loading}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition shadow-xs disabled:opacity-50 cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-[#E5E0D5] text-xs font-bold text-[#252923] hover:bg-[#F8F5ED] transition shadow-xs disabled:opacity-50 cursor-pointer"
           >
             <RotateCcw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             <span>Refresh</span>
@@ -231,15 +231,15 @@ export default function HostEarningsPage() {
       </div>
 
       {/* ── 2. PAYOUT LIMITATION & TRANSPARENCY NOTICE ── */}
-      <div className="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-4 sm:p-5 flex items-start gap-3.5">
-        <div className="p-2 bg-amber-100 rounded-xl text-amber-800 shrink-0">
+      <div className="bg-[#EEF3EF]/70 border border-[#E5E0D5] rounded-2xl p-4 sm:p-5 flex items-start gap-3.5">
+        <div className="p-2 bg-[#F8F5ED] rounded-xl text-[#234B36] border border-[#E5E0D5] shrink-0">
           <Info className="w-5 h-5" />
         </div>
-        <div className="text-xs text-amber-900 space-y-1">
-          <h3 className="font-bold text-sm text-amber-950">
+        <div className="text-xs text-[#252923] space-y-1">
+          <h3 className="font-bold text-sm text-[#252923]">
             Payment Reconciliation & Settlement Notice
           </h3>
-          <p className="leading-relaxed">
+          <p className="leading-relaxed text-[#73776F]">
             ENGIDA currently tracks real payment events processed via online gateways (Chapa) and cash-on-arrival reservation commitments.
             Automated host bank or mobile-money payouts are not yet supported; host disbursements and settlements are handled directly or per manual schedule.
           </p>
@@ -247,12 +247,12 @@ export default function HostEarningsPage() {
       </div>
 
       {/* ── 3. FILTER BAR ── */}
-      <div className="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs">
+      <div className="bg-white border border-[#E5E0D5] rounded-2xl p-4 shadow-xs">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
           {/* Property Filter */}
           <div>
-            <label className="block font-bold text-slate-700 mb-1 flex items-center gap-1">
-              <Building2 className="w-3.5 h-3.5 text-slate-400" />
+            <label className="block font-bold text-[#252923] mb-1 flex items-center gap-1">
+              <Building2 className="w-3.5 h-3.5 text-[#73776F]" />
               <span>Filter by Listing</span>
             </label>
             <select
@@ -261,7 +261,7 @@ export default function HostEarningsPage() {
                 setSelectedPropertyId(e.target.value);
                 setTxPage(1);
               }}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-medium text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-[#F8F5ED] border border-[#E5E0D5] rounded-xl px-3 py-2 font-medium text-[#252923] focus:outline-hidden focus:ring-2 focus:ring-[#234B36]/20 focus:border-[#234B36]"
             >
               <option value="">All Listings</option>
               {listings.map((l) => (
@@ -274,8 +274,8 @@ export default function HostEarningsPage() {
 
           {/* Payment Status Filter */}
           <div>
-            <label className="block font-bold text-slate-700 mb-1 flex items-center gap-1">
-              <Filter className="w-3.5 h-3.5 text-slate-400" />
+            <label className="block font-bold text-[#252923] mb-1 flex items-center gap-1">
+              <Filter className="w-3.5 h-3.5 text-[#73776F]" />
               <span>Payment Status</span>
             </label>
             <select
@@ -284,7 +284,7 @@ export default function HostEarningsPage() {
                 setSelectedPaymentStatus(e.target.value);
                 setTxPage(1);
               }}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-medium text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-[#F8F5ED] border border-[#E5E0D5] rounded-xl px-3 py-2 font-medium text-[#252923] focus:outline-hidden focus:ring-2 focus:ring-[#234B36]/20 focus:border-[#234B36]"
             >
               <option value="">All Payment Statuses</option>
               <option value="PAID">Confirmed Paid (Online)</option>
@@ -296,8 +296,8 @@ export default function HostEarningsPage() {
 
           {/* Start Date */}
           <div>
-            <label className="block font-bold text-slate-700 mb-1 flex items-center gap-1">
-              <Calendar className="w-3.5 h-3.5 text-slate-400" />
+            <label className="block font-bold text-[#252923] mb-1 flex items-center gap-1">
+              <Calendar className="w-3.5 h-3.5 text-[#73776F]" />
               <span>From Date</span>
             </label>
             <input
@@ -307,14 +307,14 @@ export default function HostEarningsPage() {
                 setStartDate(e.target.value);
                 setTxPage(1);
               }}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 font-medium text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-[#F8F5ED] border border-[#E5E0D5] rounded-xl px-3 py-1.5 font-medium text-[#252923] focus:outline-hidden focus:ring-2 focus:ring-[#234B36]/20 focus:border-[#234B36]"
             />
           </div>
 
           {/* End Date */}
           <div>
-            <label className="block font-bold text-slate-700 mb-1 flex items-center gap-1">
-              <Calendar className="w-3.5 h-3.5 text-slate-400" />
+            <label className="block font-bold text-[#252923] mb-1 flex items-center gap-1">
+              <Calendar className="w-3.5 h-3.5 text-[#73776F]" />
               <span>To Date</span>
             </label>
             <input
@@ -324,14 +324,14 @@ export default function HostEarningsPage() {
                 setEndDate(e.target.value);
                 setTxPage(1);
               }}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 font-medium text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-[#F8F5ED] border border-[#E5E0D5] rounded-xl px-3 py-1.5 font-medium text-[#252923] focus:outline-hidden focus:ring-2 focus:ring-[#234B36]/20 focus:border-[#234B36]"
             />
           </div>
         </div>
 
         {(selectedPropertyId || selectedPaymentStatus || startDate || endDate) && (
-          <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-            <span className="text-slate-500">Active filters applied</span>
+          <div className="mt-3 pt-3 border-t border-[#EEF3EF] flex items-center justify-between text-xs">
+            <span className="text-[#73776F]">Active filters applied</span>
             <button
               onClick={() => {
                 setSelectedPropertyId('');
@@ -340,7 +340,7 @@ export default function HostEarningsPage() {
                 setEndDate('');
                 setTxPage(1);
               }}
-              className="text-blue-600 font-bold hover:underline cursor-pointer"
+              className="text-[#234B36] font-bold hover:text-[#2D5E43] hover:underline cursor-pointer"
             >
               Clear all filters
             </button>
@@ -354,13 +354,13 @@ export default function HostEarningsPage() {
           <div className="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-2">
             <AlertCircle className="w-5 h-5" />
           </div>
-          <h3 className="text-sm font-bold text-slate-900 mb-1">
+          <h3 className="text-sm font-bold text-[#252923] mb-1">
             Could not load financial records
           </h3>
-          <p className="text-xs text-slate-600 mb-4">{error}</p>
+          <p className="text-xs text-[#73776F] mb-4">{error}</p>
           <button
             onClick={() => setRefreshKey((k) => k + 1)}
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#234B36] hover:bg-[#2D5E43] active:bg-[#1A3828] text-white rounded-xl text-xs font-bold transition cursor-pointer"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             Try again
@@ -371,24 +371,24 @@ export default function HostEarningsPage() {
       {/* ── 5. KPI METRICS CARDS ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: Gross Booking Value */}
-        <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs flex flex-col justify-between">
+        <div className="bg-white border border-[#E5E0D5] rounded-2xl p-5 shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+            <span className="text-xs font-bold text-[#73776F] uppercase tracking-wider">
               Total Booking Value
             </span>
-            <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-[#EEF3EF] text-[#234B36] flex items-center justify-center border border-[#E5E0D5]">
               <BadgeDollarSign className="w-4 h-4" />
             </div>
           </div>
           <div>
-            <div className="text-2xl font-black text-slate-900 tracking-tight">
+            <div className="text-2xl font-black text-[#252923] tracking-tight">
               {loading ? (
-                <div className="h-7 w-28 bg-slate-200 animate-pulse rounded-md" />
+                <div className="h-7 w-28 bg-[#EEF3EF] animate-pulse rounded-md" />
               ) : (
                 formatCurrency(summary?.totalBookingValue || 0, currency)
               )}
             </div>
-            <p className="text-[11px] text-slate-500 mt-1">
+            <p className="text-[11px] text-[#73776F] mt-1">
               Active & completed stays (
               {loading ? '…' : summary?.totalBookingsCount || 0} total bookings)
             </p>
@@ -421,24 +421,24 @@ export default function HostEarningsPage() {
         </div>
 
         {/* Card 3: Pay on Arrival */}
-        <div className="bg-white border border-blue-200/80 rounded-2xl p-5 shadow-xs flex flex-col justify-between bg-gradient-to-b from-blue-50/20 to-white">
+        <div className="bg-white border border-[#E5E0D5] rounded-2xl p-5 shadow-xs flex flex-col justify-between bg-gradient-to-b from-[#F8F5ED] to-white">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-blue-800 uppercase tracking-wider">
+            <span className="text-xs font-bold text-[#252923] uppercase tracking-wider">
               Cash on Arrival
             </span>
-            <div className="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-[#EEF3EF] text-[#234B36] flex items-center justify-center border border-[#E5E0D5]">
               <Banknote className="w-4 h-4" />
             </div>
           </div>
           <div>
-            <div className="text-2xl font-black text-blue-900 tracking-tight">
+            <div className="text-2xl font-black text-[#252923] tracking-tight">
               {loading ? (
-                <div className="h-7 w-28 bg-slate-200 animate-pulse rounded-md" />
+                <div className="h-7 w-28 bg-[#EEF3EF] animate-pulse rounded-md" />
               ) : (
                 formatCurrency(summary?.onArrivalAmount || 0, currency)
               )}
             </div>
-            <p className="text-[11px] text-blue-700 mt-1 font-medium">
+            <p className="text-[11px] text-[#73776F] mt-1 font-medium">
               Cash payable by guests (
               {loading ? '…' : summary?.onArrivalCount || 0} reservations)
             </p>
@@ -446,7 +446,7 @@ export default function HostEarningsPage() {
         </div>
 
         {/* Card 4: Refunds & Cancellations */}
-        <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs flex flex-col justify-between">
+        <div className="bg-white border border-[#E5E0D5] rounded-2xl p-5 shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Refunds / Cancellations
@@ -476,13 +476,13 @@ export default function HostEarningsPage() {
       </div>
 
       {/* ── 6. MONTHLY FINANCIAL OVERVIEW ── */}
-      <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+      <div className="bg-white border border-[#E5E0D5] rounded-2xl p-5 shadow-xs space-y-4">
+        <div className="flex items-center justify-between border-b border-[#EEF3EF] pb-3">
           <div>
-            <h2 className="text-base font-bold text-slate-900">
+            <h2 className="text-base font-bold text-[#252923]">
               Monthly Financial Overview
             </h2>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[#73776F]">
               Aggregate breakdown by booking creation month based on actual stored ledger records.
             </p>
           </div>
@@ -491,14 +491,14 @@ export default function HostEarningsPage() {
         {loading ? (
           <div className="space-y-2 py-4">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-12 bg-slate-100 animate-pulse rounded-xl" />
+              <div key={i} className="h-12 bg-[#F8F5ED] animate-pulse rounded-xl" />
             ))}
           </div>
         ) : summary?.monthlyBreakdown && summary.monthlyBreakdown.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-slate-200 text-slate-400 font-bold uppercase tracking-wider">
+                <tr className="border-b border-[#E5E0D5] text-[#73776F] font-bold uppercase tracking-wider bg-[#F8F5ED]">
                   <th className="py-2.5 px-3">Month</th>
                   <th className="py-2.5 px-3">Bookings</th>
                   <th className="py-2.5 px-3">Gross Value</th>
@@ -508,24 +508,24 @@ export default function HostEarningsPage() {
                   <th className="py-2.5 px-3">Cancelled</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 text-slate-700">
+              <tbody className="divide-y divide-[#EEF3EF] text-[#252923]">
                 {summary.monthlyBreakdown.map((m) => (
-                  <tr key={m.yearMonth} className="hover:bg-slate-50/80 transition">
-                    <td className="py-3 px-3 font-bold text-slate-900">{m.label}</td>
+                  <tr key={m.yearMonth} className="hover:bg-[#F8F5ED]/80 transition">
+                    <td className="py-3 px-3 font-bold text-[#252923]">{m.label}</td>
                     <td className="py-3 px-3 font-medium">{m.bookingCount}</td>
-                    <td className="py-3 px-3 font-bold text-slate-900">
+                    <td className="py-3 px-3 font-bold text-[#252923]">
                       {formatCurrency(m.totalBookingValue, currency)}
                     </td>
                     <td className="py-3 px-3 font-bold text-emerald-700">
                       {formatCurrency(m.confirmedPaidAmount, currency)}
-                      <span className="text-[10px] text-slate-400 font-normal ml-1">
+                      <span className="text-[10px] text-[#73776F] font-normal ml-1">
                         ({m.confirmedPaidCount})
                       </span>
                     </td>
-                    <td className="py-3 px-3 font-semibold text-blue-700">
+                    <td className="py-3 px-3 font-semibold text-[#234B36]">
                       {formatCurrency(m.onArrivalAmount, currency)}
                     </td>
-                    <td className="py-3 px-3 font-medium text-slate-500">
+                    <td className="py-3 px-3 font-medium text-[#73776F]">
                       {m.refundedAmount > 0 ? (
                         <span className="text-rose-600 font-bold">
                           {formatCurrency(m.refundedAmount, currency)}
@@ -534,7 +534,7 @@ export default function HostEarningsPage() {
                         '—'
                       )}
                     </td>
-                    <td className="py-3 px-3 font-medium text-slate-500">
+                    <td className="py-3 px-3 font-medium text-[#73776F]">
                       {m.cancelledCount > 0 ? (
                         <span className="text-rose-600 font-semibold">{m.cancelledCount}</span>
                       ) : (
@@ -547,24 +547,24 @@ export default function HostEarningsPage() {
             </table>
           </div>
         ) : (
-          <div className="py-8 text-center text-slate-400 text-xs">
+          <div className="py-8 text-center text-[#73776F] text-xs">
             No monthly booking data found for the selected timeframe.
           </div>
         )}
       </div>
 
       {/* ── 7. RESERVATION-LEVEL TRANSACTION HISTORY ── */}
-      <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+      <div className="bg-white border border-[#E5E0D5] rounded-2xl p-5 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#EEF3EF] pb-3">
           <div>
-            <h2 className="text-base font-bold text-slate-900">
+            <h2 className="text-base font-bold text-[#252923]">
               Reservation Transactions
             </h2>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[#73776F]">
               Itemized financial transactions, gateway references, and settlement states.
             </p>
           </div>
-          <span className="text-xs font-semibold text-slate-500">
+          <span className="text-xs font-semibold text-[#73776F]">
             {totalTx} total transactions
           </span>
         </div>
@@ -572,7 +572,7 @@ export default function HostEarningsPage() {
         {loading ? (
           <div className="space-y-3 py-4">
             {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="h-16 bg-slate-100 animate-pulse rounded-xl" />
+              <div key={i} className="h-16 bg-[#F8F5ED] animate-pulse rounded-xl" />
             ))}
           </div>
         ) : transactions.length > 0 ? (
@@ -581,7 +581,7 @@ export default function HostEarningsPage() {
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="border-b border-slate-200 text-slate-400 font-bold uppercase tracking-wider">
+                  <tr className="border-b border-[#E5E0D5] text-[#73776F] font-bold uppercase tracking-wider bg-[#F8F5ED]">
                     <th className="py-2.5 px-3">Date</th>
                     <th className="py-2.5 px-3">Property</th>
                     <th className="py-2.5 px-3">Guest</th>
@@ -591,16 +591,16 @@ export default function HostEarningsPage() {
                     <th className="py-2.5 px-3 text-right">Amount</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 text-slate-700">
+                <tbody className="divide-y divide-[#EEF3EF] text-[#252923]">
                   {transactions.map((tx) => {
                     const badge = getPaymentStatusBadge(tx.paymentStatus);
                     return (
-                      <tr key={tx.id} className="hover:bg-slate-50/80 transition">
+                      <tr key={tx.id} className="hover:bg-[#F8F5ED]/80 transition">
                         <td className="py-3 px-3 whitespace-nowrap">
-                          <div className="font-bold text-slate-900">
+                          <div className="font-bold text-[#252923]">
                             {formatDate(tx.checkInDate)}
                           </div>
-                          <div className="text-[10px] text-slate-400">
+                          <div className="text-[10px] text-[#73776F]">
                             booked {formatDate(String(tx.createdAt))}
                           </div>
                         </td>
@@ -608,20 +608,20 @@ export default function HostEarningsPage() {
                         <td className="py-3 px-3">
                           <Link
                             href={`/host/listings/${tx.propertyId}`}
-                            className="font-bold text-slate-900 hover:text-blue-600 truncate block max-w-xs"
+                            className="font-bold text-[#252923] hover:text-[#234B36] truncate block max-w-xs"
                           >
                             {tx.propertyTitle}
                           </Link>
-                          <div className="text-[10px] text-slate-400">{tx.propertyCity}</div>
+                          <div className="text-[10px] text-[#73776F]">{tx.propertyCity}</div>
                         </td>
 
                         <td className="py-3 px-3">
-                          <div className="font-semibold text-slate-900">{tx.guestName}</div>
-                          <div className="text-[10px] text-slate-400">{tx.guestEmail}</div>
+                          <div className="font-semibold text-[#252923]">{tx.guestName}</div>
+                          <div className="text-[10px] text-[#73776F]">{tx.guestEmail}</div>
                         </td>
 
                         <td className="py-3 px-3 whitespace-nowrap">
-                          <span className="font-medium text-slate-800">
+                          <span className="font-medium text-[#252923]">
                             {tx.paymentMethod.replace(/_/g, ' ')}
                           </span>
                         </td>
@@ -634,7 +634,7 @@ export default function HostEarningsPage() {
                           </span>
                         </td>
 
-                        <td className="py-3 px-3 whitespace-nowrap font-mono text-[11px] text-slate-500">
+                        <td className="py-3 px-3 whitespace-nowrap font-mono text-[11px] text-[#73776F]">
                           {tx.paymentReference ? (
                             <span title={tx.paymentReference}>
                               {tx.paymentReference.slice(0, 16)}…
@@ -645,7 +645,7 @@ export default function HostEarningsPage() {
                         </td>
 
                         <td className="py-3 px-3 text-right whitespace-nowrap">
-                          <span className="font-extrabold text-slate-900">
+                          <span className="font-extrabold text-[#252923]">
                             {formatCurrency(tx.totalPrice, tx.paymentCurrency)}
                           </span>
                         </td>
@@ -663,24 +663,24 @@ export default function HostEarningsPage() {
                 return (
                   <div
                     key={tx.id}
-                    className="p-4 border border-slate-200 rounded-xl bg-slate-50/50 space-y-2.5 text-xs"
+                    className="p-4 border border-[#E5E0D5] rounded-xl bg-[#F8F5ED]/50 space-y-2.5 text-xs"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <span className="font-bold text-slate-900 text-sm block">
+                        <span className="font-bold text-[#252923] text-sm block">
                           {tx.propertyTitle}
                         </span>
-                        <span className="text-[11px] text-slate-500">
+                        <span className="text-[11px] text-[#73776F]">
                           {tx.propertyCity} • Guest: {tx.guestName}
                         </span>
                       </div>
-                      <span className="text-sm font-black text-slate-900 whitespace-nowrap">
+                      <span className="text-sm font-black text-[#252923] whitespace-nowrap">
                         {formatCurrency(tx.totalPrice, tx.paymentCurrency)}
                       </span>
                     </div>
 
-                    <div className="flex items-center justify-between text-[11px] pt-1 border-t border-slate-200/60">
-                      <span className="text-slate-500">
+                    <div className="flex items-center justify-between text-[11px] pt-1 border-t border-[#E5E0D5]">
+                      <span className="text-[#73776F]">
                         {formatDate(tx.checkInDate)} - {formatDate(tx.checkOutDate)}
                       </span>
                       <span
@@ -690,7 +690,7 @@ export default function HostEarningsPage() {
                       </span>
                     </div>
 
-                    <div className="flex items-center justify-between text-[10px] text-slate-400">
+                    <div className="flex items-center justify-between text-[10px] text-[#73776F]">
                       <span>Method: {tx.paymentMethod.replace(/_/g, ' ')}</span>
                       {tx.paymentReference && (
                         <span className="font-mono">Ref: {tx.paymentReference.slice(0, 12)}…</span>
@@ -703,24 +703,24 @@ export default function HostEarningsPage() {
 
             {/* Pagination Controls */}
             {totalTxPages > 1 && (
-              <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
+              <div className="pt-4 border-t border-[#EEF3EF] flex items-center justify-between text-xs">
                 <button
                   onClick={() => setTxPage((p) => Math.max(1, p - 1))}
                   disabled={txPage <= 1}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 font-bold text-slate-700 disabled:opacity-40 cursor-pointer"
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[#E5E0D5] bg-white hover:bg-[#F8F5ED] font-bold text-[#252923] disabled:opacity-40 cursor-pointer"
                 >
                   <ChevronLeft className="w-3.5 h-3.5" />
                   <span>Previous</span>
                 </button>
 
-                <span className="text-slate-500 font-semibold">
+                <span className="text-[#73776F] font-semibold">
                   Page {txPage} of {totalTxPages}
                 </span>
 
                 <button
                   onClick={() => setTxPage((p) => Math.min(totalTxPages, p + 1))}
                   disabled={txPage >= totalTxPages}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 font-bold text-slate-700 disabled:opacity-40 cursor-pointer"
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[#E5E0D5] bg-white hover:bg-[#F8F5ED] font-bold text-[#252923] disabled:opacity-40 cursor-pointer"
                 >
                   <span>Next</span>
                   <ChevronRight className="w-3.5 h-3.5" />
@@ -729,10 +729,10 @@ export default function HostEarningsPage() {
             )}
           </>
         ) : (
-          <div className="py-12 text-center text-slate-400">
+          <div className="py-12 text-center text-[#73776F]">
             <CreditCard className="w-8 h-8 mx-auto mb-2 opacity-40 stroke-[1.5]" />
-            <p className="text-xs font-semibold text-slate-600">No transaction records found</p>
-            <p className="text-[11px] text-slate-400 mt-0.5">
+            <p className="text-xs font-semibold text-[#252923]">No transaction records found</p>
+            <p className="text-[11px] text-[#73776F] mt-0.5">
               Reservations and payments for your properties will appear here automatically.
             </p>
           </div>

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
@@ -98,19 +98,19 @@ export default function HostListingGallery({
   // Empty state: No images at all in current view
   if (totalPhotos === 0) {
     return (
-      <div className="bg-white border border-[#CBD5E1] rounded-2xl p-8 shadow-sm text-center">
-        <div className="w-16 h-16 rounded-2xl bg-[#F4F7FC] border border-[#CBD5E1] text-[#94A3B8] flex items-center justify-center mx-auto mb-3">
-          <Building2 className="w-8 h-8 text-[#CBD5E1]" />
+      <div className="bg-white border border-[#E5E0D5] rounded-2xl p-8 shadow-sm text-center">
+        <div className="w-16 h-16 rounded-2xl bg-[#F8F5ED] border border-[#E5E0D5] text-[#234B36] flex items-center justify-center mx-auto mb-3">
+          <Building2 className="w-8 h-8 text-[#234B36]" />
         </div>
-        <h3 className="text-base font-black text-[#000000]">
+        <h3 className="text-base font-black text-[#252923]">
           {viewMode === 'staged' ? 'No staged photos in proposal' : 'No photos uploaded yet'}
         </h3>
-        <p className="text-xs text-[#64748B] max-w-sm mx-auto mt-1 mb-4">
+        <p className="text-xs text-[#73776F] max-w-sm mx-auto mt-1 mb-4">
           Visuals are the most important part of attracting guests or buyers. Add photos to get your listing ready.
         </p>
         <Link
           href={`/host/listings/${listingId}/edit`}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#33599E] hover:bg-[#234079] text-white text-xs font-bold transition shadow-xs"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#234B36] hover:bg-[#2D5E43] active:bg-[#1A3828] text-white text-xs font-bold transition shadow-xs"
         >
           <Plus className="w-3.5 h-3.5" /> Add Photos
         </Link>
@@ -124,13 +124,13 @@ export default function HostListingGallery({
 
   return (
     <>
-      <div className="bg-white border border-[#CBD5E1] rounded-2xl overflow-hidden shadow-sm space-y-3 p-4 md:p-6">
+      <div className="bg-white border border-[#E5E0D5] rounded-2xl overflow-hidden shadow-sm space-y-3 p-4 md:p-6">
         {/* Header toolbar */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-2 flex-wrap">
-            <ImageIcon className="w-4 h-4 text-[#33599E]" />
-            <h2 className="text-sm font-black text-[#000000]">Listing Gallery</h2>
-            <span className="text-xs font-semibold text-[#64748B] bg-[#F4F7FC] px-2.5 py-0.5 rounded-full border border-[#CBD5E1]">
+            <ImageIcon className="w-4 h-4 text-[#234B36]" />
+            <h2 className="text-sm font-black text-[#252923]">Listing Gallery</h2>
+            <span className="text-xs font-semibold text-[#73776F] bg-[#F8F5ED] px-2.5 py-0.5 rounded-full border border-[#E5E0D5]">
               {totalPhotos} photo{totalPhotos !== 1 ? 's' : ''}
             </span>
 
@@ -145,14 +145,14 @@ export default function HostListingGallery({
           <div className="flex items-center gap-3">
             {/* View Mode Toggle when changes are staged */}
             {hasStagedMedia && (
-              <div className="flex items-center rounded-xl bg-[#F4F7FC] p-1 border border-[#CBD5E1] text-xs font-bold">
+              <div className="flex items-center rounded-xl bg-[#F8F5ED] p-1 border border-[#E5E0D5] text-xs font-bold">
                 <button
                   type="button"
                   onClick={() => setViewMode('live')}
                   className={`px-3 py-1 rounded-lg transition ${
                     viewMode === 'live'
-                      ? 'bg-white text-[#33599E] shadow-2xs'
-                      : 'text-[#64748B] hover:text-[#000000]'
+                      ? 'bg-white text-[#234B36] shadow-2xs'
+                      : 'text-[#73776F] hover:text-[#252923]'
                   }`}
                 >
                   Live Approved
@@ -174,7 +174,7 @@ export default function HostListingGallery({
             <button
               type="button"
               onClick={() => handleOpenLightbox(0)}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#33599E] hover:text-[#234079] transition shrink-0"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#234B36] hover:text-[#2D5E43] transition shrink-0"
             >
               <Maximize2 className="w-3.5 h-3.5" /> Fullscreen
             </button>
@@ -186,7 +186,7 @@ export default function HostListingGallery({
           {/* Main Hero Photo */}
           <div
             onClick={() => handleOpenLightbox(0)}
-            className="group relative w-full aspect-[16/9] sm:aspect-[21/9] rounded-xl overflow-hidden border border-[#CBD5E1] bg-[#F4F7FC] cursor-pointer"
+            className="group relative w-full aspect-[16/9] sm:aspect-[21/9] rounded-xl overflow-hidden border border-[#E5E0D5] bg-[#F8F5ED] cursor-pointer"
           >
             {!brokenImages[allPhotos[0]] ? (
               <Image
@@ -207,7 +207,7 @@ export default function HostListingGallery({
             )}
 
             {/* Cover Badge */}
-            <div className="absolute top-3 left-3 bg-[#33599E]/90 backdrop-blur-xs text-white text-[11px] font-bold px-3 py-1 rounded-full shadow-sm flex items-center gap-1.5 border border-white/20">
+            <div className="absolute top-3 left-3 bg-[#234B36]/90 backdrop-blur-xs text-white text-[11px] font-bold px-3 py-1 rounded-full shadow-sm flex items-center gap-1.5 border border-white/20">
               <Star className="w-3 h-3 fill-current text-amber-300" />
               <span>{viewMode === 'staged' ? 'Proposed Cover Photo' : 'Cover Photo'}</span>
             </div>
@@ -230,7 +230,7 @@ export default function HostListingGallery({
                   <div
                     key={`${photoUrl}-${idx}`}
                     onClick={() => handleOpenLightbox(globalIndex)}
-                    className="group relative aspect-[4/3] rounded-xl overflow-hidden border border-[#CBD5E1] bg-[#F4F7FC] cursor-pointer"
+                    className="group relative aspect-[4/3] rounded-xl overflow-hidden border border-[#E5E0D5] bg-[#F8F5ED] cursor-pointer"
                   >
                     {!isBroken ? (
                       <Image

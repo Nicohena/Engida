@@ -1,31 +1,30 @@
 @import "tailwindcss";
 
 :root {
-  /* Engida Design System - Silver Blue, Crisp White, Black Text Palette */
-  --background: #FFFFFF;
-  --foreground: #000000;
-  --text-dark: #000000;
-  --card: #FFFFFF;
-  --card-foreground: #000000;
+  /* Engida Design System — Ethiopian Coffee & Highlands Brand Palette */
+  --background: #F8F5ED;
+  --foreground: #252923;
+  --text-dark: #252923;
+  --card: #ffffff;
+  --card-foreground: #252923;
   
-  /* Silver Blue System Colors */
-  --silver-50: #F4F7FC;
-  --silver-100: #E3EAF5;
-  --silver-200: #C5D4EC;
-  --silver-300: #9BB3DD;
-  --silver-400: #7093CD;
-  --silver-500: #4672BE;
-  --silver-600: #33599E;
-  --silver-700: #234079;
-  --silver-800: #162B54;
+  /* Brand Terracotta & Earth Tones */
+  --brand-primary: #234B36;
+  --brand-primary-hover: #2D5E43;
+  --brand-primary-active: #1A3828;
+  --brand-sand: #EEF3EF;
+  --brand-canvas: #F8F5ED;
+  --brand-espresso: #252923;
+  --brand-stone: #73776F;
+  --brand-border: #E5E0D5;
   
-  --primary: #33599E;
-  --primary-hover: #234079;
-  --primary-light: #E3EAF5;
+  --primary: #234B36;
+  --primary-hover: #2D5E43;
+  --primary-light: #EEF3EF;
   
-  --muted: #334155;
-  --border: #CBD5E1;
-  --border-light: #E2E8F0;
+  --muted: #73776F;
+  --border: #E5E0D5;
+  --border-light: #E5E0D5;
 }
 
 @theme inline {
@@ -36,12 +35,12 @@
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
   --color-primary-light: var(--primary-light);
-  --color-silver-50: var(--silver-50);
-  --color-silver-100: var(--silver-100);
-  --color-silver-200: var(--silver-200);
-  --color-silver-300: var(--silver-300);
-  --color-silver-500: var(--silver-500);
-  --color-silver-700: var(--silver-700);
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-hover: var(--brand-primary-hover);
+  --color-brand-sand: var(--brand-sand);
+  --color-brand-canvas: var(--brand-canvas);
+  --color-brand-espresso: var(--brand-espresso);
+  --color-brand-stone: var(--brand-stone);
   --color-muted: var(--muted);
   --color-border: var(--border);
 }
@@ -205,9 +204,9 @@ body {
   100% { transform: scale(1); }
 }
 
-@keyframes pulseGlowTerracotta {
-  0%, 100% { box-shadow: 0 4px 14px rgba(194, 101, 42, 0.35); }
-  50% { box-shadow: 0 6px 20px rgba(194, 101, 42, 0.6); }
+@keyframes pulseGlowGreen {
+  0%, 100% { box-shadow: 0 4px 14px rgba(35, 75, 54, 0.35); }
+  50% { box-shadow: 0 6px 20px rgba(35, 75, 54, 0.6); }
 }
 
 .animate-fade-in-up {
@@ -219,7 +218,7 @@ body {
 }
 
 .search-glow:hover {
-  animation: pulseGlowTerracotta 1.8s infinite;
+  animation: pulseGlowGreen 1.8s infinite;
 }
 
 .font-headline, .font-display {

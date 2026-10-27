@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { getGoogleAuthUrl } from '../../lib/api';
@@ -38,10 +38,10 @@ export default function GoogleButton({
       onClick={handleClick}
       disabled={connecting}
       aria-label={label}
-      className={`w-full flex items-center justify-center gap-3 px-4 border border-[#d8d0c8] rounded-xl bg-white font-semibold text-[#3a302a] shadow-xs transition hover:bg-[#faf5ee] hover:border-[#c2652a]/60 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed ${sizing} ${className}`}
+      className={`w-full flex items-center justify-center gap-3 px-4 border border-[#E5E0D5] rounded-xl bg-white font-semibold text-[#252923] shadow-xs transition hover:bg-[#F8F5ED] hover:border-[#234B36]/60 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed ${sizing} ${className}`}
     >
       {connecting ? (
-        <span className="w-5 h-5 border-2 border-[#d8d0c8] border-t-[#c2652a] rounded-full animate-spin" />
+        <span className="w-5 h-5 border-2 border-[#E5E0D5] border-t-[#234B36] rounded-full animate-spin" />
       ) : (
         <svg
           width="20"

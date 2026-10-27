@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { apiFetch } from '../../lib/api';
@@ -105,15 +105,15 @@ export default function AmenitySelector({ selectedIds, onChange, error }: Amenit
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
-          <label className="block text-sm font-bold text-[#000000]">
+          <label className="block text-sm font-bold text-[#252923]">
             Amenities &amp; Features
           </label>
-          <p className="text-xs text-[#64748B]">
+          <p className="text-xs text-[#73776F]">
             Select all features available for guests at this property.
           </p>
         </div>
         {catalog.length > 0 && (
-          <span className="text-xs font-semibold text-[#33599E] bg-[#E3EAF5] px-3 py-1 rounded-full self-start sm:self-auto">
+          <span className="text-xs font-semibold text-[#234B36] bg-[#EEF3EF] px-3 py-1 rounded-full self-start sm:self-auto border border-[#E5E0D5]">
             {selectedIds.length} of {catalog.length} selected
           </span>
         )}
@@ -125,7 +125,7 @@ export default function AmenitySelector({ selectedIds, onChange, error }: Amenit
           {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
             <div
               key={i}
-              className="h-14 rounded-xl bg-[#F4F7FC] border border-[#CBD5E1]"
+              className="h-14 rounded-xl bg-[#F8F5ED] border border-[#E5E0D5]"
             />
           ))}
         </div>
@@ -153,7 +153,7 @@ export default function AmenitySelector({ selectedIds, onChange, error }: Amenit
 
       {/* Empty State */}
       {!loading && !fetchError && catalog.length === 0 && (
-        <div className="p-6 rounded-xl bg-[#F8FAFD] border border-[#CBD5E1] text-center text-xs text-[#64748B]">
+        <div className="p-6 rounded-xl bg-[#F8F5ED] border border-[#E5E0D5] text-center text-xs text-[#73776F]">
           No amenities currently available in the catalog.
         </div>
       )}
@@ -173,16 +173,16 @@ export default function AmenitySelector({ selectedIds, onChange, error }: Amenit
                 aria-pressed={isSelected}
                 className={`flex items-center justify-between p-3 rounded-xl border text-left transition-all ${
                   isSelected
-                    ? 'border-[#33599E] bg-[#E3EAF5]/50 ring-1 ring-[#33599E] text-[#000000] shadow-2xs'
-                    : 'border-[#CBD5E1] hover:border-[#94A3B8] bg-white text-[#334155]'
+                    ? 'border-[#234B36] bg-[#234B36]/10 ring-1 ring-[#234B36] text-[#252923] shadow-xs'
+                    : 'border-[#E5E0D5] hover:border-[#234B36]/50 bg-white text-[#252923]'
                 }`}
               >
                 <div className="flex items-center gap-2.5 min-w-0 pr-1">
                   <div
                     className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
                       isSelected
-                        ? 'bg-[#33599E] text-white'
-                        : 'bg-[#F4F7FC] text-[#64748B]'
+                        ? 'bg-[#234B36] text-white'
+                        : 'bg-[#EEF3EF] text-[#73776F]'
                     }`}
                   >
                     <Icon className="w-4 h-4" />
@@ -195,8 +195,8 @@ export default function AmenitySelector({ selectedIds, onChange, error }: Amenit
                 <div
                   className={`w-4 h-4 rounded flex items-center justify-center shrink-0 border transition ${
                     isSelected
-                      ? 'bg-[#33599E] border-[#33599E] text-white'
-                      : 'border-[#CBD5E1] bg-white'
+                      ? 'bg-[#234B36] border-[#234B36] text-white'
+                      : 'border-[#E5E0D5] bg-white'
                   }`}
                 >
                   {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
