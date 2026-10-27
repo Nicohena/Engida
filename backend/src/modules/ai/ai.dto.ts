@@ -59,3 +59,46 @@ export class RecommendationsDto {
   @Type(() => Number)
   minBedrooms?: number;
 }
+
+export class GenerateListingContentDto {
+  @IsString()
+  propertyType: string;
+
+  @IsString()
+  city: string;
+
+  @IsString()
+  @IsOptional()
+  subCity?: string;
+
+  @IsString()
+  @IsOptional()
+  neighborhood?: string;
+
+  @IsInt()
+  @Min(0)
+  @Type(() => Number)
+  bedrooms: number;
+
+  @IsInt()
+  @Min(0)
+  @Type(() => Number)
+  bathrooms: number;
+
+  @IsInt()
+  @Min(1)
+  @Type(() => Number)
+  maxGuests: number;
+
+  @IsArray()
+  @IsString({ each: true })
+  amenities: string[];
+
+  @IsString()
+  @IsOptional()
+  language?: 'en' | 'am';
+
+  @IsString()
+  @IsOptional()
+  tone?: 'luxury' | 'warm' | 'business';
+}

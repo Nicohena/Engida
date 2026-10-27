@@ -54,6 +54,27 @@ export interface RecommendationResponse {
   reasoning: string;
 }
 
+export interface GenerateListingContentRequest {
+  propertyType: string;
+  city: string;
+  subCity?: string;
+  neighborhood?: string;
+  bedrooms: number;
+  bathrooms: number;
+  maxGuests: number;
+  amenities: string[];
+  language?: 'en' | 'am';
+  tone?: 'luxury' | 'warm' | 'business';
+}
+
+export interface GenerateListingContentResponse {
+  title: string;
+  description: string;
+  language: 'en' | 'am';
+  tone: 'luxury' | 'warm' | 'business';
+  highlights: string[];
+}
+
 export const ETB_TO_USD_RATE = 125;
 
 @Injectable()
@@ -506,6 +527,188 @@ export class AiService {
         amenitiesPremiumEtb: Math.round(amenityLiftEtb),
         keyDrivers: keyDrivers.slice(0, 6), // Top 6 most impactful drivers
       },
+    };
+  }
+
+  async generateListingContent(
+    request: GenerateListingContentRequest,
+  ): Promise<GenerateListingContentResponse> {
+    try {
+      const response = await fetch(`${this.aiServiceUrl}/api/generate-listing-content`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(request),
+        signal: AbortSignal.timeout(6000),
+      });
+
+      if (!response.ok) {
+        return this.fallbackGenerateListingContent(request);
+      }
+
+      const data = await response.json();
+      if (!data.title || !data.description) {
+        return this.fallbackGenerateListingContent(request);
+      }
+
+      return data;
+    } catch {
+      return this.fallbackGenerateListingContent(request);
+    }
+  }
+
+  private fallbackGenerateListingContent(
+    request: GenerateListingContentRequest,
+  ): GenerateListingContentResponse {
+    const lang = request.language === 'am' ? 'am' : 'en';
+    const tone = request.tone || 'luxury';
+    const city = (request.city || 'Addis Ababa').trim();
+    const subCity = (request.subCity || '').trim();
+    const neighborhood = (request.neighborhood || '').trim();
+    const propType = (request.propertyType || 'APARTMENT').toUpperCase();
+    const bedrooms = Math.max(0, Number(request.bedrooms) || 0);
+    const bathrooms = Math.max(0, Number(request.bathrooms) || 0);
+    const rawAmenities = (request.amenities || []).map((a) => a.toLowerCase());
+
+    const hasAmenity = (keywords: string[]) =>
+      rawAmenities.some((item) => keywords.some((kw) => item.includes(kw)));
+
+    const hasGenerator = hasAmenity(['generator', 'power', 'backup', 'solar', 'electricity', 'zap']);
+    const hasWifi = hasAmenity(['wifi', 'internet', 'fiber', 'wi-fi', 'fbe2b0f1']);
+    const hasHotWater = hasAmenity(['hot water', 'water tank', 'reservoir', 'heater', '2139b538']);
+    const hasSecurity = hasAmenity(['security', 'guard', 'cctv', 'gated', '3d07918f']);
+    const hasKitchen = hasAmenity(['kitchen', 'cook', 'utensils', '4d4368d2']);
+    const hasPool = hasAmenity(['pool', 'swim', '651a809c']);
+    const hasParking = hasAmenity(['parking', 'garage', 'cdb1ee52']);
+    const hasWasher = hasAmenity(['washer', 'washing', 'laundry', '90c4bda9']);
+    const hasGarden = hasAmenity(['garden', 'yard', 'trees', '1d0cc66e']);
+    const hasAC = hasAmenity(['ac', 'air conditioning', 'cooling', 'c109b028']);
+
+    if (lang === 'am') {
+      const locAmharic = neighborhood
+        ? `${neighborhood}፣ ${subCity || city}`
+        : subCity
+        ? `${subCity}፣ ${city}`
+        : city;
+
+      let typeAm = 'አፓርታማ';
+      if (propType === 'VILLA') typeAm = 'ቪላ';
+      if (propType === 'HOUSE') typeAm = 'መኖሪያ ቤት';
+      if (propType === 'STUDIO') typeAm = 'ስቱዲዮ';
+      if (propType === 'BEDROOM') typeAm = 'የግል መኝታ ክፍል';
+
+      const bedAm = bedrooms > 0 ? `${bedrooms} መኝታ` : 'ምቹ';
+      const bathAm = bathrooms > 0 ? `${bathrooms} ዘመናዊ መታጠቢያ ቤት` : 'የተሟላ መታጠቢያ ቤት';
+
+      let title = '';
+      if (tone === 'warm') {
+        title = `በ${locAmharic} የሚገኝ ሰላማዊና ምቹ ባለ ${bedAm} ${typeAm}`;
+      } else if (tone === 'business') {
+        title = `በ${locAmharic} የሚገኝ ዘመናዊ ባለ ${bedAm} ${typeAm} ለዲፕሎማቶችና ለቢዝነስ ተጓዦች`;
+      } else {
+        title = `በ${locAmharic} የሚገኝ የቅንጦት ባለ ${bedAm} ${typeAm} ከሙሉ ጀነሬተርና ፈጣን ኢንተርኔት ጋር`;
+      }
+
+      const amenitiesAm: string[] = [];
+      if (hasGenerator) amenitiesAm.push('• 24/7 አስተማማኝ የመጠባበቂያ ጀነሬተር (የመብራት መቆራረጥ አያስጨንቅም)');
+      if (hasWifi) amenitiesAm.push('• ፈጣን የፋይበር ኢንተርኔት (ዋይፋይ) ለስራ እና ለመዝናኛ');
+      if (hasHotWater) amenitiesAm.push('• አስተማማኝ የውሃ ማጠራቀሚያ እና የሙቅ ውሃ አቅርቦት');
+      if (hasSecurity) amenitiesAm.push('• 24/7 የጥበቃ አገልግሎትና አስተማማኝ ደህንነት');
+      if (hasParking) amenitiesAm.push('• የተጠበቀ የመኪና ማቆሚያ ስፍራ');
+      if (hasKitchen) amenitiesAm.push('• ዘመናዊ የተሟላ ወጥ ቤት እና የምግብ ማብሰያ እቃዎች');
+      if (hasPool) amenitiesAm.push('• የመዋኛ ገንዳ');
+      if (hasGarden) amenitiesAm.push('• የሚያምር የአትክልት ስፍራ');
+
+      const description = `በ${locAmharic} እምብርት የሚገኝ ውብና ዘመናዊ ${typeAm}። ለዲፕሎማቶች፣ ለቢዝነስ ተጓዦች፣ ለዳያስፖራ እና ለቤተሰብ እጅግ ምቹና ሰላማዊ ማረፊያ ነው።
+
+የመኖሪያ ክፍሉ ዝርዝር:
+የመኖሪያ ክፍሉ ሰፊና ዘመናዊ የቤት እቃዎች የተሟሉለት ሲሆን፣ በቂ የተፈጥሮ ብርሃን ወደ ውስጥ ይገባል። ባለ ${bedAm} እና ${bathAm} ያካተተ ሲሆን፣ ለመዝናናት እና ለምቾትዎ በጥንቃቄ የተዘጋጀ ነው።
+
+የተሟሉ አገልግሎቶችና መሰረተ-ልማት:
+${amenitiesAm.length > 0 ? amenitiesAm.join('\n') : '• ምቹና ዘመናዊ የመኖሪያ አገልግሎቶች'}
+
+አካባቢና መዳረሻ:
+ከዋና ዋና አውራ ጎዳናዎች፣ ከዓለም አቀፍ አውሮፕላን ማረፊያ፣ ከታወቁ ሬስቶራንቶች እና የገበያ ማዕከላት ጥቂት ደቂቃዎች ርቀት ላይ ይገኛል። ጸጥታ የሰፈነበትና አስተማማኝ የመኖሪያ ሰፈር ነው።
+
+እውነተኛውን የኢትዮጵያ እንግዳ ተቀባይነት ባህል በደስታ እናቀርብልዎታለን። አሁኑኑ ያስይዙ!`;
+
+      const highlights = [
+        hasGenerator ? '24/7 የመጠባበቂያ ጀነሬተር' : 'አስተማማኝ መብራት',
+        hasWifi ? 'ፈጣን ፋይበር ዋይፋይ' : 'ኢንተርኔት',
+        hasHotWater ? 'ቀጣይነት ያለው ሙቅ ውሃ' : 'የውሃ አቅርቦት',
+        hasSecurity ? '24/7 ጥበቃና ደህንነት' : 'ምቹ አካባቢ',
+      ];
+
+      return {
+        title,
+        description,
+        language: 'am',
+        tone,
+        highlights,
+      };
+    }
+
+    // English Generation
+    const locText = neighborhood
+      ? `${neighborhood}, ${subCity || city}`
+      : subCity
+      ? `${subCity}, ${city}`
+      : city;
+
+    let typeText = 'Apartment';
+    if (propType === 'VILLA') typeText = 'Villa';
+    if (propType === 'HOUSE') typeText = 'Home';
+    if (propType === 'STUDIO') typeText = 'Studio';
+    if (propType === 'BEDROOM') typeText = 'Private Suite';
+
+    const bedText = bedrooms > 0 ? `${bedrooms}BR` : 'Cozy';
+
+    let title = '';
+    if (tone === 'warm') {
+      title = `Serene & Authentic ${bedText} ${typeText} in ${locText}`;
+    } else if (tone === 'business') {
+      title = `Modern Serviced ${bedText} ${typeText} in ${locText} | Fast Fiber WiFi & Workspace`;
+    } else {
+      title = `Executive ${bedText} ${typeText} in ${locText} with Standby Generator & High-Speed Fiber`;
+    }
+
+    const amenitiesEn: string[] = [];
+    if (hasGenerator) amenitiesEn.push('• 24/7 Automatic Standby Generator (uninterrupted electricity during outages)');
+    if (hasWifi) amenitiesEn.push('• High-Speed Dedicated Fiber WiFi (50+ Mbps for remote work & streaming)');
+    if (hasHotWater) amenitiesEn.push('• Pressurized High-Capacity Water Reservoir & Continuous Hot Water');
+    if (hasSecurity) amenitiesEn.push('• 24/7 Gated Concierge Security & Gated Compound');
+    if (hasParking) amenitiesEn.push('• Secure On-Site Gated Parking Space');
+    if (hasKitchen) amenitiesEn.push('• Fully Equipped Chef\'s Kitchen with modern appliances & cookware');
+    if (hasPool) amenitiesEn.push('• Private / Shared Swimming Pool Access');
+    if (hasAC) amenitiesEn.push('• Climate-Controlled Air Conditioning');
+    if (hasGarden) amenitiesEn.push('• Private Landscaped Garden & Outdoor Veranda');
+    if (hasWasher) amenitiesEn.push('• In-Unit Washing Machine & Laundry Amenities');
+
+    const description = `Welcome to your premium haven in ${locText}. Designed with an elegant blend of contemporary comfort and warm Ethiopian hospitality, this ${bedText.toLowerCase()} ${typeText.toLowerCase()} is the ideal urban sanctuary for international travelers, diplomats, diaspora visitors, and traveling executives.
+
+The Space:
+Features a bright, spacious living salon filled with natural light, modern orthopedic bedding across ${bedrooms} bedroom${bedrooms > 1 ? 's' : ''}, and ${bathrooms} immaculate bathroom${bathrooms > 1 ? 's' : ''}. Every room is tailored for maximum tranquility and restorative sleep.
+
+Power & Utilities Guarantee (Ethiopian Comfort Standard):
+${amenitiesEn.length > 0 ? amenitiesEn.join('\n') : '• Dependable essential utilities and comfortable amenities'}
+
+Prime Proximity & Neighborhood:
+Conveniently situated with seamless access to international dining, diplomatic embassies, supermarkets, and major transit hubs. Enjoy peace of mind in a safe, quiet residential setting.
+
+We take pride in delivering authentic Ethiopian warmth (እንግዳ ተቀባይነት). Inquire now or book your stay today!`;
+
+    const highlights = [
+      hasGenerator ? '24/7 Standby Generator' : 'Reliable Electricity',
+      hasWifi ? 'Dedicated Fiber WiFi' : 'High-Speed Internet',
+      hasHotWater ? 'Continuous Hot Water & Reservoir' : 'Hot Water',
+      hasSecurity ? '24/7 Gated Compound Security' : 'Safe Neighborhood',
+    ];
+
+    return {
+      title,
+      description,
+      language: 'en',
+      tone,
+      highlights,
     };
   }
 
