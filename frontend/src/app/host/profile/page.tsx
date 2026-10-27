@@ -349,16 +349,16 @@ export default function HostProfilePage() {
   return (
     <div className="p-4 sm:p-6 lg:p-10 max-w-5xl mx-auto space-y-8">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#d8d0c8]">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-[#1e40af] text-xs font-black uppercase tracking-wider mb-2">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f2ece4] text-[#c2652a] border border-[#d8d0c8] text-xs font-black uppercase tracking-wider mb-2">
             <ShieldCheck className="w-3.5 h-3.5" />
             <span>Host Account & Identity</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-black text-[#3a302a] tracking-tight">
             Host Profile & Verification Settings
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
+          <p className="text-xs sm:text-sm text-[#605850] font-medium mt-1">
             Manage your public host identity, hospitality story, and check your trust & verification status.
           </p>
         </div>
@@ -422,8 +422,8 @@ export default function HostProfilePage() {
       )}
 
       {loading ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center text-slate-500 text-sm">
-          <RotateCcw className="w-6 h-6 animate-spin mx-auto text-[#1e40af] mb-3" />
+        <div className="rounded-2xl border border-[#d8d0c8] bg-white p-12 text-center text-[#605850] text-sm">
+          <RotateCcw className="w-6 h-6 animate-spin mx-auto text-[#c2652a] mb-3" />
           Loading your host profile and verification details...
         </div>
       ) : profile ? (
@@ -433,23 +433,23 @@ export default function HostProfilePage() {
             <div
               role="region"
               aria-label="Host onboarding confirmation"
-              className="flex items-start gap-3.5 p-4 sm:p-5 rounded-2xl border border-blue-200 bg-blue-50/90 text-blue-900 shadow-2xs animate-in fade-in"
+              className="flex items-start gap-3.5 p-4 sm:p-5 rounded-2xl border border-[#c2652a]/30 bg-[#f2ece4] text-[#3a302a] shadow-xs animate-in fade-in"
             >
-              <div className="w-9 h-9 rounded-xl bg-blue-100 text-[#1e40af] flex items-center justify-center shrink-0 mt-0.5 border border-blue-200">
-                <Sparkles className="w-5 h-5 text-blue-700" />
+              <div className="w-9 h-9 rounded-xl bg-[#c2652a]/15 text-[#c2652a] flex items-center justify-center shrink-0 mt-0.5 border border-[#c2652a]/20">
+                <Sparkles className="w-5 h-5 text-[#c2652a]" />
               </div>
               <div className="flex-1 space-y-1">
-                <h2 className="text-sm font-bold text-blue-950">
+                <h2 className="text-sm font-bold text-[#3a302a]">
                   Welcome to ENGIDA Hosting!
                 </h2>
-                <p className="text-xs text-blue-800 leading-relaxed">
-                  Your host profile has been created with initial status <span className="font-extrabold uppercase px-1.5 py-0.5 rounded bg-blue-100 text-[#1e40af]">UNVERIFIED</span>. You can start drafting properties and setting your availability immediately. To display the official Verified Host badge on public listings, review your details below and click <strong>Submit for Verification Review</strong>.
+                <p className="text-xs text-[#605850] leading-relaxed">
+                  Your host profile has been created with initial status <span className="font-extrabold uppercase px-1.5 py-0.5 rounded bg-[#c2652a]/10 text-[#c2652a]">UNVERIFIED</span>. You can start drafting properties and setting your availability immediately. To display the official Verified Host badge on public listings, review your details below and click <strong>Submit for Verification Review</strong>.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setOnboardingNotice(false)}
-                className="text-blue-600 hover:text-blue-900 text-xs font-bold shrink-0 cursor-pointer"
+                className="text-[#c2652a] hover:text-[#e08850] text-xs font-bold shrink-0 cursor-pointer"
               >
                 Dismiss
               </button>
@@ -457,14 +457,14 @@ export default function HostProfilePage() {
           )}
 
           {/* Card 1: Identity & Business Verification Hub */}
-          <section className="rounded-2xl border border-slate-200/90 bg-white p-6 sm:p-8 shadow-xs space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+          <section className="rounded-2xl border border-[#d8d0c8] bg-white p-6 sm:p-8 shadow-xs space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#f2ece4]">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-50 to-indigo-50 text-[#1e40af] flex items-center justify-center shrink-0 border border-blue-100">
+                <div className="w-10 h-10 rounded-xl bg-[#f2ece4] text-[#c2652a] flex items-center justify-center shrink-0 border border-[#d8d0c8]">
                   <ShieldCheck className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-black text-slate-900 flex items-center gap-2">
+                  <h2 className="text-base font-black text-[#3a302a] flex items-center gap-2">
                     <span>Identity & Trust Verification</span>
                     <span
                       className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full border ${
@@ -474,7 +474,7 @@ export default function HostProfilePage() {
                       {profile.verificationStatus}
                     </span>
                   </h2>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-[#605850]">
                     Verified hosts gain prominent badges on published listings and increase guest reservation confidence.
                   </p>
                 </div>
@@ -551,14 +551,14 @@ export default function HostProfilePage() {
             )}
 
             {profile.verificationStatus === 'UNVERIFIED' && (
-              <div className="p-5 rounded-2xl border border-slate-200 bg-slate-50 space-y-4">
+              <div className="p-5 rounded-2xl border border-[#d8d0c8] bg-[#faf5ee] space-y-4">
                 <div className="flex items-center gap-2.5">
-                  <ShieldCheck className="w-5 h-5 text-slate-600" />
-                  <h3 className="text-sm font-black text-slate-900">
+                  <ShieldCheck className="w-5 h-5 text-[#c2652a]" />
+                  <h3 className="text-sm font-black text-[#3a302a]">
                     Get Your Host Profile Verified
                   </h3>
                 </div>
-                <p className="text-xs text-slate-600 leading-relaxed">
+                <p className="text-xs text-[#605850] leading-relaxed">
                   Verified hosts receive higher placement in search results, guest trust badges, and increased bookings. Make sure your display name and phone number below are complete, then submit your request for compliance review.
                 </p>
                 <div>
@@ -566,7 +566,7 @@ export default function HostProfilePage() {
                     type="button"
                     disabled={requestingVerification || saving}
                     onClick={handleRequestVerification}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#1e40af] to-[#2563eb] hover:from-[#1e3a8a] hover:to-[#1d4ed8] text-white text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-60"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#c2652a] hover:bg-[#e08850] active:bg-[#a65320] text-white text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-60"
                   >
                     {requestingVerification ? (
                       <>
@@ -585,10 +585,10 @@ export default function HostProfilePage() {
             )}
 
             {/* Truthful Infrastructure Disclosure (as requested in Step 5J prompt) */}
-            <div className="flex items-start gap-3 p-4 rounded-xl border border-blue-100 bg-blue-50/50 text-[11px] text-slate-600">
-              <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+            <div className="flex items-start gap-3 p-4 rounded-xl border border-[#d8d0c8] bg-[#f2ece4]/50 text-[11px] text-[#605850]">
+              <Info className="w-4 h-4 text-[#c2652a] shrink-0 mt-0.5" />
               <div className="space-y-1">
-                <p className="font-bold text-slate-800">
+                <p className="font-bold text-[#3a302a]">
                   Administrative Review Workflow &amp; Document Infrastructure Note
                 </p>
                 <p>
@@ -600,29 +600,29 @@ export default function HostProfilePage() {
 
           {/* Card 2: Public Host Identity & Profile Settings */}
           <form onSubmit={handleSubmit} className="space-y-8">
-            <section className="rounded-2xl border border-slate-200/90 bg-white p-6 sm:p-8 shadow-xs space-y-6">
-              <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
-                <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#1e40af] flex items-center justify-center shrink-0">
+            <section className="rounded-2xl border border-[#d8d0c8] bg-white p-6 sm:p-8 shadow-xs space-y-6">
+              <div className="flex items-center gap-3 pb-4 border-b border-[#f2ece4]">
+                <div className="w-10 h-10 rounded-xl bg-[#f2ece4] text-[#c2652a] flex items-center justify-center shrink-0 border border-[#d8d0c8]">
                   <UserIcon className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-black text-slate-900">Public Host Profile</h2>
-                  <p className="text-xs text-slate-500">
+                  <h2 className="text-base font-black text-[#3a302a]">Public Host Profile</h2>
+                  <p className="text-xs text-[#605850]">
                     This information is displayed on your published listings and visible to prospective guests.
                   </p>
                 </div>
               </div>
 
               {/* Profile Photo / Avatar Section */}
-              <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-4">
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+              <div className="p-5 rounded-2xl bg-[#faf5ee] border border-[#d8d0c8] space-y-4">
+                <label className="block text-xs font-bold text-[#3a302a] uppercase tracking-wider">
                   Host Profile Photo
                 </label>
 
                 <div className="flex flex-col sm:flex-row sm:items-center gap-5">
                   {/* Avatar Visual Preview */}
                   <div className="relative shrink-0">
-                    <div className="w-24 h-24 rounded-2xl border-2 border-slate-200 bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center text-2xl font-black shadow-inner overflow-hidden">
+                    <div className="w-24 h-24 rounded-2xl border-2 border-[#d8d0c8] bg-gradient-to-br from-[#c2652a] to-[#a65320] text-white flex items-center justify-center text-2xl font-black shadow-inner overflow-hidden">
                       {form.avatar ? (
                         /* eslint-disable-next-line @next/next/no-img-element */
                         <img
@@ -663,9 +663,9 @@ export default function HostProfilePage() {
                         type="button"
                         disabled={uploadingAvatar || saving}
                         onClick={() => fileInputRef.current?.click()}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 text-xs font-bold transition shadow-2xs cursor-pointer disabled:opacity-50"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-[#d8d0c8] hover:bg-[#f2ece4] text-[#3a302a] text-xs font-bold transition shadow-2xs cursor-pointer disabled:opacity-50"
                       >
-                        <Camera className="w-4 h-4 text-[#1e40af]" />
+                        <Camera className="w-4 h-4 text-[#c2652a]" />
                         <span>{uploadingAvatar ? 'Uploading...' : 'Upload Photo'}</span>
                       </button>
 
@@ -682,7 +682,7 @@ export default function HostProfilePage() {
                       )}
                     </div>
 
-                    <p className="text-[11px] text-slate-500">
+                    <p className="text-[11px] text-[#605850]">
                       Upload a friendly photo of yourself (JPEG, PNG, or WebP up to 5MB). Direct image URLs are also supported.
                     </p>
 
@@ -696,8 +696,8 @@ export default function HostProfilePage() {
                           setErrors((prev) => ({ ...prev, avatar: undefined }));
                         }}
                         placeholder="Or enter direct image URL (https://...)"
-                        className={`w-full rounded-xl border bg-white px-3.5 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
-                          errors.avatar ? 'border-red-300' : 'border-slate-200'
+                        className={`w-full rounded-xl border bg-white px-3.5 py-2 text-xs text-[#3a302a] placeholder-[#605850]/50 focus:outline-none focus:ring-2 focus:ring-[#c2652a]/20 focus:border-[#c2652a] ${
+                          errors.avatar ? 'border-red-300' : 'border-[#d8d0c8]'
                         }`}
                       />
                     </div>
@@ -710,38 +710,38 @@ export default function HostProfilePage() {
               </div>
 
               {/* Read-only Legal Account Information */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-xl bg-slate-50/60 border border-slate-200/60 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-xl bg-[#faf5ee] border border-[#d8d0c8]/60 text-xs">
                 <div className="flex items-center gap-2.5">
-                  <UserIcon className="w-4 h-4 text-slate-400 shrink-0" />
+                  <UserIcon className="w-4 h-4 text-[#605850] shrink-0" />
                   <div>
-                    <span className="block text-[10px] font-bold text-slate-400 uppercase">
+                    <span className="block text-[10px] font-bold text-[#605850] uppercase">
                       Legal Account Name
                     </span>
-                    <span className="font-bold text-slate-700">
+                    <span className="font-bold text-[#3a302a]">
                       {profile.user?.name || authUser?.name || 'N/A'}
                     </span>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2.5">
-                  <Mail className="w-4 h-4 text-slate-400 shrink-0" />
+                  <Mail className="w-4 h-4 text-[#605850] shrink-0" />
                   <div>
-                    <span className="block text-[10px] font-bold text-slate-400 uppercase">
+                    <span className="block text-[10px] font-bold text-[#605850] uppercase">
                       Account Email
                     </span>
-                    <span className="font-bold text-slate-700 truncate max-w-[180px] block">
+                    <span className="font-bold text-[#3a302a] truncate max-w-[180px] block">
                       {profile.user?.email || authUser?.email || 'N/A'}
                     </span>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2.5">
-                  <Calendar className="w-4 h-4 text-slate-400 shrink-0" />
+                  <Calendar className="w-4 h-4 text-[#605850] shrink-0" />
                   <div>
-                    <span className="block text-[10px] font-bold text-slate-400 uppercase">
+                    <span className="block text-[10px] font-bold text-[#605850] uppercase">
                       Host Since
                     </span>
-                    <span className="font-bold text-slate-700">
+                    <span className="font-bold text-[#3a302a]">
                       {profile.createdAt ? formatDate(profile.createdAt) : 'N/A'}
                     </span>
                   </div>
@@ -755,11 +755,11 @@ export default function HostProfilePage() {
                   <div className="flex justify-between items-center mb-1.5">
                     <label
                       htmlFor="displayName"
-                      className="block text-xs font-bold text-slate-700 uppercase tracking-wider"
+                      className="block text-xs font-bold text-[#3a302a] uppercase tracking-wider"
                     >
                       Host Display Name *
                     </label>
-                    <span className="text-[10px] font-bold text-slate-400">
+                    <span className="text-[10px] font-bold text-[#605850]">
                       Public to guests
                     </span>
                   </div>
@@ -777,10 +777,10 @@ export default function HostProfilePage() {
                       }
                     }}
                     placeholder="e.g. Almaz Hospitality"
-                    className={`w-full rounded-xl border px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
+                    className={`w-full rounded-xl border px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#3a302a] focus:outline-none focus:ring-2 focus:ring-[#c2652a]/20 ${
                       errors.displayName
                         ? 'border-red-300 focus:border-red-500'
-                        : 'border-slate-200 focus:border-[#1e40af]'
+                        : 'border-[#d8d0c8] focus:border-[#c2652a]'
                     }`}
                   />
                   {errors.displayName && (
@@ -795,11 +795,11 @@ export default function HostProfilePage() {
                   <div className="flex justify-between items-center mb-1.5">
                     <label
                       htmlFor="phone"
-                      className="block text-xs font-bold text-slate-700 uppercase tracking-wider"
+                      className="block text-xs font-bold text-[#3a302a] uppercase tracking-wider"
                     >
                       Contact Phone Number
                     </label>
-                    <span className="text-[10px] font-bold text-slate-400">
+                    <span className="text-[10px] font-bold text-[#605850]">
                       Required for verification
                     </span>
                   </div>
@@ -816,13 +816,13 @@ export default function HostProfilePage() {
                         }
                       }}
                       placeholder="+251 91 123 4567"
-                      className={`w-full rounded-xl border pl-10 pr-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
+                      className={`w-full rounded-xl border pl-10 pr-4 py-2.5 text-xs sm:text-sm font-semibold text-[#3a302a] focus:outline-none focus:ring-2 focus:ring-[#c2652a]/20 ${
                         errors.phone
                           ? 'border-red-300 focus:border-red-500'
-                          : 'border-slate-200 focus:border-[#1e40af]'
+                          : 'border-[#d8d0c8] focus:border-[#c2652a]'
                       }`}
                     />
-                    <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                    <Phone className="w-4 h-4 text-[#605850] absolute left-3.5 top-3" />
                   </div>
                   {errors.phone && (
                     <p className="mt-1 text-xs text-red-600 font-semibold">{errors.phone}</p>
@@ -834,13 +834,13 @@ export default function HostProfilePage() {
                   <div className="flex justify-between items-center mb-1.5">
                     <label
                       htmlFor="bio"
-                      className="block text-xs font-bold text-slate-700 uppercase tracking-wider"
+                      className="block text-xs font-bold text-[#3a302a] uppercase tracking-wider"
                     >
                       Host Biography &amp; Hospitality Story
                     </label>
                     <span
                       className={`text-[11px] font-bold ${
-                        form.bio.length > 450 ? 'text-amber-600' : 'text-slate-400'
+                        form.bio.length > 450 ? 'text-amber-600' : 'text-[#605850]'
                       }`}
                     >
                       {form.bio.length} / 500 characters
@@ -858,10 +858,10 @@ export default function HostProfilePage() {
                       }
                     }}
                     placeholder="Tell guests about your background, hosting hospitality, neighborhood tips, and what makes your stays in Ethiopia special..."
-                    className={`w-full rounded-xl border px-4 py-2.5 text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 resize-y ${
+                    className={`w-full rounded-xl border px-4 py-2.5 text-xs sm:text-sm text-[#3a302a] focus:outline-none focus:ring-2 focus:ring-[#c2652a]/20 resize-y ${
                       errors.bio
                         ? 'border-red-300 focus:border-red-500'
-                        : 'border-slate-200 focus:border-[#1e40af]'
+                        : 'border-[#d8d0c8] focus:border-[#c2652a]'
                     }`}
                   />
                   {errors.bio && (
@@ -871,19 +871,19 @@ export default function HostProfilePage() {
               </div>
 
               {/* Form Buttons */}
-              <div className="flex flex-wrap items-center justify-end gap-3 pt-4 border-t border-slate-100">
+              <div className="flex flex-wrap items-center justify-end gap-3 pt-4 border-t border-[#f2ece4]">
                 <button
                   type="button"
                   disabled={saving || uploadingAvatar}
                   onClick={() => profile && syncProfileToForm(profile)}
-                  className="px-5 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs sm:text-sm font-bold text-slate-700 transition cursor-pointer disabled:opacity-50"
+                  className="px-5 py-2.5 rounded-xl border border-[#d8d0c8] bg-white hover:bg-[#f2ece4] text-xs sm:text-sm font-bold text-[#3a302a] transition cursor-pointer disabled:opacity-50"
                 >
                   Reset Changes
                 </button>
                 <button
                   type="submit"
                   disabled={saving || uploadingAvatar}
-                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#1e40af] to-[#2563eb] hover:from-[#1e3a8a] hover:to-[#1d4ed8] text-white text-xs sm:text-sm font-bold transition shadow-xs cursor-pointer flex items-center gap-2 disabled:opacity-60"
+                  className="px-6 py-2.5 rounded-xl bg-[#c2652a] hover:bg-[#e08850] active:bg-[#a65320] text-white text-xs sm:text-sm font-bold transition shadow-xs cursor-pointer flex items-center gap-2 disabled:opacity-60"
                 >
                   {saving ? (
                     <>
@@ -902,20 +902,20 @@ export default function HostProfilePage() {
           </form>
 
           {/* Card 3: Payout & Financial Settlement Information (Truthful Status per Step 5J prompt) */}
-          <section className="rounded-2xl border border-slate-200/90 bg-white p-6 sm:p-8 shadow-xs space-y-5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+          <section className="rounded-2xl border border-[#d8d0c8] bg-white p-6 sm:p-8 shadow-xs space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#f2ece4]">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-50 to-teal-50 text-emerald-700 flex items-center justify-center shrink-0 border border-emerald-100">
                   <Landmark className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-black text-slate-900 flex items-center gap-2">
+                  <h2 className="text-base font-black text-[#3a302a] flex items-center gap-2">
                     <span>Payout &amp; Settlement Information</span>
-                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-[#f2ece4] text-[#605850] border border-[#d8d0c8]">
                       Disbursement Policy
                     </span>
                   </h2>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-[#605850]">
                     How rental earnings are collected, secured, and disbursed for your properties.
                   </p>
                 </div>
@@ -923,38 +923,38 @@ export default function HostProfilePage() {
 
               <Link
                 href="/host/earnings"
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#1e40af] hover:underline self-start sm:self-auto"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#c2652a] hover:text-[#e08850] hover:underline self-start sm:self-auto"
               >
                 <span>View Earnings Summary</span>
                 <ExternalLink className="w-3.5 h-3.5" />
               </Link>
             </div>
 
-            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
-              <div className="flex items-center gap-2 text-xs font-black text-slate-900 uppercase tracking-wider">
-                <Info className="w-4 h-4 text-blue-600" />
+            <div className="p-5 rounded-2xl bg-[#faf5ee] border border-[#d8d0c8] space-y-3">
+              <div className="flex items-center gap-2 text-xs font-black text-[#3a302a] uppercase tracking-wider">
+                <Info className="w-4 h-4 text-[#c2652a]" />
                 <span>Automated Direct Payouts Currently Unsupported</span>
               </div>
-              <p className="text-xs text-slate-600 leading-relaxed">
+              <p className="text-xs text-[#605850] leading-relaxed">
                 As detailed on the host earnings dashboard, automated bank transfers and direct mobile-money wallet payouts (Telebirr / CBE Birr) are currently unsupported in this release. All guest payments are safely collected and escrowed via Chapa according to platform reservation policies.
               </p>
-              <p className="text-xs text-slate-600 leading-relaxed">
+              <p className="text-xs text-[#605850] leading-relaxed">
                 To protect your financial security, ENGIDA does not collect, store, or solicit unencrypted bank account numbers or mobile-money PINs on this page. Settlement schedules and administrative disbursements will be coordinated with verified hosts directly.
               </p>
             </div>
           </section>
         </div>
       ) : (
-        <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center max-w-md mx-auto">
-          <Building2 className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-          <h2 className="text-lg font-black text-slate-900">Host Profile Unavailable</h2>
-          <p className="mt-2 text-xs sm:text-sm text-slate-500">
+        <div className="rounded-2xl border border-[#d8d0c8] bg-white p-10 text-center max-w-md mx-auto">
+          <Building2 className="w-12 h-12 text-[#605850]/60 mx-auto mb-4" />
+          <h2 className="text-lg font-black text-[#3a302a]">Host Profile Unavailable</h2>
+          <p className="mt-2 text-xs sm:text-sm text-[#605850]">
             We could not load the host profile connected to your account.
           </p>
           <button
             type="button"
             onClick={() => setReloadKey((k) => k + 1)}
-            className="mt-6 px-5 py-2.5 rounded-xl bg-[#1e40af] text-white text-xs font-bold hover:bg-[#1e3a8a] transition cursor-pointer"
+            className="mt-6 px-5 py-2.5 rounded-xl bg-[#c2652a] hover:bg-[#e08850] active:bg-[#a65320] text-white text-xs font-bold transition cursor-pointer"
           >
             Try Again
           </button>

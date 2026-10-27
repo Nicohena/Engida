@@ -93,16 +93,16 @@ export default function CountryCodePicker({
         aria-label={`Selected country: ${selectedCountry.name} (${selectedCountry.dialCode})`}
         className={`w-full flex items-center justify-between gap-1.5 px-3 py-2.5 text-xs sm:text-sm font-semibold border rounded-lg bg-white transition cursor-pointer select-none ${
           isOpen
-            ? 'border-blue-600 ring-2 ring-blue-600/20'
-            : 'border-slate-300 hover:border-slate-400'
-        } ${disabled ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'text-slate-800'}`}
+            ? 'border-[#c2652a] ring-2 ring-[#c2652a]/20'
+            : 'border-[#d8d0c8] hover:border-[#c2652a]/50'
+        } ${disabled ? 'bg-[#f2ece4] text-[#605850]/50 cursor-not-allowed' : 'text-[#3a302a]'}`}
       >
         <div className="flex items-center gap-2 min-w-0">
           <CountryFlag countryCode={selectedCountry.code} width={22} height={15} />
-          <span className="font-mono text-slate-900 tracking-tight">{selectedCountry.dialCode}</span>
+          <span className="font-mono text-[#3a302a] tracking-tight">{selectedCountry.dialCode}</span>
         </div>
         <ChevronDown
-          className={`w-3.5 h-3.5 text-slate-500 shrink-0 transition-transform duration-150 ${
+          className={`w-3.5 h-3.5 text-[#605850] shrink-0 transition-transform duration-150 ${
             isOpen ? 'rotate-180' : ''
           }`}
         />
@@ -110,24 +110,24 @@ export default function CountryCodePicker({
 
       {/* Floating Popover Dropdown */}
       {isOpen && (
-        <div className="absolute left-0 top-full mt-1.5 w-72 sm:w-80 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in-50 zoom-in-95 duration-100">
+        <div className="absolute left-0 top-full mt-1.5 w-72 sm:w-80 bg-white border border-[#d8d0c8] rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in-50 zoom-in-95 duration-100">
           {/* Search Box */}
-          <div className="p-2.5 border-b border-slate-100 bg-slate-50/60">
+          <div className="p-2.5 border-b border-[#d8d0c8]/60 bg-[#faf5ee]">
             <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#605850]" />
               <input
                 ref={searchInputRef}
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search country or code..."
-                className="w-full pl-8 pr-7 py-1.5 text-xs border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-1.5 focus:ring-blue-600"
+                className="w-full pl-8 pr-7 py-1.5 text-xs border border-[#d8d0c8] rounded-lg bg-white focus:outline-none focus:ring-1.5 focus:ring-[#c2652a]/30 focus:border-[#c2652a] text-[#3a302a]"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-[#605850] hover:text-[#3a302a] p-0.5"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -136,7 +136,7 @@ export default function CountryCodePicker({
           </div>
 
           {/* Countries List */}
-          <div role="listbox" className="max-h-60 overflow-y-auto divide-y divide-slate-50 py-1">
+          <div role="listbox" className="max-h-60 overflow-y-auto divide-y divide-[#d8d0c8]/20 py-1">
             {filteredCountries.length > 0 ? (
               filteredCountries.map((c) => {
                 const isSelected = c.code === selectedCountry.code;
@@ -149,8 +149,8 @@ export default function CountryCodePicker({
                     onClick={() => handleSelect(c)}
                     className={`w-full flex items-center justify-between px-3 py-2 text-left transition cursor-pointer ${
                       isSelected
-                        ? 'bg-blue-50/70 text-blue-900 font-bold'
-                        : 'hover:bg-slate-50 text-slate-700'
+                        ? 'bg-[#f2ece4] text-[#c2652a] font-bold'
+                        : 'hover:bg-[#faf5ee] text-[#3a302a]'
                     }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
@@ -159,16 +159,16 @@ export default function CountryCodePicker({
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0 ml-2">
-                      <span className="font-mono text-xs font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+                      <span className="font-mono text-xs font-semibold text-[#605850] bg-[#f2ece4] px-1.5 py-0.5 rounded border border-[#d8d0c8]/40">
                         {c.dialCode}
                       </span>
-                      {isSelected && <Check className="w-3.5 h-3.5 text-blue-600 shrink-0" />}
+                      {isSelected && <Check className="w-3.5 h-3.5 text-[#c2652a] shrink-0" />}
                     </div>
                   </button>
                 );
               })
             ) : (
-              <div className="p-4 text-center text-xs text-slate-500">
+              <div className="p-4 text-center text-xs text-[#605850]">
                 No matching countries found for &quot;{searchQuery}&quot;.
               </div>
             )}

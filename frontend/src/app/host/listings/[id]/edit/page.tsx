@@ -480,10 +480,10 @@ export default function EditListingPage() {
   if (loading) {
     return (
       <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-6 animate-pulse">
-        <div className="h-6 w-36 bg-[#E3EAF5] rounded-lg" />
-        <div className="h-10 w-1/2 bg-[#E3EAF5] rounded-xl" />
-        <div className="h-64 bg-[#E3EAF5] rounded-2xl" />
-        <div className="h-48 bg-[#E3EAF5] rounded-2xl" />
+        <div className="h-6 w-36 bg-[#f2ece4] rounded-lg" />
+        <div className="h-10 w-1/2 bg-[#f2ece4] rounded-xl" />
+        <div className="h-64 bg-[#f2ece4] rounded-2xl" />
+        <div className="h-48 bg-[#f2ece4] rounded-2xl" />
       </div>
     );
   }
@@ -491,17 +491,17 @@ export default function EditListingPage() {
   if (is404) {
     return (
       <div className="p-6 md:p-12 max-w-xl mx-auto text-center space-y-5">
-        <div className="w-16 h-16 rounded-2xl bg-[#F4F7FC] border border-[#CBD5E1] flex items-center justify-center mx-auto text-[#94A3B8]">
+        <div className="w-16 h-16 rounded-2xl bg-[#faf5ee] border border-[#d8d0c8] flex items-center justify-center mx-auto text-[#605850]">
           <Building2 className="w-8 h-8" />
         </div>
-        <h1 className="text-2xl font-black text-[#000000]">Listing Not Found</h1>
-        <p className="text-sm text-[#64748B]">
-          The listing with ID <code className="font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded">{listingId}</code> does
+        <h1 className="text-2xl font-black text-[#3a302a]">Listing Not Found</h1>
+        <p className="text-sm text-[#605850]">
+          The listing with ID <code className="font-mono text-xs bg-[#f2ece4] px-1.5 py-0.5 rounded text-[#3a302a]">{listingId}</code> does
           not exist or you do not have permission to edit it.
         </p>
         <Link
           href="/host/listings"
-          className="inline-flex items-center gap-2 bg-[#33599E] hover:bg-[#234079] text-white text-sm font-bold px-6 py-2.5 rounded-xl transition"
+          className="inline-flex items-center gap-2 bg-[#c2652a] hover:bg-[#e08850] active:bg-[#a65320] text-white text-sm font-bold px-6 py-2.5 rounded-xl transition shadow-sm"
         >
           <ArrowLeft className="w-4 h-4" /> Back to Listings
         </Link>
@@ -515,12 +515,12 @@ export default function EditListingPage() {
         <div className="w-16 h-16 rounded-2xl bg-red-50 border border-red-200 flex items-center justify-center mx-auto text-red-500">
           <AlertTriangle className="w-8 h-8" />
         </div>
-        <h1 className="text-2xl font-black text-[#000000]">Failed to load listing</h1>
-        <p className="text-sm text-[#64748B]">{fetchError || 'Unable to retrieve listing data.'}</p>
+        <h1 className="text-2xl font-black text-[#3a302a]">Failed to load listing</h1>
+        <p className="text-sm text-[#605850]">{fetchError || 'Unable to retrieve listing data.'}</p>
         <div className="flex justify-center gap-3">
           <Link
             href="/host/listings"
-            className="px-5 py-2.5 rounded-xl border border-[#CBD5E1] text-sm font-bold text-[#334155] hover:bg-[#F4F7FC] transition"
+            className="px-5 py-2.5 rounded-xl border border-[#d8d0c8] text-sm font-bold text-[#3a302a] hover:bg-[#faf5ee] transition"
           >
             Back to Listings
           </Link>
@@ -529,7 +529,7 @@ export default function EditListingPage() {
               setLoading(true);
               fetchListing();
             }}
-            className="inline-flex items-center gap-2 bg-[#33599E] hover:bg-[#234079] text-white text-sm font-bold px-5 py-2.5 rounded-xl transition"
+            className="inline-flex items-center gap-2 bg-[#c2652a] hover:bg-[#e08850] active:bg-[#a65320] text-white text-sm font-bold px-5 py-2.5 rounded-xl transition shadow-sm"
           >
             <RotateCcw className="w-4 h-4" /> Retry
           </button>
@@ -544,25 +544,25 @@ export default function EditListingPage() {
       <div className="flex items-center justify-between">
         <Link
           href={`/host/listings/${listing.id}`}
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-[#64748B] hover:text-[#33599E] transition"
+          className="inline-flex items-center gap-1.5 text-xs font-bold text-[#605850] hover:text-[#c2652a] transition"
         >
           <ArrowLeft className="w-4 h-4" /> Back to Listing Detail
         </Link>
       </div>
 
       {/* ── Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-[#F1F5F9]">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-[#d8d0c8]">
         <div>
-          <h1 className="text-2xl font-black text-[#000000] tracking-tight">Edit Listing</h1>
-          <p className="text-sm text-[#64748B] mt-1">
-            Updating: <strong className="text-[#000000]">{listing.title}</strong>
+          <h1 className="text-2xl font-black text-[#3a302a] tracking-tight">Edit Listing</h1>
+          <p className="text-sm text-[#605850] mt-1">
+            Updating: <strong className="text-[#3a302a]">{listing.title}</strong>
           </p>
         </div>
 
         <div className="flex items-center gap-3 flex-shrink-0">
           <Link
             href={`/host/listings/${listing.id}`}
-            className="px-4 py-2 rounded-xl text-sm font-semibold text-[#64748B] hover:bg-[#F4F7FC] border border-[#CBD5E1] transition"
+            className="px-4 py-2 rounded-xl text-sm font-semibold text-[#3a302a] bg-[#faf5ee] hover:bg-[#f2ece4] border border-[#d8d0c8] transition"
           >
             Cancel
           </Link>
@@ -570,7 +570,7 @@ export default function EditListingPage() {
             type="button"
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="inline-flex items-center gap-2 bg-[#33599E] hover:bg-[#234079] text-white text-sm font-bold px-5 py-2 rounded-xl shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 bg-[#c2652a] hover:bg-[#e08850] active:bg-[#a65320] text-white text-sm font-bold px-5 py-2 rounded-xl shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? (
               <>
@@ -627,15 +627,15 @@ export default function EditListingPage() {
         {/* ═══════════════════════════════════════════════════
             SECTION 1: Basic Information
         ═══════════════════════════════════════════════════ */}
-        <section className="bg-white border border-[#CBD5E1] rounded-2xl p-6 md:p-8 space-y-6">
-          <div className="flex items-center gap-2.5 pb-3 border-b border-[#F1F5F9]">
-            <Building2 className="w-5 h-5 text-[#33599E]" />
-            <h2 className="text-lg font-black text-[#000000]">Basic Information</h2>
+        <section className="bg-white border border-[#d8d0c8] rounded-2xl p-6 md:p-8 space-y-6">
+          <div className="flex items-center gap-2.5 pb-3 border-b border-[#d8d0c8]">
+            <Building2 className="w-5 h-5 text-[#c2652a]" />
+            <h2 className="text-lg font-black text-[#3a302a]">Basic Information</h2>
           </div>
 
           {/* Title */}
           <div className="space-y-1.5">
-            <label htmlFor="title" className="block text-sm font-bold text-[#000000]">
+            <label htmlFor="title" className="block text-sm font-bold text-[#3a302a]">
               Listing Title <span className="text-red-500">*</span>
             </label>
             <input
@@ -645,25 +645,25 @@ export default function EditListingPage() {
               value={form.title}
               onChange={handleChange}
               maxLength={255}
-              className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium text-[#000000] focus:outline-none focus:ring-2 transition ${
+              className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium text-[#3a302a] focus:outline-none focus:ring-2 transition ${
                 errors.title
                   ? 'border-red-400 focus:ring-red-200'
-                  : 'border-[#CBD5E1] focus:ring-[#33599E]/20 focus:border-[#33599E]'
+                  : 'border-[#d8d0c8] focus:ring-[#c2652a]/20 focus:border-[#c2652a]'
               }`}
             />
             <div className="flex justify-between items-center text-xs">
               {errors.title ? (
                 <span className="text-red-600 font-semibold">{errors.title}</span>
               ) : (
-                <span className="text-[#94A3B8]">Clear, descriptive listing title.</span>
+                <span className="text-[#605850]">Clear, descriptive listing title.</span>
               )}
-              <span className="text-[#94A3B8]">{form.title.length}/255</span>
+              <span className="text-[#605850]">{form.title.length}/255</span>
             </div>
           </div>
 
           {/* Property Type */}
           <div className="space-y-2">
-            <label className="block text-sm font-bold text-[#000000]">Property Type</label>
+            <label className="block text-sm font-bold text-[#3a302a]">Property Type</label>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {PROPERTY_TYPE_OPTIONS.map((opt) => {
                 const IconComponent = opt.icon;
@@ -675,20 +675,20 @@ export default function EditListingPage() {
                     onClick={() => handlePropertyTypeChange(opt.value)}
                     className={`flex items-start gap-3 p-3.5 rounded-xl border text-left transition ${
                       isSelected
-                        ? 'border-[#33599E] bg-[#E3EAF5]/40 ring-1 ring-[#33599E]'
-                        : 'border-[#CBD5E1] hover:border-[#94A3B8] bg-white'
+                        ? 'border-[#c2652a] bg-[#f2ece4]/50 ring-1 ring-[#c2652a]'
+                        : 'border-[#d8d0c8] hover:border-[#c2652a] bg-white'
                     }`}
                   >
                     <div
                       className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                        isSelected ? 'bg-[#33599E] text-white' : 'bg-[#F4F7FC] text-[#64748B]'
+                        isSelected ? 'bg-[#c2652a] text-white' : 'bg-[#faf5ee] text-[#605850]'
                       }`}
                     >
                       <IconComponent className="w-4 h-4" />
                     </div>
                     <div>
-                      <div className="text-sm font-bold text-[#000000]">{opt.label}</div>
-                      <p className="text-xs text-[#64748B] leading-snug mt-0.5">
+                      <div className="text-sm font-bold text-[#3a302a]">{opt.label}</div>
+                      <p className="text-xs text-[#605850] leading-snug mt-0.5">
                         {opt.description}
                       </p>
                     </div>
@@ -700,7 +700,7 @@ export default function EditListingPage() {
 
           {/* Description */}
           <div className="space-y-1.5">
-            <label htmlFor="description" className="block text-sm font-bold text-[#000000]">
+            <label htmlFor="description" className="block text-sm font-bold text-[#3a302a]">
               Description <span className="text-red-500">*</span>
             </label>
             <textarea
@@ -709,10 +709,10 @@ export default function EditListingPage() {
               rows={4}
               value={form.description}
               onChange={handleChange}
-              className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium text-[#000000] focus:outline-none focus:ring-2 transition ${
+              className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium text-[#3a302a] focus:outline-none focus:ring-2 transition ${
                 errors.description
                   ? 'border-red-400 focus:ring-red-200'
-                  : 'border-[#CBD5E1] focus:ring-[#33599E]/20 focus:border-[#33599E]'
+                  : 'border-[#d8d0c8] focus:ring-[#c2652a]/20 focus:border-[#c2652a]'
               }`}
             />
             {errors.description && (
@@ -724,23 +724,23 @@ export default function EditListingPage() {
         {/* ═══════════════════════════════════════════════════
             SECTION 2: Listing Type & Pricing
         ═══════════════════════════════════════════════════ */}
-        <section className="bg-white border border-[#CBD5E1] rounded-2xl p-6 md:p-8 space-y-6">
-          <div className="flex items-center gap-2.5 pb-3 border-b border-[#F1F5F9]">
-            <Lock className="w-5 h-5 text-[#64748B]" />
-            <h2 className="text-lg font-black text-[#000000]">Listing Type & Pricing</h2>
+        <section className="bg-white border border-[#d8d0c8] rounded-2xl p-6 md:p-8 space-y-6">
+          <div className="flex items-center gap-2.5 pb-3 border-b border-[#d8d0c8]">
+            <Lock className="w-5 h-5 text-[#605850]" />
+            <h2 className="text-lg font-black text-[#3a302a]">Listing Type & Pricing</h2>
           </div>
 
           {/* Immutable Listing Type Note */}
-          <div className="bg-[#F8FAFD] border border-[#CBD5E1] rounded-xl p-4 flex items-center justify-between gap-3">
+          <div className="bg-[#faf5ee] border border-[#d8d0c8] rounded-xl p-4 flex items-center justify-between gap-3">
             <div>
-              <span className="text-xs font-bold text-[#64748B] uppercase tracking-wider block">
+              <span className="text-xs font-bold text-[#605850] uppercase tracking-wider block">
                 Listing Type (Fixed)
               </span>
-              <span className="text-sm font-bold text-[#000000]">
+              <span className="text-sm font-bold text-[#3a302a]">
                 {listing.listingType === 'RENTAL' ? 'Rental Property (Nightly Stay)' : 'Property For Sale'}
               </span>
             </div>
-            <span className="text-xs font-semibold text-[#64748B] bg-white px-2.5 py-1 rounded-lg border border-[#CBD5E1]">
+            <span className="text-xs font-semibold text-[#605850] bg-white px-2.5 py-1 rounded-lg border border-[#d8d0c8]">
               Cannot be changed after creation
             </span>
           </div>
@@ -748,11 +748,11 @@ export default function EditListingPage() {
           {/* Pricing Input based on listingType */}
           {listing.listingType === 'RENTAL' ? (
             <div className="space-y-1.5 max-w-sm">
-              <label htmlFor="pricePerNight" className="block text-sm font-bold text-[#000000]">
+              <label htmlFor="pricePerNight" className="block text-sm font-bold text-[#3a302a]">
                 Price Per Night (ETB) <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-black text-[#64748B]">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-black text-[#605850]">
                   ETB
                 </span>
                 <input
@@ -763,10 +763,10 @@ export default function EditListingPage() {
                   step="any"
                   value={form.pricePerNight}
                   onChange={handleChange}
-                  className={`w-full pl-14 pr-4 py-2.5 rounded-xl border text-sm font-medium text-[#000000] focus:outline-none focus:ring-2 transition ${
+                  className={`w-full pl-14 pr-4 py-2.5 rounded-xl border text-sm font-medium text-[#3a302a] focus:outline-none focus:ring-2 transition ${
                     errors.pricePerNight
                       ? 'border-red-400 focus:ring-red-200'
-                      : 'border-[#CBD5E1] focus:ring-[#33599E]/20 focus:border-[#33599E]'
+                      : 'border-[#d8d0c8] focus:ring-[#c2652a]/20 focus:border-[#c2652a]'
                   }`}
                 />
               </div>
@@ -776,11 +776,11 @@ export default function EditListingPage() {
             </div>
           ) : (
             <div className="space-y-1.5 max-w-sm">
-              <label htmlFor="salePrice" className="block text-sm font-bold text-[#000000]">
+              <label htmlFor="salePrice" className="block text-sm font-bold text-[#3a302a]">
                 Total Sale Price (ETB) <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-black text-[#64748B]">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-black text-[#605850]">
                   ETB
                 </span>
                 <input
@@ -791,10 +791,10 @@ export default function EditListingPage() {
                   step="any"
                   value={form.salePrice}
                   onChange={handleChange}
-                  className={`w-full pl-14 pr-4 py-2.5 rounded-xl border text-sm font-medium text-[#000000] focus:outline-none focus:ring-2 transition ${
+                  className={`w-full pl-14 pr-4 py-2.5 rounded-xl border text-sm font-medium text-[#3a302a] focus:outline-none focus:ring-2 transition ${
                     errors.salePrice
                       ? 'border-red-400 focus:ring-red-200'
-                      : 'border-[#CBD5E1] focus:ring-[#33599E]/20 focus:border-[#33599E]'
+                      : 'border-[#d8d0c8] focus:ring-[#c2652a]/20 focus:border-[#c2652a]'
                   }`}
                 />
               </div>
@@ -808,15 +808,15 @@ export default function EditListingPage() {
         {/* ═══════════════════════════════════════════════════
             SECTION 3: Property Details
         ═══════════════════════════════════════════════════ */}
-        <section className="bg-white border border-[#CBD5E1] rounded-2xl p-6 md:p-8 space-y-6">
-          <div className="flex items-center gap-2.5 pb-3 border-b border-[#F1F5F9]">
-            <Layers className="w-5 h-5 text-[#33599E]" />
-            <h2 className="text-lg font-black text-[#000000]">Property Details</h2>
+        <section className="bg-white border border-[#d8d0c8] rounded-2xl p-6 md:p-8 space-y-6">
+          <div className="flex items-center gap-2.5 pb-3 border-b border-[#d8d0c8]">
+            <Layers className="w-5 h-5 text-[#c2652a]" />
+            <h2 className="text-lg font-black text-[#3a302a]">Property Details</h2>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
             <div className="space-y-1.5">
-              <label htmlFor="maxGuests" className="block text-xs font-bold text-[#000000]">
+              <label htmlFor="maxGuests" className="block text-xs font-bold text-[#3a302a]">
                 Max Guests
               </label>
               <input
@@ -827,13 +827,13 @@ export default function EditListingPage() {
                 max="50"
                 value={form.maxGuests}
                 onChange={handleChange}
-                className="w-full px-3 py-2 rounded-xl border border-[#CBD5E1] text-sm font-semibold text-[#000000] focus:outline-none focus:ring-2 focus:ring-[#33599E]/20 focus:border-[#33599E] transition"
+                className="w-full px-3 py-2 rounded-xl border border-[#d8d0c8] text-sm font-semibold text-[#3a302a] focus:outline-none focus:ring-2 focus:ring-[#c2652a]/20 focus:border-[#c2652a] transition"
               />
               {errors.maxGuests && <p className="text-xs text-red-600">{errors.maxGuests}</p>}
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="bedrooms" className="block text-xs font-bold text-[#000000]">
+              <label htmlFor="bedrooms" className="block text-xs font-bold text-[#3a302a]">
                 Bedrooms
               </label>
               <input
@@ -843,13 +843,13 @@ export default function EditListingPage() {
                 min="0"
                 value={form.bedrooms}
                 onChange={handleChange}
-                className="w-full px-3 py-2 rounded-xl border border-[#CBD5E1] text-sm font-semibold text-[#000000] focus:outline-none focus:ring-2 focus:ring-[#33599E]/20 focus:border-[#33599E] transition"
+                className="w-full px-3 py-2 rounded-xl border border-[#d8d0c8] text-sm font-semibold text-[#3a302a] focus:outline-none focus:ring-2 focus:ring-[#c2652a]/20 focus:border-[#c2652a] transition"
               />
               {errors.bedrooms && <p className="text-xs text-red-600">{errors.bedrooms}</p>}
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="bathrooms" className="block text-xs font-bold text-[#000000]">
+              <label htmlFor="bathrooms" className="block text-xs font-bold text-[#3a302a]">
                 Bathrooms
               </label>
               <input
@@ -859,13 +859,13 @@ export default function EditListingPage() {
                 min="0"
                 value={form.bathrooms}
                 onChange={handleChange}
-                className="w-full px-3 py-2 rounded-xl border border-[#CBD5E1] text-sm font-semibold text-[#000000] focus:outline-none focus:ring-2 focus:ring-[#33599E]/20 focus:border-[#33599E] transition"
+                className="w-full px-3 py-2 rounded-xl border border-[#d8d0c8] text-sm font-semibold text-[#3a302a] focus:outline-none focus:ring-2 focus:ring-[#c2652a]/20 focus:border-[#c2652a] transition"
               />
               {errors.bathrooms && <p className="text-xs text-red-600">{errors.bathrooms}</p>}
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="areaSqm" className="block text-xs font-bold text-[#000000]">
+              <label htmlFor="areaSqm" className="block text-xs font-bold text-[#3a302a]">
                 Area (m²)
               </label>
               <input
@@ -875,13 +875,13 @@ export default function EditListingPage() {
                 min="0"
                 value={form.areaSqm}
                 onChange={handleChange}
-                className="w-full px-3 py-2 rounded-xl border border-[#CBD5E1] text-sm font-semibold text-[#000000] focus:outline-none focus:ring-2 focus:ring-[#33599E]/20 focus:border-[#33599E] transition"
+                className="w-full px-3 py-2 rounded-xl border border-[#d8d0c8] text-sm font-semibold text-[#3a302a] focus:outline-none focus:ring-2 focus:ring-[#c2652a]/20 focus:border-[#c2652a] transition"
               />
               {errors.areaSqm && <p className="text-xs text-red-600">{errors.areaSqm}</p>}
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="parkingSpaces" className="block text-xs font-bold text-[#000000]">
+              <label htmlFor="parkingSpaces" className="block text-xs font-bold text-[#3a302a]">
                 Parking Spaces
               </label>
               <input
@@ -891,7 +891,7 @@ export default function EditListingPage() {
                 min="0"
                 value={form.parkingSpaces}
                 onChange={handleChange}
-                className="w-full px-3 py-2 rounded-xl border border-[#CBD5E1] text-sm font-semibold text-[#000000] focus:outline-none focus:ring-2 focus:ring-[#33599E]/20 focus:border-[#33599E] transition"
+                className="w-full px-3 py-2 rounded-xl border border-[#d8d0c8] text-sm font-semibold text-[#3a302a] focus:outline-none focus:ring-2 focus:ring-[#c2652a]/20 focus:border-[#c2652a] transition"
               />
               {errors.parkingSpaces && (
                 <p className="text-xs text-red-600">{errors.parkingSpaces}</p>
@@ -903,15 +903,15 @@ export default function EditListingPage() {
         {/* ═══════════════════════════════════════════════════
             SECTION 4: Location & Address
         ═══════════════════════════════════════════════════ */}
-        <section className="bg-white border border-[#CBD5E1] rounded-2xl p-6 md:p-8 space-y-6">
-          <div className="flex items-center gap-2.5 pb-3 border-b border-[#F1F5F9]">
-            <MapPin className="w-5 h-5 text-[#33599E]" />
-            <h2 className="text-lg font-black text-[#000000]">Location & Address</h2>
+        <section className="bg-white border border-[#d8d0c8] rounded-2xl p-6 md:p-8 space-y-6">
+          <div className="flex items-center gap-2.5 pb-3 border-b border-[#d8d0c8]">
+            <MapPin className="w-5 h-5 text-[#c2652a]" />
+            <h2 className="text-lg font-black text-[#3a302a]">Location & Address</h2>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="sm:col-span-2 space-y-1.5">
-              <label htmlFor="address" className="block text-sm font-bold text-[#000000]">
+              <label htmlFor="address" className="block text-sm font-bold text-[#3a302a]">
                 Street Address <span className="text-red-500">*</span>
               </label>
               <input
@@ -921,10 +921,10 @@ export default function EditListingPage() {
                 value={form.address}
                 onChange={handleChange}
                 maxLength={255}
-                className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium text-[#000000] focus:outline-none focus:ring-2 transition ${
+                className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium text-[#3a302a] focus:outline-none focus:ring-2 transition ${
                   errors.address
                     ? 'border-red-400 focus:ring-red-200'
-                    : 'border-[#CBD5E1] focus:ring-[#33599E]/20 focus:border-[#33599E]'
+                    : 'border-[#d8d0c8] focus:ring-[#c2652a]/20 focus:border-[#c2652a]'
                 }`}
               />
               {errors.address && (
@@ -933,7 +933,7 @@ export default function EditListingPage() {
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="city" className="block text-sm font-bold text-[#000000]">
+              <label htmlFor="city" className="block text-sm font-bold text-[#3a302a]">
                 City <span className="text-red-500">*</span>
               </label>
               <input
@@ -943,10 +943,10 @@ export default function EditListingPage() {
                 value={form.city}
                 onChange={handleChange}
                 maxLength={100}
-                className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium text-[#000000] focus:outline-none focus:ring-2 transition ${
+                className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium text-[#3a302a] focus:outline-none focus:ring-2 transition ${
                   errors.city
                     ? 'border-red-400 focus:ring-red-200'
-                    : 'border-[#CBD5E1] focus:ring-[#33599E]/20 focus:border-[#33599E]'
+                    : 'border-[#d8d0c8] focus:ring-[#c2652a]/20 focus:border-[#c2652a]'
                 }`}
               />
               {errors.city && <p className="text-xs text-red-600 font-semibold">{errors.city}</p>}
@@ -955,12 +955,12 @@ export default function EditListingPage() {
 
           {/* Ethiopian Administrative Hierarchy */}
           <div className="pt-2">
-            <h3 className="text-xs font-black uppercase tracking-wider text-[#94A3B8] mb-3">
+            <h3 className="text-xs font-black uppercase tracking-wider text-[#605850] mb-3">
               Ethiopian Administrative Hierarchy
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               <div className="space-y-1.5">
-                <label htmlFor="subCity" className="block text-xs font-bold text-[#000000]">
+                <label htmlFor="subCity" className="block text-xs font-bold text-[#3a302a]">
                   Sub-City (Kifle Ketema)
                 </label>
                 <input
@@ -970,12 +970,12 @@ export default function EditListingPage() {
                   value={form.subCity}
                   onChange={handleChange}
                   maxLength={100}
-                  className="w-full px-3 py-2 rounded-xl border border-[#CBD5E1] text-sm font-medium text-[#000000] focus:outline-none focus:ring-2 focus:ring-[#33599E]/20 focus:border-[#33599E] transition"
+                  className="w-full px-3 py-2 rounded-xl border border-[#d8d0c8] text-sm font-medium text-[#3a302a] focus:outline-none focus:ring-2 focus:ring-[#c2652a]/20 focus:border-[#c2652a] transition"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="woreda" className="block text-xs font-bold text-[#000000]">
+                <label htmlFor="woreda" className="block text-xs font-bold text-[#3a302a]">
                   Woreda
                 </label>
                 <input
@@ -985,12 +985,12 @@ export default function EditListingPage() {
                   value={form.woreda}
                   onChange={handleChange}
                   maxLength={100}
-                  className="w-full px-3 py-2 rounded-xl border border-[#CBD5E1] text-sm font-medium text-[#000000] focus:outline-none focus:ring-2 focus:ring-[#33599E]/20 focus:border-[#33599E] transition"
+                  className="w-full px-3 py-2 rounded-xl border border-[#d8d0c8] text-sm font-medium text-[#3a302a] focus:outline-none focus:ring-2 focus:ring-[#c2652a]/20 focus:border-[#c2652a] transition"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="neighborhood" className="block text-xs font-bold text-[#000000]">
+                <label htmlFor="neighborhood" className="block text-xs font-bold text-[#3a302a]">
                   Neighborhood / Area
                 </label>
                 <input
@@ -1000,12 +1000,12 @@ export default function EditListingPage() {
                   value={form.neighborhood}
                   onChange={handleChange}
                   maxLength={150}
-                  className="w-full px-3 py-2 rounded-xl border border-[#CBD5E1] text-sm font-medium text-[#000000] focus:outline-none focus:ring-2 focus:ring-[#33599E]/20 focus:border-[#33599E] transition"
+                  className="w-full px-3 py-2 rounded-xl border border-[#d8d0c8] text-sm font-medium text-[#3a302a] focus:outline-none focus:ring-2 focus:ring-[#c2652a]/20 focus:border-[#c2652a] transition"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="region" className="block text-xs font-bold text-[#000000]">
+                <label htmlFor="region" className="block text-xs font-bold text-[#3a302a]">
                   Region / Chartered City
                 </label>
                 <input
@@ -1015,12 +1015,12 @@ export default function EditListingPage() {
                   value={form.region}
                   onChange={handleChange}
                   maxLength={100}
-                  className="w-full px-3 py-2 rounded-xl border border-[#CBD5E1] text-sm font-medium text-[#000000] focus:outline-none focus:ring-2 focus:ring-[#33599E]/20 focus:border-[#33599E] transition"
+                  className="w-full px-3 py-2 rounded-xl border border-[#d8d0c8] text-sm font-medium text-[#3a302a] focus:outline-none focus:ring-2 focus:ring-[#c2652a]/20 focus:border-[#c2652a] transition"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="zone" className="block text-xs font-bold text-[#000000]">
+                <label htmlFor="zone" className="block text-xs font-bold text-[#3a302a]">
                   Zone
                 </label>
                 <input
@@ -1030,12 +1030,12 @@ export default function EditListingPage() {
                   value={form.zone}
                   onChange={handleChange}
                   maxLength={100}
-                  className="w-full px-3 py-2 rounded-xl border border-[#CBD5E1] text-sm font-medium text-[#000000] focus:outline-none focus:ring-2 focus:ring-[#33599E]/20 focus:border-[#33599E] transition"
+                  className="w-full px-3 py-2 rounded-xl border border-[#d8d0c8] text-sm font-medium text-[#3a302a] focus:outline-none focus:ring-2 focus:ring-[#c2652a]/20 focus:border-[#c2652a] transition"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="country" className="block text-xs font-bold text-[#000000]">
+                <label htmlFor="country" className="block text-xs font-bold text-[#3a302a]">
                   Country
                 </label>
                 <input
@@ -1045,20 +1045,20 @@ export default function EditListingPage() {
                   value={form.country}
                   onChange={handleChange}
                   maxLength={100}
-                  className="w-full px-3 py-2 rounded-xl border border-[#CBD5E1] text-sm font-medium text-[#000000] bg-[#F8FAFD] focus:outline-none transition"
+                  className="w-full px-3 py-2 rounded-xl border border-[#d8d0c8] text-sm font-medium text-[#3a302a] bg-[#faf5ee] focus:outline-none transition"
                 />
               </div>
             </div>
           </div>
 
           {/* Coordinates */}
-          <div className="pt-2 border-t border-[#F1F5F9]">
-            <h3 className="text-xs font-black uppercase tracking-wider text-[#94A3B8] mb-3">
+          <div className="pt-2 border-t border-[#d8d0c8]">
+            <h3 className="text-xs font-black uppercase tracking-wider text-[#605850] mb-3">
               Geographic Coordinates
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg">
               <div className="space-y-1.5">
-                <label htmlFor="latitude" className="block text-xs font-bold text-[#000000]">
+                <label htmlFor="latitude" className="block text-xs font-bold text-[#3a302a]">
                   Latitude (-90 to 90)
                 </label>
                 <input
@@ -1068,10 +1068,10 @@ export default function EditListingPage() {
                   step="any"
                   value={form.latitude}
                   onChange={handleChange}
-                  className={`w-full px-3 py-2 rounded-xl border text-sm font-medium text-[#000000] focus:outline-none focus:ring-2 transition ${
+                  className={`w-full px-3 py-2 rounded-xl border text-sm font-medium text-[#3a302a] focus:outline-none focus:ring-2 transition ${
                     errors.latitude
                       ? 'border-red-400 focus:ring-red-200'
-                      : 'border-[#CBD5E1] focus:ring-[#33599E]/20 focus:border-[#33599E]'
+                      : 'border-[#d8d0c8] focus:ring-[#c2652a]/20 focus:border-[#c2652a]'
                   }`}
                 />
                 {errors.latitude && (
@@ -1080,7 +1080,7 @@ export default function EditListingPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="longitude" className="block text-xs font-bold text-[#000000]">
+                <label htmlFor="longitude" className="block text-xs font-bold text-[#3a302a]">
                   Longitude (-180 to 180)
                 </label>
                 <input
@@ -1090,10 +1090,10 @@ export default function EditListingPage() {
                   step="any"
                   value={form.longitude}
                   onChange={handleChange}
-                  className={`w-full px-3 py-2 rounded-xl border text-sm font-medium text-[#000000] focus:outline-none focus:ring-2 transition ${
+                  className={`w-full px-3 py-2 rounded-xl border text-sm font-medium text-[#3a302a] focus:outline-none focus:ring-2 transition ${
                     errors.longitude
                       ? 'border-red-400 focus:ring-red-200'
-                      : 'border-[#CBD5E1] focus:ring-[#33599E]/20 focus:border-[#33599E]'
+                      : 'border-[#d8d0c8] focus:ring-[#c2652a]/20 focus:border-[#c2652a]'
                   }`}
                 />
                 {errors.longitude && (
@@ -1107,10 +1107,10 @@ export default function EditListingPage() {
         {/* ═══════════════════════════════════════════════════
             SECTION 5: Photos & Gallery Management
         ═══════════════════════════════════════════════════ */}
-        <section className="bg-white border border-[#CBD5E1] rounded-2xl p-6 md:p-8 space-y-6">
-          <div className="flex items-center gap-2.5 pb-3 border-b border-[#F1F5F9]">
-            <ImageIcon className="w-5 h-5 text-[#33599E]" />
-            <h2 className="text-lg font-black text-[#000000]">Photos &amp; Gallery</h2>
+        <section className="bg-white border border-[#d8d0c8] rounded-2xl p-6 md:p-8 space-y-6">
+          <div className="flex items-center gap-2.5 pb-3 border-b border-[#d8d0c8]">
+            <ImageIcon className="w-5 h-5 text-[#c2652a]" />
+            <h2 className="text-lg font-black text-[#3a302a]">Photos &amp; Gallery</h2>
           </div>
 
           <GalleryManager
@@ -1151,10 +1151,10 @@ export default function EditListingPage() {
         {/* ═══════════════════════════════════════════════════
             SECTION 6: Features & Amenities
         ═══════════════════════════════════════════════════ */}
-        <section className="bg-white border border-[#CBD5E1] rounded-2xl p-6 md:p-8 space-y-6">
-          <div className="flex items-center gap-2.5 pb-3 border-b border-[#F1F5F9]">
-            <Sparkles className="w-5 h-5 text-[#33599E]" />
-            <h2 className="text-lg font-black text-[#000000]">Features &amp; Amenities</h2>
+        <section className="bg-white border border-[#d8d0c8] rounded-2xl p-6 md:p-8 space-y-6">
+          <div className="flex items-center gap-2.5 pb-3 border-b border-[#d8d0c8]">
+            <Sparkles className="w-5 h-5 text-[#c2652a]" />
+            <h2 className="text-lg font-black text-[#3a302a]">Features &amp; Amenities</h2>
           </div>
 
           <AmenitySelector
@@ -1169,21 +1169,21 @@ export default function EditListingPage() {
         {/* ═══════════════════════════════════════════════════
             Bottom Sticky Action Bar
         ═══════════════════════════════════════════════════ */}
-        <div className="sticky bottom-4 z-20 bg-white/95 backdrop-blur-md border border-[#CBD5E1] rounded-2xl p-4 shadow-lg flex items-center justify-between gap-4">
-          <div className="text-xs text-[#64748B]">
+        <div className="sticky bottom-4 z-20 bg-white/95 backdrop-blur-md border border-[#d8d0c8] rounded-2xl p-4 shadow-lg flex items-center justify-between gap-4">
+          <div className="text-xs text-[#605850]">
             All changes will be saved to your property listing immediately.
           </div>
           <div className="flex items-center gap-3">
             <Link
               href={`/host/listings/${listing.id}`}
-              className="px-4 py-2.5 rounded-xl text-sm font-semibold text-[#64748B] hover:bg-[#F4F7FC] border border-[#CBD5E1] transition"
+              className="px-4 py-2.5 rounded-xl text-sm font-semibold text-[#3a302a] bg-[#faf5ee] hover:bg-[#f2ece4] border border-[#d8d0c8] transition"
             >
               Cancel
             </Link>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="inline-flex items-center gap-2 bg-[#33599E] hover:bg-[#234079] text-white text-sm font-bold px-6 py-2.5 rounded-xl shadow transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-2 bg-[#c2652a] hover:bg-[#e08850] active:bg-[#a65320] text-white text-sm font-bold px-6 py-2.5 rounded-xl shadow transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <>

@@ -26,7 +26,7 @@ export default function HostAvatar({
 
   return (
     <div
-      className={`rounded-full bg-[#33599E] flex items-center justify-center text-white font-black overflow-hidden flex-shrink-0 ${className}`}
+      className={`rounded-full bg-[#c2652a] flex items-center justify-center text-white font-black overflow-hidden flex-shrink-0 ${className}`}
       style={{ width: size, height: size, fontSize: Math.round(size * 0.4) }}
     >
       {showImage ? (

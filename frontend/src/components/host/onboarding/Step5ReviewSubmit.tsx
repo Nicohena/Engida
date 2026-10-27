@@ -115,52 +115,52 @@ export default function Step5ReviewSubmit({
   // SUCCESS CONFIRMATION SCREEN
   if (isSubmitted) {
     return (
-      <div className="w-full max-w-2xl mx-auto p-6 sm:p-8 bg-white border border-slate-200 rounded-2xl shadow-xs space-y-6">
+      <div className="w-full max-w-2xl mx-auto p-6 sm:p-8 bg-white border border-[#d8d0c8] rounded-2xl shadow-xs space-y-6">
         <div className="text-center space-y-2">
-          <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto">
+          <div className="w-14 h-14 rounded-full bg-[#f2ece4] text-[#c2652a] flex items-center justify-center mx-auto border border-[#d8d0c8]/60 shadow-xs">
             <CheckCircle2 className="w-8 h-8 stroke-[2.2]" />
           </div>
-          <span className="inline-block px-3 py-1 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-full text-xs font-bold uppercase tracking-wider">
+          <span className="inline-block px-3 py-1 bg-[#f2ece4] border border-[#d8d0c8] text-[#c2652a] rounded-full text-xs font-bold uppercase tracking-wider">
             Host Account Active &amp; Verified
           </span>
-          <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+          <h2 className="text-2xl font-extrabold text-[#3a302a] tracking-tight font-headline">
             Welcome to Hosting on Engida!
           </h2>
-          <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
+          <p className="text-xs text-[#605850] max-w-md mx-auto leading-relaxed">
             Your email has been successfully verified and your host account is fully active. You can now immediately create your first property listing and welcome guests to Ethiopia.
           </p>
         </div>
 
         {/* Verification Summary Card */}
-        <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2 text-xs">
-          <div className="flex justify-between py-1 border-b border-slate-200/60">
-            <span className="text-slate-500">Host Profile Name</span>
-            <span className="font-bold text-slate-900">{createdProfile?.displayName || data.displayName}</span>
+        <div className="p-4 bg-[#faf5ee] border border-[#d8d0c8] rounded-xl space-y-2 text-xs">
+          <div className="flex justify-between py-1 border-b border-[#d8d0c8]/60">
+            <span className="text-[#605850]">Host Profile Name</span>
+            <span className="font-bold text-[#3a302a]">{createdProfile?.displayName || data.displayName}</span>
           </div>
-          <div className="flex justify-between py-1 border-b border-slate-200/60">
-            <span className="text-slate-500">Verified Contact Email</span>
-            <span className="font-medium text-emerald-700 flex items-center gap-1 font-mono">
+          <div className="flex justify-between py-1 border-b border-[#d8d0c8]/60">
+            <span className="text-[#605850]">Verified Contact Email</span>
+            <span className="font-medium text-emerald-800 flex items-center gap-1 font-mono">
               <CheckCircle2 className="w-3.5 h-3.5" />
               {currentUser ? currentUser.email : data.email}
             </span>
           </div>
-          <div className="flex justify-between py-1 border-b border-slate-200/60">
-            <span className="text-slate-500">Operating Location</span>
-            <span className="font-medium text-slate-800">{data.city}, {data.region}</span>
+          <div className="flex justify-between py-1 border-b border-[#d8d0c8]/60">
+            <span className="text-[#605850]">Operating Location</span>
+            <span className="font-medium text-[#3a302a]">{data.city}, {data.region}</span>
           </div>
           <div className="flex justify-between py-1">
-            <span className="text-slate-500">Host Account Status</span>
-            <span className="font-bold text-emerald-700">ACTIVE &amp; VERIFIED</span>
+            <span className="text-[#605850]">Host Account Status</span>
+            <span className="font-bold text-[#c2652a]">ACTIVE &amp; VERIFIED</span>
           </div>
         </div>
 
         {/* What You Can Do Right Now */}
-        <div className="p-4 bg-emerald-50/60 border border-emerald-200 rounded-xl space-y-2 text-xs text-emerald-950">
-          <p className="font-bold flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-700" />
+        <div className="p-4 bg-[#faf5ee] border border-[#c2652a]/40 rounded-xl space-y-2 text-xs text-[#3a302a]">
+          <p className="font-bold flex items-center gap-2 text-[#c2652a]">
+            <CheckCircle2 className="w-4 h-4 text-[#c2652a]" />
             <span>Full Hosting Privileges Unlocked</span>
           </p>
-          <p className="text-emerald-800 leading-relaxed text-[11px]">
+          <p className="text-[#605850] leading-relaxed text-[11px]">
             You have full access to create property listings, manage nightly rates, configure booking calendars, and accept reservations from travelers worldwide.
           </p>
         </div>
@@ -169,14 +169,14 @@ export default function Step5ReviewSubmit({
         <div className="pt-2 flex flex-col sm:flex-row gap-3">
           <Link
             href="/host/listings/new"
-            className="flex-1 py-3 bg-[#1e40af] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded-xl transition text-center shadow-xs flex items-center justify-center gap-2"
+            className="flex-1 py-3 bg-[#c2652a] hover:bg-[#e08850] active:bg-[#a65320] text-white text-xs font-bold rounded-xl transition text-center shadow-xs flex items-center justify-center gap-2"
           >
             <span>Create Your First Listing</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
             href="/host/dashboard"
-            className="py-3 px-6 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition text-center"
+            className="py-3 px-6 bg-[#f2ece4] hover:bg-[#e8e0d6] text-[#3a302a] text-xs font-bold rounded-xl transition text-center border border-[#d8d0c8]"
           >
             Go to Host Dashboard
           </Link>
@@ -189,10 +189,10 @@ export default function Step5ReviewSubmit({
   return (
     <div className="w-full max-w-2xl mx-auto space-y-6">
       <div>
-        <h2 className="text-xl font-bold tracking-tight text-slate-900">
+        <h2 className="text-xl font-bold tracking-tight text-[#3a302a] font-headline">
           Review &amp; Activate Host Account
         </h2>
-        <p className="text-xs text-slate-600 mt-1">
+        <p className="text-xs text-[#605850] mt-1">
           Review your host profile and contact details before activating your hosting status.
         </p>
       </div>
@@ -207,36 +207,36 @@ export default function Step5ReviewSubmit({
       {/* Review Sections */}
       <div className="space-y-4">
         {/* Section 1: Account & Contact */}
-        <div className="p-4 bg-white border border-slate-200 rounded-xl space-y-3">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-            <span className="text-xs font-bold text-slate-900 flex items-center gap-2">
-              <User className="w-4 h-4 text-[#1e40af]" />
+        <div className="p-4 bg-white border border-[#d8d0c8] rounded-xl space-y-3 shadow-xs">
+          <div className="flex items-center justify-between border-b border-[#d8d0c8]/40 pb-2">
+            <span className="text-xs font-bold text-[#3a302a] flex items-center gap-2">
+              <User className="w-4 h-4 text-[#c2652a]" />
               Account &amp; Legal Identity
             </span>
             <button
               type="button"
               onClick={() => onEditStep(1)}
-              className="text-xs font-bold text-[#1e40af] hover:underline cursor-pointer"
+              className="text-xs font-bold text-[#c2652a] hover:underline cursor-pointer"
             >
               Edit
             </button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
             <div>
-              <span className="text-slate-500 block">Full Legal Name</span>
-              <span className="font-semibold text-slate-900">{currentUser ? currentUser.name : data.fullName}</span>
+              <span className="text-[#605850] block">Full Legal Name</span>
+              <span className="font-semibold text-[#3a302a]">{currentUser ? currentUser.name : data.fullName}</span>
             </div>
             <div>
-              <span className="text-slate-500 block">Email Address</span>
-              <span className="font-semibold text-slate-900">{currentUser ? currentUser.email : data.email}</span>
+              <span className="text-[#605850] block">Email Address</span>
+              <span className="font-semibold text-[#3a302a]">{currentUser ? currentUser.email : data.email}</span>
             </div>
             <div>
-              <span className="text-slate-500 block">Mobile Phone</span>
-              <span className="font-semibold text-slate-900 font-mono">{data.phone}</span>
+              <span className="text-[#605850] block">Mobile Phone</span>
+              <span className="font-semibold text-[#3a302a] font-mono">{data.phone}</span>
             </div>
             <div>
-              <span className="text-slate-500 block">Contact Verification</span>
-              <span className="font-medium text-emerald-700 flex items-center gap-1">
+              <span className="text-[#605850] block">Contact Verification</span>
+              <span className="font-medium text-emerald-800 flex items-center gap-1">
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 {data.contactVerified ? 'Email Verified via OTP' : 'Pending Email Verification'}
               </span>
@@ -245,46 +245,46 @@ export default function Step5ReviewSubmit({
         </div>
 
         {/* Section 2: Host Profile & Operating Location */}
-        <div className="p-4 bg-white border border-slate-200 rounded-xl space-y-3">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-            <span className="text-xs font-bold text-slate-900 flex items-center gap-2">
-              <Building2 className="w-4 h-4 text-[#1e40af]" />
+        <div className="p-4 bg-white border border-[#d8d0c8] rounded-xl space-y-3 shadow-xs">
+          <div className="flex items-center justify-between border-b border-[#d8d0c8]/40 pb-2">
+            <span className="text-xs font-bold text-[#3a302a] flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-[#c2652a]" />
               Host Profile &amp; Operating Location
             </span>
             <button
               type="button"
               onClick={() => onEditStep(3)}
-              className="text-xs font-bold text-[#1e40af] hover:underline cursor-pointer"
+              className="text-xs font-bold text-[#c2652a] hover:underline cursor-pointer"
             >
               Edit
             </button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
             <div>
-              <span className="text-slate-500 block">Public Display Name</span>
-              <span className="font-semibold text-slate-900">{data.displayName}</span>
+              <span className="text-[#605850] block">Public Display Name</span>
+              <span className="font-semibold text-[#3a302a]">{data.displayName}</span>
             </div>
             <div>
-              <span className="text-slate-500 block">Host Type</span>
-              <span className="font-semibold text-slate-900">
+              <span className="text-[#605850] block">Host Type</span>
+              <span className="font-semibold text-[#3a302a]">
                 {data.hostType === 'BUSINESS' ? 'Corporate / Business Host' : 'Individual Host'}
               </span>
             </div>
             {data.hostType === 'BUSINESS' && (
               <>
                 <div>
-                  <span className="text-slate-500 block">Company Name</span>
-                  <span className="font-semibold text-slate-900">{data.businessName}</span>
+                  <span className="text-[#605850] block">Company Name</span>
+                  <span className="font-semibold text-[#3a302a]">{data.businessName}</span>
                 </div>
                 <div>
-                  <span className="text-slate-500 block">TIN</span>
-                  <span className="font-mono font-semibold text-slate-900">{data.businessTin}</span>
+                  <span className="text-[#605850] block">TIN</span>
+                  <span className="font-mono font-semibold text-[#3a302a]">{data.businessTin}</span>
                 </div>
               </>
             )}
             <div className="sm:col-span-2">
-              <span className="text-slate-500 block">Operating Address</span>
-              <span className="font-medium text-slate-800">
+              <span className="text-[#605850] block">Operating Address</span>
+              <span className="font-medium text-[#3a302a]">
                 {data.streetAddress}, {data.woreda ? data.woreda + ', ' : ''}
                 {data.subCity ? data.subCity + ', ' : ''}
                 {data.city}, {data.region}
@@ -296,17 +296,17 @@ export default function Step5ReviewSubmit({
 
       {/* Host Code of Conduct & Standards Agreement */}
       <form onSubmit={handleFinalSubmit} className="space-y-5">
-        <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
+        <div className="p-4 rounded-xl bg-[#faf5ee] border border-[#d8d0c8]">
           <label className="flex items-start gap-3 cursor-pointer select-none">
             <input
               type="checkbox"
               checked={data.agreedToHostStandards}
               onChange={(e) => updateData({ agreedToHostStandards: e.target.checked })}
-              className="mt-1 w-4 h-4 rounded text-blue-600 border-slate-300 focus:ring-blue-600"
+              className="mt-1 w-4 h-4 rounded text-[#c2652a] border-[#d8d0c8] focus:ring-[#c2652a]"
             />
-            <span className="text-xs text-slate-700 leading-relaxed">
+            <span className="text-xs text-[#3a302a] leading-relaxed">
               I agree to abide by the{' '}
-              <a href="/host/standards" target="_blank" className="text-[#1e40af] font-semibold hover:underline">
+              <a href="/host/standards" target="_blank" className="text-[#c2652a] font-semibold hover:underline">
                 Ethiopian Hospitality Standards
               </a>
               , guest safety guidelines, tax compliance laws, and Engida&apos;s Host Code of Conduct.
@@ -315,19 +315,19 @@ export default function Step5ReviewSubmit({
         </div>
 
         {/* Navigation / Submit CTA */}
-        <div className="pt-2 border-t border-slate-200 flex items-center justify-between">
+        <div className="pt-2 border-t border-[#d8d0c8]/60 flex items-center justify-between">
           <button
             type="button"
             onClick={onBack}
             disabled={submitting}
-            className="px-4 py-2 border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-lg transition disabled:opacity-50 cursor-pointer"
+            className="px-4 py-2 border border-[#d8d0c8] bg-white hover:bg-[#f2ece4] text-[#3a302a] text-xs font-bold rounded-lg transition disabled:opacity-50 cursor-pointer shadow-xs"
           >
             ← Back
           </button>
           <button
             type="submit"
             disabled={submitting || !data.agreedToHostStandards}
-            className="px-6 py-2.5 bg-[#1e40af] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded-lg shadow-sm transition disabled:opacity-50 cursor-pointer flex items-center gap-2"
+            className="px-6 py-2.5 bg-[#c2652a] hover:bg-[#e08850] active:bg-[#a65320] text-white text-xs font-bold rounded-lg shadow-sm hover:shadow transition disabled:opacity-50 cursor-pointer flex items-center gap-2"
           >
             {submitting ? (
               <>

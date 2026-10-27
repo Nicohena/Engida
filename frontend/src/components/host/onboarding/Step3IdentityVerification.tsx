@@ -351,8 +351,8 @@ export default function Step3IdentityVerification({
     const ctx = sampleCanvas.getContext('2d');
     if (ctx) {
       const grad = ctx.createLinearGradient(0, 0, 800, 500);
-      grad.addColorStop(0, '#1e3a8a');
-      grad.addColorStop(1, '#1e40af');
+      grad.addColorStop(0, '#c2652a');
+      grad.addColorStop(1, '#a65320');
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, 800, 500);
 
@@ -360,14 +360,14 @@ export default function Step3IdentityVerification({
       ctx.font = 'bold 22px sans-serif';
       ctx.fillText('FEDERAL DEMOCRATIC REPUBLIC OF ETHIOPIA', 40, 55);
       ctx.font = '16px sans-serif';
-      ctx.fillStyle = '#93c5fd';
+      ctx.fillStyle = '#f2ece4';
       ctx.fillText('OFFICIAL IDENTITY DOCUMENT · VERIFIED DEMO SPECIMEN', 40, 85);
 
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(40, 120, 180, 220);
-      ctx.fillStyle = '#64748b';
+      ctx.fillStyle = '#605850';
       ctx.fillRect(45, 125, 170, 210);
-      ctx.fillStyle = '#e2e8f0';
+      ctx.fillStyle = '#f2ece4';
       ctx.beginPath();
       ctx.arc(130, 200, 45, 0, Math.PI * 2);
       ctx.fill();
@@ -398,7 +398,7 @@ export default function Step3IdentityVerification({
             : 'AA-03-91823';
       ctx.fillText(data.documentNumber || sampleNum, 250, 325);
 
-      ctx.fillStyle = '#93c5fd';
+      ctx.fillStyle = '#f2ece4';
       ctx.font = '12px monospace';
       ctx.fillText('<<ETH10293847<<5M01019<<<BIKILA<<ABEBE<<<<<<<<<<<<<', 40, 440);
       ctx.fillText('ET-NIDP-2026-ENGIDA-DEMO-VERIFIED-SPECIMEN-SECURE-ID', 40, 465);
@@ -489,17 +489,17 @@ export default function Step3IdentityVerification({
       {/* ── Step Header ── */}
       <div>
         <div className="flex items-center gap-2">
-          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-[#1e40af] uppercase tracking-wider">
+          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#f2ece4] text-[#c2652a] uppercase tracking-wider">
             Enterprise KYC
           </span>
-          <span className="text-xs text-slate-500 font-medium flex items-center gap-1">
-            <Lock className="w-3 h-3 text-slate-400" /> AES-256 Vault Protected
+          <span className="text-xs text-[#605850] font-medium flex items-center gap-1">
+            <Lock className="w-3 h-3 text-[#605850]" /> AES-256 Vault Protected
           </span>
         </div>
-        <h2 className="text-xl font-bold tracking-tight text-slate-900 mt-2">
+        <h2 className="text-xl font-bold tracking-tight text-[#3a302a] mt-2">
           Government Identity Verification
         </h2>
-        <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+        <p className="text-xs text-[#605850] mt-1 leading-relaxed">
           ENGIDA supports eligible Ethiopian citizens, diaspora residents, and verified international
           hosts. Government ID verification binds your account to an authoritative legal identity prior to
           public listing publication.
@@ -509,7 +509,7 @@ export default function Step3IdentityVerification({
       <form onSubmit={handleSubmit} className="space-y-6" noValidate>
         {/* ── Document Type Selection ── */}
         <div>
-          <label className="block text-xs font-bold text-slate-700 mb-2">
+          <label className="block text-xs font-bold text-[#3a302a] mb-2">
             Select Identity Document Type <span className="text-rose-500">*</span>
           </label>
           <div className="space-y-2">
@@ -520,8 +520,8 @@ export default function Step3IdentityVerification({
                   key={doc.value}
                   className={`flex items-start gap-3 p-3.5 rounded-xl border transition cursor-pointer ${
                     isSelected
-                      ? 'border-[#1e40af] bg-blue-50/50 ring-1 ring-blue-300'
-                      : 'border-slate-200 bg-white hover:border-slate-300'
+                      ? 'border-[#c2652a] bg-[#f2ece4]/50 ring-1 ring-[#c2652a]'
+                      : 'border-[#d8d0c8] bg-white hover:border-[#c2652a]'
                   }`}
                 >
                   <input
@@ -530,23 +530,23 @@ export default function Step3IdentityVerification({
                     value={doc.value}
                     checked={isSelected}
                     onChange={() => handleDocumentTypeChange(doc.value)}
-                    className="mt-1 w-4 h-4 text-[#1e40af] border-slate-300 focus:ring-[#1e40af] cursor-pointer"
+                    className="mt-1 w-4 h-4 text-[#c2652a] border-[#d8d0c8] focus:ring-[#c2652a] cursor-pointer"
                   />
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
-                      <span className="block text-xs font-bold text-slate-900">{doc.label}</span>
+                      <span className="block text-xs font-bold text-[#3a302a]">{doc.label}</span>
                       {doc.value === 'ETHIOPIAN_FAYDA_ID' && (
                         <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full flex items-center gap-1">
                           <Zap className="w-3 h-3 text-emerald-600" /> Instant e-KYC Available
                         </span>
                       )}
                       {doc.value === 'FOREIGN_PASSPORT' && (
-                        <span className="text-[10px] font-semibold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">
+                        <span className="text-[10px] font-semibold text-[#c2652a] bg-[#f2ece4] px-2 py-0.5 rounded-full">
                           Global Hosts
                         </span>
                       )}
                     </div>
-                    <span className="block text-xs text-slate-500 mt-0.5 leading-relaxed">
+                    <span className="block text-xs text-[#605850] mt-0.5 leading-relaxed">
                       {doc.description}
                     </span>
                   </div>
@@ -558,39 +558,39 @@ export default function Step3IdentityVerification({
 
         {/* ── FAYDA DIGITAL ID SECTION ── */}
         {isFayda ? (
-          <div className="space-y-4 p-5 rounded-2xl border border-blue-200 bg-white shadow-xs">
+          <div className="space-y-4 p-5 rounded-2xl border border-[#d8d0c8] bg-white shadow-xs">
             {/* Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div className="flex items-center justify-between pb-3 border-b border-[#d8d0c8]">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-blue-100 text-[#1e40af] flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-[#f2ece4] text-[#c2652a] flex items-center justify-center">
                   <CreditCard className="w-4 h-4" />
                 </div>
                 <div>
-                  <span className="block text-xs font-bold text-slate-900">National Fayda Digital ID</span>
-                  <span className="block text-[11px] text-slate-500">
+                  <span className="block text-xs font-bold text-[#3a302a]">National Fayda Digital ID</span>
+                  <span className="block text-[11px] text-[#605850]">
                     Federal Democratic Republic of Ethiopia · National Identification Program (NIDP)
                   </span>
                 </div>
               </div>
-              <span className="text-[10px] font-bold text-blue-800 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                <ShieldCheck className="w-3 h-3 text-[#1e40af]" /> NIDP Compliant
+              <span className="text-[10px] font-bold text-[#c2652a] bg-[#f2ece4] border border-[#d8d0c8] px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                <ShieldCheck className="w-3 h-3 text-[#c2652a]" /> NIDP Compliant
               </span>
             </div>
 
             {/* FIN or FAN Input */}
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label htmlFor="faydaNumberInput" className="block text-xs font-bold text-slate-800">
+                <label htmlFor="faydaNumberInput" className="block text-xs font-bold text-[#3a302a]">
                   National Fayda ID Number (FIN or FAN) <span className="text-rose-500">*</span>
                 </label>
-                <span className="text-[11px] font-mono text-blue-700">
+                <span className="text-[11px] font-mono text-[#c2652a]">
                   {data.documentNumber.replace(/\D/g, '').length} / 12 digits
                 </span>
               </div>
 
               <div className="flex gap-2">
                 <div className="relative flex-1">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#605850]">
                     <CreditCard className="w-4 h-4" />
                   </div>
                   <input
@@ -599,8 +599,8 @@ export default function Step3IdentityVerification({
                     value={data.documentNumber}
                     onChange={(e) => handleDocumentNumberChange(e.target.value)}
                     placeholder="e.g. 6874 0718 4986 (12-digit FIN)"
-                    className={`w-full pl-9 pr-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1e40af] font-mono tracking-wider ${
-                      errors.documentNumber ? 'border-rose-400 bg-rose-50/30' : 'border-slate-300 bg-white'
+                    className={`w-full pl-9 pr-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#c2652a] focus:border-[#c2652a] font-mono tracking-wider ${
+                      errors.documentNumber ? 'border-rose-400 bg-rose-50/30 text-[#3a302a]' : 'border-[#d8d0c8] bg-white text-[#3a302a]'
                     }`}
                   />
                 </div>
@@ -609,7 +609,7 @@ export default function Step3IdentityVerification({
                   type="button"
                   onClick={handleFaydaLookupAndExtract}
                   disabled={isExtractingFayda || data.documentNumber.replace(/\D/g, '').length < 12}
-                  className="px-4 py-2.5 bg-[#1e40af] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded-lg transition disabled:opacity-50 cursor-pointer flex items-center gap-1.5 shadow-xs shrink-0"
+                  className="px-4 py-2.5 bg-[#c2652a] hover:bg-[#e08850] active:bg-[#a65320] text-white text-xs font-bold rounded-lg transition disabled:opacity-50 cursor-pointer flex items-center gap-1.5 shadow-xs shrink-0"
                 >
                   {isExtractingFayda ? (
                     <>
@@ -625,9 +625,9 @@ export default function Step3IdentityVerification({
                 </button>
               </div>
 
-              <div className="flex items-center justify-between text-[11px] text-slate-500 mt-1">
+              <div className="flex items-center justify-between text-[11px] text-[#605850] mt-1">
                 <span>Enter 12-digit FIN printed on front, or 16-digit FAN on back</span>
-                <span className="text-slate-400 font-mono">Encrypted at rest</span>
+                <span className="text-[#605850] font-mono">Encrypted at rest</span>
               </div>
 
               {errors.documentNumber && (
@@ -651,13 +651,13 @@ export default function Step3IdentityVerification({
                 <div className="flex items-start gap-2.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold block text-slate-900">
+                    <span className="font-bold block text-[#3a302a]">
                       National Fayda Number Validated ({data.faydaExtractedData.fin})
                     </span>
-                    <span className="text-slate-600 text-[11px] block mt-0.5">
+                    <span className="text-[#605850] text-[11px] block mt-0.5">
                       12-digit national structure authentic. Please upload your physical card scans below for document verification.
                     </span>
-                    <span className="text-slate-500 text-[10px] block font-mono mt-0.5">
+                    <span className="text-[#605850] text-[10px] block font-mono mt-0.5">
                       Audit Token: {data.faydaExtractedData.verificationToken}
                     </span>
                   </div>
@@ -669,14 +669,14 @@ export default function Step3IdentityVerification({
             )}
 
             {/* Host Demographic Details Confirmation (Real Data Input) */}
-            <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 space-y-2.5 text-xs">
-              <span className="font-bold text-slate-800 flex items-center gap-1.5">
-                <UserCheck className="w-3.5 h-3.5 text-[#1e40af]" />
+            <div className="p-3.5 rounded-xl border border-[#d8d0c8] bg-[#faf5ee] space-y-2.5 text-xs">
+              <span className="font-bold text-[#3a302a] flex items-center gap-1.5">
+                <UserCheck className="w-3.5 h-3.5 text-[#c2652a]" />
                 Identity Details (As Printed on Your Fayda Card)
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label htmlFor="faydaDobInput" className="block text-[11px] font-semibold text-slate-700 mb-1">
+                  <label htmlFor="faydaDobInput" className="block text-[11px] font-semibold text-[#3a302a] mb-1">
                     Date of Birth
                   </label>
                   <input
@@ -684,12 +684,12 @@ export default function Step3IdentityVerification({
                     type="date"
                     value={data.dateOfBirth || ''}
                     onChange={(e) => updateData({ dateOfBirth: e.target.value })}
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1e40af] bg-white"
+                    className="w-full px-3 py-2 text-xs border border-[#d8d0c8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#c2652a] focus:border-[#c2652a] bg-white text-[#3a302a]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                  <label className="block text-[11px] font-semibold text-[#3a302a] mb-1">
                     Gender
                   </label>
                   <div className="flex gap-4 items-center h-8">
@@ -700,9 +700,9 @@ export default function Step3IdentityVerification({
                         value="MALE"
                         checked={data.gender === 'MALE'}
                         onChange={() => updateData({ gender: 'MALE' })}
-                        className="w-4 h-4 text-[#1e40af] focus:ring-[#1e40af]"
+                        className="w-4 h-4 text-[#c2652a] focus:ring-[#c2652a]"
                       />
-                      <span className="text-xs text-slate-800 font-medium">Male</span>
+                      <span className="text-xs text-[#3a302a] font-medium">Male</span>
                     </label>
                     <label className="flex items-center gap-1.5 cursor-pointer">
                       <input
@@ -711,9 +711,9 @@ export default function Step3IdentityVerification({
                         value="FEMALE"
                         checked={data.gender === 'FEMALE'}
                         onChange={() => updateData({ gender: 'FEMALE' })}
-                        className="w-4 h-4 text-[#1e40af] focus:ring-[#1e40af]"
+                        className="w-4 h-4 text-[#c2652a] focus:ring-[#c2652a]"
                       />
-                      <span className="text-xs text-slate-800 font-medium">Female</span>
+                      <span className="text-xs text-[#3a302a] font-medium">Female</span>
                     </label>
                   </div>
                 </div>
@@ -727,17 +727,17 @@ export default function Step3IdentityVerification({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label htmlFor="issuingCountry" className="block text-xs font-bold text-slate-700">
+                  <label htmlFor="issuingCountry" className="block text-xs font-bold text-[#3a302a]">
                     Issuing Country <span className="text-rose-500">*</span>
                   </label>
                   {selectedDocConfig.allowedCountries?.length === 1 && (
-                    <span className="text-[10px] text-slate-500 flex items-center gap-1 font-medium">
-                      <Lock className="w-2.5 h-2.5 text-slate-400" /> Ethiopia Only
+                    <span className="text-[10px] text-[#605850] flex items-center gap-1 font-medium">
+                      <Lock className="w-2.5 h-2.5 text-[#605850]" /> Ethiopia Only
                     </span>
                   )}
                 </div>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#605850]">
                     <Globe className="w-4 h-4" />
                   </div>
                   <select
@@ -745,7 +745,7 @@ export default function Step3IdentityVerification({
                     value={data.issuingCountry}
                     disabled={Boolean(selectedDocConfig.allowedCountries?.length === 1)}
                     onChange={(e) => updateData({ issuingCountry: e.target.value })}
-                    className="w-full pl-9 pr-8 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#1e40af] disabled:bg-slate-100 disabled:text-slate-600 font-medium cursor-pointer"
+                    className="w-full pl-9 pr-8 py-2.5 text-sm border border-[#d8d0c8] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#c2652a] focus:border-[#c2652a] disabled:bg-[#f2ece4] disabled:text-[#605850] text-[#3a302a] font-medium cursor-pointer"
                   >
                     {SUPPORTED_COUNTRIES.map((c) => (
                       <option key={c.code} value={c.code}>
@@ -763,7 +763,7 @@ export default function Step3IdentityVerification({
               </div>
 
               <div>
-                <label htmlFor="issuingAuthority" className="block text-xs font-bold text-slate-700 mb-1">
+                <label htmlFor="issuingAuthority" className="block text-xs font-bold text-[#3a302a] mb-1">
                   Issuing Authority / Agency (Optional)
                 </label>
                 <input
@@ -772,7 +772,7 @@ export default function Step3IdentityVerification({
                   value={data.issuingAuthority}
                   onChange={(e) => updateData({ issuingAuthority: e.target.value })}
                   placeholder={getIssuingAuthorityPlaceholder(data.documentType)}
-                  className="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1e40af] bg-white"
+                  className="w-full px-3 py-2.5 text-sm border border-[#d8d0c8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#c2652a] focus:border-[#c2652a] bg-white text-[#3a302a]"
                 />
               </div>
             </div>
@@ -781,17 +781,17 @@ export default function Step3IdentityVerification({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label htmlFor="documentNumber" className="block text-xs font-bold text-slate-700">
+                  <label htmlFor="documentNumber" className="block text-xs font-bold text-[#3a302a]">
                     Document Number <span className="text-rose-500">*</span>
                   </label>
                   {isFayda && (
-                    <span className="text-[10px] font-mono text-blue-700">
+                    <span className="text-[10px] font-mono text-[#c2652a]">
                       {data.documentNumber.replace(/\D/g, '').length} / 12 digits
                     </span>
                   )}
                 </div>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#605850]">
                     <CreditCard className="w-4 h-4" />
                   </div>
                   <input
@@ -800,8 +800,8 @@ export default function Step3IdentityVerification({
                     value={data.documentNumber}
                     onChange={(e) => handleDocumentNumberChange(e.target.value)}
                     placeholder={getDocumentPlaceholder(data.documentType)}
-                    className={`w-full pl-9 pr-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1e40af] font-mono ${
-                      errors.documentNumber ? 'border-rose-400 bg-rose-50/30' : 'border-slate-300 bg-white'
+                    className={`w-full pl-9 pr-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#c2652a] focus:border-[#c2652a] font-mono text-[#3a302a] ${
+                      errors.documentNumber ? 'border-rose-400 bg-rose-50/30' : 'border-[#d8d0c8] bg-white'
                     }`}
                     aria-invalid={Boolean(errors.documentNumber)}
                   />
@@ -812,17 +812,17 @@ export default function Step3IdentityVerification({
                     <span>{errors.documentNumber}</span>
                   </p>
                 )}
-                <span className="text-[11px] text-slate-500 block mt-0.5">
+                <span className="text-[11px] text-[#605850] block mt-0.5">
                   Encrypted at rest and masked on storage (<span className="font-mono">****-1234</span>) for privacy.
                 </span>
               </div>
 
               <div>
-                <label htmlFor="expirationDate" className="block text-xs font-bold text-slate-700 mb-1">
+                <label htmlFor="expirationDate" className="block text-xs font-bold text-[#3a302a] mb-1">
                   Expiration Date (Optional)
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#605850]">
                     <Calendar className="w-4 h-4" />
                   </div>
                   <input
@@ -830,8 +830,8 @@ export default function Step3IdentityVerification({
                     type="date"
                     value={data.expirationDate}
                     onChange={(e) => handleExpirationDateChange(e.target.value)}
-                    className={`w-full pl-9 pr-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1e40af] bg-white ${
-                      errors.expirationDate ? 'border-rose-400 bg-rose-50/30' : 'border-slate-300'
+                    className={`w-full pl-9 pr-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#c2652a] focus:border-[#c2652a] bg-white text-[#3a302a] ${
+                      errors.expirationDate ? 'border-rose-400 bg-rose-50/30' : 'border-[#d8d0c8]'
                     }`}
                   />
                 </div>
@@ -850,26 +850,26 @@ export default function Step3IdentityVerification({
         <div className="space-y-4">
           <div className="flex items-center justify-between">
                 <div>
-                  <label className="block text-xs font-bold text-slate-800">
+                  <label className="block text-xs font-bold text-[#3a302a]">
                     Upload Official Document Scans <span className="text-rose-500">*</span>
                   </label>
-                  <span className="text-[11px] text-slate-500">Max 5MB per file • JPEG, PNG, or PDF</span>
+                  <span className="text-[11px] text-[#605850]">Max 5MB per file • JPEG, PNG, or PDF</span>
                 </div>
 
                 <button
                   type="button"
                   onClick={loadDemoIdentityDocument}
-                  className="px-2.5 py-1 text-[11px] font-semibold text-[#1e40af] hover:bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-1.5 transition cursor-pointer"
+                  className="px-2.5 py-1 text-[11px] font-semibold text-[#c2652a] hover:bg-[#faf5ee] border border-[#d8d0c8] rounded-lg flex items-center gap-1.5 transition cursor-pointer"
                   title="Populate a demo government document for evaluation"
                 >
-                  <Camera className="w-3 h-3 text-[#1e40af]" />
+                  <Camera className="w-3 h-3 text-[#c2652a]" />
                   <span>Use Demo ID Specimen</span>
                 </button>
               </div>
 
               {/* Front Side Upload */}
               <div className="space-y-1.5">
-                <span className="text-xs font-semibold text-slate-700 flex items-center gap-1">
+                <span className="text-xs font-semibold text-[#3a302a] flex items-center gap-1">
                   <span>Front Side (Photo & Personal Details)</span>
                   <span className="text-rose-500">*</span>
                 </span>
@@ -900,7 +900,7 @@ export default function Step3IdentityVerification({
                         </div>
                       )}
                       <div className="min-w-0">
-                        <p className="text-xs font-bold text-slate-900 truncate">{data.fileName}</p>
+                        <p className="text-xs font-bold text-[#3a302a] truncate">{data.fileName}</p>
                         <p className="text-[11px] text-emerald-800 font-medium flex items-center gap-1 mt-0.5">
                           <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                           {data.fileSize ? `${(data.fileSize / 1024).toFixed(0)} KB · Verified Ready` : 'Attached'}
@@ -913,7 +913,7 @@ export default function Step3IdentityVerification({
                         <button
                           type="button"
                           onClick={() => setPreviewModalUrl(data.filePreviewUrl || null)}
-                          className="px-2 py-1 text-xs text-[#1e40af] hover:bg-blue-50 rounded-lg font-medium flex items-center gap-1 transition cursor-pointer"
+                          className="px-2 py-1 text-xs text-[#c2652a] hover:bg-[#faf5ee] rounded-lg font-medium flex items-center gap-1 transition cursor-pointer"
                         >
                           <Eye className="w-3.5 h-3.5" /> Preview
                         </button>
@@ -921,7 +921,7 @@ export default function Step3IdentityVerification({
                       <button
                         type="button"
                         onClick={() => frontInputRef.current?.click()}
-                        className="px-2 py-1 text-xs text-slate-600 hover:bg-slate-100 rounded-lg font-medium flex items-center gap-1 transition cursor-pointer"
+                        className="px-2 py-1 text-xs text-[#605850] hover:bg-[#f2ece4] rounded-lg font-medium flex items-center gap-1 transition cursor-pointer"
                         title="Replace with another file"
                       >
                         <RefreshCw className="w-3 h-3" /> Replace
@@ -929,7 +929,7 @@ export default function Step3IdentityVerification({
                       <button
                         type="button"
                         onClick={removeFrontFile}
-                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                        className="p-1.5 text-[#605850] hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
                         title="Remove file"
                       >
                         <X className="w-4 h-4" />
@@ -952,15 +952,15 @@ export default function Step3IdentityVerification({
                     onClick={() => frontInputRef.current?.click()}
                     className={`relative flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-xl transition cursor-pointer ${
                       isFrontDragOver
-                        ? 'border-[#1e40af] bg-blue-50/50'
-                        : 'border-slate-300 hover:border-[#1e40af] bg-slate-50/50 hover:bg-blue-50/20'
+                        ? 'border-[#c2652a] bg-[#f2ece4]/50'
+                        : 'border-[#d8d0c8] hover:border-[#c2652a] bg-[#faf5ee] hover:bg-[#f2ece4]'
                     }`}
                   >
-                    <UploadCloud className="w-8 h-8 text-slate-400 mb-2" />
-                    <span className="text-xs font-bold text-slate-800">
+                    <UploadCloud className="w-8 h-8 text-[#605850] mb-2" />
+                    <span className="text-xs font-bold text-[#3a302a]">
                       Click to browse or drag Front of document here
                     </span>
-                    <span className="text-[11px] text-slate-500 mt-1">
+                    <span className="text-[11px] text-[#605850] mt-1">
                       Accepted formats: JPEG, PNG, WebP, or PDF (Max 5MB)
                     </span>
                     <input
@@ -995,10 +995,10 @@ export default function Step3IdentityVerification({
               {requiresBackSide && (
                 <div className="space-y-1.5 pt-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-slate-700">
+                    <span className="text-xs font-semibold text-[#3a302a]">
                       Back Side (Barcode, Address, or Official Stamp)
                     </span>
-                    <span className="text-[11px] text-slate-500">Recommended for ID Cards</span>
+                    <span className="text-[11px] text-[#605850]">Recommended for ID Cards</span>
                   </div>
 
                   {data.backFileName ? (
@@ -1027,7 +1027,7 @@ export default function Step3IdentityVerification({
                           </div>
                         )}
                         <div className="min-w-0">
-                          <p className="text-xs font-bold text-slate-900 truncate">{data.backFileName}</p>
+                          <p className="text-xs font-bold text-[#3a302a] truncate">{data.backFileName}</p>
                           <p className="text-[11px] text-emerald-800 font-medium flex items-center gap-1 mt-0.5">
                             <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                             {data.backFileSize ? `${(data.backFileSize / 1024).toFixed(0)} KB · Verified Ready` : 'Attached'}
@@ -1040,7 +1040,7 @@ export default function Step3IdentityVerification({
                           <button
                             type="button"
                             onClick={() => setPreviewModalUrl(data.backFilePreviewUrl || null)}
-                            className="px-2 py-1 text-xs text-[#1e40af] hover:bg-blue-50 rounded-lg font-medium flex items-center gap-1 transition cursor-pointer"
+                            className="px-2 py-1 text-xs text-[#c2652a] hover:bg-[#faf5ee] rounded-lg font-medium flex items-center gap-1 transition cursor-pointer"
                           >
                             <Eye className="w-3.5 h-3.5" /> Preview
                           </button>
@@ -1048,7 +1048,7 @@ export default function Step3IdentityVerification({
                         <button
                           type="button"
                           onClick={() => backInputRef.current?.click()}
-                          className="px-2 py-1 text-xs text-slate-600 hover:bg-slate-100 rounded-lg font-medium flex items-center gap-1 transition cursor-pointer"
+                          className="px-2 py-1 text-xs text-[#605850] hover:bg-[#f2ece4] rounded-lg font-medium flex items-center gap-1 transition cursor-pointer"
                           title="Replace with another file"
                         >
                           <RefreshCw className="w-3 h-3" /> Replace
@@ -1056,7 +1056,7 @@ export default function Step3IdentityVerification({
                         <button
                           type="button"
                           onClick={removeBackFile}
-                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                          className="p-1.5 text-[#605850] hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
                           title="Remove file"
                         >
                           <X className="w-4 h-4" />
@@ -1079,15 +1079,15 @@ export default function Step3IdentityVerification({
                       onClick={() => backInputRef.current?.click()}
                       className={`relative flex flex-col items-center justify-center p-4 border-2 border-dashed rounded-xl transition cursor-pointer ${
                         isBackDragOver
-                          ? 'border-[#1e40af] bg-blue-50/50'
-                          : 'border-slate-300 hover:border-[#1e40af] bg-slate-50/30 hover:bg-blue-50/10'
+                          ? 'border-[#c2652a] bg-[#f2ece4]/50'
+                          : 'border-[#d8d0c8] hover:border-[#c2652a] bg-[#faf5ee] hover:bg-[#f2ece4]'
                       }`}
                     >
-                      <UploadCloud className="w-6 h-6 text-slate-400 mb-1" />
-                      <span className="text-xs font-bold text-slate-700">
+                      <UploadCloud className="w-6 h-6 text-[#605850] mb-1" />
+                      <span className="text-xs font-bold text-[#3a302a]">
                         Click to browse or drag Back of document here
                       </span>
-                      <span className="text-[11px] text-slate-400 mt-0.5">
+                      <span className="text-[11px] text-[#605850] mt-0.5">
                         Helps expedite administrative approval for regional ID cards
                       </span>
                       <input
@@ -1114,12 +1114,12 @@ export default function Step3IdentityVerification({
             </div>
 
         {/* ── Document Quality & Authenticity Guidelines ── */}
-        <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2 text-xs">
-          <p className="font-bold text-slate-900 flex items-center gap-1.5">
+        <div className="p-4 bg-[#faf5ee] border border-[#d8d0c8] rounded-xl space-y-2 text-xs">
+          <p className="font-bold text-[#3a302a] flex items-center gap-1.5">
             <ShieldCheck className="w-4 h-4 text-emerald-600" />
             <span>Document Quality & Authenticity Standards</span>
           </p>
-          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-slate-600 pt-1">
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-[#605850] pt-1">
             <li className="flex items-center gap-1.5">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
               <span>All 4 physical corners must be fully visible</span>
@@ -1140,20 +1140,20 @@ export default function Step3IdentityVerification({
         </div>
 
         {/* ── Data Protection & Privacy Notice ── */}
-        <div className="p-4 rounded-xl bg-blue-50/60 border border-blue-200 text-slate-700 space-y-2 text-xs">
+        <div className="p-4 rounded-xl bg-[#f2ece4]/50 border border-[#d8d0c8] text-[#3a302a] space-y-2 text-xs">
           <div className="flex items-start gap-2.5">
-            <Lock className="w-4 h-4 text-[#1e40af] mt-0.5 shrink-0" />
+            <Lock className="w-4 h-4 text-[#c2652a] mt-0.5 shrink-0" />
             <div>
-              <p className="font-bold text-slate-900">Privacy & Confidential Storage Guarantee</p>
-              <p className="text-slate-600 mt-0.5 leading-relaxed text-[11px]">
+              <p className="font-bold text-[#3a302a]">Privacy & Confidential Storage Guarantee</p>
+              <p className="text-[#605850] mt-0.5 leading-relaxed text-[11px]">
                 In accordance with Ethiopian Personal Data Protection Proclamation No. 1205/2020 and platform
                 governance standards, identity document files are encrypted with AES-256 and stored in an
                 isolated, zero-public-access security vault. Documents are never exposed to guests or public visitors.
               </p>
             </div>
           </div>
-          <div className="flex items-start gap-2.5 pt-1 text-[11px] text-slate-500">
-            <Info className="w-4 h-4 text-[#1e40af] mt-0.5 shrink-0" />
+          <div className="flex items-start gap-2.5 pt-1 text-[11px] text-[#605850]">
+            <Info className="w-4 h-4 text-[#c2652a] mt-0.5 shrink-0" />
             <span>
               Your identity application will be submitted for formal verification by authorized compliance officers.
             </span>
@@ -1161,17 +1161,17 @@ export default function Step3IdentityVerification({
         </div>
 
         {/* ── Navigation Buttons ── */}
-        <div className="pt-4 border-t border-slate-200 flex items-center justify-between">
+        <div className="pt-4 border-t border-[#d8d0c8] flex items-center justify-between">
           <button
             type="button"
             onClick={onBack}
-            className="px-4 py-2 border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-lg transition cursor-pointer"
+            className="px-4 py-2 border border-[#d8d0c8] hover:bg-[#faf5ee] text-[#3a302a] text-xs font-bold rounded-lg transition cursor-pointer"
           >
             ← Back to Email Verification
           </button>
           <button
             type="submit"
-            className="px-6 py-2.5 bg-[#1e40af] hover:bg-[#1e3a8a] text-white text-xs font-bold rounded-lg transition cursor-pointer flex items-center gap-2 shadow-xs"
+            className="px-6 py-2.5 bg-[#c2652a] hover:bg-[#e08850] active:bg-[#a65320] text-white text-xs font-bold rounded-lg transition cursor-pointer flex items-center gap-2 shadow-xs"
           >
             <span>Continue to Host Details & Address →</span>
           </button>
@@ -1187,23 +1187,23 @@ export default function Step3IdentityVerification({
           onClick={() => setPreviewModalUrl(null)}
         >
           <div
-            className="relative max-w-2xl w-full bg-white rounded-2xl overflow-hidden shadow-2xl p-4 space-y-3"
+            className="relative max-w-2xl w-full bg-[#faf5ee] border border-[#d8d0c8] rounded-2xl overflow-hidden shadow-2xl p-4 space-y-3"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b pb-2">
-              <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                <FileText className="w-4 h-4 text-[#1e40af]" />
+            <div className="flex items-center justify-between border-b border-[#d8d0c8] pb-2">
+              <span className="text-xs font-bold text-[#3a302a] flex items-center gap-1.5">
+                <FileText className="w-4 h-4 text-[#c2652a]" />
                 Identity Document High-Res Inspection
               </span>
               <button
                 type="button"
                 onClick={() => setPreviewModalUrl(null)}
-                className="p-1 rounded-lg hover:bg-slate-100 text-slate-500 cursor-pointer"
+                className="p-1 rounded-lg hover:bg-[#f2ece4] text-[#605850] cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="max-h-[70vh] overflow-auto flex items-center justify-center bg-slate-100 rounded-xl p-3">
+            <div className="max-h-[70vh] overflow-auto flex items-center justify-center bg-[#f2ece4]/60 rounded-xl p-3 border border-[#d8d0c8]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={previewModalUrl}
@@ -1212,13 +1212,13 @@ export default function Step3IdentityVerification({
               />
             </div>
             <div className="flex items-center justify-between pt-1">
-              <span className="text-[11px] text-slate-500">
+              <span className="text-[11px] text-[#605850]">
                 AES-256 encrypted preview · Ensure all details and photo are sharp
               </span>
               <button
                 type="button"
                 onClick={() => setPreviewModalUrl(null)}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-lg transition cursor-pointer"
+                className="px-4 py-2 bg-[#f2ece4] hover:bg-[#d8d0c8] text-[#3a302a] text-xs font-bold rounded-lg transition cursor-pointer"
               >
                 Close Preview
               </button>

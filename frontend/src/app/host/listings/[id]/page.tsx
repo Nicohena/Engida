@@ -103,8 +103,8 @@ function StatusBadge({
       );
     }
     return (
-      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border bg-blue-50 border-blue-200 text-blue-700">
-        <span className="w-2 h-2 rounded-full flex-shrink-0 bg-blue-500 animate-pulse" />
+      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border bg-[#f2ece4] border-[#d8d0c8] text-[#c2652a]">
+        <span className="w-2 h-2 rounded-full flex-shrink-0 bg-[#c2652a] animate-pulse" />
         Changes Awaiting Review
       </span>
     );
@@ -119,8 +119,8 @@ function StatusBadge({
   }
   if (activeReview?.status === 'WITHDRAWN' && status === 'DRAFT') {
     return (
-      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border bg-slate-50 border-slate-200 text-slate-700">
-        <span className="w-2 h-2 rounded-full flex-shrink-0 bg-slate-400" />
+      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border bg-stone-50 border-[#d8d0c8] text-[#605850]">
+        <span className="w-2 h-2 rounded-full flex-shrink-0 bg-[#605850]" />
         Review Withdrawn
       </span>
     );
@@ -141,7 +141,7 @@ function TypeBadge({ type }: { type: ListingType }) {
     <span
       className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider ${
         type === 'RENTAL'
-          ? 'bg-[#E3EAF5] text-[#33599E]'
+          ? 'bg-[#f2ece4] text-[#c2652a]'
           : 'bg-violet-100 text-violet-800'
       }`}
     >
@@ -181,18 +181,18 @@ function ActionModal({
       ? 'bg-red-600 hover:bg-red-700 text-white'
       : confirmStyle === 'warning'
       ? 'bg-amber-600 hover:bg-amber-700 text-white'
-      : 'bg-[#33599E] hover:bg-[#234079] text-white';
+      : 'bg-[#c2652a] hover:bg-[#e08850] active:bg-[#a65320] text-white';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl border border-[#CBD5E1] max-w-md w-full p-6 space-y-4">
-        <h3 className="text-lg font-black text-[#000000]">{title}</h3>
-        <p className="text-sm text-[#64748B] leading-relaxed">{description}</p>
+      <div className="bg-white rounded-2xl shadow-2xl border border-[#d8d0c8] max-w-md w-full p-6 space-y-4">
+        <h3 className="text-lg font-black text-[#3a302a]">{title}</h3>
+        <p className="text-sm text-[#605850] leading-relaxed">{description}</p>
         <div className="flex gap-3 justify-end pt-2">
           <button
             onClick={onCancel}
             disabled={isLoading}
-            className="px-4 py-2 rounded-xl text-sm font-semibold text-[#334155] bg-[#F4F7FC] hover:bg-[#E3EAF5] border border-[#CBD5E1] transition disabled:opacity-50"
+            className="px-4 py-2 rounded-xl text-sm font-semibold text-[#3a302a] bg-[#faf5ee] hover:bg-[#f2ece4] border border-[#d8d0c8] transition disabled:opacity-50"
           >
             Cancel
           </button>
@@ -375,12 +375,12 @@ export default function ListingDetailPage() {
   if (loading) {
     return (
       <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-6 animate-pulse">
-        <div className="h-6 w-36 bg-[#E3EAF5] rounded-lg" />
-        <div className="h-10 w-3/4 bg-[#E3EAF5] rounded-xl" />
-        <div className="h-72 w-full bg-[#E3EAF5] rounded-2xl" />
+        <div className="h-6 w-36 bg-[#f2ece4] rounded-lg" />
+        <div className="h-10 w-3/4 bg-[#f2ece4] rounded-xl" />
+        <div className="h-72 w-full bg-[#f2ece4] rounded-2xl" />
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-24 bg-[#E3EAF5] rounded-xl" />
+            <div key={i} className="h-24 bg-[#f2ece4] rounded-xl" />
           ))}
         </div>
       </div>
@@ -393,18 +393,18 @@ export default function ListingDetailPage() {
   if (is404) {
     return (
       <div className="p-6 md:p-12 max-w-xl mx-auto text-center space-y-5">
-        <div className="w-16 h-16 rounded-2xl bg-[#F4F7FC] border border-[#CBD5E1] flex items-center justify-center mx-auto text-[#94A3B8]">
+        <div className="w-16 h-16 rounded-2xl bg-[#faf5ee] border border-[#d8d0c8] flex items-center justify-center mx-auto text-[#605850]">
           <Building2 className="w-8 h-8" />
         </div>
-        <h1 className="text-2xl font-black text-[#000000]">Listing Not Found</h1>
-        <p className="text-sm text-[#64748B] leading-relaxed">
-          The listing with ID <code className="font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded">{listingId}</code> does
+        <h1 className="text-2xl font-black text-[#3a302a]">Listing Not Found</h1>
+        <p className="text-sm text-[#605850] leading-relaxed">
+          The listing with ID <code className="font-mono text-xs bg-[#f2ece4] px-1.5 py-0.5 rounded text-[#3a302a]">{listingId}</code> does
           not exist or you do not have permission to view it.
         </p>
         <div>
           <Link
             href="/host/listings"
-            className="inline-flex items-center gap-2 bg-[#33599E] hover:bg-[#234079] text-white text-sm font-bold px-6 py-2.5 rounded-xl transition"
+            className="inline-flex items-center gap-2 bg-[#c2652a] hover:bg-[#e08850] active:bg-[#a65320] text-white text-sm font-bold px-6 py-2.5 rounded-xl transition shadow-sm"
           >
             <ArrowLeft className="w-4 h-4" /> Back to Listings
           </Link>
@@ -422,12 +422,12 @@ export default function ListingDetailPage() {
         <div className="w-16 h-16 rounded-2xl bg-red-50 border border-red-200 flex items-center justify-center mx-auto text-red-500">
           <AlertTriangle className="w-8 h-8" />
         </div>
-        <h1 className="text-2xl font-black text-[#000000]">Failed to load listing</h1>
-        <p className="text-sm text-[#64748B]">{error || 'An unexpected error occurred.'}</p>
+        <h1 className="text-2xl font-black text-[#3a302a]">Failed to load listing</h1>
+        <p className="text-sm text-[#605850]">{error || 'An unexpected error occurred.'}</p>
         <div className="flex justify-center gap-3">
           <Link
             href="/host/listings"
-            className="px-5 py-2.5 rounded-xl border border-[#CBD5E1] text-sm font-bold text-[#334155] hover:bg-[#F4F7FC] transition"
+            className="px-5 py-2.5 rounded-xl border border-[#d8d0c8] text-sm font-bold text-[#3a302a] hover:bg-[#faf5ee] transition"
           >
             Back to Listings
           </Link>
@@ -436,7 +436,7 @@ export default function ListingDetailPage() {
               setLoading(true);
               fetchListing();
             }}
-            className="inline-flex items-center gap-2 bg-[#33599E] hover:bg-[#234079] text-white text-sm font-bold px-5 py-2.5 rounded-xl transition"
+            className="inline-flex items-center gap-2 bg-[#c2652a] hover:bg-[#e08850] active:bg-[#a65320] text-white text-sm font-bold px-5 py-2.5 rounded-xl transition shadow-sm"
           >
             <RotateCcw className="w-4 h-4" /> Retry
           </button>
@@ -522,7 +522,7 @@ export default function ListingDetailPage() {
       <div className="flex items-center justify-between">
         <Link
           href="/host/listings"
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-[#64748B] hover:text-[#33599E] transition"
+          className="inline-flex items-center gap-1.5 text-xs font-bold text-[#605850] hover:text-[#c2652a] transition"
         >
           <ArrowLeft className="w-4 h-4" /> Back to My Listings
         </Link>
@@ -531,7 +531,7 @@ export default function ListingDetailPage() {
           <Link
             href={`/properties/${listing.id}`}
             target="_blank"
-            className="inline-flex items-center gap-1 text-xs font-bold text-[#33599E] hover:underline"
+            className="inline-flex items-center gap-1 text-xs font-bold text-[#c2652a] hover:underline"
           >
             <span>View Public Listing</span>
             <ExternalLink className="w-3.5 h-3.5" />
@@ -540,7 +540,7 @@ export default function ListingDetailPage() {
       </div>
 
       {/* ── Page Header ── */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-[#F1F5F9]">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-[#d8d0c8]">
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2.5">
             <StatusBadge
@@ -549,13 +549,13 @@ export default function ListingDetailPage() {
               activeReview={listing.activeReview}
             />
             <TypeBadge type={listing.listingType} />
-            <span className="text-xs text-[#94A3B8] font-mono">ID: {listing.id.slice(0, 8)}…</span>
+            <span className="text-xs text-[#605850] font-mono">ID: {listing.id.slice(0, 8)}…</span>
           </div>
-          <h1 className="text-2xl md:text-3xl font-black text-[#000000] tracking-tight">
+          <h1 className="text-2xl md:text-3xl font-black text-[#3a302a] tracking-tight">
             {listing.title}
           </h1>
-          <div className="flex items-center gap-1.5 text-xs text-[#64748B]">
-            <MapPin className="w-3.5 h-3.5 text-[#33599E]" />
+          <div className="flex items-center gap-1.5 text-xs text-[#605850]">
+            <MapPin className="w-3.5 h-3.5 text-[#c2652a]" />
             <span>
               {listing.address}, {listing.city}
               {listing.subCity ? `, ${listing.subCity}` : ''}, {listing.country || 'Ethiopia'}
@@ -568,9 +568,9 @@ export default function ListingDetailPage() {
           {!isArchived && !isSold && (
             <Link
               href={`/host/listings/${listing.id}/edit`}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-[#334155] bg-white border border-[#CBD5E1] hover:bg-[#F4F7FC] hover:border-[#33599E] transition"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-[#3a302a] bg-white border border-[#d8d0c8] hover:bg-[#faf5ee] hover:border-[#c2652a] transition shadow-xs"
             >
-              <Pencil className="w-4 h-4 text-[#33599E]" /> Edit Listing
+              <Pencil className="w-4 h-4 text-[#c2652a]" /> Edit Listing
             </Link>
           )}
         </div>
@@ -636,9 +636,9 @@ export default function ListingDetailPage() {
                       >
                         <div className="min-w-0">
                           <span className="font-bold text-amber-950 block">Proposed Cover Photo</span>
-                          <span className="text-slate-500 text-[11px] truncate block max-w-sm">{v}</span>
+                          <span className="text-[#605850] text-[11px] truncate block max-w-sm">{v}</span>
                         </div>
-                        <div className="relative w-14 h-14 rounded-lg overflow-hidden border border-slate-200 shrink-0 bg-slate-100">
+                        <div className="relative w-14 h-14 rounded-lg overflow-hidden border border-[#d8d0c8] shrink-0 bg-[#faf5ee]">
                           <Image src={v} alt="Proposed cover preview" fill sizes="56px" className="object-cover" />
                         </div>
                       </div>
@@ -652,19 +652,19 @@ export default function ListingDetailPage() {
                       >
                         <div className="flex items-center justify-between">
                           <span className="font-bold text-amber-950">Proposed Photo Gallery</span>
-                          <span className="text-slate-500 font-semibold text-[11px]">{v.length} photos</span>
+                          <span className="text-[#605850] font-semibold text-[11px]">{v.length} photos</span>
                         </div>
                         <div className="flex items-center gap-2 overflow-x-auto py-1">
                           {v.slice(0, 6).map((imgUrl, i) => (
                             <div
                               key={i}
-                              className="relative w-12 h-12 rounded-lg overflow-hidden border border-slate-200 shrink-0 bg-slate-100"
+                              className="relative w-12 h-12 rounded-lg overflow-hidden border border-[#d8d0c8] shrink-0 bg-[#faf5ee]"
                             >
                               <Image src={imgUrl} alt={`Proposed ${i + 1}`} fill sizes="48px" className="object-cover" />
                             </div>
                           ))}
                           {v.length > 6 && (
-                            <span className="text-[11px] font-bold text-slate-500 px-2">
+                            <span className="text-[11px] font-bold text-[#605850] px-2">
                               +{v.length - 6} more
                             </span>
                           )}
@@ -676,14 +676,14 @@ export default function ListingDetailPage() {
                     return (
                       <div key={k} className="bg-white/90 rounded-lg p-2.5 border border-amber-200 shadow-2xs">
                         <span className="font-bold capitalize text-amber-950">Proposed Amenities: </span>
-                        <span className="text-[#334155]">{v.length} selected</span>
+                        <span className="text-[#3a302a]">{v.length} selected</span>
                       </div>
                     );
                   }
                   return (
                     <div key={k} className="bg-white/90 rounded-lg p-2.5 border border-amber-200 shadow-2xs">
                       <span className="font-bold capitalize text-amber-950">{k}: </span>
-                      <span className="text-[#334155]">{typeof v === 'object' ? JSON.stringify(v) : String(v)}</span>
+                      <span className="text-[#3a302a]">{typeof v === 'object' ? JSON.stringify(v) : String(v)}</span>
                     </div>
                   );
                 })}
@@ -719,7 +719,7 @@ export default function ListingDetailPage() {
       )}
 
       {/* ── Status Workflow Action Bar ── */}
-      <div className="bg-white border border-[#CBD5E1] rounded-2xl p-5 shadow-sm space-y-3">
+      <div className="bg-white border border-[#d8d0c8] rounded-2xl p-5 shadow-sm space-y-3">
         {!isHostVerified && (isDraft || isPaused) && (
           <div className="bg-amber-50/90 border border-amber-200 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs mb-3">
             <div className="flex items-start gap-2.5">
@@ -746,13 +746,13 @@ export default function ListingDetailPage() {
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h2 className="text-sm font-black text-[#000000] flex items-center gap-2">
+            <h2 className="text-sm font-black text-[#3a302a] flex items-center gap-2">
               <span>Listing Lifecycle:</span>
-              <span className="text-[#33599E]">
+              <span className="text-[#c2652a]">
                 {listing.status.charAt(0) + listing.status.slice(1).toLowerCase()}
               </span>
             </h2>
-            <p className="text-xs text-[#64748B] mt-0.5">
+            <p className="text-xs text-[#605850] mt-0.5">
               {listing.adminHidden
                 ? 'This listing is temporarily hidden by an administrator. Please resolve the hold reasons above.'
                 : isDraft
@@ -871,21 +871,21 @@ export default function ListingDetailPage() {
           />
 
           {/* Description Card */}
-          <div className="bg-white border border-[#CBD5E1] rounded-2xl p-6 space-y-3 shadow-sm">
-            <h2 className="text-base font-black text-[#000000]">About This Property</h2>
-            <p className="text-sm text-[#334155] leading-relaxed whitespace-pre-line">
+          <div className="bg-white border border-[#d8d0c8] rounded-2xl p-6 space-y-3 shadow-sm">
+            <h2 className="text-base font-black text-[#3a302a]">About This Property</h2>
+            <p className="text-sm text-[#3a302a] leading-relaxed whitespace-pre-line">
               {listing.description || 'No description provided.'}
             </p>
           </div>
 
           {/* Features & Amenities Card */}
-          <div className="bg-white border border-[#CBD5E1] rounded-2xl p-6 space-y-4 shadow-sm">
-            <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-3">
+          <div className="bg-white border border-[#d8d0c8] rounded-2xl p-6 space-y-4 shadow-sm">
+            <div className="flex items-center justify-between border-b border-[#d8d0c8] pb-3">
               <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-[#33599E]" />
-                <h2 className="text-base font-black text-[#000000]">Features &amp; Amenities</h2>
+                <Sparkles className="w-4 h-4 text-[#c2652a]" />
+                <h2 className="text-base font-black text-[#3a302a]">Features &amp; Amenities</h2>
                 {listing.amenities && listing.amenities.length > 0 && (
-                  <span className="text-xs font-semibold text-[#64748B] bg-[#F4F7FC] px-2.5 py-0.5 rounded-full border border-[#CBD5E1]">
+                  <span className="text-xs font-semibold text-[#605850] bg-[#faf5ee] px-2.5 py-0.5 rounded-full border border-[#d8d0c8]">
                     {listing.amenities.length}
                   </span>
                 )}
@@ -899,7 +899,7 @@ export default function ListingDetailPage() {
               {!isArchived && !isSold && (
                 <Link
                   href={`/host/listings/${listing.id}/edit`}
-                  className="text-xs font-bold text-[#33599E] hover:underline flex items-center gap-1"
+                  className="text-xs font-bold text-[#c2652a] hover:underline flex items-center gap-1"
                 >
                   <Pencil className="w-3 h-3" /> Edit
                 </Link>
@@ -913,9 +913,9 @@ export default function ListingDetailPage() {
                   return (
                     <div
                       key={amenity.id}
-                      className="flex items-center gap-2.5 p-2.5 rounded-xl bg-[#F8FAFD] border border-[#CBD5E1]/70 text-xs font-bold text-[#334155]"
+                      className="flex items-center gap-2.5 p-2.5 rounded-xl bg-[#faf5ee] border border-[#d8d0c8] text-xs font-bold text-[#3a302a]"
                     >
-                      <div className="w-7 h-7 rounded-lg bg-[#E3EAF5] text-[#33599E] flex items-center justify-center shrink-0">
+                      <div className="w-7 h-7 rounded-lg bg-[#f2ece4] text-[#c2652a] flex items-center justify-center shrink-0">
                         <Icon className="w-3.5 h-3.5" />
                       </div>
                       <span className="truncate">{amenity.name}</span>
@@ -924,12 +924,12 @@ export default function ListingDetailPage() {
                 })}
               </div>
             ) : (
-              <div className="p-4 rounded-xl bg-[#F8FAFD] border border-[#CBD5E1]/60 text-xs text-[#64748B] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="p-4 rounded-xl bg-[#faf5ee] border border-[#d8d0c8] text-xs text-[#605850] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <span>No amenities specified for this listing yet. Adding amenities helps guests find and choose your property.</span>
                 {!isArchived && !isSold && (
                   <Link
                     href={`/host/listings/${listing.id}/edit`}
-                    className="font-bold text-[#33599E] hover:underline shrink-0"
+                    className="font-bold text-[#c2652a] hover:underline shrink-0"
                   >
                     Add Amenities
                   </Link>
@@ -939,70 +939,70 @@ export default function ListingDetailPage() {
           </div>
 
           {/* Location & Administrative Hierarchy */}
-          <div className="bg-white border border-[#CBD5E1] rounded-2xl p-6 space-y-4">
-            <div className="flex items-center gap-2 border-b border-[#F1F5F9] pb-3">
-              <MapPin className="w-4 h-4 text-[#33599E]" />
-              <h2 className="text-base font-black text-[#000000]">Location Details</h2>
+          <div className="bg-white border border-[#d8d0c8] rounded-2xl p-6 space-y-4 shadow-sm">
+            <div className="flex items-center gap-2 border-b border-[#d8d0c8] pb-3">
+              <MapPin className="w-4 h-4 text-[#c2652a]" />
+              <h2 className="text-base font-black text-[#3a302a]">Location Details</h2>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs">
               <div>
-                <span className="text-[#94A3B8] font-bold uppercase tracking-wider block">
+                <span className="text-[#605850] font-bold uppercase tracking-wider block">
                   Address
                 </span>
-                <span className="font-semibold text-[#000000] mt-0.5 block">{listing.address}</span>
+                <span className="font-semibold text-[#3a302a] mt-0.5 block">{listing.address}</span>
               </div>
               <div>
-                <span className="text-[#94A3B8] font-bold uppercase tracking-wider block">City</span>
-                <span className="font-semibold text-[#000000] mt-0.5 block">{listing.city}</span>
+                <span className="text-[#605850] font-bold uppercase tracking-wider block">City</span>
+                <span className="font-semibold text-[#3a302a] mt-0.5 block">{listing.city}</span>
               </div>
               {listing.subCity && (
                 <div>
-                  <span className="text-[#94A3B8] font-bold uppercase tracking-wider block">
+                  <span className="text-[#605850] font-bold uppercase tracking-wider block">
                     Sub-City
                   </span>
-                  <span className="font-semibold text-[#000000] mt-0.5 block">{listing.subCity}</span>
+                  <span className="font-semibold text-[#3a302a] mt-0.5 block">{listing.subCity}</span>
                 </div>
               )}
               {listing.woreda && (
                 <div>
-                  <span className="text-[#94A3B8] font-bold uppercase tracking-wider block">
+                  <span className="text-[#605850] font-bold uppercase tracking-wider block">
                     Woreda
                   </span>
-                  <span className="font-semibold text-[#000000] mt-0.5 block">{listing.woreda}</span>
+                  <span className="font-semibold text-[#3a302a] mt-0.5 block">{listing.woreda}</span>
                 </div>
               )}
               {listing.neighborhood && (
                 <div>
-                  <span className="text-[#94A3B8] font-bold uppercase tracking-wider block">
+                  <span className="text-[#605850] font-bold uppercase tracking-wider block">
                     Neighborhood
                   </span>
-                  <span className="font-semibold text-[#000000] mt-0.5 block">
+                  <span className="font-semibold text-[#3a302a] mt-0.5 block">
                     {listing.neighborhood}
                   </span>
                 </div>
               )}
               {listing.region && (
                 <div>
-                  <span className="text-[#94A3B8] font-bold uppercase tracking-wider block">
+                  <span className="text-[#605850] font-bold uppercase tracking-wider block">
                     Region
                   </span>
-                  <span className="font-semibold text-[#000000] mt-0.5 block">{listing.region}</span>
+                  <span className="font-semibold text-[#3a302a] mt-0.5 block">{listing.region}</span>
                 </div>
               )}
               {listing.zone && (
                 <div>
-                  <span className="text-[#94A3B8] font-bold uppercase tracking-wider block">
+                  <span className="text-[#605850] font-bold uppercase tracking-wider block">
                     Zone
                   </span>
-                  <span className="font-semibold text-[#000000] mt-0.5 block">{listing.zone}</span>
+                  <span className="font-semibold text-[#3a302a] mt-0.5 block">{listing.zone}</span>
                 </div>
               )}
               <div>
-                <span className="text-[#94A3B8] font-bold uppercase tracking-wider block">
+                <span className="text-[#605850] font-bold uppercase tracking-wider block">
                   Country
                 </span>
-                <span className="font-semibold text-[#000000] mt-0.5 block">
+                <span className="font-semibold text-[#3a302a] mt-0.5 block">
                   {listing.country || 'Ethiopia'}
                 </span>
               </div>
@@ -1010,11 +1010,11 @@ export default function ListingDetailPage() {
 
             {/* Coordinates */}
             {(listing.latitude !== null || listing.longitude !== null) && (
-              <div className="pt-3 border-t border-[#F1F5F9] flex items-center gap-4 text-xs text-[#64748B]">
-                <Compass className="w-4 h-4 text-[#33599E]" />
+              <div className="pt-3 border-t border-[#d8d0c8] flex items-center gap-4 text-xs text-[#605850]">
+                <Compass className="w-4 h-4 text-[#c2652a]" />
                 <span>
                   Coordinates:{' '}
-                  <strong className="text-[#000000] font-mono">
+                  <strong className="text-[#3a302a] font-mono">
                     {listing.latitude ?? '—'}, {listing.longitude ?? '—'}
                   </strong>
                 </span>
@@ -1026,70 +1026,70 @@ export default function ListingDetailPage() {
         {/* Right Column / Sidebar */}
         <div className="space-y-6">
           {/* Price & Primary Specs Card */}
-          <div className="bg-white border border-[#CBD5E1] rounded-2xl p-6 space-y-5 shadow-sm">
+          <div className="bg-white border border-[#d8d0c8] rounded-2xl p-6 space-y-5 shadow-sm">
             <div>
-              <span className="text-xs font-black uppercase tracking-wider text-[#94A3B8]">
+              <span className="text-xs font-black uppercase tracking-wider text-[#605850]">
                 {listing.listingType === 'RENTAL' ? 'Nightly Rate' : 'Total Valuation'}
               </span>
-              <div className="text-2xl font-black text-[#000000] mt-1">{formattedPrice}</div>
+              <div className="text-2xl font-black text-[#3a302a] mt-1">{formattedPrice}</div>
             </div>
 
             {/* Key Specs Grid */}
-            <div className="space-y-3 pt-3 border-t border-[#F1F5F9]">
+            <div className="space-y-3 pt-3 border-t border-[#d8d0c8]">
               <div className="flex items-center justify-between text-xs py-1">
-                <span className="text-[#64748B] flex items-center gap-2">
-                  <Home className="w-4 h-4 text-[#33599E]" /> Property Type
+                <span className="text-[#605850] flex items-center gap-2">
+                  <Home className="w-4 h-4 text-[#c2652a]" /> Property Type
                 </span>
-                <span className="font-bold text-[#000000]">{listing.propertyType}</span>
+                <span className="font-bold text-[#3a302a]">{listing.propertyType}</span>
               </div>
 
               <div className="flex items-center justify-between text-xs py-1">
-                <span className="text-[#64748B] flex items-center gap-2">
-                  <Users className="w-4 h-4 text-[#33599E]" /> Max Guests
+                <span className="text-[#605850] flex items-center gap-2">
+                  <Users className="w-4 h-4 text-[#c2652a]" /> Max Guests
                 </span>
-                <span className="font-bold text-[#000000]">{listing.maxGuests || 1}</span>
+                <span className="font-bold text-[#3a302a]">{listing.maxGuests || 1}</span>
               </div>
 
               <div className="flex items-center justify-between text-xs py-1">
-                <span className="text-[#64748B] flex items-center gap-2">
-                  <Bed className="w-4 h-4 text-[#33599E]" /> Bedrooms
+                <span className="text-[#605850] flex items-center gap-2">
+                  <Bed className="w-4 h-4 text-[#c2652a]" /> Bedrooms
                 </span>
-                <span className="font-bold text-[#000000]">{listing.bedrooms || 0}</span>
+                <span className="font-bold text-[#3a302a]">{listing.bedrooms || 0}</span>
               </div>
 
               <div className="flex items-center justify-between text-xs py-1">
-                <span className="text-[#64748B] flex items-center gap-2">
-                  <Bath className="w-4 h-4 text-[#33599E]" /> Bathrooms
+                <span className="text-[#605850] flex items-center gap-2">
+                  <Bath className="w-4 h-4 text-[#c2652a]" /> Bathrooms
                 </span>
-                <span className="font-bold text-[#000000]">{listing.bathrooms || 0}</span>
+                <span className="font-bold text-[#3a302a]">{listing.bathrooms || 0}</span>
               </div>
 
               {listing.areaSqm ? (
                 <div className="flex items-center justify-between text-xs py-1">
-                  <span className="text-[#64748B] flex items-center gap-2">
-                    <Maximize2 className="w-4 h-4 text-[#33599E]" /> Area
+                  <span className="text-[#605850] flex items-center gap-2">
+                    <Maximize2 className="w-4 h-4 text-[#c2652a]" /> Area
                   </span>
-                  <span className="font-bold text-[#000000]">{listing.areaSqm} m²</span>
+                  <span className="font-bold text-[#3a302a]">{listing.areaSqm} m²</span>
                 </div>
               ) : null}
 
               {listing.parkingSpaces ? (
                 <div className="flex items-center justify-between text-xs py-1">
-                  <span className="text-[#64748B] flex items-center gap-2">
-                    <Car className="w-4 h-4 text-[#33599E]" /> Parking Spaces
+                  <span className="text-[#605850] flex items-center gap-2">
+                    <Car className="w-4 h-4 text-[#c2652a]" /> Parking Spaces
                   </span>
-                  <span className="font-bold text-[#000000]">{listing.parkingSpaces}</span>
+                  <span className="font-bold text-[#3a302a]">{listing.parkingSpaces}</span>
                 </div>
               ) : null}
             </div>
           </div>
 
           {/* Listing Metadata */}
-          <div className="bg-white border border-[#CBD5E1] rounded-2xl p-6 space-y-3 text-xs text-[#64748B]">
-            <h3 className="font-black text-[#000000] text-sm">Listing Metadata</h3>
+          <div className="bg-white border border-[#d8d0c8] rounded-2xl p-6 space-y-3 text-xs text-[#605850] shadow-sm">
+            <h3 className="font-black text-[#3a302a] text-sm">Listing Metadata</h3>
             <div className="flex items-center justify-between py-1">
               <span>Created</span>
-              <span className="font-semibold text-[#000000]">
+              <span className="font-semibold text-[#3a302a]">
                 {new Date(listing.createdAt).toLocaleDateString(undefined, {
                   year: 'numeric',
                   month: 'short',
@@ -1099,7 +1099,7 @@ export default function ListingDetailPage() {
             </div>
             <div className="flex items-center justify-between py-1">
               <span>Last Updated</span>
-              <span className="font-semibold text-[#000000]">
+              <span className="font-semibold text-[#3a302a]">
                 {new Date(listing.updatedAt).toLocaleDateString(undefined, {
                   year: 'numeric',
                   month: 'short',
@@ -1111,7 +1111,7 @@ export default function ListingDetailPage() {
               <span>Availability</span>
               <span
                 className={`font-bold ${
-                  listing.isAvailable ? 'text-emerald-700' : 'text-slate-500'
+                  listing.isAvailable ? 'text-emerald-700' : 'text-[#605850]'
                 }`}
               >
                 {listing.isAvailable ? 'Active' : 'Inactive'}
