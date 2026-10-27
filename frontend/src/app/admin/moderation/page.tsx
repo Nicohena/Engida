@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import ProtectedRoute from '../../../components/ProtectedRoute';
 import AdminPageHeader from '../../../components/admin/AdminPageHeader';
-import { apiFetch } from '../../../lib/api';
+import { apiFetch, downloadAuthedFile } from '../../../lib/api';
 import type {
   ReviewSubmissionType,
   ReviewStatus,
@@ -29,6 +29,7 @@ import {
   AlertOctagon,
   FileText,
   BadgeCheck,
+  Download,
   Phone,
   Mail,
 } from 'lucide-react';
@@ -107,6 +108,8 @@ export default function AdminModerationPage() {
   const [reviews, setReviews] = useState<ReviewQueueItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [exportingListings, setExportingListings] = useState(false);
+  const [exportNotice, setExportNotice] = useState<string | null>(null);
 
   // Filters
   const [typeFilter, setTypeFilter] = useState<string>('');
@@ -157,6 +160,20 @@ export default function AdminModerationPage() {
   const [hostRejectionExplanation, setHostRejectionExplanation] = useState('');
   const [hostRejectionModalError, setHostRejectionModalError] = useState<string | null>(null);
   const [submittingHostRejection, setSubmittingHostRejection] = useState(false);
+
+  const exportListings = async () => {
+    setExportingListings(true);
+    setExportNotice(null);
+    try {
+      await downloadAuthedFile('/admin/listings/export.csv', 'engida-listings.csv');
+    } catch (err) {
+      setExportNotice(
+        err instanceof Error ? err.message : 'The listing export could not be prepared.',
+      );
+    } finally {
+      setExportingListings(false);
+    }
+  };
 
   // ─────────────────────────────────────────────────────────────
   // 1. Load Reviews Queue
@@ -477,16 +494,46 @@ export default function AdminModerationPage() {
           title="Moderation"
           description="Review new property publications, inspect live edit proposals, and enforce safety holds."
           actions={
-            <button
-              onClick={() => fetchReviews()}
-              disabled={loading}
-              className="admin-btn admin-btn-secondary"
-            >
-              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} strokeWidth={1.8} />
-              Refresh queue
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={() => void exportListings()}
+                disabled={exportingListings}
+                className="admin-btn admin-btn-secondary"
+              >
+                <Download className="h-4 w-4" strokeWidth={1.8} />
+                {exportingListings ? 'Preparing…' : 'Export listings'}
+              </button>
+              <button
+                type="button"
+                onClick={() => fetchReviews()}
+                disabled={loading}
+                className="admin-btn admin-btn-secondary"
+              >
+                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} strokeWidth={1.8} />
+                Refresh queue
+              </button>
+            </>
           }
         />
+
+        {exportNotice && (
+          <div
+            role="alert"
+            className="flex items-start gap-3 rounded-2xl border border-[#ecd0c9] bg-[#f8e9e5] p-4 text-sm text-[#8f4035]"
+          >
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+            <p className="flex-1 font-medium">{exportNotice}</p>
+            <button
+              type="button"
+              onClick={() => setExportNotice(null)}
+              className="rounded p-0.5 text-[#7a6b5f] hover:text-[#6c5d52]"
+              aria-label="Dismiss export message"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
 
         {/* ── Moderation summary ── */}
         <section className="admin-panel overflow-hidden" aria-label="Moderation summary">

@@ -29,12 +29,20 @@ import { Room } from './modules/properties/entities/room.entity';
 import { AvailabilityBlock } from './modules/properties/entities/availability-block.entity';
 import { Amenity } from './modules/amenities/entities/amenity.entity';
 import { Booking } from './modules/bookings/entities/booking.entity';
+import { BookingStatusHistory } from './modules/bookings/entities/booking-status-history.entity';
+import { CancellationRequest } from './modules/bookings/entities/cancellation-request.entity';
 import { Review } from './modules/reviews/entities/review.entity';
 import { ListingReview } from './modules/properties/entities/listing-review.entity';
 import { Notification } from './modules/notifications/entities/notification.entity';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { Report } from './modules/reports/entities/report.entity';
+import { Case } from './modules/admin/cases/entities/case.entity';
+import { CaseMessage } from './modules/admin/cases/entities/case-message.entity';
+import { CaseNote } from './modules/admin/cases/entities/case-note.entity';
+import { CaseAttachment } from './modules/admin/cases/entities/case-attachment.entity';
+import { CaseEvent } from './modules/admin/cases/entities/case-event.entity';
+import { CannedResponse } from './modules/admin/cases/entities/canned-response.entity';
 import { validate } from './config/env.validation';
 
 @Module({
@@ -65,11 +73,19 @@ import { validate } from './config/env.validation';
           AvailabilityBlock,
           Amenity,
           Booking,
+          BookingStatusHistory,
+          CancellationRequest,
           Review,
           ListingReview,
           Notification,
           AuditLog,
           Report,
+          Case,
+          CaseMessage,
+          CaseNote,
+          CaseAttachment,
+          CaseEvent,
+          CannedResponse,
         ];
 
         if (databaseUrl) {

@@ -8,15 +8,17 @@ import {
   Optional,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Not, In } from 'typeorm';
+import { Repository, Not, In, EntityManager } from 'typeorm';
 import { Booking, BookingStatus, PaymentMethod, PaymentStatus } from './entities/booking.entity';
+import { BookingStatusHistory, BookingActorType } from './entities/booking-status-history.entity';
+import { CancellationPolicyTier } from './entities/cancellation-policy';
 import { Property, ListingType, ListingStatus } from '../properties/entities/property.entity';
 import { Room } from '../properties/entities/room.entity';
 import { AvailabilityBlock } from '../properties/entities/availability-block.entity';
 import { HostProfile } from '../../users/entities/host-profile.entity';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingStatusDto } from './dto/update-booking-status.dto';
-import { UserRole } from '../../users/entities/user.entity';
+import { UserRole, User } from '../../users/entities/user.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/entities/notification.entity';
 
@@ -37,6 +39,9 @@ export class BookingsService {
     private readonly hostProfileRepository: Repository<HostProfile>,
     @Optional()
     private readonly notificationsService?: NotificationsService,
+    @Optional()
+    @InjectRepository(BookingStatusHistory)
+    private readonly statusHistoryRepository?: Repository<BookingStatusHistory>,
   ) {}
 
   async create(createBookingDto: CreateBookingDto, guestId: string): Promise<Booking> {
@@ -157,7 +162,10 @@ export class BookingsService {
         ? PaymentStatus.ON_ARRIVAL
         : PaymentStatus.PENDING;
 
+      const reference = await this.nextBookingReference(manager);
+
       const booking = bookingRepository.create({
+        reference,
         propertyId,
         roomId: roomId || null,
         guestId,
@@ -166,6 +174,7 @@ export class BookingsService {
         guestCount,
         totalPrice,
         status: BookingStatus.PENDING,
+        cancellationPolicy: CancellationPolicyTier.MODERATE,
         paymentMethod: method,
         paymentStatus,
         paymentReference: createBookingDto.paymentReference || null,
@@ -175,11 +184,31 @@ export class BookingsService {
       const saved = await bookingRepository.save(booking);
       return {
         id: saved.id,
+        reference,
         totalPrice,
         hostId: property.hostId,
         propertyTitle: property.title,
       };
     });
+
+    try {
+      await this.statusHistoryRepository?.save(
+        this.statusHistoryRepository.create({
+          bookingId: id,
+          fromStatus: null,
+          toStatus: BookingStatus.PENDING,
+          source: BookingActorType.GUEST,
+          actorId: guestId,
+          reason: 'Reservation requested',
+        }),
+      );
+    } catch (historyError: unknown) {
+      this.logger.warn(
+        `Booking ${id} was created without a status history row: ${
+          historyError instanceof Error ? historyError.message : String(historyError)
+        }`,
+      );
+    }
 
     this.logger.log(
       `Booking created: ${id} for property ${propertyId} (${nights} nights, ETB ${totalPrice})`,
@@ -258,6 +287,7 @@ export class BookingsService {
     updateDto: UpdateBookingStatusDto,
     userId: string,
     userRole: UserRole,
+    options?: { actor?: User; reason?: string; source?: BookingActorType },
   ): Promise<Booking> {
     const booking = await this.bookingRepository.findOne({
       where: { id },
@@ -310,10 +340,57 @@ export class BookingsService {
 
     const updateResult = await this.bookingRepository.update(
       { id, status: booking.status },
-      { status: updateDto.status },
+      {
+        status: updateDto.status,
+        ...(updateDto.status === BookingStatus.CANCELLED
+          ? {
+              cancelledById: userId,
+              cancelledByType:
+                userRole === UserRole.ADMIN
+                  ? BookingActorType.ADMIN
+                  : isHost
+                    ? BookingActorType.HOST
+                    : BookingActorType.GUEST,
+              cancelledAt: new Date(),
+              cancellationReason:
+                options?.reason?.trim() || 'Reservation cancelled',
+            }
+          : {}),
+      },
     );
     if (updateResult.affected !== 1) {
       throw new ConflictException('This reservation changed while you were acting. Reload it and try again.');
+    }
+
+    const source =
+      options?.source ??
+      (userRole === UserRole.ADMIN
+        ? BookingActorType.ADMIN
+        : isHost
+          ? BookingActorType.HOST
+          : BookingActorType.GUEST);
+
+    try {
+      await this.statusHistoryRepository?.save(
+        this.statusHistoryRepository.create({
+          bookingId: id,
+          fromStatus: booking.status,
+          toStatus: updateDto.status,
+          source,
+          actorId: userId,
+          reason:
+            options?.reason?.trim() ||
+            (updateDto.status === BookingStatus.CANCELLED
+              ? 'Reservation cancelled'
+              : `Reservation marked ${updateDto.status.toLowerCase()}`),
+        }),
+      );
+    } catch (historyError: unknown) {
+      this.logger.warn(
+        `Booking ${id} changed status without a history row: ${
+          historyError instanceof Error ? historyError.message : String(historyError)
+        }`,
+      );
     }
 
     if (this.notificationsService && booking.property?.hostId) {
@@ -324,7 +401,7 @@ export class BookingsService {
             userId: booking.property.hostId,
             type: NotificationType.BOOKING_CANCELLED,
             title: 'Reservation Cancelled',
-            message: `Reservation #${booking.id.slice(0, 8)} for "${propTitle}" has been cancelled.`,
+            message: `Reservation ${booking.reference || `#${booking.id.slice(0, 8)}`} for "${propTitle}" has been cancelled.`,
             link: '/host/reservations',
             metadata: { bookingId: id, propertyId: booking.property.id },
             idempotencyKey: `booking_${id}_CANCELLED`,
@@ -334,7 +411,7 @@ export class BookingsService {
             userId: booking.property.hostId,
             type: NotificationType.BOOKING_CONFIRMED,
             title: 'Reservation Confirmed',
-            message: `Reservation #${booking.id.slice(0, 8)} for "${propTitle}" has been confirmed.`,
+            message: `Reservation ${booking.reference || `#${booking.id.slice(0, 8)}`} for "${propTitle}" has been confirmed.`,
             link: '/host/reservations',
             metadata: { bookingId: id, propertyId: booking.property.id },
             idempotencyKey: `booking_${id}_CONFIRMED`,
@@ -347,5 +424,29 @@ export class BookingsService {
 
     this.logger.log(`Booking ${id} status updated to ${updateDto.status} by user ${userId}`);
     return this.findOne(id, userId, userRole);
+  }
+
+  /**
+   * Allocate the next human-readable booking reference inside the booking
+   * transaction. The database sequence is the source of truth; the fallback
+   * keeps isolated unit-test mocks usable.
+   */
+  private async nextBookingReference(manager: EntityManager): Promise<string> {
+    const year = new Date().getUTCFullYear();
+    const query = (manager as unknown as { query?: (sql: string) => Promise<unknown> })
+      .query;
+
+    if (typeof query === 'function') {
+      const rows = (await query.call(
+        manager,
+        `SELECT nextval('booking_reference_seq') AS value`,
+      )) as Array<{ value: string | number }>;
+      const sequence = Number(rows?.[0]?.value);
+      if (Number.isFinite(sequence) && sequence > 0) {
+        return `BKG-${year}-${String(sequence).padStart(6, '0')}`;
+      }
+    }
+
+    return `BKG-${year}-${String(Date.now()).slice(-6)}`;
   }
 }

@@ -35,6 +35,11 @@ export const ADMIN_PERMISSIONS = {
   REVIEWS_MODERATE: 'reviews.moderate',
   REPORTS_VIEW: 'reports.view',
   REPORTS_RESOLVE: 'reports.resolve',
+  BOOKINGS_VIEW: 'bookings.view',
+  BOOKINGS_MANAGE: 'bookings.manage',
+  CASES_VIEW: 'cases.view',
+  CASES_MANAGE: 'cases.manage',
+  CASES_COMPENSATE: 'cases.compensate',
   AUDIT_VIEW: 'audit.view',
 } as const;
 
@@ -114,6 +119,11 @@ export interface AdminDashboardSummary {
     hiddenListings: number;
     totalReviews: number;
     openReports: number;
+    pendingBookings: number;
+    confirmedBookings: number;
+    openCases: number;
+    overdueCases: number;
+    unassignedCases: number;
   };
   recentAudit: AuditLogEntry[];
 }

@@ -5,11 +5,13 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   ArrowUpRight,
+  CalendarRange,
   ClipboardCheck,
   Flag,
   LayoutDashboard,
   LogOut,
   Menu,
+  MessagesSquare,
   ScrollText,
   ShieldCheck,
   Star,
@@ -39,6 +41,18 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Overview',
     icon: LayoutDashboard,
     permission: ADMIN_PERMISSIONS.DASHBOARD_VIEW,
+  },
+  {
+    href: '/admin/bookings',
+    label: 'Bookings',
+    icon: CalendarRange,
+    permission: ADMIN_PERMISSIONS.BOOKINGS_VIEW,
+  },
+  {
+    href: '/admin/cases',
+    label: 'Support cases',
+    icon: MessagesSquare,
+    permission: ADMIN_PERMISSIONS.CASES_VIEW,
   },
   {
     href: '/admin/users',

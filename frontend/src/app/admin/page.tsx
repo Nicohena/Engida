@@ -7,10 +7,12 @@ import {
   ArrowRight,
   ArrowUpRight,
   BadgeCheck,
+  CalendarRange,
   ClipboardCheck,
   Clock3,
   EyeOff,
   Flag,
+  MessagesSquare,
   RefreshCw,
   ShieldCheck,
   Star,
@@ -95,6 +97,22 @@ export default function AdminOverviewPage() {
 
   const queueItems: QueueItem[] = [
     {
+      label: 'Bookings awaiting host',
+      description: 'Stay requests that need a host decision or a desk correction.',
+      value: counts?.pendingBookings ?? 0,
+      href: '/admin/bookings',
+      permission: ADMIN_PERMISSIONS.BOOKINGS_VIEW,
+      icon: CalendarRange,
+    },
+    {
+      label: 'Open support cases',
+      description: 'Complaints, disputes and guest support that still need an owner.',
+      value: counts?.openCases ?? 0,
+      href: '/admin/cases',
+      permission: ADMIN_PERMISSIONS.CASES_VIEW,
+      icon: MessagesSquare,
+    },
+    {
       label: 'Listing reviews',
       description: 'New properties and listing edits awaiting a decision.',
       value: counts?.pendingListingReviews ?? 0,
@@ -124,6 +142,20 @@ export default function AdminOverviewPage() {
   const openTotal = visibleQueues.reduce((sum, item) => sum + item.value, 0);
 
   const pulseItems: PulseItem[] = [
+    {
+      label: 'Confirmed stays',
+      hint: 'Reservations on the books',
+      value: counts?.confirmedBookings ?? 0,
+      href: '/admin/bookings',
+      permission: ADMIN_PERMISSIONS.BOOKINGS_VIEW,
+    },
+    {
+      label: 'Unassigned cases',
+      hint: 'Support work without an owner',
+      value: counts?.unassignedCases ?? 0,
+      href: '/admin/cases',
+      permission: ADMIN_PERMISSIONS.CASES_VIEW,
+    },
     {
       label: 'Active accounts',
       hint: 'Guests, hosts and admins',
@@ -194,6 +226,20 @@ export default function AdminOverviewPage() {
     return [
       ...moderationActions,
       {
+        href: '/admin/bookings',
+        label: 'Booking ledger',
+        hint: 'Inspect stays, corrections and cancellations',
+        icon: CalendarRange,
+        permission: ADMIN_PERMISSIONS.BOOKINGS_VIEW,
+      },
+      {
+        href: '/admin/cases',
+        label: 'Support desk',
+        hint: 'Assign, answer and resolve cases',
+        icon: MessagesSquare,
+        permission: ADMIN_PERMISSIONS.CASES_VIEW,
+      },
+      {
         href: '/admin/users',
         label: 'Accounts & access',
         hint: 'Search, suspend and assign roles',
@@ -233,7 +279,7 @@ export default function AdminOverviewPage() {
     <div className="space-y-8">
       <AdminPageHeader
         title="Operations overview"
-        description="A working view of trust queues, marketplace health, and privileged activity."
+        description="Bookings, support and trust in one working view. The queue shows what needs a human next."
         actions={
           <button
             type="button"
@@ -246,6 +292,76 @@ export default function AdminOverviewPage() {
           </button>
         }
       />
+
+      {can(user?.permissions, ADMIN_PERMISSIONS.BOOKINGS_VIEW) ||
+      can(user?.permissions, ADMIN_PERMISSIONS.CASES_VIEW) ? (
+        <section className="border-y border-[#d8d0c8]" aria-labelledby="live-operations-title">
+          <div className="flex flex-wrap items-end justify-between gap-3 py-4">
+            <div>
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#78706a]">
+                Live operations
+              </p>
+              <h2
+                id="live-operations-title"
+                className="mt-1 font-headline text-[1.6rem] font-semibold leading-none tracking-[-0.02em] text-[#3a302a]"
+              >
+                Stays and service, right now
+              </h2>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              {can(user?.permissions, ADMIN_PERMISSIONS.BOOKINGS_VIEW) ? (
+                <Link
+                  href="/admin/bookings"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#b3541e] hover:text-[#934313]"
+                >
+                  Booking ledger
+                  <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.8} />
+                </Link>
+              ) : null}
+              {can(user?.permissions, ADMIN_PERMISSIONS.CASES_VIEW) ? (
+                <Link
+                  href="/admin/cases"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#b3541e] hover:text-[#934313]"
+                >
+                  Support desk
+                  <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.8} />
+                </Link>
+              ) : null}
+            </div>
+          </div>
+          <div className="admin-stats-strip border-t-0">
+            <Link href="/admin/bookings" className="admin-stat group transition-colors hover:bg-[#f6f0e8]">
+              <p className="admin-stat-label">Awaiting host</p>
+              <p className="admin-stat-value">{displayValue(counts?.pendingBookings ?? 0)}</p>
+              <p className="admin-stat-note">Booking requests to watch</p>
+            </Link>
+            <Link href="/admin/bookings" className="admin-stat group transition-colors hover:bg-[#f6f0e8]">
+              <p className="admin-stat-label">Confirmed stays</p>
+              <p className="admin-stat-value">{displayValue(counts?.confirmedBookings ?? 0)}</p>
+              <p className="admin-stat-note">Reservations on the books</p>
+            </Link>
+            <Link href="/admin/cases" className="admin-stat group transition-colors hover:bg-[#f6f0e8]">
+              <p className="admin-stat-label">Open cases</p>
+              <p className="admin-stat-value">{displayValue(counts?.openCases ?? 0)}</p>
+              <p className="admin-stat-note">Support work in the desk</p>
+            </Link>
+            <Link
+              href="/admin/cases"
+              className="admin-stat group transition-colors hover:bg-[#f6f0e8]"
+            >
+              <p className="admin-stat-label">Overdue cases</p>
+              <p className="admin-stat-value text-[#9a3f33]">
+                {displayValue(counts?.overdueCases ?? 0)}
+              </p>
+              <p className="admin-stat-note">
+                {counts?.unassignedCases
+                  ? `${counts.unassignedCases} unassigned`
+                  : 'Past the resolution SLA'}
+              </p>
+            </Link>
+          </div>
+        </section>
+      ) : null}
 
       {error && (
         <div
@@ -274,7 +390,7 @@ export default function AdminOverviewPage() {
                 Priority queues
               </h2>
               <p className="mt-1 text-xs leading-5 text-[#78706a]">
-                Decisions that keep trust moving today.
+                Bookings, support and trust decisions that need a person today.
               </p>
             </div>
             {visibleQueues.length > 0 && summary && (

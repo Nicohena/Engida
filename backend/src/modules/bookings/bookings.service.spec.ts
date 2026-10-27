@@ -71,6 +71,8 @@ describe('BookingsService Integration Acceptance', () => {
 
   const mockBooking: Booking = {
     id: BOOKING_ID,
+    reference: 'BKG-2027-000001',
+    cancellationPolicy: 'MODERATE' as Booking['cancellationPolicy'],
     propertyId: PROPERTY_ID,
     roomId: null,
     guestId: GUEST_ID,
@@ -79,6 +81,10 @@ describe('BookingsService Integration Acceptance', () => {
     guestCount: 2,
     totalPrice: 7500,
     status: BookingStatus.PENDING,
+    cancelledById: null,
+    cancelledByType: null,
+    cancelledAt: null,
+    cancellationReason: null,
     paymentMethod: PaymentMethod.CASH_ON_ARRIVAL,
     paymentStatus: PaymentStatus.ON_ARRIVAL,
     paymentReference: null,
@@ -372,7 +378,12 @@ describe('BookingsService Integration Acceptance', () => {
 
       expect(mockBookingRepo.update).toHaveBeenCalledWith(
         { id: BOOKING_ID, status: BookingStatus.PENDING },
-        { status: BookingStatus.CANCELLED },
+        expect.objectContaining({
+          status: BookingStatus.CANCELLED,
+          cancelledById: GUEST_ID,
+          cancelledByType: 'GUEST',
+          cancellationReason: 'Reservation cancelled',
+        }),
       );
     });
 

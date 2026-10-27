@@ -16,6 +16,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock3,
+  Download,
   Eye,
   KeyRound,
   Loader2,
@@ -29,7 +30,7 @@ import {
   Users,
   X,
 } from 'lucide-react';
-import { apiFetch } from '../../../lib/api';
+import { apiFetch, downloadAuthedFile } from '../../../lib/api';
 import { useAuth } from '../../../context/AuthContext';
 import AdminPageHeader from '../../../components/admin/AdminPageHeader';
 import {
@@ -149,6 +150,7 @@ export default function AdminUsersPage() {
   const [error, setError] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const [refreshTick, setRefreshTick] = useState(0);
+  const [exporting, setExporting] = useState(false);
 
   const [searchInput, setSearchInput] = useState('');
   const [filters, setFilters] = useState<{
@@ -258,6 +260,31 @@ export default function AdminUsersPage() {
     const timer = window.setTimeout(() => setToast(null), 5000);
     return () => window.clearTimeout(timer);
   }, [toast]);
+
+  const exportUsers = async () => {
+    setExporting(true);
+    try {
+      const params = new URLSearchParams();
+      if (filters.q.trim()) params.set('q', filters.q.trim());
+      if (filters.role !== 'all') params.set('role', filters.role);
+      if (filters.status !== 'all') {
+        params.set('isActive', filters.status === 'active' ? 'true' : 'false');
+      }
+      const query = params.toString();
+      await downloadAuthedFile(
+        `/admin/users/export.csv${query ? `?${query}` : ''}`,
+        'engida-users.csv',
+      );
+      setToast({ type: 'success', message: 'User export prepared.' });
+    } catch (err) {
+      setToast({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'The user export could not be prepared',
+      });
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const openDetail = useCallback(async (id: string) => {
     setDetailOpen(true);
@@ -408,19 +435,32 @@ export default function AdminUsersPage() {
         title="Users & administrators"
         description="Search every account, review host status and manage console access. Account suspensions revoke active refresh tokens."
         actions={
-          canManageAdmins ? (
-            <button
-              type="button"
-              onClick={() => {
-                setCreateOpen(true);
-                setCreatedAdmin(null);
-                setCreateError(null);
-              }}
-              className="admin-btn admin-btn-primary"
-            >
-              <UserPlus className="h-4 w-4" strokeWidth={1.8} />
-              Create admin
-            </button>
+          canViewUsers ? (
+            <>
+              <button
+                type="button"
+                onClick={() => void exportUsers()}
+                disabled={exporting}
+                className="admin-btn admin-btn-secondary"
+              >
+                <Download className="h-4 w-4" strokeWidth={1.8} />
+                {exporting ? 'Preparing…' : 'Export CSV'}
+              </button>
+              {canManageAdmins ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCreateOpen(true);
+                    setCreatedAdmin(null);
+                    setCreateError(null);
+                  }}
+                  className="admin-btn admin-btn-primary"
+                >
+                  <UserPlus className="h-4 w-4" strokeWidth={1.8} />
+                  Create admin
+                </button>
+              ) : null}
+            </>
           ) : null
         }
       />

@@ -9,8 +9,10 @@ import {
   Patch,
   Post,
   Query,
+  Res,
   UseGuards,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { Roles } from '../../../auth/decorators/roles.decorator';
@@ -48,6 +50,27 @@ export class AdminUsersController {
     @Headers('user-agent') userAgent: string,
   ) {
     return this.adminUsersService.createAdmin(dto, actor, { ipAddress, userAgent });
+  }
+
+  @Get('users/export.csv')
+  @RequirePermissions(Permission.USERS_VIEW)
+  async export(
+    @Query() query: QueryAdminUsersDto,
+    @GetUser() actor: User,
+    @Ip() ipAddress: string,
+    @Headers('user-agent') userAgent: string,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<string> {
+    const csv = await this.adminUsersService.exportCsv(query, actor, {
+      ipAddress,
+      userAgent,
+    });
+    response.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    response.setHeader(
+      'Content-Disposition',
+      `attachment; filename="engida-users-${new Date().toISOString().slice(0, 10)}.csv"`,
+    );
+    return csv;
   }
 
   @Get('users/:id')

@@ -70,7 +70,7 @@ async function bootstrap() {
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With', 'Range'],
-    exposedHeaders: ['Content-Range', 'X-Total-Count'],
+    exposedHeaders: ['Content-Range', 'X-Total-Count', 'Content-Disposition'],
   });
 
   const port = Number(configService.get('PORT')) || 3000;
