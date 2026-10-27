@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useEffect, useMemo, useState, type FormEvent } from 'react';
 import Link from 'next/link';
@@ -24,7 +24,17 @@ import {
   CheckCircle2,
   AlertCircle,
   X,
+  Compass,
+  Calendar as CalendarIcon,
 } from 'lucide-react';
+import {
+  gregorianToEthiopian,
+  getEthiopianSpanForGregorianMonth,
+  formatDualDate,
+  ETHIOPIAN_WEEKDAYS,
+  type EthiopianDate,
+  type EthiopianHoliday,
+} from '@/lib/ethiopianCalendar';
 
 interface AvailabilityBlock {
   id: string;
@@ -53,6 +63,53 @@ const PRESET_REASONS = [
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+const DEMO_LISTINGS: HostListingRow[] = [
+  {
+    id: 'demo-penthouse-bole',
+    title: 'Executive Luxury Penthouse overlooking Bole Medhanialem',
+    description: 'Breathtaking 3-bedroom penthouse in Bole with generator, high-speed WiFi and panoramic city view.',
+    propertyType: 'APARTMENT',
+    listingType: 'RENTAL',
+    status: 'PUBLISHED',
+    pricePerNight: 6500,
+    salePrice: null,
+    address: 'Cameroon St, Bole Medhanialem',
+    city: 'Addis Ababa',
+    country: 'Ethiopia',
+    region: 'Addis Ababa',
+    zone: 'Bole Central',
+    subCity: 'Bole',
+    woreda: 'Woreda 03',
+    neighborhood: 'Bole Medhanialem',
+    coverImage: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1200&q=80',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    isInstantBookable: true,
+  } as unknown as HostListingRow,
+  {
+    id: 'demo-villa-lake-tana',
+    title: 'Lake Tana Shoreline Retreat Villa with Sunset Terrace',
+    description: 'Exclusive lakefront villa with private dock, organic garden, and traditional Ethiopian coffee pavilion.',
+    propertyType: 'VILLA',
+    listingType: 'RENTAL',
+    status: 'PUBLISHED',
+    pricePerNight: 4800,
+    salePrice: null,
+    address: 'Kebele 01, Lake Tana Shore',
+    city: 'Bahir Dar',
+    country: 'Ethiopia',
+    region: 'Amhara',
+    zone: 'South Gondar',
+    subCity: 'Lake Tana Waterfront',
+    woreda: 'Woreda 01',
+    neighborhood: 'Shoreline',
+    coverImage: 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=1200&q=80',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    isInstantBookable: true,
+  } as unknown as HostListingRow,
+];
+
 export default function HostAvailabilityPage() {
   const [listings, setListings] = useState<HostListingRow[]>([]);
   const [listingId, setListingId] = useState('');
@@ -68,19 +125,81 @@ export default function HostAvailabilityPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [reloadVersion, setReloadVersion] = useState(0);
+  const [isDemoMode, setIsDemoMode] = useState(false);
 
   // Calendar View State: Year and Month (0-indexed: 0 = January, 11 = December)
   const today = useMemo(() => new Date(), []);
   const [viewYear, setViewYear] = useState<number>(today.getFullYear());
   const [viewMonth, setViewMonth] = useState<number>(today.getMonth());
+  // Dual Ethiopian / Gregorian Calendar display mode (enabled by default)
+  const [showEthiopianDates, setShowEthiopianDates] = useState(true);
 
   // Date selection helper state
   const [selectionStep, setSelectionStep] = useState<'start' | 'end'>('start');
 
+  const isAuthError = useMemo(() => {
+    if (!error) return false;
+    const lower = error.toLowerCase();
+    return (
+      lower.includes('token') ||
+      lower.includes('unauthorized') ||
+      lower.includes('auth') ||
+      lower.includes('expired') ||
+      lower.includes('401')
+    );
+  }, [error]);
+
+  const effectiveListings = useMemo(() => {
+    return isDemoMode ? DEMO_LISTINGS : listings;
+  }, [isDemoMode, listings]);
+
   const selectedListing = useMemo(
-    () => listings.find((listing) => listing.id === listingId) ?? null,
-    [listings, listingId],
+    () => effectiveListings.find((listing) => listing.id === listingId) ?? effectiveListings[0] ?? null,
+    [effectiveListings, listingId],
   );
+
+  const activateDemoMode = () => {
+    setIsDemoMode(true);
+    setError(null);
+    setListingId(DEMO_LISTINGS[0].id);
+    const y = today.getFullYear();
+    const m = String(today.getMonth() + 1).padStart(2, '0');
+    // Provide realistic demo blocks & reservation to immediately showcase calendar color coding
+    setBlocks([
+      {
+        id: 'demo-block-1',
+        propertyId: DEMO_LISTINGS[0].id,
+        startDate: `${y}-${m}-04`,
+        endDate: `${y}-${m}-07`,
+        reason: 'Owner / Personal Stay',
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: 'demo-block-2',
+        propertyId: DEMO_LISTINGS[0].id,
+        startDate: `${y}-${m}-18`,
+        endDate: `${y}-${m}-21`,
+        reason: 'Repairs & Renovation',
+        createdAt: new Date().toISOString(),
+      },
+    ]);
+    setReservations([
+      {
+        id: 'demo-res-1',
+        propertyId: DEMO_LISTINGS[0].id,
+        propertyName: DEMO_LISTINGS[0].title,
+        guestId: 'guest-dawit',
+        guestName: 'Dawit Bekele',
+        guestEmail: 'dawit.b@example.com',
+        checkInDate: `${y}-${m}-10`,
+        checkOutDate: `${y}-${m}-14`,
+        totalPrice: 26000,
+        status: 'CONFIRMED',
+        createdAt: new Date().toISOString(),
+      } as unknown as HostReservationRow,
+    ]);
+    setSuccess('🇪🇹 Ethiopian Calendar demo preview activated! You can test date clicks, Ge\'ez toggling, and holiday surges.');
+  };
 
   // ─────────────────────────────────────────────────────────────
   // 1. Load Host's Rental Listings
@@ -128,7 +247,7 @@ export default function HostAvailabilityPage() {
   // 2. Load Availability Blocks and Reservations for Selected Property
   // ─────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!listingId) return;
+    if (!listingId || isDemoMode) return;
     let active = true;
 
     const loadCalendarData = async () => {
@@ -191,6 +310,39 @@ export default function HostAvailabilityPage() {
       year: 'numeric',
     });
   }, [viewYear, viewMonth]);
+
+  // Ethiopian month span computation (e.g., "ጥቅምት – ኅዳር 2019 ዓ.ም")
+  const ethiopianSpan = useMemo(() => {
+    return getEthiopianSpanForGregorianMonth(viewYear, viewMonth);
+  }, [viewYear, viewMonth]);
+
+  // Ethiopian cultural & national holidays falling within the active month
+  const activeMonthHolidays = useMemo(() => {
+    const holidays: {
+      dateIso: string;
+      dayNum: number;
+      ethDate: EthiopianDate;
+      holiday: EthiopianHoliday;
+    }[] = [];
+
+    for (let day = 1; day <= daysInMonth; day += 1) {
+      const y = viewYear;
+      const m = String(viewMonth + 1).padStart(2, '0');
+      const d = String(day).padStart(2, '0');
+      const iso = `${y}-${m}-${d}`;
+      const eth = gregorianToEthiopian(iso);
+      if (eth.holiday) {
+        holidays.push({
+          dateIso: iso,
+          dayNum: day,
+          ethDate: eth,
+          holiday: eth.holiday,
+        });
+      }
+    }
+
+    return holidays;
+  }, [viewYear, viewMonth, daysInMonth]);
 
   const handlePrevMonth = () => {
     if (viewMonth === 0) {
@@ -261,7 +413,14 @@ export default function HostAvailabilityPage() {
       setSelectionStep('end');
     } else {
       // Step is 'end'
-      if (dateStr > form.startDate) {
+      if (dateStr === form.startDate) {
+        // User clicked the same day: block this single night (check-in to next day)
+        const nextD = new Date(dateStr);
+        nextD.setDate(nextD.getDate() + 1);
+        const nextIso = nextD.toISOString().slice(0, 10);
+        setForm((prev) => ({ ...prev, endDate: nextIso }));
+        setSelectionStep('start');
+      } else if (dateStr > form.startDate) {
         setForm((prev) => ({ ...prev, endDate: dateStr }));
         setSelectionStep('start');
       } else {
@@ -286,6 +445,25 @@ export default function HostAvailabilityPage() {
 
     if (form.endDate <= form.startDate) {
       setError('The end date must be after the start date.');
+      return;
+    }
+
+    if (isDemoMode) {
+      const created: AvailabilityBlock = {
+        id: `demo-block-${Date.now()}`,
+        propertyId: listingId || DEMO_LISTINGS[0].id,
+        startDate: form.startDate,
+        endDate: form.endDate,
+        reason: form.reason.trim() || 'Demo Maintenance / Blackout',
+        createdAt: new Date().toISOString(),
+      };
+      setBlocks((current) =>
+        [...current, created].sort((a, b) => a.startDate.localeCompare(b.startDate)),
+      );
+      setForm(EMPTY_FORM);
+      setSelectionStep('start');
+      setSuccess('The selected date range has been blocked in demo mode.');
+      setSaving(false);
       return;
     }
 
@@ -324,6 +502,13 @@ export default function HostAvailabilityPage() {
   // ─────────────────────────────────────────────────────────────
   const handleRemove = async (blockId: string) => {
     if (!listingId) return;
+
+    if (isDemoMode) {
+      setBlocks((current) => current.filter((block) => block.id !== blockId));
+      setSuccess('Availability block removed (demo mode).');
+      return;
+    }
+
     setRemovingId(blockId);
     setError(null);
     setSuccess(null);
@@ -345,19 +530,15 @@ export default function HostAvailabilityPage() {
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-10 max-w-7xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EEF3EF] text-[#234B36] border border-[#E5E0D5] text-xs font-black uppercase tracking-wider mb-2">
-            <CalendarDays className="w-3.5 h-3.5" />
-            <span>Interactive Availability Manager</span>
-          </div>
           <h1 className="text-2xl sm:text-3xl font-black text-[#252923] tracking-tight">
-            Property Calendar & Blockouts
+            Property Calendar & Availability
           </h1>
           <p className="text-xs sm:text-sm text-[#73776F] font-medium mt-1">
-            Visually manage unavailable dates, view upcoming guest stays, and block maintenance windows.
+            Manage blocked maintenance dates, view guest bookings, and optimize for Ethiopian holiday surges.
           </p>
         </div>
 
@@ -368,10 +549,10 @@ export default function HostAvailabilityPage() {
             setLoadingData(true);
             setReloadVersion((v) => v + 1);
           }}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-[#E5E0D5] bg-white hover:bg-[#F8F5ED] text-xs font-bold text-[#252923] transition cursor-pointer self-start sm:self-auto shadow-2xs"
+          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-[#E5E0D5] bg-white hover:bg-[#F8F5ED] text-xs font-bold text-[#252923] transition cursor-pointer self-start sm:self-auto shadow-2xs"
         >
           <RotateCcw className={`w-3.5 h-3.5 ${loadingData ? 'animate-spin' : ''}`} />
-          <span>Refresh Data</span>
+          <span>Refresh</span>
         </button>
       </div>
 
@@ -379,16 +560,63 @@ export default function HostAvailabilityPage() {
       {error && (
         <div
           role="alert"
-          className="flex items-center gap-3 p-4 rounded-2xl border border-red-200 bg-red-50 text-red-800 text-xs sm:text-sm font-medium animate-in fade-in"
+          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl border border-red-200 bg-red-50 text-red-800 text-xs sm:text-sm font-medium animate-in fade-in"
         >
-          <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
-          <span className="flex-1">{error}</span>
-          <button
-            onClick={() => setError(null)}
-            className="text-red-500 hover:text-red-700 cursor-pointer"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-2.5 min-w-0">
+            <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
+            <span className="truncate">{error}</span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {isAuthError && (
+              <Link
+                href="/login?next=/host/availability"
+                className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg text-xs transition"
+              >
+                Sign In Again
+              </Link>
+            )}
+            <button
+              onClick={() => setError(null)}
+              className="text-red-500 hover:text-red-700 cursor-pointer p-1"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Demo Active Banner */}
+      {isDemoMode && (
+        <div className="rounded-2xl border border-[#234B36]/20 bg-[#EEF3EF] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🇪🇹</span>
+            <div>
+              <p className="text-xs sm:text-sm font-black text-[#234B36]">
+                Interactive Ethiopian Calendar Demo Mode Active
+              </p>
+              <p className="text-[11px] text-[#73776F]">
+                Exploring dual Ge'ez dates, Amharic weekdays, peak holiday surges, and date range selections on mock property data.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <Link
+              href="/login?next=/host/availability"
+              className="px-3.5 py-1.5 rounded-xl bg-[#234B36] hover:bg-[#2D5E43] text-white text-xs font-bold transition shadow-2xs"
+            >
+              Sign In to Sync Real Listings
+            </Link>
+            <button
+              type="button"
+              onClick={() => {
+                setIsDemoMode(false);
+                setReloadVersion((v) => v + 1);
+              }}
+              className="px-3 py-1.5 rounded-xl border border-[#E5E0D5] bg-white text-xs font-bold text-[#73776F] hover:text-[#252923] transition cursor-pointer"
+            >
+              Exit Demo
+            </button>
+          </div>
         </div>
       )}
 
@@ -413,20 +641,61 @@ export default function HostAvailabilityPage() {
           <RotateCcw className="w-6 h-6 animate-spin mx-auto text-[#234B36] mb-3" />
           Loading your rental properties...
         </div>
-      ) : listings.length === 0 ? (
-        <div className="rounded-2xl border border-[#E5E0D5] bg-white p-10 text-center max-w-lg mx-auto shadow-sm">
-          <Building2 className="w-12 h-12 text-[#73776F]/60 mx-auto mb-4" />
-          <h2 className="text-lg font-black text-[#252923]">No Rental Listings Yet</h2>
-          <p className="mt-2 text-xs sm:text-sm text-[#73776F] leading-relaxed">
-            Calendar and availability management is available for rental properties. Create your first rental listing to unlock date blockouts.
-          </p>
-          <Link
-            href="/host/listings/new"
-            className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#234B36] hover:bg-[#2D5E43] active:bg-[#1A3828] text-white text-xs font-bold transition shadow-xs cursor-pointer"
-          >
-            <Sparkles className="w-4 h-4 text-amber-300" />
-            Create a Rental Listing
-          </Link>
+      ) : isAuthError && effectiveListings.length === 0 ? (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50/80 p-8 sm:p-10 text-center max-w-xl mx-auto shadow-sm space-y-4">
+          <div className="w-14 h-14 rounded-2xl bg-amber-100 border border-amber-200 text-amber-800 mx-auto flex items-center justify-center shadow-xs">
+            <AlertCircle className="w-7 h-7" />
+          </div>
+          <div>
+            <h2 className="text-xl font-black text-[#252923]">Session Expired or Login Required</h2>
+            <p className="mt-2 text-xs sm:text-sm text-[#73776F] leading-relaxed max-w-md mx-auto">
+              Your host session token has expired. Sign in again to load your published rental properties, or launch the interactive preview demo immediately.
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-3">
+            <Link
+              href="/login?next=/host/availability"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#234B36] hover:bg-[#2D5E43] active:bg-[#1A3828] text-white text-xs sm:text-sm font-bold transition shadow-xs cursor-pointer"
+            >
+              <span>Sign In Again</span>
+              <ChevronRight className="w-4 h-4" />
+            </Link>
+            <button
+              type="button"
+              onClick={activateDemoMode}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl border border-[#E5E0D5] bg-white hover:bg-[#F8F5ED] text-[#252923] text-xs sm:text-sm font-bold transition shadow-2xs cursor-pointer"
+            >
+              <Sparkles className="w-4 h-4 text-amber-500" />
+              <span>🇪🇹 Preview Interactive Calendar Demo</span>
+            </button>
+          </div>
+        </div>
+      ) : effectiveListings.length === 0 ? (
+        <div className="rounded-2xl border border-[#E5E0D5] bg-white p-10 text-center max-w-lg mx-auto shadow-sm space-y-4">
+          <Building2 className="w-12 h-12 text-[#73776F]/60 mx-auto" />
+          <div>
+            <h2 className="text-lg font-black text-[#252923]">No Rental Listings Yet</h2>
+            <p className="mt-2 text-xs sm:text-sm text-[#73776F] leading-relaxed">
+              Calendar and availability management is available for rental properties. Create your first rental listing to unlock date blockouts.
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            <Link
+              href="/host/listings/new"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#234B36] hover:bg-[#2D5E43] active:bg-[#1A3828] text-white text-xs font-bold transition shadow-xs cursor-pointer"
+            >
+              <Sparkles className="w-4 h-4 text-amber-300" />
+              Create a Rental Listing
+            </Link>
+            <button
+              type="button"
+              onClick={activateDemoMode}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E5E0D5] bg-[#F8F5ED] hover:bg-white text-xs font-bold text-[#234B36] transition cursor-pointer"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+              <span>🇪🇹 Preview Calendar Demo</span>
+            </button>
+          </div>
         </div>
       ) : (
         <div className="space-y-6">
@@ -488,7 +757,7 @@ export default function HostAvailabilityPage() {
                 }}
                 className="rounded-xl border border-[#E5E0D5] bg-[#F8F5ED] px-3.5 py-2 text-xs font-bold text-[#252923] focus:border-[#234B36] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#234B36]/20 cursor-pointer"
               >
-                {listings.map((l) => (
+                {effectiveListings.map((l) => (
                   <option key={l.id} value={l.id}>
                     {l.title} ({l.city})
                   </option>
@@ -500,73 +769,101 @@ export default function HostAvailabilityPage() {
           {/* Main Two-Column Layout: Visual Calendar (Left) & Quick Action Manager (Right) */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             {/* Left 8 Cols: Visual Month Calendar Grid */}
-            <div className="lg:col-span-8 rounded-2xl border border-[#E5E0D5] bg-white p-5 sm:p-7 shadow-xs space-y-6">
+            <div className="lg:col-span-8 rounded-2xl border border-[#E5E0D5] bg-white p-5 sm:p-6 shadow-xs space-y-5">
               {/* Calendar Month Navigation Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#EEF3EF]">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-xl font-black text-[#252923] tracking-tight">
-                    {monthName}
-                  </h2>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#EEF3EF]">
+                <div>
+                  <div className="flex items-baseline gap-2.5 flex-wrap">
+                    <h2 className="text-xl sm:text-2xl font-black text-[#252923] tracking-tight">
+                      {monthName}
+                    </h2>
+                    {showEthiopianDates && (
+                      <span className="text-xs font-bold text-[#234B36] bg-[#EEF3EF] px-2.5 py-0.5 rounded-full border border-[#E5E0D5]">
+                        🇪🇹 {ethiopianSpan.amharic}
+                      </span>
+                    )}
+                  </div>
+                  {showEthiopianDates && (
+                    <p className="text-[11px] text-[#73776F] font-semibold mt-0.5">
+                      {ethiopianSpan.english}
+                    </p>
+                  )}
+                </div>
+
+                {/* Sleek Toolbar Controls */}
+                <div className="flex items-center gap-2 flex-wrap self-end sm:self-auto">
+                  {/* Segmented Dual / Standard Switcher */}
+                  <div className="inline-flex rounded-xl bg-[#F8F5ED] p-1 border border-[#E5E0D5]">
+                    <button
+                      type="button"
+                      onClick={() => setShowEthiopianDates(true)}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                        showEthiopianDates
+                          ? 'bg-white text-[#234B36] shadow-2xs'
+                          : 'text-[#73776F] hover:text-[#252923]'
+                      }`}
+                    >
+                      🇪🇹 Dual
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowEthiopianDates(false)}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                        !showEthiopianDates
+                          ? 'bg-white text-[#234B36] shadow-2xs'
+                          : 'text-[#73776F] hover:text-[#252923]'
+                      }`}
+                    >
+                      🌐 Standard
+                    </button>
+                  </div>
+
                   <button
                     type="button"
                     onClick={handleJumpToday}
-                    className="ml-2 text-[11px] font-bold text-[#234B36] hover:text-[#2D5E43] bg-[#EEF3EF] hover:bg-[#234B36]/15 px-2.5 py-1 rounded-full transition cursor-pointer"
+                    className="px-3 py-1.5 rounded-xl border border-[#E5E0D5] bg-white hover:bg-[#F8F5ED] text-xs font-bold text-[#252923] transition cursor-pointer shadow-2xs"
                   >
                     Today
                   </button>
-                </div>
 
-                {/* Prev / Next Month Controls */}
-                <div className="flex items-center gap-1.5 self-end sm:self-auto">
-                  <button
-                    type="button"
-                    onClick={handlePrevMonth}
-                    aria-label="Previous Month"
-                    className="p-2 rounded-xl border border-[#E5E0D5] hover:border-[#234B36] hover:bg-[#F8F5ED] text-[#252923] transition cursor-pointer"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleNextMonth}
-                    aria-label="Next Month"
-                    className="p-2 rounded-xl border border-[#E5E0D5] hover:border-[#234B36] hover:bg-[#F8F5ED] text-[#252923] transition cursor-pointer"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Color Legend Bar */}
-              <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-xs font-bold text-[#73776F] bg-[#F8F5ED] p-3 rounded-xl border border-[#E5E0D5]">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded-md bg-white border border-[#E5E0D5] shadow-2xs" />
-                  <span>Available for Guests</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded-md bg-rose-100 border border-rose-300" />
-                  <span className="text-rose-700">Blocked by Host</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded-md bg-[#EEF3EF] border border-[#E5E0D5]" />
-                  <span className="text-[#234B36]">Guest Reservation</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded-md ring-2 ring-[#234B36] bg-[#EEF3EF]" />
-                  <span className="text-[#252923]">Selecting Range</span>
+                  <div className="inline-flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={handlePrevMonth}
+                      aria-label="Previous Month"
+                      className="p-1.5 rounded-xl border border-[#E5E0D5] hover:border-[#234B36] hover:bg-[#F8F5ED] text-[#252923] transition cursor-pointer shadow-2xs"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleNextMonth}
+                      aria-label="Next Month"
+                      className="p-1.5 rounded-xl border border-[#E5E0D5] hover:border-[#234B36] hover:bg-[#F8F5ED] text-[#252923] transition cursor-pointer shadow-2xs"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
 
               {/* Calendar Grid */}
-              <div className="space-y-2">
-                {/* Weekday Names */}
-                <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center">
-                  {WEEKDAYS.map((wd) => (
+              <div className="space-y-1.5">
+                {/* Weekday Names with Ethiopian Days */}
+                <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center pb-1">
+                  {WEEKDAYS.map((wd, idx) => (
                     <div
                       key={wd}
-                      className="text-[11px] font-black uppercase tracking-wider text-[#73776F] py-1"
+                      className="py-1.5 flex flex-col items-center justify-center rounded-xl bg-[#F8F5ED]/70 border border-[#E5E0D5]/50"
                     >
-                      {wd}
+                      <span className="text-[11px] font-black uppercase tracking-wider text-[#252923]">
+                        {wd}
+                      </span>
+                      {showEthiopianDates && (
+                        <span className="text-[10px] font-bold text-[#9E472A] tracking-normal -mt-0.5">
+                          {ETHIOPIAN_WEEKDAYS[idx]?.shortAmharic}
+                        </span>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -577,7 +874,7 @@ export default function HostAvailabilityPage() {
                   {Array.from({ length: firstDayOfWeek }).map((_, i) => (
                     <div
                       key={`empty-${i}`}
-                      className="min-h-[70px] sm:min-h-[85px] rounded-xl bg-[#F8F5ED]/40 border border-transparent"
+                      className="min-h-[72px] sm:min-h-[88px] rounded-xl bg-[#F8F5ED]/30 border border-transparent"
                     />
                   ))}
 
@@ -600,19 +897,21 @@ export default function HostAvailabilityPage() {
                       dateIso >= form.startDate &&
                       dateIso <= form.endDate;
 
+                    const ethDate = gregorianToEthiopian(dateIso);
+
                     return (
                       <button
                         key={dateIso}
                         type="button"
                         disabled={isPast}
                         onClick={() => handleDateClick(dateIso)}
-                        className={`group relative min-h-[70px] sm:min-h-[85px] p-1.5 sm:p-2 rounded-xl text-left border transition-all flex flex-col justify-between ${
+                        className={`group relative min-h-[72px] sm:min-h-[88px] p-2 rounded-xl text-left border transition-all flex flex-col justify-between ${
                           isPast
-                            ? 'bg-[#F8F5ED]/60 border-[#EEF3EF] text-[#73776F]/40 cursor-not-allowed opacity-60'
+                            ? 'bg-[#F8F5ED]/50 border-[#EEF3EF] text-[#73776F]/40 cursor-not-allowed opacity-50'
                             : block
-                            ? 'bg-rose-50/80 border-rose-200 text-rose-950 hover:bg-rose-100/80 cursor-pointer shadow-2xs'
+                            ? 'bg-rose-50/90 border-rose-200 text-rose-950 hover:bg-rose-100 cursor-pointer shadow-2xs'
                             : booking
-                            ? 'bg-[#EEF3EF]/70 border-[#E5E0D5] text-[#252923] hover:bg-[#EEF3EF] cursor-pointer shadow-2xs'
+                            ? 'bg-[#EEF3EF]/90 border-[#C8DACF] text-[#252923] hover:bg-[#EEF3EF] cursor-pointer shadow-2xs'
                             : isInSelectedRange
                             ? 'bg-[#EEF3EF] border-[#234B36] text-[#252923] ring-2 ring-[#234B36]/30'
                             : isStartSelected
@@ -620,67 +919,103 @@ export default function HostAvailabilityPage() {
                             : 'bg-white border-[#E5E0D5] text-[#252923] hover:border-[#234B36] hover:shadow-xs cursor-pointer'
                         }`}
                       >
-                        {/* Day Header (Number + Badges) */}
+                        {/* Top Bar: Gregorian Day (left) + Holiday/Status micro-badge (right) */}
                         <div className="flex items-center justify-between w-full">
                           <span
-                            className={`text-xs font-black rounded-full w-5 h-5 flex items-center justify-center ${
+                            className={`text-sm font-black rounded-lg w-6 h-6 flex items-center justify-center shrink-0 ${
                               isToday
-                                ? 'bg-[#234B36] text-white'
+                                ? 'bg-[#234B36] text-white ring-2 ring-[#234B36]/30'
                                 : isStartSelected
-                                ? 'bg-white text-[#234B36]'
+                                ? 'bg-white text-[#234B36] font-black'
                                 : 'text-[#252923]'
                             }`}
                           >
                             {dayNum}
                           </span>
 
-                          {/* Quick Micro Icons */}
-                          {block && (
-                            <Ban className="w-3 h-3 text-rose-500 shrink-0" />
-                          )}
-                          {booking && (
-                            <Luggage className="w-3 h-3 text-[#234B36] shrink-0" />
-                          )}
+                          <div className="flex items-center gap-1 shrink-0">
+                            {ethDate.holiday && (
+                              <span
+                                className="w-4 h-4 rounded-full bg-amber-100 text-amber-900 text-[10px] font-black flex items-center justify-center shrink-0 shadow-2xs cursor-help border border-amber-300"
+                                title={`🇪🇹 ${ethDate.holiday.nameAmharic} (${ethDate.holiday.nameEnglish}) · +${ethDate.holiday.recommendedPriceSurgePercent}% peak surge`}
+                              >
+                                ✨
+                              </span>
+                            )}
+                            {block && <Ban className="w-3.5 h-3.5 text-rose-500 shrink-0" />}
+                            {booking && <Luggage className="w-3.5 h-3.5 text-[#234B36] shrink-0" />}
+                          </div>
                         </div>
 
-                        {/* Status Label on Cell */}
-                        <div className="mt-1 w-full overflow-hidden">
+                        {/* Middle status tag */}
+                        <div className="my-auto w-full">
                           {block ? (
-                            <div className="bg-rose-100 text-rose-800 px-1.5 py-0.5 rounded text-[10px] font-black truncate leading-tight">
+                            <div className="bg-rose-100/90 text-rose-800 border border-rose-200/80 px-1.5 py-0.5 rounded text-[10px] font-black truncate text-center">
                               Blocked
                             </div>
                           ) : booking ? (
-                            <div className="bg-[#EEF3EF] text-[#234B36] px-1.5 py-0.5 rounded text-[10px] font-black truncate leading-tight border border-[#E5E0D5]">
+                            <div className="bg-[#EEF3EF] text-[#234B36] border border-[#C8DACF] px-1.5 py-0.5 rounded text-[10px] font-bold truncate text-center">
                               {booking.guest?.name ? booking.guest.name.split(' ')[0] : 'Guest'}
                             </div>
                           ) : isStartSelected ? (
-                            <div className="bg-white/20 text-white px-1 py-0.5 rounded text-[10px] font-bold text-center leading-none">
+                            <div className="bg-white/20 text-white px-1.5 py-0.5 rounded text-[10px] font-black text-center">
                               Start
                             </div>
                           ) : isEndSelected ? (
-                            <div className="bg-[#234B36] text-white px-1 py-0.5 rounded text-[10px] font-bold text-center leading-none">
+                            <div className="bg-[#234B36] text-white px-1.5 py-0.5 rounded text-[10px] font-black text-center">
                               End
-                            </div>
-                          ) : !isPast ? (
-                            <div className="text-[10px] font-medium text-[#73776F] opacity-0 group-hover:opacity-100 transition-opacity">
-                              Open
                             </div>
                           ) : null}
                         </div>
+
+                        {/* Bottom Bar: Ethiopian Ge'ez Date Pill with Month Name (Bottom-Right corner) */}
+                        {showEthiopianDates && (
+                          <div className="flex items-center justify-end w-full mt-auto pt-0.5">
+                            <span
+                              className={`text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-md border tracking-tight transition-colors whitespace-nowrap truncate max-w-full ${
+                                isStartSelected
+                                  ? 'bg-white/20 text-white border-white/30'
+                                  : ethDate.day === 1
+                                  ? 'bg-[#B85C38] text-white border-[#B85C38] font-black shadow-2xs'
+                                  : 'bg-[#FAF3F0] text-[#9E472A] border-[#F3DFD8]'
+                              }`}
+                              title={`${ethDate.formattedAmharic} (${ethDate.formattedEnglish})`}
+                            >
+                              {ethDate.monthNameAmharic} {ethDate.day}
+                            </span>
+                          </div>
+                        )}
                       </button>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Instructions banner */}
-              <div className="flex items-start gap-2.5 p-3 rounded-xl bg-[#EEF3EF]/70 border border-[#E5E0D5] text-xs text-[#252923]">
-                <Info className="w-4 h-4 text-[#234B36] shrink-0 mt-0.5" />
-                <p>
-                  <strong className="font-bold text-[#252923]">How to block dates:</strong> Click any open date to set your{' '}
-                  <span className="font-extrabold underline text-[#234B36]">Start Date</span>, then click a later date to set your{' '}
-                  <span className="font-extrabold underline text-[#234B36]">End Date</span>. Confirm with the block button in the side panel.
-                </p>
+              {/* Bottom Legend Bar (Below Grid) */}
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-[#EEF3EF] text-xs text-[#73776F] font-semibold">
+                <div className="flex flex-wrap items-center gap-4">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-white border border-[#E5E0D5]" />
+                    <span>Available</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+                    <span className="text-rose-700 font-bold">Blocked by Host</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#234B36]" />
+                    <span className="text-[#234B36] font-bold">Guest Stay</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3.5 h-3.5 rounded-full bg-amber-100 border border-amber-300 text-amber-800 text-[9px] font-black flex items-center justify-center">✨</span>
+                    <span className="text-amber-800 font-bold">Ethiopian Holiday Surge</span>
+                  </div>
+                </div>
+
+                <div className="text-[11px] text-[#73776F] flex items-center gap-1">
+                  <Info className="w-3.5 h-3.5 text-[#234B36]" />
+                  <span>Click start & end date on calendar to block</span>
+                </div>
               </div>
             </div>
 
@@ -691,9 +1026,9 @@ export default function HostAvailabilityPage() {
                 onSubmit={handleCreate}
                 className="rounded-2xl border border-[#E5E0D5] bg-white p-5 shadow-xs space-y-4"
               >
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between pb-2 border-b border-[#EEF3EF]">
                   <h3 className="text-sm font-black text-[#252923] flex items-center gap-2">
-                    <Ban className="w-4 h-4 text-rose-600" />
+                    <Ban className="w-4 h-4 text-[#234B36]" />
                     <span>Block Dates</span>
                   </h3>
                   {(form.startDate || form.endDate) && (
@@ -703,92 +1038,116 @@ export default function HostAvailabilityPage() {
                         setForm(EMPTY_FORM);
                         setSelectionStep('start');
                       }}
-                      className="text-[11px] font-bold text-[#73776F] hover:text-[#252923] cursor-pointer"
+                      className="text-[11px] font-bold text-red-600 hover:underline cursor-pointer"
                     >
-                      Clear
+                      Clear Selection
                     </button>
                   )}
                 </div>
 
-                {/* Selected Range Display */}
-                <div className="grid grid-cols-2 gap-2 bg-[#F8F5ED] p-2.5 rounded-xl border border-[#E5E0D5]">
-                  <div>
-                    <label className="block text-[10px] font-black uppercase tracking-wider text-[#73776F]">
-                      Start Date
-                    </label>
-                    <input
-                      type="date"
-                      required
-                      min={todayIso}
-                      value={form.startDate}
-                      onChange={(e) =>
-                        setForm((prev) => ({ ...prev, startDate: e.target.value }))
-                      }
-                      className="w-full mt-1 bg-white border border-[#E5E0D5] rounded-lg px-2 py-1.5 text-xs font-bold text-[#252923] focus:outline-none focus:border-[#234B36]"
-                    />
+                {/* Selected Range Display with Dual Ethiopian / Gregorian Dates */}
+                <div className="space-y-2.5">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-wider text-[#73776F]">
+                        Start Date
+                      </label>
+                      <input
+                        type="date"
+                        required
+                        min={todayIso}
+                        value={form.startDate}
+                        onChange={(e) =>
+                          setForm((prev) => ({ ...prev, startDate: e.target.value }))
+                        }
+                        className="w-full mt-1 bg-[#F8F5ED] border border-[#E5E0D5] rounded-xl px-2.5 py-2 text-xs font-bold text-[#252923] focus:outline-none focus:border-[#234B36] focus:bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-wider text-[#73776F]">
+                        End Date
+                      </label>
+                      <input
+                        type="date"
+                        required
+                        min={form.startDate || todayIso}
+                        value={form.endDate}
+                        onChange={(e) =>
+                          setForm((prev) => ({ ...prev, endDate: e.target.value }))
+                        }
+                        className="w-full mt-1 bg-[#F8F5ED] border border-[#E5E0D5] rounded-xl px-2.5 py-2 text-xs font-bold text-[#252923] focus:outline-none focus:border-[#234B36] focus:bg-white"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-[10px] font-black uppercase tracking-wider text-[#73776F]">
-                      End Date
-                    </label>
-                    <input
-                      type="date"
-                      required
-                      min={form.startDate || todayIso}
-                      value={form.endDate}
-                      onChange={(e) =>
-                        setForm((prev) => ({ ...prev, endDate: e.target.value }))
-                      }
-                      className="w-full mt-1 bg-white border border-[#E5E0D5] rounded-lg px-2 py-1.5 text-xs font-bold text-[#252923] focus:outline-none focus:border-[#234B36]"
-                    />
-                  </div>
+
+                  {form.startDate && (
+                    <div className="bg-[#EEF3EF] p-3 rounded-xl border border-[#C8DACF] space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-[#234B36]">
+                          Selected Range
+                        </span>
+                        {form.startDate && form.endDate && form.endDate > form.startDate && (
+                          <span className="text-[10px] font-bold text-[#234B36] bg-white px-2 py-0.5 rounded-full border border-[#C8DACF]">
+                            {Math.round(
+                              (new Date(form.endDate).getTime() - new Date(form.startDate).getTime()) /
+                                (1000 * 60 * 60 * 24),
+                            )}{' '}
+                            nights
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs font-black text-[#252923] leading-snug">
+                        {formatDualDate(form.startDate)}
+                        {form.endDate ? ` → ${formatDualDate(form.endDate)}` : ' (Pick end date)'}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
-                {/* Quick Preset Reasons */}
+                {/* Reason Selector Dropdown */}
                 <div>
                   <label className="block text-xs font-bold text-[#252923] mb-1.5">
                     Reason for Blackout
                   </label>
-                  <div className="flex flex-wrap gap-1.5 mb-2">
-                    {PRESET_REASONS.map((preset) => (
-                      <button
-                        key={preset}
-                        type="button"
-                        onClick={() =>
-                          setForm((prev) => ({ ...prev, reason: preset }))
-                        }
-                        className={`text-[10px] font-bold px-2.5 py-1 rounded-full border transition cursor-pointer ${
-                          form.reason === preset
-                            ? 'bg-[#234B36] text-white border-[#234B36]'
-                            : 'bg-white border-[#E5E0D5] text-[#73776F] hover:bg-[#F8F5ED]'
-                        }`}
-                      >
-                        {preset}
-                      </button>
-                    ))}
-                  </div>
-                  <input
-                    type="text"
-                    maxLength={255}
+                  <select
                     value={form.reason}
-                    onChange={(e) =>
-                      setForm((prev) => ({ ...prev, reason: e.target.value }))
-                    }
-                    placeholder="Or type a custom reason..."
-                    className="w-full rounded-xl border border-[#E5E0D5] px-3 py-2 text-xs text-[#252923] focus:border-[#234B36] focus:outline-none focus:ring-2 focus:ring-[#234B36]/20"
-                  />
+                    onChange={(e) => setForm((prev) => ({ ...prev, reason: e.target.value }))}
+                    className="w-full rounded-xl border border-[#E5E0D5] bg-[#F8F5ED] px-3.5 py-2.5 text-xs font-bold text-[#252923] focus:border-[#234B36] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#234B36]/20 cursor-pointer"
+                  >
+                    <option value="">Select a reason...</option>
+                    {PRESET_REASONS.map((preset) => (
+                      <option key={preset} value={preset}>
+                        {preset}
+                      </option>
+                    ))}
+                    <option value="Custom">Other (Custom reason)...</option>
+                  </select>
+
+                  {/* Optional Custom Reason Input */}
+                  {(form.reason === 'Custom' || (!PRESET_REASONS.includes(form.reason) && form.reason)) && (
+                    <input
+                      type="text"
+                      maxLength={255}
+                      value={form.reason === 'Custom' ? '' : form.reason}
+                      onChange={(e) =>
+                        setForm((prev) => ({ ...prev, reason: e.target.value }))
+                      }
+                      placeholder="Type custom blackout reason..."
+                      className="w-full mt-2 rounded-xl border border-[#E5E0D5] bg-white px-3 py-2 text-xs text-[#252923] focus:border-[#234B36] focus:outline-none focus:ring-2 focus:ring-[#234B36]/20"
+                    />
+                  )}
                 </div>
 
-                {/* Submit Block Button */}
+                {/* Submit Block Button in Brand Signature Forest Green */}
                 <button
                   type="submit"
                   disabled={saving || !listingId || !form.startDate || !form.endDate}
-                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-700 hover:to-rose-800 text-white text-xs font-bold tracking-wide transition shadow-xs disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
+                  className="w-full py-3 rounded-xl bg-[#234B36] hover:bg-[#2D5E43] active:bg-[#1A3828] text-white text-xs font-black tracking-wide transition shadow-xs disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
                 >
                   {saving ? (
                     <>
                       <RotateCcw className="w-3.5 h-3.5 animate-spin" />
-                      <span>Saving Block...</span>
+                      <span>Saving Blackout...</span>
                     </>
                   ) : (
                     <>
@@ -798,6 +1157,60 @@ export default function HostAvailabilityPage() {
                   )}
                 </button>
               </form>
+
+              {/* Card: Ethiopian High-Demand & Tourism Holidays */}
+              {activeMonthHolidays.length > 0 && (
+                <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-4 space-y-2.5 shadow-2xs">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">🇪🇹</span>
+                    <h3 className="text-xs font-black text-amber-950 uppercase tracking-wider">
+                      Ethiopian Peak Holidays ({activeMonthHolidays.length})
+                    </h3>
+                  </div>
+                  <p className="text-[11px] text-amber-900 leading-relaxed font-medium">
+                    High guest demand expected. Recommended for premium rates or early blackout:
+                  </p>
+                  <div className="space-y-2 pt-1">
+                    {activeMonthHolidays.map(({ dateIso, ethDate, holiday }) => (
+                      <div
+                        key={holiday.id}
+                        className="p-2.5 rounded-xl bg-white border border-amber-200/80 flex items-center justify-between gap-2 shadow-2xs"
+                      >
+                        <div className="min-w-0">
+                          <p className="text-xs font-black text-[#252923] truncate">
+                            {holiday.nameAmharic}
+                          </p>
+                          <p className="text-[10px] text-[#73776F] font-bold truncate">
+                            {ethDate.formattedAmharic} · {dateIso}
+                          </p>
+                        </div>
+                        <div className="shrink-0 text-right">
+                          <span className="inline-block text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                            +{holiday.recommendedPriceSurgePercent}% Surge
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const nextD = new Date(dateIso);
+                              nextD.setDate(nextD.getDate() + 1);
+                              const nextIso = nextD.toISOString().slice(0, 10);
+                              setForm({
+                                startDate: dateIso,
+                                endDate: nextIso,
+                                reason: `${holiday.nameAmharic} - High Season Reserve`,
+                              });
+                              setSelectionStep('start');
+                            }}
+                            className="block text-[10px] font-bold text-[#234B36] hover:underline mt-1 cursor-pointer"
+                          >
+                            Set Dates →
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Drawer: Active Blocks vs Guest Reservations */}
               <div className="rounded-2xl border border-[#E5E0D5] bg-white overflow-hidden shadow-xs">
