@@ -1235,58 +1235,6 @@ export default function CreateListingPage() {
         </section>
 
         {/* ═══════════════════════════════════════════════════
-            SECTION 7: Master AI Listing Review & Optimizer
-        ═══════════════════════════════════════════════════ */}
-        <section className="bg-gradient-to-br from-[#FAF8F5] via-white to-[#F2F6F3] border-2 border-[#234B36]/20 rounded-2xl p-6 md:p-8 space-y-5 shadow-xs">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-start gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#234B36] to-[#2D5E43] text-[#E6C687] flex items-center justify-center shrink-0 shadow-sm">
-                <Sparkles className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-base sm:text-lg font-black text-[#252923]">
-                    ✨ AI Listing Review &amp; Copy Optimizer
-                  </h2>
-                  <span className="text-[10px] font-black uppercase tracking-wider bg-[#234B36]/10 text-[#234B36] px-2 py-0.5 rounded-full">
-                    Enterprise Copilot
-                  </span>
-                </div>
-                <p className="text-xs text-[#73776F] mt-1 max-w-xl">
-                  Generate or polish your listing title &amp; description using your complete property specifications, verified amenities, and exact location. Supports bilingual drafting in English and Amharic (አማርኛ).
-                </p>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => { setCopilotMode('both'); setIsCopilotOpen(true); }}
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#234B36] hover:bg-[#2D5E43] text-white text-xs font-black shadow-md hover:shadow-lg transition cursor-pointer shrink-0"
-            >
-              <Sparkles className="w-4 h-4 text-[#E6C687]" />
-              <span>Launch AI Listing Copilot</span>
-            </button>
-          </div>
-
-          {/* Summary tags of what the AI will base its response on */}
-          <div className="pt-3 border-t border-[#E5E0D5]/70 flex flex-wrap items-center gap-2 text-xs">
-            <span className="text-[11px] font-bold text-[#73776F]">Grounded In:</span>
-            <span className="px-2.5 py-1 rounded-lg bg-white border border-[#E5E0D5] font-semibold text-[#252923]">
-              📍 {form.neighborhood ? `${form.neighborhood}, ` : ''}{form.subCity ? `${form.subCity}, ` : ''}{form.city || 'Addis Ababa'}
-            </span>
-            <span className="px-2.5 py-1 rounded-lg bg-white border border-[#E5E0D5] font-semibold text-[#252923]">
-              🏠 {form.listingType === 'SALE' ? 'For Sale' : 'Rental'} • {form.propertyType}
-            </span>
-            <span className="px-2.5 py-1 rounded-lg bg-white border border-[#E5E0D5] font-semibold text-[#252923]">
-              🛏️ {form.bedrooms || 0} Beds • 🚿 {form.bathrooms || 0} Baths{form.areaSqm ? ` • 📐 ${form.areaSqm} m²` : ''}
-            </span>
-            <span className="px-2.5 py-1 rounded-lg bg-white border border-[#E5E0D5] font-semibold text-[#252923]">
-              ✨ {form.amenityIds.length} Amenities Selected
-            </span>
-          </div>
-        </section>
-
-        {/* ═══════════════════════════════════════════════════
             Bottom Action Bar
         ═══════════════════════════════════════════════════ */}
         <div className="sticky bottom-4 z-20 bg-white/95 backdrop-blur-md border border-[#E5E0D5] rounded-2xl p-4 shadow-lg flex items-center justify-between gap-4">
