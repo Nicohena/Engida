@@ -140,6 +140,12 @@ export class Booking {
   @Column({ type: 'timestamptz', nullable: true, name: 'paid_at' })
   paidAt: Date | null;
 
+  @Column({ type: 'boolean', default: false, name: 'is_legacy_cash' })
+  isLegacyCash: boolean;
+
+  @Column({ type: 'varchar', length: 32, default: 'UNVERIFIED', name: 'payment_reconciliation_status' })
+  paymentReconciliationStatus: string;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

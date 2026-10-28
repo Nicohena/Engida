@@ -54,3 +54,21 @@ export function decimalStringToNumber(value: MoneyLike | number | string | null 
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : 0;
 }
+
+export function calculateBasisPoints(
+  minorOrValue: bigint | MoneyLike | number | string | null | undefined,
+  bps: number,
+  rounding: 'DOWN' | 'HALF_UP' = 'HALF_UP',
+): bigint {
+  const minor = typeof minorOrValue === 'bigint' ? minorOrValue : toMinorUnits(minorOrValue);
+  const boundedBps = BigInt(Math.max(0, Math.trunc(bps)));
+  if (minor === 0n || boundedBps === 0n) return 0n;
+
+  const product = minor * boundedBps;
+  if (rounding === 'DOWN') {
+    return product / 10000n;
+  }
+  // HALF_UP rounding
+  return (product + 5000n) / 10000n;
+}
+
