@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { apiFetch } from '../../lib/api';
@@ -23,6 +23,7 @@ import {
   Briefcase,
   AlertTriangle,
   RotateCcw,
+  Plus,
 } from 'lucide-react';
 
 export function getAmenityIcon(name: string, iconKey?: string | null): React.ComponentType<{ className?: string }> {
@@ -93,11 +94,57 @@ export default function AmenitySelector({ selectedIds, onChange, error }: Amenit
     };
   }, []);
 
+  const [customAmenityInput, setCustomAmenityInput] = useState('');
+  const [isAddingCustom, setIsAddingCustom] = useState(false);
+  const [customError, setCustomError] = useState<string | null>(null);
+
   const toggleAmenity = (id: string) => {
     if (selectedIds.includes(id)) {
       onChange(selectedIds.filter((item) => item !== id));
     } else {
       onChange([...selectedIds, id]);
+    }
+  };
+
+  const handleAddCustomAmenity = async (suggestedName?: string) => {
+    const nameToAdd = (suggestedName || customAmenityInput).trim();
+    if (!nameToAdd) return;
+
+    // Check if already in catalog
+    const existing = catalog.find(
+      (a) => a.name.toLowerCase() === nameToAdd.toLowerCase(),
+    );
+    if (existing) {
+      if (!selectedIds.includes(existing.id)) {
+        onChange([...selectedIds, existing.id]);
+      }
+      setCustomAmenityInput('');
+      setCustomError(null);
+      return;
+    }
+
+    setIsAddingCustom(true);
+    setCustomError(null);
+
+    try {
+      const created = await apiFetch<Amenity>('/amenities', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: nameToAdd }),
+      });
+
+      if (created && created.id) {
+        setCatalog((prev) => [...prev, created]);
+        if (!selectedIds.includes(created.id)) {
+          onChange([...selectedIds, created.id]);
+        }
+        setCustomAmenityInput('');
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to add custom amenity';
+      setCustomError(msg);
+    } finally {
+      setIsAddingCustom(false);
     }
   };
 
@@ -206,6 +253,79 @@ export default function AmenitySelector({ selectedIds, onChange, error }: Amenit
           })}
         </div>
       )}
+
+      {/* Dynamic Custom Amenity Input */}
+      <div className="pt-3 border-t border-[#EEF3EF] space-y-2.5">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold text-[#252923] flex items-center gap-1.5">
+            <Plus className="w-3.5 h-3.5 text-[#234B36]" /> Add Custom Amenity
+          </span>
+          <span className="text-[11px] text-[#73776F]">
+            Have additional features? Add them dynamically to your listing
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            value={customAmenityInput}
+            onChange={(e) => {
+              setCustomAmenityInput(e.target.value);
+              if (customError) setCustomError(null);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleAddCustomAmenity();
+              }
+            }}
+            placeholder="e.g. Dedicated Workspace, Private Balcony, Rooftop Terrace..."
+            className="flex-1 px-3.5 py-2 rounded-xl border border-[#E5E0D5] text-xs font-medium text-[#252923] placeholder:text-[#73776F] focus:outline-none focus:ring-2 focus:ring-[#234B36]/20 focus:border-[#234B36] transition"
+          />
+          <button
+            type="button"
+            onClick={() => handleAddCustomAmenity()}
+            disabled={isAddingCustom || !customAmenityInput.trim()}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#234B36] hover:bg-[#2D5E43] text-white text-xs font-bold transition disabled:opacity-50 shrink-0"
+          >
+            {isAddingCustom ? (
+              <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              <Plus className="w-3.5 h-3.5" />
+            )}
+            Add
+          </button>
+        </div>
+
+        {customError && <p className="text-xs text-red-600 font-semibold">{customError}</p>}
+
+        {/* Quick Suggestions */}
+        <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+          <span className="text-[10px] font-semibold text-[#73776F]">Quick Add:</span>
+          {['Balcony', 'Dedicated Workspace', 'Rooftop Terrace', 'Solar Power', 'BBQ Grill', 'Baby Crib'].map(
+            (sug) => {
+              const alreadyHas = catalog.some(
+                (a) => a.name.toLowerCase() === sug.toLowerCase() && selectedIds.includes(a.id),
+              );
+              return (
+                <button
+                  key={sug}
+                  type="button"
+                  onClick={() => handleAddCustomAmenity(sug)}
+                  disabled={alreadyHas || isAddingCustom}
+                  className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border transition ${
+                    alreadyHas
+                      ? 'bg-emerald-50 text-emerald-800 border-emerald-200 opacity-60 cursor-default'
+                      : 'bg-[#F8F5ED] hover:bg-[#EEF3EF] text-[#234B36] border-[#E5E0D5]'
+                  }`}
+                >
+                  {alreadyHas ? `✓ ${sug}` : `+ ${sug}`}
+                </button>
+              );
+            },
+          )}
+        </div>
+      </div>
 
       {error && <p className="text-xs text-red-600 font-semibold">{error}</p>}
     </div>

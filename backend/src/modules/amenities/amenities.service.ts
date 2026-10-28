@@ -19,4 +19,23 @@ export class AmenitiesService {
   async findByIds(ids: string[]): Promise<Amenity[]> {
     return this.amenityRepository.findByIds(ids);
   }
+
+  async findOrCreate(name: string, icon?: string): Promise<Amenity> {
+    const trimmed = (name || '').trim();
+    if (!trimmed) {
+      throw new Error('Amenity name cannot be empty');
+    }
+    const all = await this.amenityRepository.find();
+    const existing = all.find(
+      (a) => a.name.toLowerCase() === trimmed.toLowerCase(),
+    );
+    if (existing) {
+      return existing;
+    }
+    const amenity = this.amenityRepository.create({
+      name: trimmed,
+      icon: icon || null,
+    });
+    return this.amenityRepository.save(amenity);
+  }
 }

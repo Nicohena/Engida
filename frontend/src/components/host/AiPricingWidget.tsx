@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Sparkles, Check, ChevronRight } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import AiPricingModal from './AiPricingModal';
 
 interface AiPricingWidgetProps {
@@ -42,21 +42,8 @@ export default function AiPricingWidget({
   className = '',
 }: AiPricingWidgetProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [appliedPrice, setAppliedPrice] = useState<number | null>(null);
 
   const isSale = (listingType || '').toUpperCase() === 'SALE';
-  const currentNumPrice =
-    typeof currentPrice === 'string'
-      ? parseFloat(currentPrice.replace(/[^0-9.]/g, '')) || 0
-      : Number(currentPrice || 0);
-
-  const displayPrice = appliedPrice || (currentNumPrice > 0 ? currentNumPrice : null);
-
-  const handleApplyFromModal = (price: number) => {
-    setAppliedPrice(price);
-    onApplyPrice(price);
-  };
-
   return (
     <>
       <div className={`inline-flex items-center gap-2 shrink-0 ${className}`}>
@@ -70,26 +57,6 @@ export default function AiPricingWidget({
           <Sparkles className="w-3.5 h-3.5 text-[#234B36] group-hover:rotate-12 transition-transform shrink-0" />
           <span>✨ {isSale ? 'AI Valuation Copilot' : 'AI Price Copilot'}</span>
         </button>
-
-        {/* Clean 1-Line Feedback Pill when price is set */}
-        {displayPrice && (
-          <button
-            type="button"
-            onClick={() => setIsModalOpen(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100/70 transition cursor-pointer shrink-0"
-            title="Click to review or modify AI pricing tiers"
-          >
-            <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-            <span>
-              {appliedPrice ? 'Applied AI:' : 'Active:'}{' '}
-              <strong className="font-black text-[#252923]">
-                ETB {displayPrice.toLocaleString()}
-              </strong>
-              {isSale ? '' : '/night'}
-            </span>
-            <ChevronRight className="w-3.5 h-3.5 text-emerald-600 ml-0.5 opacity-60 shrink-0" />
-          </button>
-        )}
       </div>
 
       {/* Dedicated Enterprise AI Pricing Modal */}
@@ -110,7 +77,7 @@ export default function AiPricingWidget({
         currentPrice={currentPrice}
         coverImage={coverImage}
         images={images}
-        onApplyPrice={handleApplyFromModal}
+        onApplyPrice={onApplyPrice}
       />
     </>
   );

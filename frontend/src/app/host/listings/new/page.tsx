@@ -1183,7 +1183,7 @@ export default function CreateListingPage() {
         {/* ═══════════════════════════════════════════════════
             RIGHT COLUMN: Sticky Live Guest Preview Console (35%)
         ═══════════════════════════════════════════════════ */}
-        <div className="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-6">
+        <div className="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto no-scrollbar">
           <HostListingLivePreview
             title={form.title}
             propertyType={form.propertyType}
