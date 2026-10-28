@@ -11,6 +11,7 @@ import {
   Compass,
   AlertCircle,
   ExternalLink,
+  X,
 } from 'lucide-react';
 
 export interface LocationSelectedData {
@@ -174,12 +175,11 @@ export default function HostLocationPickerMapInner({
     // Add zoom control in top-right
     L.control.zoom({ position: 'topright' }).addTo(map);
 
-    // High quality CartoDB Positron tiles (clean, modern, no ads)
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    // Official OpenStreetMap standard tiles (100% free, full Ethiopian detail, no API key required)
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>',
-      subdomains: 'abcd',
-      maxZoom: 20,
+        '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors',
+      maxZoom: 19,
     }).addTo(map);
 
     // Add draggable marker
@@ -289,6 +289,19 @@ export default function HostLocationPickerMapInner({
 
   // Geolocation button
   const handleUseCurrentLocation = () => {
+    // If on insecure HTTP context on non-localhost IP, modern browsers strictly block geolocation API
+    if (
+      typeof window !== 'undefined' &&
+      window.location.protocol !== 'https:' &&
+      window.location.hostname !== 'localhost' &&
+      window.location.hostname !== '127.0.0.1'
+    ) {
+      setLocateError(
+        'Browser GPS requires an HTTPS or localhost connection. You can use the search bar above or click one of the popular Ethiopian hubs below (e.g. Bole, Kazanchis, Atlas) to immediately pinpoint your property.'
+      );
+      return;
+    }
+
     if (!navigator.geolocation) {
       setLocateError('Geolocation is not supported by your browser.');
       return;
@@ -307,7 +320,13 @@ export default function HostLocationPickerMapInner({
       },
       (err) => {
         setIsLocating(false);
-        setLocateError('Could not obtain current location. Please allow GPS permission in your browser.');
+        if (err.code === 1) {
+          setLocateError('GPS permission was denied by your browser. Use the search bar or presets below to select your property location.');
+        } else if (err.code === 2) {
+          setLocateError('GPS position unavailable. Please use the search bar or presets below.');
+        } else {
+          setLocateError('Could not obtain current location. Use the search bar or presets to pinpoint.');
+        }
         console.warn('Geolocation error:', err.message);
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
@@ -373,9 +392,19 @@ export default function HostLocationPickerMapInner({
       </div>
 
       {locateError && (
-        <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800 flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 shrink-0 text-amber-600" />
-          <span>{locateError}</span>
+        <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800 flex items-center justify-between gap-2 animate-in fade-in">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0 text-amber-600" />
+            <span>{locateError}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setLocateError(null)}
+            className="p-1 rounded-md hover:bg-amber-100 text-amber-700 transition cursor-pointer shrink-0"
+            aria-label="Dismiss alert"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
         </div>
       )}
 
