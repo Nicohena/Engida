@@ -47,6 +47,9 @@ export const ADMIN_PERMISSIONS = {
   FINANCE_RECONCILE: 'finance.reconcile',
   FINANCE_CONFIG: 'finance.config',
   FINANCE_EXPORT: 'finance.export',
+  CATALOG_MANAGE: 'catalog.manage',
+  COUPONS_MANAGE: 'coupons.manage',
+  CONTENT_MANAGE: 'content.manage',
 } as const;
 
 export type Permission = (typeof ADMIN_PERMISSIONS)[keyof typeof ADMIN_PERMISSIONS];
