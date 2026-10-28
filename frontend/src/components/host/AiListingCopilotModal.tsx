@@ -103,6 +103,7 @@ export default function AiListingCopilotModal({
   const [tone, setTone] = useState<ToneOption>('luxury');
   const [descriptionLength, setDescriptionLength] = useState<DescriptionLengthOption>('medium');
   const [titleLength, setTitleLength] = useState<TitleLengthOption>('standard');
+  const [regenerationCount, setRegenerationCount] = useState(0);
   const [result, setResult] = useState<GenerateListingContentResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -116,6 +117,7 @@ export default function AiListingCopilotModal({
       setError(null);
       setAppliedField(null);
       setLoading(false);
+      setRegenerationCount(0);
     }
   }, [isOpen, mode]);
 
@@ -168,6 +170,9 @@ export default function AiListingCopilotModal({
     const activeDescLen   = targetDescLen   ?? descriptionLength;
     const activeTitleLen  = targetTitleLen  ?? titleLength;
 
+    const nextCount = regenerationCount + 1;
+    setRegenerationCount(nextCount);
+
     setLoading(true);
     setError(null);
     setAppliedField(null);
@@ -190,6 +195,7 @@ export default function AiListingCopilotModal({
         titleLength:        activeTitleLen,
         coverImage:         coverImage?.trim() || undefined,
         images:             images && images.length > 0 ? images : undefined,
+        regenerationIndex:  nextCount,
       };
 
       const response = await apiFetch<GenerateListingContentResponse>('/ai/generate-listing-content', {
@@ -633,7 +639,7 @@ export default function AiListingCopilotModal({
                 disabled={loading}
                 className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[#E5E0D5] hover:bg-white text-xs font-bold text-[#73776F] transition disabled:opacity-50"
               >
-                <RotateCcw className="w-3.5 h-3.5" />
+                <RotateCcw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
                 Regenerate
               </button>
             )}

@@ -69,6 +69,7 @@ export default function AiPricingModal({
   const [error, setError] = useState<string | null>(null);
   const [applied, setApplied] = useState(false);
   const [showBreakdown, setShowBreakdown] = useState(false);
+  const [recalculateCount, setRecalculateCount] = useState(0);
   const [, startTransition] = useTransition();
 
   const isSale = (listingType || '').toUpperCase() === 'SALE';
@@ -92,7 +93,12 @@ export default function AiPricingModal({
   const hasWater = selectedAmenityNames.some((a) => /water|tank|reservoir|heater/i.test(a));
   const hasSecurity = selectedAmenityNames.some((a) => /security|guard|cctv|gated/i.test(a));
 
-  const handlePredictPrice = async () => {
+  const handlePredictPrice = async (forceRecalculate = false) => {
+    const nextCount = forceRecalculate ? recalculateCount + 1 : recalculateCount;
+    if (forceRecalculate) {
+      setRecalculateCount(nextCount);
+    }
+
     setLoading(true);
     setError(null);
     setApplied(false);
@@ -111,6 +117,7 @@ export default function AiPricingModal({
         amenities: selectedAmenityNames.length > 0 ? selectedAmenityNames : amenityIds,
         coverImage: coverImage?.trim() || undefined,
         images: images && images.length > 0 ? images : undefined,
+        regenerationIndex: nextCount,
       };
 
       const result = await apiFetch<AiPricePredictionResponse>('/ai/predict-price', {
@@ -136,7 +143,8 @@ export default function AiPricingModal({
     if (isOpen) {
       setApplied(false);
       setError(null);
-      handlePredictPrice();
+      setRecalculateCount(0);
+      handlePredictPrice(false);
     }
   }, [isOpen]);
 
@@ -463,7 +471,7 @@ export default function AiPricingModal({
               <span>{error}</span>
               <button
                 type="button"
-                onClick={handlePredictPrice}
+                onClick={() => handlePredictPrice(false)}
                 className="text-xs font-bold underline hover:no-underline shrink-0"
               >
                 Retry
@@ -802,11 +810,11 @@ export default function AiPricingModal({
             {prediction && (
               <button
                 type="button"
-                onClick={handlePredictPrice}
+                onClick={() => handlePredictPrice(true)}
                 disabled={loading}
                 className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[#E5E0D5] hover:bg-white text-xs font-bold text-[#73776F] transition disabled:opacity-50"
               >
-                <RotateCcw className="w-3.5 h-3.5" />
+                <RotateCcw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
                 Recalculate
               </button>
             )}

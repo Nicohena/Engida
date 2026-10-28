@@ -470,6 +470,22 @@ export interface AiPricePredictionResponse {
   };
 }
 
+export interface AiPricePredictionRequest {
+  city: string;
+  subCity?: string;
+  neighborhood?: string;
+  propertyType: string;
+  listingType?: string;
+  bedrooms: number;
+  bathrooms: number;
+  maxGuests: number;
+  areaSqm?: number;
+  amenities: string[];
+  coverImage?: string;
+  images?: string[];
+  regenerationIndex?: number;
+}
+
 export interface GenerateListingContentRequest {
   propertyType: string;
   listingType?: string; // 'RENTAL' | 'SALE'
@@ -487,6 +503,7 @@ export interface GenerateListingContentRequest {
   titleLength?: 'concise' | 'standard' | 'extended';
   coverImage?: string;
   images?: string[];
+  regenerationIndex?: number;
 }
 
 export interface GenerateListingContentResponse {
