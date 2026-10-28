@@ -14,6 +14,7 @@ import GalleryManager from '../../../../components/host/GalleryManager';
 import AiPricingWidget from '../../../../components/host/AiPricingWidget';
 import AiListingCopilotModal, { type CopilotMode } from '../../../../components/host/AiListingCopilotModal';
 import HostListingLivePreview from '../../../../components/host/HostListingLivePreview';
+import HostLocationPickerMap from '../../../../components/maps/HostLocationPickerMap';
 import {
   ArrowLeft,
   Building2,
@@ -610,6 +611,43 @@ export default function CreateListingPage() {
                 </div>
               </div>
 
+              {/* Interactive Real Map Location Picker */}
+              <div className="space-y-2 pt-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-sm font-bold text-[#252923]">
+                    Interactive Property Location Map <span className="text-xs text-[#73776F] font-normal">(Drag pin or search to auto-fill address)</span>
+                  </label>
+                  <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                    Live Auto-Fill Active
+                  </span>
+                </div>
+                <HostLocationPickerMap
+                  initialLat={form.latitude ? parseFloat(form.latitude) : null}
+                  initialLng={form.longitude ? parseFloat(form.longitude) : null}
+                  initialAddress={form.address}
+                  initialCity={form.city}
+                  initialSubCity={form.subCity}
+                  initialNeighborhood={form.neighborhood}
+                  onLocationChange={(loc) => {
+                    setForm((prev) => ({
+                      ...prev,
+                      address: loc.address || prev.address,
+                      city: loc.city || prev.city,
+                      subCity: loc.subCity || prev.subCity,
+                      neighborhood: loc.neighborhood || prev.neighborhood,
+                      latitude: loc.latitude.toString(),
+                      longitude: loc.longitude.toString(),
+                    }));
+                    setErrors((prev) => {
+                      const next = { ...prev };
+                      if (loc.address) delete next.address;
+                      if (loc.city) delete next.city;
+                      return next;
+                    });
+                  }}
+                />
+              </div>
+
               {/* Location Address */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
                 <div className="sm:col-span-2 space-y-1.5">
@@ -1162,9 +1200,12 @@ export default function CreateListingPage() {
             title={form.title}
             propertyType={form.propertyType}
             listingType={form.listingType}
+            address={form.address}
             city={form.city}
             subCity={form.subCity}
             neighborhood={form.neighborhood}
+            latitude={form.latitude}
+            longitude={form.longitude}
             bedrooms={form.bedrooms}
             bathrooms={form.bathrooms}
             maxGuests={form.maxGuests}

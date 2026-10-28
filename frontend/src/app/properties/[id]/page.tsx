@@ -10,6 +10,7 @@ import type { Property } from '@/types';
 import AppHeader from '@/components/layout/AppHeader';
 import AppFooter from '@/components/layout/AppFooter';
 import ReportDialog from '@/components/reports/ReportDialog';
+import PropertyPublicMap from '@/components/maps/PropertyPublicMap';
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -25,6 +26,11 @@ interface DetailedProperty {
   subLocation: string;
   country: string;
   city: string;
+  address?: string;
+  subCity?: string;
+  neighborhood?: string;
+  latitude?: number | null;
+  longitude?: number | null;
   details: string;
   guests: number;
   bedrooms: number;
@@ -366,6 +372,11 @@ export default function PropertyDetailsPage() {
           subLocation: data.address || `${data.city} neighborhood`,
           city: data.city,
           country: data.country,
+          address: data.address || '',
+          subCity: data.subCity || '',
+          neighborhood: data.neighborhood || '',
+          latitude: data.latitude ? Number(data.latitude) : null,
+          longitude: data.longitude ? Number(data.longitude) : null,
           details: `${data.maxGuests || 4} guests · ${data.bedrooms || 2} bedrooms · ${data.bedrooms || 2} beds · ${data.bathrooms || 2} baths`,
           guests: data.maxGuests || 4,
           bedrooms: data.bedrooms || 2,
@@ -799,6 +810,23 @@ export default function PropertyDetailsPage() {
                   </div>
                 ))}
               </div>
+            </div>
+
+            {/* Where you'll be (Interactive Real Map) */}
+            <div className="pb-8 border-b border-[#d8d0c8]/60 space-y-4">
+              <h2 className="text-2xl font-bold font-headline text-[#3a302a] text-balance">
+                Where you&apos;ll be
+              </h2>
+              <PropertyPublicMap
+                latitude={property.latitude}
+                longitude={property.longitude}
+                title={property.title}
+                address={property.address}
+                city={property.city}
+                subCity={property.subCity}
+                neighborhood={property.neighborhood}
+                showExactPin={true}
+              />
             </div>
 
             {/* Guest Reviews Section */}

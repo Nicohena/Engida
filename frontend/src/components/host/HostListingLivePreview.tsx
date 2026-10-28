@@ -26,14 +26,18 @@ import {
   Info,
 } from 'lucide-react';
 import type { ListingType, PropertyType } from '../../types/host';
+import PropertyPublicMap from '../maps/PropertyPublicMap';
 
 interface HostListingLivePreviewProps {
   title: string;
   propertyType: PropertyType;
   listingType: ListingType;
+  address?: string;
   city: string;
   subCity?: string;
   neighborhood?: string;
+  latitude?: number | string | null;
+  longitude?: number | string | null;
   bedrooms: number | string;
   bathrooms: number | string;
   maxGuests: number | string;
@@ -58,9 +62,12 @@ export default function HostListingLivePreview({
   title,
   propertyType,
   listingType,
+  address,
   city,
   subCity,
   neighborhood,
+  latitude,
+  longitude,
   bedrooms,
   bathrooms,
   maxGuests,
@@ -653,6 +660,23 @@ export default function HostListingLivePreview({
                     ) : (
                       <p className="text-xs italic text-[#73776F]">No amenities selected yet.</p>
                     )}
+                  </div>
+
+                  {/* Where you'll be (Interactive Public Map) */}
+                  <div className="space-y-3 pb-6 border-b border-[#EEF3EF]">
+                    <h3 className="text-sm font-black uppercase tracking-wider text-[#73776F]">
+                      Where you&apos;ll be
+                    </h3>
+                    <PropertyPublicMap
+                      latitude={latitude ? Number(latitude) : null}
+                      longitude={longitude ? Number(longitude) : null}
+                      title={title || 'Your Property'}
+                      address={address}
+                      city={city}
+                      subCity={subCity}
+                      neighborhood={neighborhood}
+                      showExactPin={true}
+                    />
                   </div>
 
                   {/* House Rules */}

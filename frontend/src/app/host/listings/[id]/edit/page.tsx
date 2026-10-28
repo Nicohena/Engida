@@ -15,6 +15,7 @@ import HostRoomsManager from '../../../../../components/host/HostRoomsManager';
 import AiPricingWidget from '../../../../../components/host/AiPricingWidget';
 import AiListingCopilotModal, { type CopilotMode } from '../../../../../components/host/AiListingCopilotModal';
 import HostListingLivePreview from '../../../../../components/host/HostListingLivePreview';
+import HostLocationPickerMap from '../../../../../components/maps/HostLocationPickerMap';
 import {
   ArrowLeft,
   Building2,
@@ -669,6 +670,46 @@ export default function EditListingPage() {
                 </div>
               </div>
 
+              {/* Interactive Real Map Location Picker */}
+              <div className="space-y-2 pt-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-sm font-bold text-[#252923]">
+                    Interactive Property Location Map <span className="text-xs text-[#73776F] font-normal">(Drag pin or search to auto-fill address)</span>
+                  </label>
+                  <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                    Live Auto-Fill Active
+                  </span>
+                </div>
+                <HostLocationPickerMap
+                  initialLat={form.latitude ? parseFloat(form.latitude) : (listing.latitude ? Number(listing.latitude) : null)}
+                  initialLng={form.longitude ? parseFloat(form.longitude) : (listing.longitude ? Number(listing.longitude) : null)}
+                  initialAddress={form.address}
+                  initialCity={form.city}
+                  initialSubCity={form.subCity}
+                  initialNeighborhood={form.neighborhood}
+                  onLocationChange={(loc) => {
+                    setForm((prev) => {
+                      if (!prev) return prev;
+                      return {
+                        ...prev,
+                        address: loc.address || prev.address,
+                        city: loc.city || prev.city,
+                        subCity: loc.subCity || prev.subCity,
+                        neighborhood: loc.neighborhood || prev.neighborhood,
+                        latitude: loc.latitude.toString(),
+                        longitude: loc.longitude.toString(),
+                      };
+                    });
+                    setErrors((prev) => {
+                      const next = { ...prev };
+                      if (loc.address) delete next.address;
+                      if (loc.city) delete next.city;
+                      return next;
+                    });
+                  }}
+                />
+              </div>
+
               {/* Address inputs */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
                 <div className="sm:col-span-2 space-y-1.5">
@@ -1219,9 +1260,12 @@ export default function EditListingPage() {
             title={form.title}
             propertyType={form.propertyType}
             listingType={listing.listingType}
+            address={form.address}
             city={form.city}
             subCity={form.subCity}
             neighborhood={form.neighborhood}
+            latitude={form.latitude}
+            longitude={form.longitude}
             bedrooms={form.bedrooms}
             bathrooms={form.bathrooms}
             maxGuests={form.maxGuests}

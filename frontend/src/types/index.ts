@@ -92,6 +92,12 @@ export interface Property {
   address: string;
   city: string;
   country: string;
+  subCity?: string | null;
+  neighborhood?: string | null;
+  woreda?: string | null;
+  region?: string | null;
+  latitude?: number | string | null;
+  longitude?: number | string | null;
   pricePerNight: string;
   maxGuests: number;
   bedrooms: number;
