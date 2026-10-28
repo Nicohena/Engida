@@ -45,6 +45,22 @@ import { ReconciliationIssue } from '../modules/finance/entities/reconciliation-
 import { JobRun } from '../modules/finance/entities/job-run.entity';
 import { FinanceSetting } from '../modules/finance/entities/finance-setting.entity';
 
+import { PropertyCategory } from '../modules/catalog/entities/property-category.entity';
+import { Destination } from '../modules/catalog/entities/destination.entity';
+import { Coupon } from '../modules/coupons/entities/coupon.entity';
+import { CouponRedemption } from '../modules/coupons/entities/coupon-redemption.entity';
+import { FaqItem } from '../modules/content/entities/faq-item.entity';
+import { ContentBlock } from '../modules/content/entities/content-block.entity';
+
+const phase4Entities = [
+  PropertyCategory,
+  Destination,
+  Coupon,
+  CouponRedemption,
+  FaqItem,
+  ContentBlock,
+];
+
 const financeEntities = [
   Payment,
   ProviderEvent,
@@ -96,6 +112,7 @@ const AppDataSource = new DataSource(
           CaseEvent,
           CannedResponse,
           ...financeEntities,
+          ...phase4Entities,
         ],
         migrations: [path.join(__dirname, 'migrations/*{.ts,.js}')],
         synchronize: false,
@@ -131,6 +148,7 @@ const AppDataSource = new DataSource(
           CaseEvent,
           CannedResponse,
           ...financeEntities,
+          ...phase4Entities,
         ],
         migrations: [path.join(__dirname, 'migrations/*{.ts,.js}')],
         synchronize: false,
