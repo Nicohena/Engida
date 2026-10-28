@@ -24,6 +24,12 @@ export enum Permission {
   CASES_MANAGE = 'cases.manage',
   CASES_COMPENSATE = 'cases.compensate',
   AUDIT_VIEW = 'audit.view',
+  FINANCE_VIEW = 'finance.view',
+  FINANCE_REFUNDS = 'finance.refunds',
+  FINANCE_PAYOUTS = 'finance.payouts',
+  FINANCE_RECONCILE = 'finance.reconcile',
+  FINANCE_CONFIG = 'finance.config',
+  FINANCE_EXPORT = 'finance.export',
 }
 
 export const ALL_PERMISSIONS: Permission[] = Object.values(Permission);
@@ -33,6 +39,7 @@ export const ALL_PERMISSIONS: Permission[] = Object.values(Permission);
  *
  * Phase 1 is deliberately code-defined: roles are stable and permission changes
  * go through code review. Phase 2 adds the booking and case permissions here.
+ * Phase 3 adds complete finance and escrow operations permissions.
  */
 export const ADMIN_ROLE_PERMISSIONS: Record<AdminRole, Permission[]> = {
   [AdminRole.SUPER_ADMIN]: ALL_PERMISSIONS,
@@ -87,6 +94,12 @@ export const ADMIN_ROLE_PERMISSIONS: Record<AdminRole, Permission[]> = {
     Permission.LISTINGS_VIEW,
     Permission.BOOKINGS_VIEW,
     Permission.AUDIT_VIEW,
+    Permission.FINANCE_VIEW,
+    Permission.FINANCE_REFUNDS,
+    Permission.FINANCE_PAYOUTS,
+    Permission.FINANCE_RECONCILE,
+    Permission.FINANCE_CONFIG,
+    Permission.FINANCE_EXPORT,
   ],
 };
 
