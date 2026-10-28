@@ -86,7 +86,10 @@ export default function HostLocationPickerMapInner({
   const [showDropdown, setShowDropdown] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [isReverseGeocoding, setIsReverseGeocoding] = useState(false);
-  const [locateError, setLocateError] = useState<string | null>(null);
+  const [locateMessage, setLocateMessage] = useState<{
+    text: string;
+    type: 'success' | 'info';
+  } | null>(null);
 
   // Custom luxury SVG Pin Marker
   const createCustomPinIcon = () => {
@@ -287,28 +290,55 @@ export default function HostLocationPickerMapInner({
     setAddressSummary(`${preset.name}, ${preset.subCity ? preset.subCity + ', ' : ''}${preset.city}`);
   };
 
+  // Fallback to IP geolocation when browser GPS is blocked or unavailable
+  const fallbackIpGeolocation = async () => {
+    try {
+      const res = await fetch('https://ipapi.co/json/');
+      if (res.ok) {
+        const data = await res.json();
+        if (data && typeof data.latitude === 'number' && typeof data.longitude === 'number') {
+          setMapLocation(data.latitude, data.longitude, 15);
+          reverseGeocode(data.latitude, data.longitude);
+          setIsLocating(false);
+          setLocateMessage({
+            text: `Pinpointed via network (${data.city || 'Addis Ababa'}). Drag pin to exact building.`,
+            type: 'success',
+          });
+          setTimeout(() => setLocateMessage(null), 5000);
+          return true;
+        }
+      }
+    } catch {
+      // Ignore
+    }
+    // Smooth fallback to central Addis Ababa
+    setMapLocation(8.9982, 38.7844, 15);
+    reverseGeocode(8.9982, 38.7844);
+    setIsLocating(false);
+    setLocateMessage({
+      text: 'Centered on Addis Ababa. Drag pin to your building or pick a preset below.',
+      type: 'info',
+    });
+    setTimeout(() => setLocateMessage(null), 5000);
+    return false;
+  };
+
   // Geolocation button
-  const handleUseCurrentLocation = () => {
-    // If on insecure HTTP context on non-localhost IP, modern browsers strictly block geolocation API
-    if (
+  const handleUseCurrentLocation = async () => {
+    setIsLocating(true);
+    setLocateMessage(null);
+
+    // If on insecure HTTP context on non-localhost IP, modern browsers block geolocation API
+    const isInsecureNonLocal =
       typeof window !== 'undefined' &&
       window.location.protocol !== 'https:' &&
       window.location.hostname !== 'localhost' &&
-      window.location.hostname !== '127.0.0.1'
-    ) {
-      setLocateError(
-        'Browser GPS requires an HTTPS or localhost connection. You can use the search bar above or click one of the popular Ethiopian hubs below (e.g. Bole, Kazanchis, Atlas) to immediately pinpoint your property.'
-      );
+      window.location.hostname !== '127.0.0.1';
+
+    if (isInsecureNonLocal || !navigator.geolocation) {
+      await fallbackIpGeolocation();
       return;
     }
-
-    if (!navigator.geolocation) {
-      setLocateError('Geolocation is not supported by your browser.');
-      return;
-    }
-
-    setIsLocating(true);
-    setLocateError(null);
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -317,19 +347,17 @@ export default function HostLocationPickerMapInner({
         setMapLocation(lat, lng, 17);
         reverseGeocode(lat, lng);
         setIsLocating(false);
+        setLocateMessage({
+          text: 'Accurately located via device GPS. Drag pin to fine-tune.',
+          type: 'success',
+        });
+        setTimeout(() => setLocateMessage(null), 5000);
       },
-      (err) => {
-        setIsLocating(false);
-        if (err.code === 1) {
-          setLocateError('GPS permission was denied by your browser. Use the search bar or presets below to select your property location.');
-        } else if (err.code === 2) {
-          setLocateError('GPS position unavailable. Please use the search bar or presets below.');
-        } else {
-          setLocateError('Could not obtain current location. Use the search bar or presets to pinpoint.');
-        }
-        console.warn('Geolocation error:', err.message);
+      async (err) => {
+        console.warn('Geolocation error, falling back to IP:', err.message);
+        await fallbackIpGeolocation();
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 6000, maximumAge: 60000 }
     );
   };
 
@@ -391,19 +419,29 @@ export default function HostLocationPickerMapInner({
         )}
       </div>
 
-      {locateError && (
-        <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800 flex items-center justify-between gap-2 animate-in fade-in">
+      {locateMessage && (
+        <div
+          className={`p-2.5 px-3.5 rounded-xl text-xs font-medium flex items-center justify-between gap-2 transition animate-in fade-in ${
+            locateMessage.type === 'success'
+              ? 'bg-emerald-50 border border-emerald-200 text-emerald-800'
+              : 'bg-[#FCFAF6] border border-[#E5E0D5] text-[#252923]'
+          }`}
+        >
           <div className="flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0 text-amber-600" />
-            <span>{locateError}</span>
+            {locateMessage.type === 'success' ? (
+              <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+            ) : (
+              <Compass className="w-4 h-4 text-[#234B36] shrink-0" />
+            )}
+            <span>{locateMessage.text}</span>
           </div>
           <button
             type="button"
-            onClick={() => setLocateError(null)}
-            className="p-1 rounded-md hover:bg-amber-100 text-amber-700 transition cursor-pointer shrink-0"
-            aria-label="Dismiss alert"
+            onClick={() => setLocateMessage(null)}
+            className="p-1 rounded-md hover:bg-black/5 transition cursor-pointer shrink-0"
+            aria-label="Dismiss message"
           >
-            <X className="w-3.5 h-3.5" />
+            <X className="w-3.5 h-3.5 opacity-60" />
           </button>
         </div>
       )}
