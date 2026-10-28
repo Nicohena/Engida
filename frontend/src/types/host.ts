@@ -438,21 +438,30 @@ export interface AiKeyPriceDriver {
   type: 'positive' | 'neutral' | 'premium';
 }
 
+export interface AiPriceStrategyTier {
+  rate: number;
+  label: string;
+  badge?: string;
+  rationale: string;
+  occupancyTarget?: string;
+}
+
 export interface AiPricePredictionResponse {
   predictedPrice: number;
-  predictedPriceUsd: number;
   currency: 'ETB';
-  exchangeRate: number;
   confidence: number;
   priceRange: {
     min: number;
     max: number;
-    minUsd: number;
-    maxUsd: number;
   };
+  tiers?: {
+    fastBooking: AiPriceStrategyTier;
+    optimal: AiPriceStrategyTier;
+    peakSeason: AiPriceStrategyTier;
+  };
+  hostTip?: string;
   breakdown: {
     baseRateEtb: number;
-    baseRateUsd: number;
     locationMultiplier: number;
     locationTier: string;
     propertyTypeMultiplier: number;
@@ -463,15 +472,21 @@ export interface AiPricePredictionResponse {
 
 export interface GenerateListingContentRequest {
   propertyType: string;
+  listingType?: string; // 'RENTAL' | 'SALE'
   city: string;
   subCity?: string;
   neighborhood?: string;
   bedrooms: number;
   bathrooms: number;
   maxGuests: number;
+  areaSqm?: number;
   amenities: string[];
   language?: 'en' | 'am';
   tone?: 'luxury' | 'warm' | 'business';
+  descriptionLength?: 'short' | 'medium' | 'long';
+  titleLength?: 'concise' | 'standard' | 'extended';
+  coverImage?: string;
+  images?: string[];
 }
 
 export interface GenerateListingContentResponse {

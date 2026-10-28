@@ -16,6 +16,10 @@ export class PredictPriceDto {
   @IsString()
   propertyType: string;
 
+  @IsString()
+  @IsOptional()
+  listingType?: string; // 'RENTAL' | 'SALE'
+
   @IsInt()
   @Min(0)
   @Type(() => Number)
@@ -31,9 +35,23 @@ export class PredictPriceDto {
   @Type(() => Number)
   maxGuests: number;
 
+  @IsNumber()
+  @IsOptional()
+  @Type(() => Number)
+  areaSqm?: number;
+
   @IsArray()
   @IsString({ each: true })
   amenities: string[];
+
+  @IsString()
+  @IsOptional()
+  coverImage?: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  images?: string[];
 }
 
 export class RecommendationsDto {
@@ -65,6 +83,10 @@ export class GenerateListingContentDto {
   propertyType: string;
 
   @IsString()
+  @IsOptional()
+  listingType?: string; // 'RENTAL' | 'SALE'
+
+  @IsString()
   city: string;
 
   @IsString()
@@ -90,6 +112,11 @@ export class GenerateListingContentDto {
   @Type(() => Number)
   maxGuests: number;
 
+  @IsNumber()
+  @IsOptional()
+  @Type(() => Number)
+  areaSqm?: number;
+
   @IsArray()
   @IsString({ each: true })
   amenities: string[];
@@ -101,4 +128,21 @@ export class GenerateListingContentDto {
   @IsString()
   @IsOptional()
   tone?: 'luxury' | 'warm' | 'business';
+
+  @IsString()
+  @IsOptional()
+  descriptionLength?: 'short' | 'medium' | 'long';
+
+  @IsString()
+  @IsOptional()
+  titleLength?: 'concise' | 'standard' | 'extended';
+
+  @IsString()
+  @IsOptional()
+  coverImage?: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  images?: string[];
 }

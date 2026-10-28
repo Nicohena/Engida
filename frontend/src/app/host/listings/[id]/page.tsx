@@ -1029,7 +1029,7 @@ export default function ListingDetailPage() {
           <div className="bg-white border border-[#d8d0c8] rounded-2xl p-6 space-y-5 shadow-sm">
             <div>
               <span className="text-xs font-black uppercase tracking-wider text-[#605850]">
-                {listing.listingType === 'RENTAL' ? 'Nightly Rate' : 'Total Valuation'}
+                {listing.listingType === 'RENTAL' ? 'Price per night' : 'Total Valuation'}
               </span>
               <div className="text-2xl font-black text-[#3a302a] mt-1">{formattedPrice}</div>
             </div>
