@@ -78,7 +78,7 @@ describe('Admin RBAC permissions', () => {
     expect(permissions).not.toContain(Permission.AUDIT_VIEW);
   });
 
-  it('keeps booking managers read-only until phase two permissions exist', () => {
+  it('gives booking managers booking and case controls without moderation powers', () => {
     const permissions = getAdminPermissions({
       role: UserRole.ADMIN,
       adminRole: AdminRole.BOOKING_MANAGER,
@@ -89,19 +89,30 @@ describe('Admin RBAC permissions', () => {
         Permission.DASHBOARD_VIEW,
         Permission.USERS_VIEW,
         Permission.REPORTS_VIEW,
+        Permission.BOOKINGS_VIEW,
+        Permission.BOOKINGS_MANAGE,
+        Permission.CASES_VIEW,
+        Permission.CASES_MANAGE,
       ]),
     );
     expect(permissions).not.toContain(Permission.USERS_MANAGE);
     expect(permissions).not.toContain(Permission.REPORTS_RESOLVE);
+    expect(permissions).not.toContain(Permission.REVIEWS_MODERATE);
   });
 
-  it('gives finance managers audit access without moderation powers', () => {
+  it('gives finance managers audit access and finance capabilities without moderation powers', () => {
     const permissions = getAdminPermissions({
       role: UserRole.ADMIN,
       adminRole: AdminRole.FINANCE_MANAGER,
     });
 
     expect(permissions).toContain(Permission.AUDIT_VIEW);
+    expect(permissions).toContain(Permission.FINANCE_VIEW);
+    expect(permissions).toContain(Permission.FINANCE_REFUNDS);
+    expect(permissions).toContain(Permission.FINANCE_PAYOUTS);
+    expect(permissions).toContain(Permission.FINANCE_RECONCILE);
+    expect(permissions).toContain(Permission.FINANCE_CONFIG);
+    expect(permissions).toContain(Permission.FINANCE_EXPORT);
     expect(permissions).not.toContain(Permission.REPORTS_VIEW);
     expect(permissions).not.toContain(Permission.REVIEWS_MODERATE);
   });

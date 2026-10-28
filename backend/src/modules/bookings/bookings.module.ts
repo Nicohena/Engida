@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Booking } from './entities/booking.entity';
+import { BookingStatusHistory } from './entities/booking-status-history.entity';
+import { CancellationRequest } from './entities/cancellation-request.entity';
 import { Property } from '../properties/entities/property.entity';
 import { Room } from '../properties/entities/room.entity';
 import { AvailabilityBlock } from '../properties/entities/availability-block.entity';
@@ -11,7 +13,15 @@ import { BookingsController } from './bookings.controller';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Booking, Property, Room, AvailabilityBlock, HostProfile]),
+    TypeOrmModule.forFeature([
+      Booking,
+      BookingStatusHistory,
+      CancellationRequest,
+      Property,
+      Room,
+      AvailabilityBlock,
+      HostProfile,
+    ]),
     NotificationsModule,
   ],
   controllers: [BookingsController],

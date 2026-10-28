@@ -18,12 +18,18 @@ import { AuditModule } from '../audit/audit.module';
 import { IdentityVerificationService } from './identity-verification.service';
 import { IdentityVerificationController } from './identity-verification.controller';
 
+import { FinanceModule } from '../finance/finance.module';
+import { Payout } from '../finance/entities/payout.entity';
+import { PayoutAccount } from '../finance/entities/payout-account.entity';
+import { EscrowHold } from '../finance/entities/escrow-hold.entity';
+
 @Module({
   imports: [
     CloudinaryModule,
     ListingModerationModule,
     NotificationsModule,
     AuditModule,
+    FinanceModule,
     TypeOrmModule.forFeature([
       Property,
       Room,
@@ -34,6 +40,9 @@ import { IdentityVerificationController } from './identity-verification.controll
       User,
       ListingReview,
       Review,
+      Payout,
+      PayoutAccount,
+      EscrowHold,
     ]),
   ],
   controllers: [HostController, IdentityVerificationController],

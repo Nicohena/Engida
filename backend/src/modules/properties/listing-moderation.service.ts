@@ -448,14 +448,14 @@ export class ListingModerationService {
       .leftJoinAndSelect('review.property', 'property')
       .leftJoinAndSelect('review.submittedByHost', 'host')
       .leftJoinAndSelect('review.reviewedByAdmin', 'admin')
-      .orderBy('review.submitted_at', 'ASC');
+      .orderBy('review.submittedAt', 'ASC');
 
     if (query.status) {
       qb.andWhere('review.status = :status', { status: query.status });
     }
 
     if (query.submissionType) {
-      qb.andWhere('review.submission_type = :submissionType', {
+      qb.andWhere('review.submissionType = :submissionType', {
         submissionType: query.submissionType,
       });
     }

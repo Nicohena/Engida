@@ -35,7 +35,18 @@ export const ADMIN_PERMISSIONS = {
   REVIEWS_MODERATE: 'reviews.moderate',
   REPORTS_VIEW: 'reports.view',
   REPORTS_RESOLVE: 'reports.resolve',
+  BOOKINGS_VIEW: 'bookings.view',
+  BOOKINGS_MANAGE: 'bookings.manage',
+  CASES_VIEW: 'cases.view',
+  CASES_MANAGE: 'cases.manage',
+  CASES_COMPENSATE: 'cases.compensate',
   AUDIT_VIEW: 'audit.view',
+  FINANCE_VIEW: 'finance.view',
+  FINANCE_REFUNDS: 'finance.refunds',
+  FINANCE_PAYOUTS: 'finance.payouts',
+  FINANCE_RECONCILE: 'finance.reconcile',
+  FINANCE_CONFIG: 'finance.config',
+  FINANCE_EXPORT: 'finance.export',
 } as const;
 
 export type Permission = (typeof ADMIN_PERMISSIONS)[keyof typeof ADMIN_PERMISSIONS];
@@ -114,6 +125,11 @@ export interface AdminDashboardSummary {
     hiddenListings: number;
     totalReviews: number;
     openReports: number;
+    pendingBookings: number;
+    confirmedBookings: number;
+    openCases: number;
+    overdueCases: number;
+    unassignedCases: number;
   };
   recentAudit: AuditLogEntry[];
 }

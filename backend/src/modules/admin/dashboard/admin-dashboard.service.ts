@@ -1,12 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { In, IsNull, LessThan, Not, Repository } from 'typeorm';
 import { User, UserRole } from '../../../users/entities/user.entity';
 import { HostProfile, HostVerificationStatus } from '../../../users/entities/host-profile.entity';
 import { Property, ListingStatus } from '../../properties/entities/property.entity';
 import { ListingReview, ReviewStatus } from '../../properties/entities/listing-review.entity';
 import { Review } from '../../reviews/entities/review.entity';
 import { Report, ReportStatus } from '../../reports/entities/report.entity';
+import { Booking, BookingStatus } from '../../bookings/entities/booking.entity';
+import { Case, CaseStatus } from '../cases/entities/case.entity';
 import { AuditService } from '../../audit/audit.service';
 import { AuditLog } from '../../audit/entities/audit-log.entity';
 import { hasPermission, Permission } from '../rbac/permissions';
@@ -26,6 +28,10 @@ export class AdminDashboardService {
     private readonly reviewRepository: Repository<Review>,
     @InjectRepository(Report)
     private readonly reportRepository: Repository<Report>,
+    @InjectRepository(Booking)
+    private readonly bookingRepository: Repository<Booking>,
+    @InjectRepository(Case)
+    private readonly caseRepository: Repository<Case>,
     private readonly auditService: AuditService,
   ) {}
 
@@ -41,6 +47,11 @@ export class AdminDashboardService {
       hiddenListings,
       totalReviews,
       openReports,
+      pendingBookings,
+      confirmedBookings,
+      openCases,
+      overdueCases,
+      unassignedCases,
       recentAudit,
     ] = await Promise.all([
       this.listingReviewRepository.count({ where: { status: ReviewStatus.PENDING } }),
@@ -62,6 +73,29 @@ export class AdminDashboardService {
           status: In([ReportStatus.OPEN, ReportStatus.INVESTIGATING]),
         },
       }),
+      this.bookingRepository.count({
+        where: { status: BookingStatus.PENDING },
+      }),
+      this.bookingRepository.count({
+        where: { status: BookingStatus.CONFIRMED },
+      }),
+      this.caseRepository.count({
+        where: {
+          status: Not(In([CaseStatus.RESOLVED, CaseStatus.CLOSED])),
+        },
+      }),
+      this.caseRepository.count({
+        where: {
+          status: Not(In([CaseStatus.RESOLVED, CaseStatus.CLOSED])),
+          resolutionDueAt: LessThan(new Date()),
+        },
+      }),
+      this.caseRepository.count({
+        where: {
+          status: Not(In([CaseStatus.RESOLVED, CaseStatus.CLOSED])),
+          assigneeId: IsNull(),
+        },
+      }),
       canViewAudit
         ? this.auditService.list({ page: 1, limit: 8 })
         : Promise.resolve({ data: [] as AuditLog[] }),
@@ -78,6 +112,11 @@ export class AdminDashboardService {
         hiddenListings,
         totalReviews,
         openReports,
+        pendingBookings,
+        confirmedBookings,
+        openCases,
+        overdueCases,
+        unassignedCases,
       },
       recentAudit: recentAudit.data,
     };

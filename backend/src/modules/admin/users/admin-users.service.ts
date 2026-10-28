@@ -18,7 +18,8 @@ import { Property } from '../../properties/entities/property.entity';
 import { Booking } from '../../bookings/entities/booking.entity';
 import { Review } from '../../reviews/entities/review.entity';
 import { RefreshToken } from '../../../auth/entities/refresh-token.entity';
-import { AuditService } from '../../audit/audit.service';
+import { AuditRequestContext, AuditService } from '../../audit/audit.service';
+import { buildCsv } from '../utils/csv';
 import { getAdminPermissions, hasPermission, Permission } from '../rbac/permissions';
 import {
   CreateAdminUserDto,
@@ -26,6 +27,8 @@ import {
   UpdateAdminRoleDto,
   UpdateUserStatusDto,
 } from './dto/admin-users.dto';
+
+const CSV_LIMIT = 5000;
 
 export interface AdminUserView {
   id: string;
@@ -69,11 +72,7 @@ export class AdminUsersService {
     private readonly auditService: AuditService,
   ) {}
 
-  async list(query: QueryAdminUsersDto): Promise<PaginatedAdminUsers> {
-    const page = Math.max(query.page || 1, 1);
-    const limit = Math.min(query.limit || 20, 100);
-    const skip = (page - 1) * limit;
-
+  private buildListQuery(query: QueryAdminUsersDto) {
     const qb = this.userRepository
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.hostProfile', 'hostProfile')
@@ -114,6 +113,15 @@ export class AdminUsersService {
       qb.andWhere('user.isActive = :isActive', { isActive: query.isActive });
     }
 
+    return qb;
+  }
+
+  async list(query: QueryAdminUsersDto): Promise<PaginatedAdminUsers> {
+    const page = Math.max(query.page || 1, 1);
+    const limit = Math.min(query.limit || 20, 100);
+    const skip = (page - 1) * limit;
+
+    const qb = this.buildListQuery(query);
     const sort = query.sort || 'createdAt';
     const order = (query.order || 'desc').toUpperCase() as 'ASC' | 'DESC';
     qb.orderBy(`user.${sort}`, order);
@@ -127,6 +135,59 @@ export class AdminUsersService {
       limit,
       totalPages: Math.ceil(total / limit) || 1,
     };
+  }
+
+  async exportCsv(
+    query: QueryAdminUsersDto,
+    actor: User,
+    context: AuditRequestContext,
+  ): Promise<string> {
+    const qb = this.buildListQuery(query);
+    const sort = query.sort || 'createdAt';
+    const order = (query.order || 'desc').toUpperCase() as 'ASC' | 'DESC';
+    const users = await qb.orderBy(`user.${sort}`, order).take(CSV_LIMIT).getMany();
+
+    const rows = users.map((user) => [
+      user.id,
+      user.name,
+      user.email,
+      user.phone ?? '',
+      user.role,
+      user.adminRole ?? '',
+      user.isActive ? 'Active' : 'Suspended',
+      user.hostProfile?.verificationStatus ?? '',
+      user.createdAt.toISOString(),
+      user.updatedAt.toISOString(),
+    ]);
+    const header = [
+      'User ID',
+      'Name',
+      'Email',
+      'Phone',
+      'Account role',
+      'Admin role',
+      'Status',
+      'Host verification',
+      'Created',
+      'Updated',
+    ];
+
+    await this.auditService.record({
+      actor,
+      action: 'user.list_exported',
+      entityType: 'user',
+      metadata: {
+        rows: rows.length,
+        filters: {
+          role: query.role ?? null,
+          adminRole: query.adminRole ?? null,
+          isActive: query.isActive ?? null,
+        },
+      },
+      ...context,
+    });
+
+    return buildCsv(header, rows);
   }
 
   async getDetail(id: string) {
@@ -145,7 +206,7 @@ export class AdminUsersService {
       this.bookingRepository
         .createQueryBuilder('booking')
         .innerJoin('booking.property', 'property')
-        .where('property.host_id = :id', { id })
+        .where('property.hostId = :id', { id })
         .getCount(),
       this.reviewRepository.count({ where: { userId: id } }),
     ]);

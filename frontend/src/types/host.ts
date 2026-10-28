@@ -330,6 +330,36 @@ export interface HostEarningsSummary {
   cancelledCount: number;
   cancelledBookingValue: number;
   monthlyBreakdown: MonthlyEarningItem[];
+  ledgerAvailableMinor?: string;
+  ledgerPendingEscrowMinor?: string;
+  ledgerPaidTotalMinor?: string;
+}
+
+export interface HostPayoutAccount {
+  id: string;
+  provider: string;
+  accountName: string;
+  accountNumberLast4: string;
+  phoneLast4?: string | null;
+  bankName?: string | null;
+  bankBranch?: string | null;
+  currency: string;
+  status: 'PENDING' | 'VERIFIED' | 'REJECTED' | 'DISABLED';
+  verifiedAt?: string | null;
+  createdAt: string;
+}
+
+export interface HostPayoutRow {
+  id: string;
+  amountMinor: string;
+  currency: string;
+  status: 'SCHEDULED' | 'PENDING_APPROVAL' | 'APPROVED' | 'PROCESSING' | 'PAID' | 'FAILED' | 'CANCELLED';
+  periodStart: string;
+  periodEnd: string;
+  providerTransferId?: string | null;
+  paidAt?: string | null;
+  accountLast4: string;
+  createdAt: string;
 }
 
 export interface HostTransactionItem {

@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { apiFetch } from '../../../lib/api';
 import { useAuth } from '../../../context/AuthContext';
+import AdminPageHeader from '../../../components/admin/AdminPageHeader';
 import {
   ADMIN_PERMISSIONS,
   REPORT_REASON_LABELS,
@@ -56,13 +57,13 @@ function formatDateTime(value: string): string {
 function statusClasses(status: ReportStatus): string {
   switch (status) {
     case 'OPEN':
-      return 'bg-amber-50 text-amber-700 border-amber-200';
+      return 'bg-[#f7ebda] text-[#8a5e20] border-[#ecd9c2]';
     case 'INVESTIGATING':
-      return 'bg-blue-50 text-blue-700 border-blue-200';
+      return 'bg-[#f2eadf] text-[#8a5e20] border-[#e3d5c1]';
     case 'RESOLVED':
-      return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      return 'bg-[#edf1e8] text-[#4f6648] border-[#d6dfcd]';
     default:
-      return 'bg-slate-100 text-slate-600 border-slate-200';
+      return 'bg-[#efe7dc] text-[#6c5d52] border-[#d8d0c8]';
   }
 }
 
@@ -91,7 +92,7 @@ function Modal({ open, onClose, title, description, children, footer, wide }: Mo
       <button
         type="button"
         aria-label="Close dialog"
-        className="absolute inset-0 bg-slate-950/50 backdrop-blur-[1px]"
+        className="absolute inset-0 bg-[#2f2722]/55 backdrop-blur-[1px]"
         onClick={onClose}
       />
       <div
@@ -102,24 +103,24 @@ function Modal({ open, onClose, title, description, children, footer, wide }: Mo
           wide ? 'sm:max-w-3xl' : 'sm:max-w-lg'
         }`}
       >
-        <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-5 py-4">
+        <div className="flex items-start justify-between gap-4 border-b border-[#d8d0c8] px-5 py-4">
           <div>
-            <h2 id="report-dialog-title" className="text-base font-bold text-slate-900">
+            <h2 id="report-dialog-title" className="text-base font-bold text-[#3a302a]">
               {title}
             </h2>
-            {description && <p className="mt-0.5 text-xs text-slate-500">{description}</p>}
+            {description && <p className="mt-0.5 text-xs text-[#7a6b5f]">{description}</p>}
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+            className="rounded-lg p-1.5 text-[#7a6b5f] hover:bg-[#efe7dc] hover:text-[#6c5d52]"
             aria-label="Close"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
         <div className="flex-1 overflow-y-auto px-5 py-5">{children}</div>
-        {footer && <div className="border-t border-slate-200 bg-slate-50/80 px-5 py-3.5">{footer}</div>}
+        {footer && <div className="border-t border-[#d8d0c8] bg-[#f6f0e8]/80 px-5 py-3.5">{footer}</div>}
       </div>
     </div>
   );
@@ -295,42 +296,36 @@ export default function AdminReportsPage() {
   const terminal = detail?.status === 'RESOLVED' || detail?.status === 'DISMISSED';
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#33599E]">
-            Trust and safety
-          </p>
-          <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-900">Reports</h2>
-          <p className="mt-1 max-w-2xl text-sm text-slate-500">
-            Triage reports about listings and guest reviews. Closing a report requires a written
-            resolution note and is recorded in the audit log.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => setRefreshTick((tick) => tick + 1)}
-          disabled={loading || !canView}
-          className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-50"
-        >
-          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
-        </button>
-      </div>
+    <div className="space-y-8">
+      <AdminPageHeader
+        title="Reports"
+        description="Triage reports about listings and guest reviews. Closing a report requires a written resolution note and is recorded in the audit log."
+        actions={
+          <button
+            type="button"
+            onClick={() => setRefreshTick((tick) => tick + 1)}
+            disabled={loading || !canView}
+            className="admin-btn admin-btn-secondary"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} strokeWidth={1.8} />
+            Refresh
+          </button>
+        }
+      />
 
       {!canView ? (
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-800">
+        <div className="rounded-2xl border border-[#ecd9c2] bg-[#f7ebda] p-6 text-sm text-[#7a531c]">
           Your role does not include permission to view reports.
         </div>
       ) : (
         <>
           <form
             onSubmit={applyFilters}
-            className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5"
+            className="rounded-2xl border border-[#d8d0c8] bg-white p-4 shadow-sm sm:p-5"
           >
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_150px_150px_180px_auto]">
               <div className="relative">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7a6b5f]" />
                 <input
                   type="search"
                   value={draft.q}
@@ -338,7 +333,7 @@ export default function AdminReportsPage() {
                     setDraft((current) => ({ ...current, q: event.target.value }))
                   }
                   placeholder="Search reporter or details"
-                  className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 text-sm text-slate-800 outline-none transition focus:border-[#33599E] focus:bg-white focus:ring-2 focus:ring-[#33599E]/15"
+                  className="h-10 w-full rounded-xl border border-[#d8d0c8] bg-[#f6f0e8] pl-9 pr-3 text-sm text-[#4a3e35] outline-none transition focus:border-[#b3541e] focus:bg-white focus:ring-2 focus:ring-[#b3541e]/15"
                 />
               </div>
 
@@ -347,7 +342,7 @@ export default function AdminReportsPage() {
                 onChange={(event) =>
                   setDraft((current) => ({ ...current, status: event.target.value }))
                 }
-                className="h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-700 outline-none focus:border-[#33599E] focus:bg-white focus:ring-2 focus:ring-[#33599E]/15"
+                className="h-10 rounded-xl border border-[#d8d0c8] bg-[#f6f0e8] px-3 text-sm font-medium text-[#5a4c42] outline-none focus:border-[#b3541e] focus:bg-white focus:ring-2 focus:ring-[#b3541e]/15"
                 aria-label="Filter by report status"
               >
                 <option value="all">All statuses</option>
@@ -362,7 +357,7 @@ export default function AdminReportsPage() {
                 onChange={(event) =>
                   setDraft((current) => ({ ...current, targetType: event.target.value }))
                 }
-                className="h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-700 outline-none focus:border-[#33599E] focus:bg-white focus:ring-2 focus:ring-[#33599E]/15"
+                className="h-10 rounded-xl border border-[#d8d0c8] bg-[#f6f0e8] px-3 text-sm font-medium text-[#5a4c42] outline-none focus:border-[#b3541e] focus:bg-white focus:ring-2 focus:ring-[#b3541e]/15"
                 aria-label="Filter by target type"
               >
                 <option value="all">All targets</option>
@@ -375,7 +370,7 @@ export default function AdminReportsPage() {
                 onChange={(event) =>
                   setDraft((current) => ({ ...current, reason: event.target.value }))
                 }
-                className="h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-700 outline-none focus:border-[#33599E] focus:bg-white focus:ring-2 focus:ring-[#33599E]/15"
+                className="h-10 rounded-xl border border-[#d8d0c8] bg-[#f6f0e8] px-3 text-sm font-medium text-[#5a4c42] outline-none focus:border-[#b3541e] focus:bg-white focus:ring-2 focus:ring-[#b3541e]/15"
                 aria-label="Filter by reason"
               >
                 <option value="all">All reasons</option>
@@ -389,7 +384,7 @@ export default function AdminReportsPage() {
               <div className="flex items-center gap-2">
                 <button
                   type="submit"
-                  className="inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#33599E] px-4 text-sm font-semibold text-white hover:bg-[#284A86]"
+                  className="inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#b3541e] px-4 text-sm font-semibold text-white hover:bg-[#934313]"
                 >
                   Apply
                 </button>
@@ -403,7 +398,7 @@ export default function AdminReportsPage() {
                     draft.targetType === 'all' &&
                     draft.reason === 'all'
                   }
-                  className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-40"
+                  className="inline-flex h-10 items-center justify-center rounded-xl border border-[#d8d0c8] bg-white px-3 text-sm font-semibold text-[#6c5d52] hover:bg-[#f6f0e8] disabled:opacity-40"
                 >
                   Clear
                 </button>
@@ -411,14 +406,14 @@ export default function AdminReportsPage() {
             </div>
 
             <div className="mt-3 flex items-center justify-between">
-              <p className="text-xs font-semibold text-slate-500">
+              <p className="text-xs font-semibold text-[#7a6b5f]">
                 {total.toLocaleString()} report{total === 1 ? '' : 's'}
               </p>
               {hasFilters && (
                 <button
                   type="button"
                   onClick={clearFilters}
-                  className="text-xs font-bold text-[#33599E] hover:text-[#284A86]"
+                  className="text-xs font-bold text-[#b3541e] hover:text-[#934313]"
                 >
                   Clear all filters
                 </button>
@@ -427,32 +422,32 @@ export default function AdminReportsPage() {
           </form>
 
           {error && (
-            <div className="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+            <div className="flex items-start gap-3 rounded-2xl border border-[#ecd0c9] bg-[#f8e9e5] p-4 text-sm text-[#8f4035]">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
               <div className="flex-1">
                 <p className="font-semibold">Could not load reports</p>
-                <p className="mt-0.5 text-rose-600">{error}</p>
+                <p className="mt-0.5 text-[#a24b3e]">{error}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setRefreshTick((tick) => tick + 1)}
-                className="rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-100"
+                className="rounded-lg border border-[#ecd0c9] bg-white px-3 py-1.5 text-xs font-bold text-[#8f4035] hover:bg-[#f3dcd6]"
               >
                 Retry
               </button>
             </div>
           )}
 
-          <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <section className="overflow-hidden rounded-2xl border border-[#d8d0c8] bg-white shadow-sm">
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-slate-200">
-                <thead className="bg-slate-50">
+              <table className="min-w-full divide-y divide-[#d8d0c8]">
+                <thead className="bg-[#f6f0e8]">
                   <tr>
                     {['Report', 'Target', 'Reporter', 'Status', 'Opened', 'Actions'].map(
                       (heading) => (
                         <th
                           key={heading}
-                          className={`px-5 py-3 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500 ${
+                          className={`px-5 py-3 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7a6b5f] ${
                             heading === 'Actions' ? 'text-right' : 'text-left'
                           }`}
                         >
@@ -462,33 +457,33 @@ export default function AdminReportsPage() {
                     )}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-[#ece4d9]">
                   {loading && reports.length === 0
                     ? Array.from({ length: 6 }).map((_, index) => (
                         <tr key={index}>
                           <td colSpan={6} className="px-5 py-4">
                             <div className="flex items-center gap-3">
-                              <div className="h-9 w-9 animate-pulse rounded-lg bg-slate-100" />
+                              <div className="h-9 w-9 animate-pulse rounded-lg bg-[#efe7dc]" />
                               <div className="flex-1 space-y-2">
-                                <div className="h-3 w-1/3 animate-pulse rounded bg-slate-100" />
-                                <div className="h-2.5 w-1/2 animate-pulse rounded bg-slate-100" />
+                                <div className="h-3 w-1/3 animate-pulse rounded bg-[#efe7dc]" />
+                                <div className="h-2.5 w-1/2 animate-pulse rounded bg-[#efe7dc]" />
                               </div>
                             </div>
                           </td>
                         </tr>
                       ))
                     : reports.map((report) => (
-                        <tr key={report.id} className="hover:bg-slate-50/70">
+                        <tr key={report.id} className="hover:bg-[#f6f0e8]/70">
                           <td className="max-w-[280px] px-5 py-4">
                             <div className="flex items-start gap-3">
-                              <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-rose-50 text-rose-700">
+                              <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#f8e9e5] text-[#8f4035]">
                                 <Flag className="h-4 w-4" />
                               </div>
                               <div className="min-w-0">
-                                <p className="text-xs font-bold text-slate-800">
+                                <p className="text-xs font-bold text-[#4a3e35]">
                                   {REPORT_REASON_LABELS[report.reason] || report.reason}
                                 </p>
-                                <p className="mt-0.5 line-clamp-2 text-xs text-slate-500">
+                                <p className="mt-0.5 line-clamp-2 text-xs text-[#7a6b5f]">
                                   {report.details || 'No additional details.'}
                                 </p>
                               </div>
@@ -496,30 +491,30 @@ export default function AdminReportsPage() {
                           </td>
                           <td className="px-5 py-4">
                             <div className="flex items-center gap-2">
-                              <span className="text-slate-400">
+                              <span className="text-[#7a6b5f]">
                                 <TargetIcon target={report.target} />
                               </span>
                               <div className="min-w-0">
-                                <p className="max-w-[220px] truncate text-xs font-semibold text-slate-700">
+                                <p className="max-w-[220px] truncate text-xs font-semibold text-[#5a4c42]">
                                   {targetLabel(report.target)}
                                 </p>
-                                <p className="mt-0.5 text-[11px] text-slate-400">
+                                <p className="mt-0.5 text-xs text-[#7a6b5f]">
                                   {report.targetType === 'LISTING' ? 'Listing' : 'Guest review'}
                                 </p>
                               </div>
                             </div>
                           </td>
                           <td className="px-5 py-4">
-                            <p className="max-w-[200px] truncate text-xs font-semibold text-slate-700">
+                            <p className="max-w-[200px] truncate text-xs font-semibold text-[#5a4c42]">
                               {report.reporter?.name || 'Deleted user'}
                             </p>
-                            <p className="mt-0.5 max-w-[200px] truncate text-[11px] text-slate-400">
+                            <p className="mt-0.5 max-w-[200px] truncate text-xs text-[#7a6b5f]">
                               {report.reporter?.email || 'No email'}
                             </p>
                           </td>
                           <td className="px-5 py-4">
                             <span
-                              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-bold ${statusClasses(
+                              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-bold ${statusClasses(
                                 report.status,
                               )}`}
                             >
@@ -535,14 +530,14 @@ export default function AdminReportsPage() {
                               {REPORT_STATUS_LABELS[report.status]}
                             </span>
                           </td>
-                          <td className="whitespace-nowrap px-5 py-4 text-xs font-medium text-slate-500">
+                          <td className="whitespace-nowrap px-5 py-4 text-xs font-medium text-[#7a6b5f]">
                             {formatDate(report.createdAt)}
                           </td>
                           <td className="px-5 py-4 text-right">
                             <button
                               type="button"
                               onClick={() => openDetail(report.id)}
-                              className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-bold text-[#33599E] hover:bg-[#33599E]/5"
+                              className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-bold text-[#b3541e] hover:bg-[#b3541e]/5"
                             >
                               <Eye className="h-3.5 w-3.5" />
                               Review
@@ -556,16 +551,16 @@ export default function AdminReportsPage() {
 
             {!loading && reports.length === 0 && !error && (
               <div className="px-6 py-14 text-center">
-                <Flag className="mx-auto h-10 w-10 text-slate-300" />
-                <h3 className="mt-3 text-base font-bold text-slate-700">No reports found</h3>
-                <p className="mt-1 text-sm text-slate-500">
+                <Flag className="mx-auto h-10 w-10 text-[#c2b6aa]" />
+                <h2 className="mt-3 font-headline text-xl font-semibold tracking-[-0.01em] text-[#3a302a]">No reports found</h2>
+                <p className="mt-1 text-sm text-[#7a6b5f]">
                   {hasFilters ? 'No reports match these filters.' : 'New reports will appear here.'}
                 </p>
                 {hasFilters && (
                   <button
                     type="button"
                     onClick={clearFilters}
-                    className="mt-4 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                    className="mt-4 rounded-xl border border-[#d8d0c8] bg-white px-4 py-2 text-sm font-semibold text-[#5a4c42] hover:bg-[#f6f0e8]"
                   >
                     Clear filters
                   </button>
@@ -573,17 +568,23 @@ export default function AdminReportsPage() {
               </div>
             )}
 
-            <div className="flex flex-col gap-3 border-t border-slate-200 bg-slate-50/60 px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-xs font-medium text-slate-500">
-                Page {page} of {totalPages} · {total.toLocaleString()} report
-                {total === 1 ? '' : 's'}
+            <div className="flex flex-col gap-3 border-t border-[#d8d0c8] bg-[#f6f0e8]/60 px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs font-medium text-[#7a6b5f]">
+                {total === 0 ? (
+                  'No reports to display'
+                ) : (
+                  <>
+                    Page {page} of {totalPages} · {total.toLocaleString()} report
+                    {total === 1 ? '' : 's'}
+                  </>
+                )}
               </p>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setPage((current) => Math.max(1, current - 1))}
                   disabled={page <= 1 || loading}
-                  className="inline-flex h-8 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-40"
+                  className="inline-flex h-8 items-center gap-1 rounded-lg border border-[#d8d0c8] bg-white px-2.5 text-xs font-bold text-[#6c5d52] hover:bg-[#f6f0e8] disabled:opacity-40"
                 >
                   <ChevronLeft className="h-3.5 w-3.5" />
                   Previous
@@ -592,7 +593,7 @@ export default function AdminReportsPage() {
                   type="button"
                   onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
                   disabled={page >= totalPages || loading}
-                  className="inline-flex h-8 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-40"
+                  className="inline-flex h-8 items-center gap-1 rounded-lg border border-[#d8d0c8] bg-white px-2.5 text-xs font-bold text-[#6c5d52] hover:bg-[#f6f0e8] disabled:opacity-40"
                 >
                   Next
                   <ChevronRight className="h-3.5 w-3.5" />
@@ -614,7 +615,7 @@ export default function AdminReportsPage() {
             <button
               type="button"
               onClick={() => setDetailOpen(false)}
-              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              className="rounded-xl border border-[#d8d0c8] bg-white px-4 py-2 text-sm font-semibold text-[#5a4c42] hover:bg-[#f6f0e8]"
             >
               Close
             </button>
@@ -622,7 +623,7 @@ export default function AdminReportsPage() {
               <button
                 type="button"
                 onClick={() => openStatusDialog(detail, 'INVESTIGATING')}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-[#e3d5c1] bg-[#f2eadf] px-3 py-2 text-sm font-semibold text-[#8a5e20] hover:bg-[#efe2ce]"
               >
                 <PlayCircle className="h-4 w-4" />
                 Start investigating
@@ -633,7 +634,7 @@ export default function AdminReportsPage() {
                 <button
                   type="button"
                   onClick={() => openStatusDialog(detail, 'DISMISSED')}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-[#d8d0c8] bg-white px-3 py-2 text-sm font-semibold text-[#5a4c42] hover:bg-[#f6f0e8]"
                 >
                   <XCircle className="h-4 w-4" />
                   Dismiss
@@ -641,7 +642,7 @@ export default function AdminReportsPage() {
                 <button
                   type="button"
                   onClick={() => openStatusDialog(detail, 'RESOLVED')}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-[#5d7554] px-3 py-2 text-sm font-semibold text-white hover:bg-[#4f6648]"
                 >
                   <CheckCircle2 className="h-4 w-4" />
                   Resolve
@@ -652,12 +653,12 @@ export default function AdminReportsPage() {
         }
       >
         {detailLoading ? (
-          <div className="flex flex-col items-center justify-center py-14 text-slate-500">
-            <Loader2 className="h-6 w-6 animate-spin text-[#33599E]" />
+          <div className="flex flex-col items-center justify-center py-14 text-[#7a6b5f]">
+            <Loader2 className="h-6 w-6 animate-spin text-[#b3541e]" />
             <p className="mt-2 text-sm font-medium">Loading report…</p>
           </div>
         ) : detailError ? (
-          <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+          <div className="rounded-xl border border-[#ecd0c9] bg-[#f8e9e5] p-4 text-sm text-[#8f4035]">
             <p className="font-semibold">Could not load report</p>
             <p className="mt-1">{detailError}</p>
           </div>
@@ -665,72 +666,72 @@ export default function AdminReportsPage() {
           <div className="space-y-5">
             <div className="flex flex-wrap items-center gap-2">
               <span
-                className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-bold ${statusClasses(
+                className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-bold ${statusClasses(
                   detail.status,
                 )}`}
               >
                 {REPORT_STATUS_LABELS[detail.status]}
               </span>
-              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-600">
+              <span className="rounded-full bg-[#efe7dc] px-2.5 py-1 text-xs font-bold text-[#6c5d52]">
                 {REPORT_REASON_LABELS[detail.reason] || detail.reason}
               </span>
-              <span className="text-xs text-slate-500">
+              <span className="text-xs text-[#7a6b5f]">
                 Opened {formatDateTime(detail.createdAt)}
               </span>
             </div>
 
             <div>
-              <p className="text-xs font-bold text-slate-700">Reporter details</p>
-              <p className="mt-1 whitespace-pre-wrap rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-700">
+              <p className="text-xs font-bold text-[#5a4c42]">Reporter details</p>
+              <p className="mt-1 whitespace-pre-wrap rounded-xl border border-[#d8d0c8] bg-white p-3 text-sm text-[#5a4c42]">
                 {detail.details || 'No additional details were provided.'}
               </p>
-              <p className="mt-1.5 text-[11px] text-slate-500">
+              <p className="mt-1.5 text-xs text-[#7a6b5f]">
                 {detail.reporter?.name || 'Deleted user'} ·{' '}
                 {detail.reporter?.email || 'No email'} · {detail.reporter?.id || 'No account'}
               </p>
             </div>
 
             <div>
-              <p className="mb-2 text-xs font-bold text-slate-700">Reported target</p>
+              <p className="mb-2 text-xs font-bold text-[#5a4c42]">Reported target</p>
               {!detail.target ? (
-                <p className="rounded-xl border border-slate-200 p-3 text-sm text-slate-500">
+                <p className="rounded-xl border border-[#d8d0c8] p-3 text-sm text-[#7a6b5f]">
                   Target data is unavailable.
                 </p>
               ) : detail.target.missing ? (
-                <p className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+                <p className="rounded-xl border border-[#ecd0c9] bg-[#f8e9e5] p-3 text-sm text-[#8f4035]">
                   The reported {detail.targetType.toLowerCase()} no longer exists.
                 </p>
               ) : detail.target.type === 'LISTING' ? (
-                <div className="rounded-xl border border-slate-200 p-4">
+                <div className="rounded-xl border border-[#d8d0c8] p-4">
                   <div className="flex items-start gap-3">
-                    <div className="rounded-lg bg-blue-50 p-2 text-blue-700">
+                    <div className="rounded-lg bg-[#f2eadf] p-2 text-[#8a5e20]">
                       <Building2 className="h-4 w-4" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-bold text-slate-800">
+                      <p className="text-sm font-bold text-[#4a3e35]">
                         {detail.target.title || 'Listing'}
                       </p>
-                      <p className="mt-0.5 text-xs text-slate-500">
+                      <p className="mt-0.5 text-xs text-[#7a6b5f]">
                         {detail.target.city || 'Unknown city'}
                         {detail.target.address ? ` · ${detail.target.address}` : ''}
                       </p>
-                      <div className="mt-2 flex flex-wrap gap-1.5 text-[10px] font-semibold">
-                        <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-600">
+                      <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] font-semibold">
+                        <span className="rounded-full bg-[#efe7dc] px-2 py-1 text-[#6c5d52]">
                           Status: {detail.target.status || 'UNKNOWN'}
                         </span>
                         {detail.target.adminHidden && (
-                          <span className="rounded-full bg-rose-50 px-2 py-1 text-rose-700">
+                          <span className="rounded-full bg-[#f8e9e5] px-2 py-1 text-[#8f4035]">
                             Hidden from public view
                           </span>
                         )}
                       </div>
                       {detail.target.host && (
-                        <p className="mt-2 text-[11px] text-slate-500">
+                        <p className="mt-2 text-xs text-[#7a6b5f]">
                           Host: {detail.target.host.name} · {detail.target.host.email}
                         </p>
                       )}
                       {detail.target.adminHiddenReason && (
-                        <p className="mt-2 rounded-lg bg-rose-50 px-2.5 py-2 text-[11px] text-rose-700">
+                        <p className="mt-2 rounded-lg bg-[#f8e9e5] px-2.5 py-2 text-xs text-[#8f4035]">
                           Hide reason: {detail.target.adminHiddenReason}
                         </p>
                       )}
@@ -738,9 +739,9 @@ export default function AdminReportsPage() {
                   </div>
                 </div>
               ) : (
-                <div className="rounded-xl border border-slate-200 p-4">
+                <div className="rounded-xl border border-[#d8d0c8] p-4">
                   <div className="flex items-start gap-3">
-                    <div className="rounded-lg bg-amber-50 p-2 text-amber-700">
+                    <div className="rounded-lg bg-[#f7ebda] p-2 text-[#8a5e20]">
                       <Star className="h-4 w-4" />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -751,33 +752,33 @@ export default function AdminReportsPage() {
                               key={index}
                               className={`h-3.5 w-3.5 ${
                                 index < (detail.target?.rating || 0)
-                                  ? 'fill-amber-400 text-amber-400'
-                                  : 'text-slate-300'
+                                  ? 'fill-amber-400 text-[#c89658]'
+                                  : 'text-[#c2b6aa]'
                               }`}
                             />
                           ))}
                         </span>
-                        <span className="text-xs font-semibold text-slate-700">
+                        <span className="text-xs font-semibold text-[#5a4c42]">
                           {detail.target.authorName || detail.target.author?.name || 'Guest review'}
                         </span>
                         <span
-                          className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                          className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
                             detail.target.moderationStatus === 'HIDDEN'
-                              ? 'bg-slate-200 text-slate-700'
-                              : 'bg-emerald-50 text-emerald-700'
+                              ? 'bg-[#e7ded2] text-[#5a4c42]'
+                              : 'bg-[#edf1e8] text-[#4f6648]'
                           }`}
                         >
                           {detail.target.moderationStatus === 'HIDDEN' ? 'Hidden' : 'Visible'}
                         </span>
                       </div>
-                      <p className="mt-2 whitespace-pre-wrap text-sm text-slate-700">
+                      <p className="mt-2 whitespace-pre-wrap text-sm text-[#5a4c42]">
                         {detail.target.comment || 'No comment provided.'}
                       </p>
-                      <p className="mt-2 text-[11px] text-slate-500">
+                      <p className="mt-2 text-xs text-[#7a6b5f]">
                         Listing: {detail.target.propertyTitle || detail.target.propertyId || '—'}
                       </p>
                       {detail.target.moderationReason && (
-                        <p className="mt-2 rounded-lg bg-slate-50 px-2.5 py-2 text-[11px] text-slate-600">
+                        <p className="mt-2 rounded-lg bg-[#f6f0e8] px-2.5 py-2 text-xs text-[#6c5d52]">
                           Moderation note: {detail.target.moderationReason}
                         </p>
                       )}
@@ -788,17 +789,17 @@ export default function AdminReportsPage() {
             </div>
 
             <div>
-              <p className="text-xs font-bold text-slate-700">Resolution</p>
+              <p className="text-xs font-bold text-[#5a4c42]">Resolution</p>
               {detail.resolutionNote ? (
-                <div className="mt-1 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
+                <div className="mt-1 rounded-xl border border-[#d6dfcd] bg-[#edf1e8] p-3 text-sm text-[#405a3a]">
                   <p>{detail.resolutionNote}</p>
-                  <p className="mt-1.5 text-[11px] text-emerald-700">
+                  <p className="mt-1.5 text-xs text-[#4f6648]">
                     {detail.resolvedBy?.name || 'Unknown admin'}
                     {detail.resolvedAt ? ` · ${formatDateTime(detail.resolvedAt)}` : ''}
                   </p>
                 </div>
               ) : (
-                <p className="mt-1 rounded-xl border border-slate-200 p-3 text-sm text-slate-500">
+                <p className="mt-1 rounded-xl border border-[#d8d0c8] p-3 text-sm text-[#7a6b5f]">
                   This report has not been closed yet.
                 </p>
               )}
@@ -822,7 +823,7 @@ export default function AdminReportsPage() {
               type="button"
               onClick={() => setStatusTarget(null)}
               disabled={statusSubmitting}
-              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+              className="rounded-xl border border-[#d8d0c8] bg-white px-4 py-2 text-sm font-semibold text-[#5a4c42] hover:bg-[#f6f0e8] disabled:opacity-50"
             >
               Cancel
             </button>
@@ -836,10 +837,10 @@ export default function AdminReportsPage() {
               }
               className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 ${
                 nextStatus === 'DISMISSED'
-                  ? 'bg-slate-700 hover:bg-slate-800'
+                  ? 'bg-[#5a4c42] hover:bg-[#463a31]'
                   : nextStatus === 'RESOLVED'
-                    ? 'bg-emerald-600 hover:bg-emerald-700'
-                    : 'bg-blue-600 hover:bg-blue-700'
+                    ? 'bg-[#5d7554] hover:bg-[#4f6648]'
+                    : 'bg-[#9a671f] hover:bg-[#8a5e20]'
               }`}
             >
               {statusSubmitting ? (
@@ -857,8 +858,8 @@ export default function AdminReportsPage() {
         }
       >
         <div className="space-y-4">
-          <div className="flex items-start gap-2 rounded-xl bg-slate-50 p-3 text-xs text-slate-600">
-            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#33599E]" />
+          <div className="flex items-start gap-2 rounded-xl bg-[#f6f0e8] p-3 text-xs text-[#6c5d52]">
+            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#b3541e]" />
             <p>
               Status changes are permanent for closed reports. Use the target moderation screens
               separately if the listing or review also needs to be hidden.
@@ -866,12 +867,12 @@ export default function AdminReportsPage() {
           </div>
 
           <div>
-            <label htmlFor="resolution-note" className="text-xs font-bold text-slate-700">
+            <label htmlFor="resolution-note" className="text-xs font-bold text-[#5a4c42]">
               Resolution note{' '}
               {nextStatus === 'RESOLVED' || nextStatus === 'DISMISSED' ? (
-                <span className="text-rose-500">*</span>
+                <span className="text-[#a24b3e]">*</span>
               ) : (
-                <span className="font-normal text-slate-400">(optional)</span>
+                <span className="font-normal text-[#7a6b5f]">(optional)</span>
               )}
             </label>
             <textarea
@@ -881,16 +882,16 @@ export default function AdminReportsPage() {
               rows={4}
               maxLength={2000}
               placeholder="Summarise what was checked and the outcome."
-              className="mt-1.5 w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-[#33599E] focus:bg-white focus:ring-2 focus:ring-[#33599E]/15"
+              className="mt-1.5 w-full resize-none rounded-xl border border-[#d8d0c8] bg-[#f6f0e8] px-3 py-2.5 text-sm text-[#4a3e35] outline-none focus:border-[#b3541e] focus:bg-white focus:ring-2 focus:ring-[#b3541e]/15"
             />
-            <div className="mt-1 flex justify-between text-[11px] text-slate-400">
+            <div className="mt-1 flex justify-between text-xs text-[#7a6b5f]">
               <span>Required when resolving or dismissing</span>
               <span>{resolutionNote.length}/2000</span>
             </div>
           </div>
 
           {statusError && (
-            <p className="rounded-lg bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">
+            <p className="rounded-lg bg-[#f8e9e5] px-3 py-2 text-xs font-medium text-[#8f4035]">
               {statusError}
             </p>
           )}
@@ -902,20 +903,20 @@ export default function AdminReportsPage() {
           role="status"
           className={`fixed bottom-5 right-5 z-[70] flex max-w-sm items-start gap-2 rounded-xl border px-4 py-3 text-sm shadow-lg ${
             toast.type === 'success'
-              ? 'border-emerald-200 bg-white text-emerald-800'
-              : 'border-rose-200 bg-white text-rose-800'
+              ? 'border-[#d6dfcd] bg-white text-[#405a3a]'
+              : 'border-[#ecd0c9] bg-white text-[#7d352b]'
           }`}
         >
           {toast.type === 'success' ? (
-            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#5d7554]" />
           ) : (
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[#a24b3e]" />
           )}
           <p className="font-medium">{toast.message}</p>
           <button
             type="button"
             onClick={() => setToast(null)}
-            className="ml-1 rounded p-0.5 text-slate-400 hover:text-slate-600"
+            className="ml-1 rounded p-0.5 text-[#7a6b5f] hover:text-[#6c5d52]"
             aria-label="Dismiss notification"
           >
             <X className="h-4 w-4" />

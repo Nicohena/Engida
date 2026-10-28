@@ -1,6 +1,28 @@
 import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID, Min } from 'class-validator';
 import { PaymentMethod } from '../../bookings/entities/booking.entity';
 
+export class CreatePaymentSessionDto {
+  @IsUUID()
+  @IsNotEmpty()
+  bookingId: string;
+
+  @IsString()
+  @IsNotEmpty()
+  paymentMethod: string;
+
+  @IsString()
+  @IsOptional()
+  currency?: string = 'ETB';
+
+  @IsString()
+  @IsOptional()
+  customerPhone?: string;
+
+  @IsString()
+  @IsOptional()
+  returnUrl?: string;
+}
+
 export class InitializePaymentDto {
   @IsUUID()
   @IsOptional()
