@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { createHmac } from 'crypto';
+import { createHmac, randomInt } from 'crypto';
 import {
   CreatePaymentSessionInput,
   ExecutePayoutTransferInput,
@@ -21,7 +21,7 @@ export class SandboxPaymentProvider implements PaymentProvider {
   private readonly secretKey = process.env.SANDBOX_WEBHOOK_SECRET || 'engida-sandbox-secret';
 
   async createSession(input: CreatePaymentSessionInput): Promise<PaymentSessionResult> {
-    const providerPaymentId = `SB-PAY-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const providerPaymentId = `SB-PAY-${Date.now()}-${randomInt(1000, 10000)}`;
     this.logger.log(`Created sandbox payment session for booking ${input.bookingId}: ${providerPaymentId}`);
 
     return {
@@ -112,7 +112,7 @@ export class SandboxPaymentProvider implements PaymentProvider {
     }
 
     return {
-      providerRefundId: `SB-REF-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`,
+      providerRefundId: `SB-REF-${Date.now()}-${randomInt(1000, 10000)}`,
       status: 'SUCCEEDED',
       metadata: {
         idempotencyKey: input.idempotencyKey,
@@ -135,7 +135,7 @@ export class SandboxPaymentProvider implements PaymentProvider {
     }
 
     return {
-      providerTransferId: `SB-TRF-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`,
+      providerTransferId: `SB-TRF-${Date.now()}-${randomInt(1000, 10000)}`,
       status: 'PAID',
       metadata: {
         accountLast4: input.accountNumber.slice(-4),
