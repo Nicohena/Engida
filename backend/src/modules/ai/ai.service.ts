@@ -214,9 +214,14 @@ export class AiService {
    * Calibrated Ethiopian Birr (ETB) pricing model based on real regional demand tiers,
    * spatial capacity, and verified infrastructure reliability.
    */
+  /**
+   * Enterprise Calibrated Ethiopian Birr (ETB) pricing & valuation engine based on
+   * real-time regional demand tiers, square footage, spatial capacity, and verified infrastructure reliability.
+   */
   private fallbackPricePrediction(
     request: PricePredictionRequest,
   ): PricePredictionResponse {
+    const isSale = (request.listingType || '').toUpperCase() === 'SALE';
     const cityText = `${request.city || ''} ${request.subCity || ''} ${request.neighborhood || ''}`.toLowerCase();
     const subCityText = (request.subCity || '').toLowerCase();
     const neighborhoodText = (request.neighborhood || '').toLowerCase();
@@ -224,22 +229,19 @@ export class AiService {
     const bedrooms = Math.max(0, Number(request.bedrooms) || 0);
     const bathrooms = Math.max(0, Number(request.bathrooms) || 0);
     const maxGuests = Math.max(1, Number(request.maxGuests) || 1);
+    const areaSqm = Math.max(0, Number(request.areaSqm) || 0);
     const rawAmenities = (request.amenities || []).map((a) => a.toLowerCase());
 
     const hasAmenity = (keywords: string[]) =>
       rawAmenities.some((item) => keywords.some((kw) => item.includes(kw)));
 
-    // 1. Base Capacity Rate (in ETB)
-    const entryBaseEtb = 2500;
-    const bedroomAdd = bedrooms * 1200;
-    const bathroomAdd = bathrooms * 500;
-    const guestAdd = Math.max(0, maxGuests - 2) * 250;
-    const baseCapacityRateEtb = entryBaseEtb + bedroomAdd + bathroomAdd + guestAdd;
-
-    // 2. Regional & City Multipliers
+    // ─────────────────────────────────────────────────────────
+    // 1. Regional & City Multipliers / Benchmarks
+    // ─────────────────────────────────────────────────────────
     let locationMultiplier = 1.0;
     let locationTier = 'Ethiopian Regional Baseline';
     let locationDriverText = 'Regional accommodation baseline';
+    let baseSqmSaleRateEtb = 55000; // ETB/sqm default for sales
 
     const isAddis = cityText.includes('addis') || cityText.includes('sheger') || cityText.includes('finfinne');
 
@@ -254,7 +256,8 @@ export class AiService {
       ) {
         locationMultiplier = 1.45;
         locationTier = 'Bole Diplomatic & Airport Corridor';
-        locationDriverText = 'Bole prime diplomatic hub (+45%)';
+        locationDriverText = 'Prime diplomatic hub & high expat demand (+45%)';
+        baseSqmSaleRateEtb = 135000;
       } else if (
         subCityText.includes('kirkos') ||
         neighborhoodText.includes('kazanchis') ||
@@ -263,7 +266,8 @@ export class AiService {
       ) {
         locationMultiplier = 1.40;
         locationTier = 'Kazanchis UN & Financial District';
-        locationDriverText = 'Kazanchis UN & financial enclave (+40%)';
+        locationDriverText = 'UN headquarters & financial center enclave (+40%)';
+        baseSqmSaleRateEtb = 128000;
       } else if (
         cityText.includes('old airport') ||
         cityText.includes('sarbet') ||
@@ -272,8 +276,9 @@ export class AiService {
         cityText.includes('yeka')
       ) {
         locationMultiplier = 1.30;
-        locationTier = 'Prime Residential & Embassy Enclave';
-        locationDriverText = 'Embassy quarter & high-demand zone (+30%)';
+        locationTier = 'Old Airport / Embassy Quarter';
+        locationDriverText = 'Prestigious residential & international school zone (+30%)';
+        baseSqmSaleRateEtb = 115000;
       } else if (
         cityText.includes('cmc') ||
         cityText.includes('ayat') ||
@@ -281,62 +286,69 @@ export class AiService {
         cityText.includes('sunshine')
       ) {
         locationMultiplier = 1.22;
-        locationTier = 'Modern Residential Quarter (CMC/Ayat)';
-        locationDriverText = 'East Addis modern residential hub (+22%)';
+        locationTier = 'Modern Residential Corridor (CMC / Ayat)';
+        locationDriverText = 'East Addis modern residential district (+22%)';
+        baseSqmSaleRateEtb = 88000;
       } else {
         locationMultiplier = 1.15;
         locationTier = 'Addis Ababa Metropolitan';
-        locationDriverText = 'Capital city metropolitan demand (+15%)';
+        locationDriverText = 'Capital metropolitan baseline demand (+15%)';
+        baseSqmSaleRateEtb = 78000;
       }
-    } else if (cityText.includes('debre berhan') || cityText.includes('debreberhan')) {
-      locationMultiplier = 1.12;
-      locationTier = 'Debre Berhan Highland Industrial & Heritage Hub';
-      locationDriverText = 'Debre Berhan highland commercial corridor (+12%)';
     } else if (cityText.includes('bishoftu') || cityText.includes('debre zeyit')) {
       locationMultiplier = 1.25;
       locationTier = 'Bishoftu Crater Lakes Resort Hub';
-      locationDriverText = 'Crater lake leisure & resort corridor (+25%)';
+      locationDriverText = 'Crater lake weekend leisure & resort corridor (+25%)';
+      baseSqmSaleRateEtb = 62000;
     } else if (cityText.includes('hawassa') || cityText.includes('awassa')) {
       locationMultiplier = 1.20;
-      locationTier = 'Lake Hawassa Resort Corridor';
-      locationDriverText = 'Rift Valley lakefront destination (+20%)';
+      locationTier = 'Lake Hawassa Waterfront Destination';
+      locationDriverText = 'Rift Valley lakefront & international convention corridor (+20%)';
+      baseSqmSaleRateEtb = 58000;
     } else if (cityText.includes('bahir dar') || cityText.includes('bahirdar')) {
       locationMultiplier = 1.20;
-      locationTier = 'Lake Tana Waterfront Destination';
-      locationDriverText = 'Lake Tana & Blue Nile tourism corridor (+20%)';
+      locationTier = 'Lake Tana Tourism Corridor';
+      locationDriverText = 'Lake Tana resort & conference destination (+20%)';
+      baseSqmSaleRateEtb = 55000;
+    } else if (cityText.includes('debre berhan') || cityText.includes('debreberhan')) {
+      locationMultiplier = 1.12;
+      locationTier = 'Debre Berhan Highland Industrial Hub';
+      locationDriverText = 'Highland commercial corridor & business hub (+12%)';
+      baseSqmSaleRateEtb = 48000;
     } else if (cityText.includes('gondar') || cityText.includes('gonder')) {
       locationMultiplier = 1.15;
       locationTier = 'Historic Castles Heritage Circuit';
-      locationDriverText = 'Gondar historical circuit (+15%)';
+      locationDriverText = 'Historical tourism circuit (+15%)';
+      baseSqmSaleRateEtb = 48000;
     } else if (cityText.includes('arba minch') || cityText.includes('arbaminch')) {
       locationMultiplier = 1.15;
-      locationTier = 'Nechisar & Rift Valley Tourism Hub';
-      locationDriverText = 'Southern tourist corridor (+15%)';
-    } else if (
-      cityText.includes('jimma') ||
-      cityText.includes('mekelle') ||
-      cityText.includes('dire dawa')
-    ) {
-      locationMultiplier = 1.10;
-      locationTier = 'Primary Regional Center';
-      locationDriverText = 'Major commercial center (+10%)';
+      locationTier = 'Nechisar Tourism Hub';
+      locationDriverText = 'Southern lakes & eco-tourism corridor (+15%)';
+      baseSqmSaleRateEtb = 45000;
+    } else {
+      locationMultiplier = 1.05;
+      locationTier = 'Regional Hub';
+      locationDriverText = 'Standard regional market rate';
+      baseSqmSaleRateEtb = 42000;
     }
 
-    // 3. Property Type Multiplier
+    // ─────────────────────────────────────────────────────────
+    // 2. Property Type Multiplier
+    // ─────────────────────────────────────────────────────────
     let propertyTypeMultiplier = 1.0;
     let propTypeDriverText = 'Standard layout';
     if (propType === 'VILLA') {
       propertyTypeMultiplier = 1.40;
-      propTypeDriverText = 'Private Villa compound with private perimeter (+40%)';
+      propTypeDriverText = 'Private detached villa compound (+40%)';
     } else if (propType === 'PENTHOUSE') {
       propertyTypeMultiplier = 1.50;
-      propTypeDriverText = 'Executive Penthouse panoramic luxury (+50%)';
+      propTypeDriverText = 'Top-floor penthouse with panoramic views (+50%)';
     } else if (propType === 'APARTMENT') {
       propertyTypeMultiplier = 1.10;
-      propTypeDriverText = 'Serviced modern apartment (+10%)';
+      propTypeDriverText = 'Modern serviced apartment building (+10%)';
     } else if (propType === 'HOUSE' || propType === 'TOWNHOUSE') {
-      propertyTypeMultiplier = 1.15;
-      propTypeDriverText = 'Detached standalone home (+15%)';
+      propertyTypeMultiplier = 1.18;
+      propTypeDriverText = 'Standalone townhouse / family home (+18%)';
     } else if (propType === 'STUDIO') {
       propertyTypeMultiplier = 0.90;
       propTypeDriverText = 'Compact studio space (-10%)';
@@ -345,7 +357,9 @@ export class AiService {
       propTypeDriverText = 'Private room in shared property (-40%)';
     }
 
-    // 4. Amenities Multipliers (strictly verified from actual selected amenities)
+    // ─────────────────────────────────────────────────────────
+    // 3. Infrastructure & Amenities Lift (Strictly from verified selections)
+    // ─────────────────────────────────────────────────────────
     const keyDrivers: KeyPriceDriver[] = [];
     let amenityPercentageLift = 0;
 
@@ -357,125 +371,179 @@ export class AiService {
 
     if (propType !== 'APARTMENT') {
       keyDrivers.push({
-        factor: `${propType} Type`,
+        factor: `${propType} Layout`,
         impact: propTypeDriverText,
         type: propertyTypeMultiplier > 1 ? 'positive' : 'neutral',
       });
     }
 
-    if (bedrooms > 1) {
-      keyDrivers.push({
-        factor: `${bedrooms} Bedrooms Capacity`,
-        impact: `+${(bedrooms * 1200).toLocaleString()} ETB`,
-        type: 'positive',
-      });
-    }
-
+    // High impact Ethiopian infrastructure lifts
     if (hasAmenity(['generator', 'power', 'backup', 'solar', 'electricity', 'zap'])) {
-      amenityPercentageLift += 0.20;
+      amenityPercentageLift += isSale ? 0.08 : 0.20;
       keyDrivers.push({
-        factor: 'Standby Generator / Backup Power',
-        impact: '+20% premium (High priority for uninterrupted stay)',
+        factor: 'Automatic Standby Generator',
+        impact: isSale ? '+8% capital infrastructure' : '+20% premium (Guaranteed 24/7 power)',
         type: 'premium',
       });
     }
 
     if (hasAmenity(['wifi', 'internet', 'fiber', 'wi-fi', 'fbe2b0f1'])) {
-      amenityPercentageLift += 0.15;
+      amenityPercentageLift += isSale ? 0.03 : 0.15;
       keyDrivers.push({
-        factor: 'High-Speed Fiber WiFi',
-        impact: '+15% premium (Essential for remote work)',
+        factor: 'High-Speed Fiber Internet',
+        impact: isSale ? '+3% modern connectivity' : '+15% business traveler premium',
         type: 'positive',
       });
     }
 
     if (hasAmenity(['hot water', 'water tank', 'reservoir', 'heater', '2139b538'])) {
-      amenityPercentageLift += 0.10;
+      amenityPercentageLift += isSale ? 0.05 : 0.10;
       keyDrivers.push({
-        factor: 'Continuous Hot Water & Water Tank',
-        impact: '+10% premium (Guaranteed supply)',
+        factor: 'Water Reservoir & Continuous Hot Water',
+        impact: isSale ? '+5% water security' : '+10% uninterrupted water guarantee',
+        type: 'positive',
+      });
+    }
+
+    if (hasAmenity(['security', 'guard', 'cctv', 'gated', '3d07918f'])) {
+      amenityPercentageLift += isSale ? 0.06 : 0.10;
+      keyDrivers.push({
+        factor: '24/7 Gated Security & Guard',
+        impact: isSale ? '+6% compound safety' : '+10% guest peace-of-mind',
         type: 'positive',
       });
     }
 
     if (hasAmenity(['pool', 'swim', '651a809c'])) {
-      amenityPercentageLift += 0.15;
+      amenityPercentageLift += isSale ? 0.07 : 0.15;
       keyDrivers.push({
-        factor: 'Swimming Pool',
-        impact: '+15% leisure feature',
+        factor: 'Private / Communal Swimming Pool',
+        impact: isSale ? '+7% luxury asset value' : '+15% leisure amenity yield',
         type: 'premium',
       });
     }
 
-    if (hasAmenity(['security', 'guard', 'cctv', 'gated', '3d07918f'])) {
-      amenityPercentageLift += 0.10;
-      keyDrivers.push({
-        factor: '24/7 Gated Security & Guard',
-        impact: '+10% safety assurance',
-        type: 'positive',
-      });
-    }
-
-    if (hasAmenity(['kitchen', 'cook', 'utensils', '4d4368d2'])) {
-      amenityPercentageLift += 0.08;
-      keyDrivers.push({
-        factor: 'Fully Equipped Kitchen',
-        impact: '+8% self-catering appeal',
-        type: 'positive',
-      });
-    }
-
     if (hasAmenity(['parking', 'garage', 'cdb1ee52'])) {
-      amenityPercentageLift += 0.08;
+      amenityPercentageLift += isSale ? 0.05 : 0.08;
       keyDrivers.push({
-        factor: 'Secure On-Site Parking',
-        impact: '+8% vehicle convenience',
+        factor: 'Dedicated Secure Parking',
+        impact: isSale ? '+5% vehicle asset value' : '+8% convenience premium',
         type: 'positive',
       });
     }
 
     if (hasAmenity(['garden', 'yard', 'trees', '1d0cc66e'])) {
-      amenityPercentageLift += 0.06;
+      amenityPercentageLift += isSale ? 0.05 : 0.06;
       keyDrivers.push({
         factor: 'Private Landscaped Garden',
-        impact: '+6% scenic relaxation',
+        impact: isSale ? '+5% green space' : '+6% outdoor relaxation',
         type: 'positive',
       });
     }
 
-    // Synthesis calculation in pure ETB
+    // ─────────────────────────────────────────────────────────
+    // 4. Calculations: SALE vs RENTAL
+    // ─────────────────────────────────────────────────────────
+    if (isSale) {
+      // Estimated area if not provided
+      const effectiveArea = areaSqm > 0
+        ? areaSqm
+        : (bedrooms === 0 ? 50 : bedrooms === 1 ? 80 : bedrooms === 2 ? 120 : bedrooms === 3 ? 170 : 250);
+
+      const baseValuation = effectiveArea * baseSqmSaleRateEtb;
+      const typeAdjusted = baseValuation * propertyTypeMultiplier;
+      const amenityAdjusted = typeAdjusted * (1 + amenityPercentageLift);
+
+      // Round to nearest 50,000 ETB
+      const predictedPrice = Math.max(1000000, Math.round(amenityAdjusted / 50000) * 50000);
+      const minEtb = Math.round((predictedPrice * 0.88) / 50000) * 50000; // Fast sale liquidity corridor
+      const maxEtb = Math.round((predictedPrice * 1.15) / 50000) * 50000; // Premium ceiling
+
+      keyDrivers.unshift({
+        factor: `${effectiveArea} m² Area Valuation`,
+        impact: `~${baseSqmSaleRateEtb.toLocaleString()} ETB/m² market index`,
+        type: 'positive',
+      });
+
+      let confidence = 0.78;
+      if (request.city) confidence += 0.04;
+      if (request.subCity) confidence += 0.04;
+      if (areaSqm > 0) confidence += 0.06;
+      if (bedrooms > 0) confidence += 0.03;
+      if (rawAmenities.length >= 3) confidence += 0.03;
+      confidence = Math.min(0.95, Math.round(confidence * 100) / 100);
+
+      return {
+        predictedPrice,
+        currency: 'ETB',
+        confidence,
+        priceRange: { min: minEtb, max: maxEtb },
+        breakdown: {
+          baseRateEtb: Math.round(baseValuation),
+          locationMultiplier,
+          locationTier,
+          propertyTypeMultiplier,
+          amenitiesPremiumEtb: Math.round(amenityAdjusted - typeAdjusted),
+          keyDrivers: keyDrivers.slice(0, 6),
+        },
+      };
+    }
+
+    // ── RENTAL NIGHTLY CALCULATION ──
+    const entryBaseEtb = 2500;
+    const bedroomAdd = bedrooms * 1200;
+    const bathroomAdd = bathrooms * 500;
+    const guestAdd = Math.max(0, maxGuests - 2) * 250;
+    const areaAdd = areaSqm > 80 ? Math.min(1500, Math.round((areaSqm - 80) * 12)) : 0;
+    const baseCapacityRateEtb = entryBaseEtb + bedroomAdd + bathroomAdd + guestAdd + areaAdd;
+
+    if (bedrooms > 1) {
+      keyDrivers.push({
+        factor: `${bedrooms} Bedrooms Capacity`,
+        impact: `+${(bedrooms * 1200).toLocaleString()} ETB capacity base`,
+        type: 'positive',
+      });
+    }
+
+    if (areaSqm > 100) {
+      keyDrivers.push({
+        factor: `${areaSqm} m² Generous Footprint`,
+        impact: `+${areaAdd.toLocaleString()} ETB executive space premium`,
+        type: 'positive',
+      });
+    }
+
     const locationAdjustedBase = baseCapacityRateEtb * locationMultiplier * propertyTypeMultiplier;
     const amenityLiftEtb = baseCapacityRateEtb * amenityPercentageLift;
     const rawTotalEtb = locationAdjustedBase + amenityLiftEtb;
 
+    // Round to nearest 50 ETB
     const predictedPrice = Math.max(1200, Math.round(rawTotalEtb / 50) * 50);
-    const minEtb = Math.max(1000, Math.round((predictedPrice * 0.85) / 50) * 50);
-    const maxEtb = Math.round((predictedPrice * 1.20) / 50) * 50;
+    const minEtb = Math.max(1000, Math.round((predictedPrice * 0.85) / 50) * 50); // -15% Fast booking
+    const maxEtb = Math.round((predictedPrice * 1.20) / 50) * 50; // +20% Peak season
 
-    let confidence = 0.72;
+    let confidence = 0.74;
     if (request.city) confidence += 0.05;
     if (request.subCity) confidence += 0.05;
     if (request.neighborhood) confidence += 0.03;
     if (bedrooms > 0) confidence += 0.03;
     if (bathrooms > 0) confidence += 0.02;
+    if (areaSqm > 0) confidence += 0.03;
     if (rawAmenities.length >= 3) confidence += 0.04;
-    confidence = Math.min(0.92, Math.round(confidence * 100) / 100);
+    confidence = Math.min(0.95, Math.round(confidence * 100) / 100);
 
     return {
       predictedPrice,
       currency: 'ETB',
       confidence,
-      priceRange: {
-        min: minEtb,
-        max: maxEtb,
-      },
+      priceRange: { min: minEtb, max: maxEtb },
       breakdown: {
         baseRateEtb: Math.round(baseCapacityRateEtb),
         locationMultiplier,
         locationTier,
         propertyTypeMultiplier,
         amenitiesPremiumEtb: Math.round(amenityLiftEtb),
-        keyDrivers: keyDrivers.slice(0, 5),
+        keyDrivers: keyDrivers.slice(0, 6),
       },
     };
   }

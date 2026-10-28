@@ -1,25 +1,32 @@
 'use client';
 
-import React, { useState, useTransition } from 'react';
+import React, { useState, useEffect, useTransition } from 'react';
 import { apiFetch } from '../../lib/api';
 import type { GenerateListingContentResponse } from '../../types/host';
 import {
   Sparkles,
   Check,
   RotateCcw,
-  Languages,
   X,
-  FileText,
   BadgeCheck,
   MapPin,
   Home,
-  Zap,
   Info,
+  ArrowRight,
+  FileText,
+  Heading1,
+  AlignLeft,
 } from 'lucide-react';
+
+// ─────────────────────────────────────────────────────────
+// Types
+// ─────────────────────────────────────────────────────────
+export type CopilotMode = 'title' | 'description' | 'both';
 
 interface AiListingCopilotModalProps {
   isOpen: boolean;
   onClose: () => void;
+  mode?: CopilotMode;
   propertyType: string;
   listingType?: string;
   city: string;
@@ -41,9 +48,22 @@ interface AiListingCopilotModalProps {
 type LanguageOption = 'en' | 'am';
 type ToneOption = 'luxury' | 'warm' | 'business';
 
+// ─────────────────────────────────────────────────────────
+// Tone options config
+// ─────────────────────────────────────────────────────────
+const TONE_OPTIONS: { value: ToneOption; label: string; emoji: string; desc: string }[] = [
+  { value: 'luxury',   label: 'Executive & Luxury',  emoji: '💎', desc: 'Premium, prestige phrasing for discerning guests' },
+  { value: 'warm',     label: 'Warm & Authentic',    emoji: '🌿', desc: 'Friendly, inviting Ethiopian hospitality tone' },
+  { value: 'business', label: 'Modern Business',     emoji: '💼', desc: 'Professional, concise — ideal for corporate clients' },
+];
+
+// ─────────────────────────────────────────────────────────
+// Component
+// ─────────────────────────────────────────────────────────
 export default function AiListingCopilotModal({
   isOpen,
   onClose,
+  mode = 'both',
   propertyType,
   listingType = 'RENTAL',
   city,
@@ -55,6 +75,8 @@ export default function AiListingCopilotModal({
   areaSqm,
   amenityIds,
   amenityCatalog = [],
+  currentTitle,
+  currentDescription,
   onApplyTitle,
   onApplyDescription,
   onApplyBoth,
@@ -64,43 +86,79 @@ export default function AiListingCopilotModal({
   const [result, setResult] = useState<GenerateListingContentResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [appliedNotice, setAppliedNotice] = useState<string | null>(null);
+  const [appliedField, setAppliedField] = useState<'title' | 'description' | 'both' | null>(null);
   const [, startTransition] = useTransition();
+
+  // Reset state when modal opens/mode changes
+  useEffect(() => {
+    if (isOpen) {
+      setResult(null);
+      setError(null);
+      setAppliedField(null);
+      setLoading(false);
+    }
+  }, [isOpen, mode]);
 
   if (!isOpen) return null;
 
-  // Resolve human-readable amenity names
+  // ── Derived values ──────────────────────────────────────
   const selectedAmenityNames: string[] = amenityIds
     .map((id) => amenityCatalog.find((item) => item.id === id)?.name || id)
     .filter(Boolean);
 
-  const numBedrooms = Math.max(0, parseInt(String(bedrooms), 10) || 0);
+  const numBedrooms  = Math.max(0, parseInt(String(bedrooms), 10) || 0);
   const numBathrooms = Math.max(0, parseInt(String(bathrooms), 10) || 0);
-  const numAreaSqm = parseFloat(String(areaSqm || 0)) || 0;
+  const numAreaSqm   = parseFloat(String(areaSqm || 0)) || 0;
   const locationLabel = [neighborhood, subCity, city].filter(Boolean).join(', ') || 'Ethiopia';
 
+  // ── Modal heading based on mode ─────────────────────────
+  const modalMeta = {
+    title: {
+      icon: <Heading1 className="w-5 h-5 text-[#E6C687]" />,
+      heading: 'AI Title Generator',
+      sub: 'Generate a single enterprise-grade listing title grounded in your property specs.',
+      btnLabel: 'Generate Title',
+      applyLabel: 'Apply This Title',
+    },
+    description: {
+      icon: <AlignLeft className="w-5 h-5 text-[#E6C687]" />,
+      heading: 'AI Description Drafter',
+      sub: 'Draft a structured, enterprise-grade property description grounded in your specs.',
+      btnLabel: 'Draft Description',
+      applyLabel: 'Apply This Description',
+    },
+    both: {
+      icon: <Sparkles className="w-5 h-5 text-[#E6C687]" />,
+      heading: 'AI Listing Copilot',
+      sub: 'Generate both title & structured description — strictly grounded in your listing\'s real specifications.',
+      btnLabel: 'Generate Title & Description',
+      applyLabel: 'Apply Both',
+    },
+  }[mode];
+
+  // ── API call ────────────────────────────────────────────
   const handleGenerate = async (targetLang?: LanguageOption, targetTone?: ToneOption) => {
-    const activeLang = targetLang || language;
-    const activeTone = targetTone || tone;
+    const activeLang  = targetLang  ?? language;
+    const activeTone  = targetTone  ?? tone;
 
     setLoading(true);
     setError(null);
-    setAppliedNotice(null);
+    setAppliedField(null);
 
     try {
       const payload = {
-        propertyType: propertyType || 'APARTMENT',
-        listingType: listingType || 'RENTAL',
-        city: city || 'Addis Ababa',
-        subCity: subCity || undefined,
-        neighborhood: neighborhood || undefined,
-        bedrooms: numBedrooms,
-        bathrooms: numBathrooms,
-        maxGuests: Math.max(1, parseInt(String(maxGuests), 10) || 1),
-        areaSqm: numAreaSqm > 0 ? numAreaSqm : undefined,
-        amenities: selectedAmenityNames.length > 0 ? selectedAmenityNames : amenityIds,
-        language: activeLang,
-        tone: activeTone,
+        propertyType:  propertyType || 'APARTMENT',
+        listingType:   listingType  || 'RENTAL',
+        city:          city || 'Addis Ababa',
+        subCity:       subCity       || undefined,
+        neighborhood:  neighborhood  || undefined,
+        bedrooms:      numBedrooms,
+        bathrooms:     numBathrooms,
+        maxGuests:     Math.max(1, parseInt(String(maxGuests), 10) || 1),
+        areaSqm:       numAreaSqm > 0 ? numAreaSqm : undefined,
+        amenities:     selectedAmenityNames.length > 0 ? selectedAmenityNames : amenityIds,
+        language:      activeLang,
+        tone:          activeTone,
       };
 
       const response = await apiFetch<GenerateListingContentResponse>('/ai/generate-listing-content', {
@@ -113,288 +171,407 @@ export default function AiListingCopilotModal({
         setResult(response);
       });
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to generate tailored listing content';
-      setError(msg);
+      setError(err instanceof Error ? err.message : 'Failed to generate content. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleApplyBoth = () => {
-    if (!result) return;
-    onApplyBoth(result.title, result.description);
-    setAppliedNotice(
-      language === 'am'
-        ? 'የአማርኛ ርዕስ እና ዝርዝር ማብራሪያ ተተግብሯል!'
-        : 'Applied Title & Structured Description to listing!'
-    );
-    setTimeout(() => {
-      onClose();
-    }, 1200);
-  };
-
-  const handleApplyTitleOnly = () => {
+  // ── Apply handlers ─────────────────────────────────────
+  const applyTitle = () => {
     if (!result) return;
     onApplyTitle(result.title);
-    setAppliedNotice('Applied Title to listing!');
-    setTimeout(() => setAppliedNotice(null), 2500);
+    setAppliedField('title');
+    if (mode === 'title') {
+      setTimeout(onClose, 1000);
+    }
   };
 
-  const handleApplyDescriptionOnly = () => {
+  const applyDescription = () => {
     if (!result) return;
     onApplyDescription(result.description);
-    setAppliedNotice('Applied Description to listing!');
-    setTimeout(() => setAppliedNotice(null), 2500);
+    setAppliedField('description');
+    if (mode === 'description') {
+      setTimeout(onClose, 1000);
+    }
   };
 
+  const applyBoth = () => {
+    if (!result) return;
+    onApplyBoth(result.title, result.description);
+    setAppliedField('both');
+    setTimeout(onClose, 1000);
+  };
+
+  // ── Backdrop click to close ────────────────────────────
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) onClose();
+  };
+
+  // ── Mode accent colour ─────────────────────────────────
+  const accentCls = 'bg-[#234B36]';
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="bg-white border border-[#E5E0D5] rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden">
-        {/* ── Modal Header ── */}
-        <div className="p-5 sm:p-6 border-b border-[#EEF3EF] flex items-center justify-between gap-4 bg-[#FCFAF6]">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#234B36] to-[#2D5E43] text-white flex items-center justify-center shadow-xs">
-              <Sparkles className="w-5 h-5 text-[#E6C687]" />
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/55 backdrop-blur-sm"
+      onClick={handleBackdropClick}
+    >
+      <div
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-xl flex flex-col overflow-hidden"
+        style={{ maxHeight: 'min(92vh, 720px)' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+
+        {/* ════════ HEADER ════════ */}
+        <div className="flex items-center justify-between gap-4 px-5 py-4 border-b border-[#EEF3EF] bg-gradient-to-br from-[#234B36] to-[#2D5E43] rounded-t-2xl">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+              {modalMeta.icon}
             </div>
-            <div>
-              <h3 className="text-base font-black text-[#252923]">
-                AI Listing Copilot
-              </h3>
-              <p className="text-xs text-[#73776F]">
-                Tailored enterprise title &amp; description strictly grounded in your listing's real specifications.
-              </p>
+            <div className="min-w-0">
+              <h3 className="text-sm font-black text-white leading-tight">{modalMeta.heading}</h3>
+              <p className="text-[11px] text-white/70 mt-0.5 leading-snug line-clamp-2">{modalMeta.sub}</p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-xl text-[#73776F] hover:bg-[#EEF3EF] hover:text-[#252923] transition"
+            className="w-8 h-8 rounded-xl flex items-center justify-center text-white/70 hover:text-white hover:bg-white/15 transition shrink-0"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* ── Modal Scrollable Body ── */}
-        <div className="p-5 sm:p-6 overflow-y-auto space-y-5 flex-1">
-          {/* Detected Listing Specifications Card */}
-          <div className="p-4 rounded-2xl bg-[#F8F5ED] border border-[#E5E0D5] space-y-2.5">
-            <span className="text-[11px] font-black uppercase tracking-wider text-[#73776F] flex items-center gap-1.5">
-              <BadgeCheck className="w-4 h-4 text-[#234B36]" />
-              <span>Detected Property Specifications</span>
-            </span>
+        {/* ════════ SCROLLABLE BODY ════════ */}
+        <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-5 space-y-4">
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-              <div className="flex items-center gap-2 text-[#252923] font-bold">
+          {/* ── Property Specs Card ── */}
+          <div className="rounded-xl bg-[#F8F5ED] border border-[#E5E0D5] p-4 space-y-3">
+            <div className="flex items-center gap-1.5">
+              <BadgeCheck className="w-3.5 h-3.5 text-[#234B36]" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-[#73776F]">Detected Property Specs</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div className="flex items-center gap-2 text-xs font-bold text-[#252923]">
                 <MapPin className="w-3.5 h-3.5 text-[#234B36] shrink-0" />
                 <span className="truncate">{locationLabel}</span>
               </div>
-              <div className="flex items-center gap-2 text-[#252923] font-bold">
+              <div className="flex items-center gap-2 text-xs font-bold text-[#252923]">
                 <Home className="w-3.5 h-3.5 text-[#234B36] shrink-0" />
                 <span className="truncate">
-                  {listingType === 'SALE' ? 'Property For Sale' : 'Nightly Rental'} • {propertyType} (
-                  {numBedrooms} Bed, {numBathrooms} Bath)
+                  {listingType === 'SALE' ? 'For Sale' : 'Nightly Rental'} · {propertyType}
                 </span>
               </div>
             </div>
 
-            {/* Selected Amenities Chips */}
-            <div className="pt-1 flex items-center gap-1.5 flex-wrap">
-              {selectedAmenityNames.length > 0 ? (
-                selectedAmenityNames.slice(0, 6).map((name, i) => (
-                  <span
-                    key={i}
-                    className="text-[11px] font-semibold bg-white border border-[#E5E0D5] px-2 py-0.5 rounded-md text-[#252923]"
-                  >
-                    ✓ {name}
-                  </span>
-                ))
-              ) : (
-                <div className="text-[11px] text-amber-700 font-medium flex items-center gap-1.5">
-                  <Info className="w-3.5 h-3.5 shrink-0" />
-                  <span>
-                    No amenities selected in Section 6 yet. (AI will only feature amenities you select).
-                  </span>
-                </div>
+            {/* Rooms & area row */}
+            <div className="flex flex-wrap items-center gap-2 text-[11px]">
+              <span className="px-2 py-0.5 bg-white border border-[#E5E0D5] rounded-md font-semibold text-[#252923]">
+                🛏 {numBedrooms} Beds
+              </span>
+              <span className="px-2 py-0.5 bg-white border border-[#E5E0D5] rounded-md font-semibold text-[#252923]">
+                🚿 {numBathrooms} Baths
+              </span>
+              {numAreaSqm > 0 && (
+                <span className="px-2 py-0.5 bg-white border border-[#E5E0D5] rounded-md font-semibold text-[#252923]">
+                  📐 {numAreaSqm} m²
+                </span>
               )}
             </div>
+
+            {/* Amenities */}
+            {selectedAmenityNames.length > 0 ? (
+              <div className="flex flex-wrap gap-1.5">
+                {selectedAmenityNames.slice(0, 8).map((name, i) => (
+                  <span
+                    key={i}
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold bg-[#234B36]/10 text-[#234B36] border border-[#234B36]/20 px-2 py-0.5 rounded-md"
+                  >
+                    <Check className="w-2.5 h-2.5" />
+                    {name}
+                  </span>
+                ))}
+                {selectedAmenityNames.length > 8 && (
+                  <span className="text-[11px] text-[#73776F] font-medium px-1 self-center">
+                    +{selectedAmenityNames.length - 8} more
+                  </span>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-start gap-1.5 text-[11px] text-amber-700">
+                <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                <span>No amenities selected yet — AI will not mention amenities until you select them in Section 6.</span>
+              </div>
+            )}
           </div>
 
-          {/* Controls: Language & Tone */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl border border-[#E5E0D5] bg-white">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-[#73776F]">Language:</span>
-              <div className="inline-flex rounded-xl border border-[#E5E0D5] bg-[#FCFAF6] p-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLanguage('en');
-                    if (result) handleGenerate('en', tone);
-                  }}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
-                    language === 'en'
-                      ? 'bg-[#234B36] text-white shadow-xs'
-                      : 'text-[#73776F] hover:text-[#252923]'
-                  }`}
-                >
-                  🇬🇧 English
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLanguage('am');
-                    if (result) handleGenerate('am', tone);
-                  }}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
-                    language === 'am'
-                      ? 'bg-[#234B36] text-white shadow-xs'
-                      : 'text-[#73776F] hover:text-[#252923]'
-                  }`}
-                >
-                  🇪🇹 አማርኛ
-                </button>
+          {/* ── Language & Tone Controls ── */}
+          <div className="rounded-xl border border-[#E5E0D5] bg-white p-4 space-y-3">
+            {/* Language toggle */}
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-bold text-[#73776F] w-20 shrink-0">Language:</span>
+              <div className="inline-flex rounded-lg border border-[#E5E0D5] bg-[#F8F5ED] p-0.5 gap-0.5">
+                {(['en', 'am'] as LanguageOption[]).map((lang) => (
+                  <button
+                    key={lang}
+                    type="button"
+                    onClick={() => {
+                      setLanguage(lang);
+                      if (result) handleGenerate(lang, tone);
+                    }}
+                    className={`px-3.5 py-1.5 rounded-md text-xs font-black transition ${
+                      language === lang
+                        ? `${accentCls} text-white shadow-sm`
+                        : 'text-[#73776F] hover:text-[#252923]'
+                    }`}
+                  >
+                    {lang === 'en' ? '🇬🇧 English' : '🇪🇹 አማርኛ'}
+                  </button>
+                ))}
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-[#73776F]">Tone:</span>
-              <select
-                value={tone}
-                onChange={(e) => {
-                  const newTone = e.target.value as ToneOption;
-                  setTone(newTone);
-                  if (result) handleGenerate(language, newTone);
-                }}
-                className="px-3 py-1.5 rounded-xl border border-[#E5E0D5] bg-[#FCFAF6] text-xs font-bold text-[#252923] focus:outline-none focus:ring-1 focus:ring-[#234B36]"
-              >
-                <option value="luxury">💎 Executive &amp; Luxury</option>
-                <option value="warm">🌿 Warm &amp; Authentic</option>
-                <option value="business">💼 Modern Business</option>
-              </select>
+            {/* Tone selector */}
+            <div className="flex items-start gap-3">
+              <span className="text-xs font-bold text-[#73776F] w-20 shrink-0 pt-0.5">Tone:</span>
+              <div className="flex flex-wrap gap-2">
+                {TONE_OPTIONS.map((t) => (
+                  <button
+                    key={t.value}
+                    type="button"
+                    onClick={() => {
+                      setTone(t.value);
+                      if (result) handleGenerate(language, t.value);
+                    }}
+                    title={t.desc}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
+                      tone === t.value
+                        ? `${accentCls} text-white border-transparent shadow-sm`
+                        : 'border-[#E5E0D5] text-[#73776F] hover:border-[#234B36]/50 hover:text-[#252923] bg-white'
+                    }`}
+                  >
+                    <span>{t.emoji}</span>
+                    <span>{t.label}</span>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
-          {/* Generate Action Button */}
-          {!result && (
-            <div className="text-center py-4">
-              <button
-                type="button"
-                onClick={() => handleGenerate()}
-                disabled={loading}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-[#234B36] hover:bg-[#2D5E43] text-white text-sm font-black shadow-md hover:shadow-lg transition disabled:opacity-60"
-              >
-                {loading ? (
-                  <>
-                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>Analyzing Specifications &amp; Drafting Copy…</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-4 h-4 text-[#E6C687]" />
-                    <span>Generate Tailored Title &amp; Description</span>
-                  </>
-                )}
-              </button>
-            </div>
-          )}
-
-          {/* Error Notice */}
+          {/* ── Error notice ── */}
           {error && (
-            <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-xs font-semibold text-red-700 flex items-center justify-between gap-2">
-              <span>{error}</span>
+            <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 flex items-center justify-between gap-3">
+              <p className="text-xs font-semibold text-red-700">{error}</p>
               <button
                 type="button"
                 onClick={() => handleGenerate()}
-                className="text-xs font-bold underline hover:no-underline"
+                className="text-xs font-black text-red-700 underline hover:no-underline shrink-0"
               >
                 Retry
               </button>
             </div>
           )}
 
-          {/* Success Banner */}
-          {appliedNotice && (
-            <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-300 text-xs font-bold text-emerald-800 flex items-center gap-2">
+          {/* ── Applied success banner ── */}
+          {appliedField && (
+            <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center gap-2">
               <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>{appliedNotice}</span>
+              <p className="text-xs font-bold text-emerald-800">
+                {appliedField === 'title' && 'Title applied to your listing ✓'}
+                {appliedField === 'description' && 'Description applied to your listing ✓'}
+                {appliedField === 'both' && 'Title & Description applied to your listing ✓'}
+              </p>
             </div>
           )}
 
-          {/* Generated Result Preview */}
-          {result && (
-            <div className="space-y-4">
-              {/* Proposed Title */}
-              <div className="p-4 rounded-2xl bg-white border border-[#E5E0D5] space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-black uppercase tracking-wider text-[#73776F]">
-                    Proposed Title
-                  </span>
-                  <button
-                    type="button"
-                    onClick={handleApplyTitleOnly}
-                    className="inline-flex items-center gap-1 text-xs font-bold text-[#234B36] hover:underline"
-                  >
-                    <Check className="w-3.5 h-3.5" />
-                    <span>Apply Title Only</span>
-                  </button>
-                </div>
-                <p className="text-sm font-black text-[#252923] leading-snug">
-                  {result.title}
-                </p>
-              </div>
+          {/* ── Generate button (pre-result state) ── */}
+          {!result && !loading && (
+            <button
+              type="button"
+              onClick={() => handleGenerate()}
+              className={`w-full flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-xl ${accentCls} hover:bg-[#2D5E43] text-white text-sm font-black shadow-md hover:shadow-lg transition`}
+            >
+              <Sparkles className="w-4 h-4 text-[#E6C687]" />
+              <span>{modalMeta.btnLabel}</span>
+            </button>
+          )}
 
-              {/* Proposed Description */}
-              <div className="p-4 rounded-2xl bg-white border border-[#E5E0D5] space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-black uppercase tracking-wider text-[#73776F]">
-                    Proposed Description
-                  </span>
-                  <button
-                    type="button"
-                    onClick={handleApplyDescriptionOnly}
-                    className="inline-flex items-center gap-1 text-xs font-bold text-[#234B36] hover:underline"
-                  >
-                    <Check className="w-3.5 h-3.5" />
-                    <span>Apply Description Only</span>
-                  </button>
+          {/* ── Loading skeleton ── */}
+          {loading && (
+            <div className="space-y-3 animate-pulse">
+              {(mode === 'title' || mode === 'both') && (
+                <div className="rounded-xl border border-[#E5E0D5] p-4 space-y-2">
+                  <div className="h-3 w-24 bg-[#E5E0D5] rounded" />
+                  <div className="h-5 w-3/4 bg-[#E5E0D5] rounded" />
                 </div>
-                <div className="text-xs text-[#252923] whitespace-pre-line leading-relaxed max-h-56 overflow-y-auto pr-2 bg-[#FCFAF6] p-3 rounded-xl border border-[#E5E0D5]/60 font-sans">
-                  {result.description}
+              )}
+              {(mode === 'description' || mode === 'both') && (
+                <div className="rounded-xl border border-[#E5E0D5] p-4 space-y-2">
+                  <div className="h-3 w-28 bg-[#E5E0D5] rounded" />
+                  <div className="h-4 w-full bg-[#E5E0D5] rounded" />
+                  <div className="h-4 w-5/6 bg-[#E5E0D5] rounded" />
+                  <div className="h-4 w-4/5 bg-[#E5E0D5] rounded" />
+                  <div className="h-4 w-3/4 bg-[#E5E0D5] rounded" />
                 </div>
-              </div>
+              )}
+              <p className="text-xs text-center text-[#73776F] font-medium">
+                Analyzing your property specs and drafting copy…
+              </p>
+            </div>
+          )}
+
+          {/* ── Result cards ── */}
+          {result && !loading && (
+            <div className="space-y-3">
+              {/* Title card — show for 'title' or 'both' mode */}
+              {(mode === 'title' || mode === 'both') && (
+                <div className={`rounded-xl border p-4 space-y-2.5 transition ${
+                  appliedField === 'title' || appliedField === 'both'
+                    ? 'border-emerald-300 bg-emerald-50/60'
+                    : 'border-[#E5E0D5] bg-white'
+                }`}>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5">
+                      <Heading1 className="w-3.5 h-3.5 text-[#234B36]" />
+                      <span className="text-[10px] font-black uppercase tracking-widest text-[#73776F]">
+                        {mode === 'title' ? 'Generated Title' : 'Proposed Title'}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={applyTitle}
+                      disabled={appliedField === 'title' || appliedField === 'both'}
+                      className={`inline-flex items-center gap-1 text-[11px] font-black transition rounded-lg px-2.5 py-1 ${
+                        appliedField === 'title' || appliedField === 'both'
+                          ? 'text-emerald-700 bg-emerald-100 cursor-default'
+                          : 'text-[#234B36] bg-[#234B36]/10 hover:bg-[#234B36]/15'
+                      }`}
+                    >
+                      {appliedField === 'title' || appliedField === 'both' ? (
+                        <><Check className="w-3 h-3" /> Applied</>
+                      ) : (
+                        <><ArrowRight className="w-3 h-3" /> {mode === 'title' ? 'Apply Title' : 'Apply Title Only'}</>
+                      )}
+                    </button>
+                  </div>
+                  <p className="text-sm font-black text-[#252923] leading-snug">{result.title}</p>
+                </div>
+              )}
+
+              {/* Description card — show for 'description' or 'both' mode */}
+              {(mode === 'description' || mode === 'both') && (
+                <div className={`rounded-xl border p-4 space-y-2.5 transition ${
+                  appliedField === 'description' || appliedField === 'both'
+                    ? 'border-emerald-300 bg-emerald-50/60'
+                    : 'border-[#E5E0D5] bg-white'
+                }`}>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5">
+                      <AlignLeft className="w-3.5 h-3.5 text-[#234B36]" />
+                      <span className="text-[10px] font-black uppercase tracking-widest text-[#73776F]">
+                        {mode === 'description' ? 'Generated Description' : 'Proposed Description'}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={applyDescription}
+                      disabled={appliedField === 'description' || appliedField === 'both'}
+                      className={`inline-flex items-center gap-1 text-[11px] font-black transition rounded-lg px-2.5 py-1 ${
+                        appliedField === 'description' || appliedField === 'both'
+                          ? 'text-emerald-700 bg-emerald-100 cursor-default'
+                          : 'text-[#234B36] bg-[#234B36]/10 hover:bg-[#234B36]/15'
+                      }`}
+                    >
+                      {appliedField === 'description' || appliedField === 'both' ? (
+                        <><Check className="w-3 h-3" /> Applied</>
+                      ) : (
+                        <><ArrowRight className="w-3 h-3" /> {mode === 'description' ? 'Apply Description' : 'Apply Description Only'}</>
+                      )}
+                    </button>
+                  </div>
+                  <div className="text-xs text-[#252923] whitespace-pre-line leading-relaxed bg-[#FCFAF6] border border-[#E5E0D5]/70 rounded-lg p-3 max-h-52 overflow-y-auto">
+                    {result.description}
+                  </div>
+                </div>
+              )}
+
+              {/* Highlights (both mode only) */}
+              {mode === 'both' && result.highlights && result.highlights.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[10px] font-black text-[#73776F] uppercase tracking-wider">Key Highlights:</span>
+                  {result.highlights.map((h, i) => (
+                    <span
+                      key={i}
+                      className="text-[11px] font-semibold bg-[#234B36]/10 text-[#234B36] border border-[#234B36]/20 px-2 py-0.5 rounded-md"
+                    >
+                      ✓ {h}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
 
-        {/* ── Modal Footer ── */}
-        <div className="p-4 sm:p-5 border-t border-[#EEF3EF] bg-[#FCFAF6] flex items-center justify-between gap-3">
+        {/* ════════ FOOTER ════════ */}
+        <div className="px-5 py-4 border-t border-[#EEF3EF] bg-[#FCFAF6] flex items-center justify-between gap-3 rounded-b-2xl">
           {result ? (
             <>
+              {/* Regenerate */}
               <button
                 type="button"
                 onClick={() => handleGenerate()}
                 disabled={loading}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[#E5E0D5] hover:bg-white text-xs font-bold text-[#73776F] transition"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[#E5E0D5] hover:bg-white text-xs font-bold text-[#73776F] transition disabled:opacity-50"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                <span>Regenerate</span>
+                Regenerate
               </button>
 
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-[#73776F] hover:bg-[#EEF3EF] transition"
+                  className="px-4 py-2 rounded-lg text-xs font-bold text-[#73776F] hover:bg-[#EEF3EF] transition"
                 >
-                  Cancel
+                  {appliedField ? 'Done' : 'Cancel'}
                 </button>
-                <button
-                  type="button"
-                  onClick={handleApplyBoth}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#234B36] hover:bg-[#2D5E43] text-white text-xs font-black shadow-md transition"
-                >
-                  <Check className="w-4 h-4 text-emerald-300" />
-                  <span>Apply Both Title &amp; Description</span>
-                </button>
+
+                {/* Primary CTA — only show "Apply Both" in 'both' mode */}
+                {mode === 'both' && !appliedField && (
+                  <button
+                    type="button"
+                    onClick={applyBoth}
+                    className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl ${accentCls} hover:bg-[#2D5E43] text-white text-xs font-black shadow-md transition`}
+                  >
+                    <Check className="w-3.5 h-3.5 text-emerald-300" />
+                    Apply Both Title & Description
+                  </button>
+                )}
+
+                {/* Single-field mode primary CTA */}
+                {mode === 'title' && result && !appliedField && (
+                  <button
+                    type="button"
+                    onClick={applyTitle}
+                    className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl ${accentCls} hover:bg-[#2D5E43] text-white text-xs font-black shadow-md transition`}
+                  >
+                    <Check className="w-3.5 h-3.5 text-emerald-300" />
+                    Apply This Title
+                  </button>
+                )}
+
+                {mode === 'description' && result && !appliedField && (
+                  <button
+                    type="button"
+                    onClick={applyDescription}
+                    className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl ${accentCls} hover:bg-[#2D5E43] text-white text-xs font-black shadow-md transition`}
+                  >
+                    <Check className="w-3.5 h-3.5 text-emerald-300" />
+                    Apply This Description
+                  </button>
+                )}
               </div>
             </>
           ) : (
@@ -402,9 +579,9 @@ export default function AiListingCopilotModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-[#73776F] hover:bg-[#EEF3EF] transition"
+                className="px-4 py-2 rounded-lg text-xs font-bold text-[#73776F] hover:bg-[#EEF3EF] transition"
               >
-                Close
+                Cancel
               </button>
             </div>
           )}

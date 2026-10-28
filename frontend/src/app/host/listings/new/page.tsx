@@ -12,7 +12,7 @@ import type {
 import AmenitySelector from '../../../../components/host/AmenitySelector';
 import GalleryManager from '../../../../components/host/GalleryManager';
 import AiPricingWidget from '../../../../components/host/AiPricingWidget';
-import AiListingCopilotModal from '../../../../components/host/AiListingCopilotModal';
+import AiListingCopilotModal, { type CopilotMode } from '../../../../components/host/AiListingCopilotModal';
 import {
   ArrowLeft,
   Building2,
@@ -133,6 +133,7 @@ export default function CreateListingPage() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [isCopilotOpen, setIsCopilotOpen] = useState(false);
+  const [copilotMode, setCopilotMode] = useState<CopilotMode>('both');
   const [amenitiesCatalog, setAmenitiesCatalog] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
@@ -525,12 +526,12 @@ export default function CreateListingPage() {
               </label>
               <button
                 type="button"
-                onClick={() => setIsCopilotOpen(true)}
+                onClick={() => { setCopilotMode('title'); setIsCopilotOpen(true); }}
                 className="inline-flex items-center gap-1.5 text-xs font-bold text-[#234B36] hover:text-[#2D5E43] bg-[#234B36]/10 hover:bg-[#234B36]/15 px-2.5 py-1 rounded-lg transition"
-                title="Generate enterprise title and description grounded in property specs"
+                title="Generate a title grounded in your property specs"
               >
                 <Sparkles className="w-3.5 h-3.5 text-[#234B36]" />
-                <span>✨ AI Title &amp; Copilot</span>
+                <span>✨ Generate Title with AI</span>
               </button>
             </div>
             <input
@@ -606,12 +607,12 @@ export default function CreateListingPage() {
               </label>
               <button
                 type="button"
-                onClick={() => setIsCopilotOpen(true)}
+                onClick={() => { setCopilotMode('description'); setIsCopilotOpen(true); }}
                 className="inline-flex items-center gap-1.5 text-xs font-bold text-[#234B36] hover:text-[#2D5E43] bg-[#234B36]/10 hover:bg-[#234B36]/15 px-2.5 py-1 rounded-lg transition"
-                title="Draft description in English & Amharic grounded in property specs"
+                title="Draft description grounded in your property specs"
               >
                 <Sparkles className="w-3.5 h-3.5 text-[#234B36]" />
-                <span>✨ Draft with AI (English &amp; አማርኛ)</span>
+                <span>✨ Draft Description with AI</span>
               </button>
             </div>
             <textarea
@@ -748,6 +749,7 @@ export default function CreateListingPage() {
                 bedrooms={form.bedrooms}
                 bathrooms={form.bathrooms}
                 maxGuests={form.maxGuests}
+                areaSqm={form.areaSqm}
                 amenityIds={form.amenityIds}
                 amenityCatalog={amenitiesCatalog}
                 currentPrice={form.pricePerNight}
@@ -767,37 +769,66 @@ export default function CreateListingPage() {
           )}
 
           {form.listingType === 'SALE' && (
-            <div className="space-y-1.5 max-w-sm">
-              <label htmlFor="salePrice" className="block text-sm font-bold text-[#252923]">
-                Total Sale Price (ETB) <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-black text-[#73776F]">
-                  ETB
-                </span>
-                <input
-                  id="salePrice"
-                  name="salePrice"
-                  type="number"
-                  min="1"
-                  step="any"
-                  value={form.salePrice}
-                  onChange={handleChange}
-                  placeholder="e.g. 8500000"
-                  className={`w-full pl-14 pr-4 py-2.5 rounded-xl border text-sm font-medium text-[#252923] focus:outline-none focus:ring-2 transition ${
-                    errors.salePrice
-                      ? 'border-red-400 focus:ring-red-200'
-                      : 'border-[#E5E0D5] focus:ring-[#234B36]/20 focus:border-[#234B36]'
-                  }`}
-                />
+            <div className="space-y-4">
+              <div className="space-y-1.5 max-w-sm">
+                <label htmlFor="salePrice" className="block text-sm font-bold text-[#252923]">
+                  Total Sale Price (ETB) <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-black text-[#73776F]">
+                    ETB
+                  </span>
+                  <input
+                    id="salePrice"
+                    name="salePrice"
+                    type="number"
+                    min="1"
+                    step="any"
+                    value={form.salePrice}
+                    onChange={handleChange}
+                    placeholder="e.g. 8500000"
+                    className={`w-full pl-14 pr-4 py-2.5 rounded-xl border text-sm font-medium text-[#252923] focus:outline-none focus:ring-2 transition ${
+                      errors.salePrice
+                        ? 'border-red-400 focus:ring-red-200'
+                        : 'border-[#E5E0D5] focus:ring-[#234B36]/20 focus:border-[#234B36]'
+                    }`}
+                  />
+                </div>
+                {errors.salePrice ? (
+                  <p className="text-xs text-red-600 font-semibold">{errors.salePrice}</p>
+                ) : (
+                  <p className="text-xs text-[#73776F]">
+                    Total purchase asking price in Ethiopian Birr.
+                  </p>
+                )}
               </div>
-              {errors.salePrice ? (
-                <p className="text-xs text-red-600 font-semibold">{errors.salePrice}</p>
-              ) : (
-                <p className="text-xs text-[#73776F]">
-                  Total purchase asking price in Ethiopian Birr.
-                </p>
-              )}
+
+              {/* ✨ AI Property Valuation (ETB) for Sale */}
+              <AiPricingWidget
+                city={form.city}
+                subCity={form.subCity}
+                neighborhood={form.neighborhood}
+                propertyType={form.propertyType}
+                listingType="SALE"
+                bedrooms={form.bedrooms}
+                bathrooms={form.bathrooms}
+                maxGuests={form.maxGuests}
+                areaSqm={form.areaSqm}
+                amenityIds={form.amenityIds}
+                amenityCatalog={amenitiesCatalog}
+                currentPrice={form.salePrice}
+                onApplyPrice={(price) => {
+                  setIsDirty(true);
+                  setForm((prev) => ({ ...prev, salePrice: String(price) }));
+                  if (errors.salePrice) {
+                    setErrors((prev) => {
+                      const next = { ...prev };
+                      delete next.salePrice;
+                      return next;
+                    });
+                  }
+                }}
+              />
             </div>
           )}
         </section>
@@ -1229,7 +1260,7 @@ export default function CreateListingPage() {
 
             <button
               type="button"
-              onClick={() => setIsCopilotOpen(true)}
+              onClick={() => { setCopilotMode('both'); setIsCopilotOpen(true); }}
               className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#234B36] hover:bg-[#2D5E43] text-white text-xs font-black shadow-md hover:shadow-lg transition cursor-pointer shrink-0"
             >
               <Sparkles className="w-4 h-4 text-[#E6C687]" />
@@ -1293,6 +1324,7 @@ export default function CreateListingPage() {
       {/* ✨ AI Listing Copilot Modal */}
       <AiListingCopilotModal
         isOpen={isCopilotOpen}
+        mode={copilotMode}
         onClose={() => setIsCopilotOpen(false)}
         propertyType={form.propertyType}
         listingType={form.listingType}
