@@ -574,8 +574,8 @@ export default function CreateListingPage() {
                       }`}
                     />
                     <div>
-                      <div className="text-xs font-black text-[#252923]">Nightly Rental</div>
-                      <div className="text-[11px] text-[#73776F]">Short-term guest stays</div>
+                      <div className="text-xs font-black text-[#252923]">For Rent</div>
+                      <div className="text-[11px] text-[#73776F]">Short-term & flexible guest stays</div>
                     </div>
                   </button>
 
@@ -918,7 +918,7 @@ export default function CreateListingPage() {
               id="section-narrative"
               className="bg-white border border-[#E5E0D5] rounded-2xl p-6 md:p-8 space-y-6 scroll-mt-14"
             >
-              <div className="flex items-center justify-between pb-3 border-b border-[#EEF3EF]">
+              <div className="pb-3 border-b border-[#EEF3EF]">
                 <div className="flex items-center gap-2.5">
                   <Sparkles className="w-5 h-5 text-[#234B36]" />
                   <div>
@@ -928,18 +928,6 @@ export default function CreateListingPage() {
                     </p>
                   </div>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCopilotMode('both');
-                    setIsCopilotOpen(true);
-                  }}
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-gradient-to-r from-[#234B36] to-[#2D5E43] hover:from-[#1E3F2E] hover:to-[#234B36] px-3.5 py-1.5 rounded-xl shadow-xs transition"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-[#E6C687]" />
-                  <span>✨ AI Copilot Suite</span>
-                </button>
               </div>
 
               {/* Title Input */}
@@ -954,9 +942,9 @@ export default function CreateListingPage() {
                       setCopilotMode('title');
                       setIsCopilotOpen(true);
                     }}
-                    className="inline-flex items-center gap-1 text-xs font-bold text-[#234B36] hover:underline"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#EEF3EF] hover:bg-[#E2ECE4] text-xs font-black text-[#234B36] border border-[#234B36]/20 shadow-2xs hover:shadow-xs transition"
                   >
-                    <Sparkles className="w-3 h-3 text-[#234B36]" />
+                    <Sparkles className="w-3.5 h-3.5 text-[#234B36]" />
                     <span>Auto-draft Title</span>
                   </button>
                 </div>
@@ -989,9 +977,9 @@ export default function CreateListingPage() {
                       setCopilotMode('description');
                       setIsCopilotOpen(true);
                     }}
-                    className="inline-flex items-center gap-1 text-xs font-bold text-[#234B36] hover:underline"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#EEF3EF] hover:bg-[#E2ECE4] text-xs font-black text-[#234B36] border border-[#234B36]/20 shadow-2xs hover:shadow-xs transition"
                   >
-                    <Sparkles className="w-3 h-3 text-[#234B36]" />
+                    <Sparkles className="w-3.5 h-3.5 text-[#234B36]" />
                     <span>Auto-draft Description</span>
                   </button>
                 </div>
@@ -1032,12 +1020,12 @@ export default function CreateListingPage() {
               </div>
 
               {form.listingType === 'RENTAL' ? (
-                <div className="space-y-1.5 max-w-xl">
+                <div className="space-y-2 max-w-3xl">
                   <label htmlFor="pricePerNight" className="block text-sm font-bold text-[#252923]">
-                    Nightly Rate (ETB) <span className="text-red-500">*</span>
+                    Price per night (ETB) <span className="text-red-500">*</span>
                   </label>
-                  <div className="flex flex-wrap items-center gap-2.5">
-                    <div className="relative w-full sm:w-64">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                    <div className="relative w-full sm:w-56 shrink-0">
                       <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-black text-[#73776F]">
                         ETB
                       </span>
@@ -1091,12 +1079,12 @@ export default function CreateListingPage() {
                   )}
                 </div>
               ) : (
-                <div className="space-y-1.5 max-w-xl">
+                <div className="space-y-2 max-w-3xl">
                   <label htmlFor="salePrice" className="block text-sm font-bold text-[#252923]">
                     Total Sale Price (ETB) <span className="text-red-500">*</span>
                   </label>
-                  <div className="flex flex-wrap items-center gap-2.5">
-                    <div className="relative w-full sm:w-64">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                    <div className="relative w-full sm:w-56 shrink-0">
                       <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-black text-[#73776F]">
                         ETB
                       </span>

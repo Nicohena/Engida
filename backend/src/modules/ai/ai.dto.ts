@@ -131,6 +131,14 @@ export class GenerateListingContentDto {
 
   @IsString()
   @IsOptional()
+  descriptionLength?: 'short' | 'medium' | 'long';
+
+  @IsString()
+  @IsOptional()
+  titleLength?: 'concise' | 'standard' | 'extended';
+
+  @IsString()
+  @IsOptional()
   coverImage?: string;
 
   @IsArray()

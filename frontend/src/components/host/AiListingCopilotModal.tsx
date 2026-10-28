@@ -49,6 +49,20 @@ interface AiListingCopilotModalProps {
 
 type LanguageOption = 'en' | 'am';
 type ToneOption = 'luxury' | 'warm' | 'business';
+type DescriptionLengthOption = 'short' | 'medium' | 'long';
+type TitleLengthOption = 'concise' | 'standard' | 'extended';
+
+const DESC_LENGTH_OPTIONS: { value: DescriptionLengthOption; label: string; desc: string; detail: string }[] = [
+  { value: 'short', label: 'Short', desc: 'Punchy & mobile-friendly', detail: '~50-80 words' },
+  { value: 'medium', label: 'Medium', desc: 'Balanced standard', detail: '~150 words' },
+  { value: 'long', label: 'Detailed', desc: 'Comprehensive room-by-room', detail: '~300 words' },
+];
+
+const TITLE_LENGTH_OPTIONS: { value: TitleLengthOption; label: string; desc: string; detail: string }[] = [
+  { value: 'concise', label: 'Concise', desc: 'Short & punchy', detail: '~40 chars' },
+  { value: 'standard', label: 'Standard', desc: 'Balanced & clear', detail: '~75 chars' },
+  { value: 'extended', label: 'Extended', desc: 'Descriptive & feature-rich', detail: '~110 chars' },
+];
 
 // ─────────────────────────────────────────────────────────
 // Tone options config
@@ -87,6 +101,8 @@ export default function AiListingCopilotModal({
 }: AiListingCopilotModalProps) {
   const [language, setLanguage] = useState<LanguageOption>('en');
   const [tone, setTone] = useState<ToneOption>('luxury');
+  const [descriptionLength, setDescriptionLength] = useState<DescriptionLengthOption>('medium');
+  const [titleLength, setTitleLength] = useState<TitleLengthOption>('standard');
   const [result, setResult] = useState<GenerateListingContentResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -141,9 +157,16 @@ export default function AiListingCopilotModal({
   }[mode];
 
   // ── API call ────────────────────────────────────────────
-  const handleGenerate = async (targetLang?: LanguageOption, targetTone?: ToneOption) => {
-    const activeLang  = targetLang  ?? language;
-    const activeTone  = targetTone  ?? tone;
+  const handleGenerate = async (
+    targetLang?: LanguageOption,
+    targetTone?: ToneOption,
+    targetDescLen?: DescriptionLengthOption,
+    targetTitleLen?: TitleLengthOption,
+  ) => {
+    const activeLang      = targetLang      ?? language;
+    const activeTone      = targetTone      ?? tone;
+    const activeDescLen   = targetDescLen   ?? descriptionLength;
+    const activeTitleLen  = targetTitleLen  ?? titleLength;
 
     setLoading(true);
     setError(null);
@@ -151,20 +174,22 @@ export default function AiListingCopilotModal({
 
     try {
       const payload = {
-        propertyType:  propertyType || 'APARTMENT',
-        listingType:   listingType  || 'RENTAL',
-        city:          city || 'Addis Ababa',
-        subCity:       subCity       || undefined,
-        neighborhood:  neighborhood  || undefined,
-        bedrooms:      numBedrooms,
-        bathrooms:     numBathrooms,
-        maxGuests:     Math.max(1, parseInt(String(maxGuests), 10) || 1),
-        areaSqm:       numAreaSqm > 0 ? numAreaSqm : undefined,
-        amenities:     selectedAmenityNames.length > 0 ? selectedAmenityNames : amenityIds,
-        language:      activeLang,
-        tone:          activeTone,
-        coverImage:    coverImage?.trim() || undefined,
-        images:        images && images.length > 0 ? images : undefined,
+        propertyType:       propertyType || 'APARTMENT',
+        listingType:        listingType  || 'RENTAL',
+        city:               city || 'Addis Ababa',
+        subCity:            subCity       || undefined,
+        neighborhood:       neighborhood  || undefined,
+        bedrooms:           numBedrooms,
+        bathrooms:          numBathrooms,
+        maxGuests:          Math.max(1, parseInt(String(maxGuests), 10) || 1),
+        areaSqm:            numAreaSqm > 0 ? numAreaSqm : undefined,
+        amenities:          selectedAmenityNames.length > 0 ? selectedAmenityNames : amenityIds,
+        language:           activeLang,
+        tone:               activeTone,
+        descriptionLength:  activeDescLen,
+        titleLength:        activeTitleLen,
+        coverImage:         coverImage?.trim() || undefined,
+        images:             images && images.length > 0 ? images : undefined,
       };
 
       const response = await apiFetch<GenerateListingContentResponse>('/ai/generate-listing-content', {
@@ -293,7 +318,7 @@ export default function AiListingCopilotModal({
               <div className="flex items-center gap-2 text-xs font-bold text-[#252923]">
                 <Home className="w-3.5 h-3.5 text-[#234B36] shrink-0" />
                 <span className="truncate">
-                  {listingType === 'SALE' ? 'For Sale' : 'Nightly Rental'} · {propertyType}
+                  {listingType === 'SALE' ? 'For Sale' : 'For Rent'} · {propertyType}
                 </span>
               </div>
             </div>
@@ -375,7 +400,7 @@ export default function AiListingCopilotModal({
                     type="button"
                     onClick={() => {
                       setTone(t.value);
-                      if (result) handleGenerate(language, t.value);
+                      if (result) handleGenerate(language, t.value, descriptionLength, titleLength);
                     }}
                     title={t.desc}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
@@ -390,6 +415,66 @@ export default function AiListingCopilotModal({
                 ))}
               </div>
             </div>
+
+            {/* Title Length selector (if mode is 'title' or 'both') */}
+            {(mode === 'title' || mode === 'both') && (
+              <div className="flex items-start gap-3 pt-2 border-t border-[#EEF3EF]">
+                <span className="text-xs font-bold text-[#73776F] w-20 shrink-0 pt-0.5">Title Size:</span>
+                <div className="flex flex-wrap gap-2">
+                  {TITLE_LENGTH_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => {
+                        setTitleLength(opt.value);
+                        if (result) handleGenerate(language, tone, descriptionLength, opt.value);
+                      }}
+                      title={`${opt.desc} (${opt.detail})`}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
+                        titleLength === opt.value
+                          ? `${accentCls} text-white border-transparent shadow-sm`
+                          : 'border-[#E5E0D5] text-[#73776F] hover:border-[#234B36]/50 hover:text-[#252923] bg-white'
+                      }`}
+                    >
+                      <span>{opt.label}</span>
+                      <span className={`text-[10px] ${titleLength === opt.value ? 'text-white/80' : 'text-[#73776F]'}`}>
+                        ({opt.detail})
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Description Length selector (if mode is 'description' or 'both') */}
+            {(mode === 'description' || mode === 'both') && (
+              <div className="flex items-start gap-3 pt-2 border-t border-[#EEF3EF]">
+                <span className="text-xs font-bold text-[#73776F] w-20 shrink-0 pt-0.5">Length:</span>
+                <div className="flex flex-wrap gap-2">
+                  {DESC_LENGTH_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => {
+                        setDescriptionLength(opt.value);
+                        if (result) handleGenerate(language, tone, opt.value, titleLength);
+                      }}
+                      title={`${opt.desc} (${opt.detail})`}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
+                        descriptionLength === opt.value
+                          ? `${accentCls} text-white border-transparent shadow-sm`
+                          : 'border-[#E5E0D5] text-[#73776F] hover:border-[#234B36]/50 hover:text-[#252923] bg-white'
+                      }`}
+                    >
+                      <span>{opt.label}</span>
+                      <span className={`text-[10px] ${descriptionLength === opt.value ? 'text-white/80' : 'text-[#73776F]'}`}>
+                        ({opt.detail})
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* ── Error notice ── */}

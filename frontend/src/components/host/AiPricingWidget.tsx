@@ -59,7 +59,7 @@ export default function AiPricingWidget({
 
   return (
     <>
-      <div className={`inline-flex flex-wrap items-center gap-2 ${className}`}>
+      <div className={`inline-flex items-center gap-2 shrink-0 ${className}`}>
         {/* Trigger Button - positioned directly beside the price input */}
         <button
           type="button"

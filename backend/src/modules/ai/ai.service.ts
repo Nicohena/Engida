@@ -67,6 +67,8 @@ export interface GenerateListingContentRequest {
   amenities: string[];
   language?: 'en' | 'am';
   tone?: 'luxury' | 'warm' | 'business';
+  descriptionLength?: 'short' | 'medium' | 'long';
+  titleLength?: 'concise' | 'standard' | 'extended';
   coverImage?: string;
   images?: string[];
 }
@@ -628,11 +630,18 @@ export class AiService {
    * Strictly adheres to the property's real specifications (Location, Type, Rental vs Sale,
    * actual selected amenities). Never invents or assumes unselected features.
    */
+  /**
+   * Enterprise multilingual content generator.
+   * Strictly adheres to the property's real specifications (Location, Type, Rental vs Sale,
+   * actual selected amenities). Dynamically varies phrasing across tone, length, and iterations.
+   */
   private fallbackGenerateListingContent(
     request: GenerateListingContentRequest,
   ): GenerateListingContentResponse {
     const lang = request.language === 'am' ? 'am' : 'en';
     const tone = request.tone || 'luxury';
+    const descLength = request.descriptionLength || 'medium';
+    const titleLen = request.titleLength || 'standard';
     const isSale = (request.listingType || '').toUpperCase() === 'SALE';
     const city = (request.city || 'Addis Ababa').trim();
     const subCity = (request.subCity || '').trim();
@@ -646,7 +655,6 @@ export class AiService {
     const hasAmenity = (keywords: string[]) =>
       rawAmenities.some((item) => keywords.some((kw) => item.includes(kw)));
 
-    // Strictly check for presence in actual selected amenities
     const hasGenerator = hasAmenity(['generator', 'power', 'backup', 'solar', 'electricity', 'zap']);
     const hasWifi = hasAmenity(['wifi', 'internet', 'fiber', 'wi-fi', 'fbe2b0f1']);
     const hasHotWater = hasAmenity(['hot water', 'water tank', 'reservoir', 'heater', '2139b538']);
@@ -659,11 +667,7 @@ export class AiService {
     const hasAC = hasAmenity(['ac', 'air conditioning', 'cooling', 'c109b028']);
     const hasPhotos = Boolean(request.coverImage || (request.images && request.images.length > 0));
 
-    // Location detection
-    const isDebreBerhan = city.toLowerCase().includes('debre berhan') || city.toLowerCase().includes('debreberhan');
-    const isBahirDar = city.toLowerCase().includes('bahir dar') || city.toLowerCase().includes('bahirdar');
-    const isHawassa = city.toLowerCase().includes('hawassa') || city.toLowerCase().includes('awassa');
-    const isBishoftu = city.toLowerCase().includes('bishoftu') || city.toLowerCase().includes('debre zeyit');
+    const pick = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 
     // ─────────────────────────────────────────────────────────
     // AMHARIC (አማርኛ) GENERATION
@@ -685,20 +689,51 @@ export class AiService {
       const bathAm = bathrooms > 0 ? `${bathrooms} ዘመናዊ መታጠቢያ ቤት` : 'የተሟላ መታጠቢያ ቤት';
       const areaAm = areaSqm > 0 ? ` (${areaSqm} ካሬ ሜትር)` : '';
 
+      // Title Generation by length & tone
       let title = '';
       if (isSale) {
-        title = `በ${locAmharic} የሚሸጥ ዘመናዊ ባለ ${bedAm} ${typeAm}${areaAm}`;
-      } else {
-        if (tone === 'warm') {
-          title = `በ${locAmharic} የሚገኝ ሰላማዊና ምቹ ባለ ${bedAm} ${typeAm}`;
-        } else if (tone === 'business') {
-          title = `በ${locAmharic} የሚገኝ ዘመናዊ ባለ ${bedAm} ${typeAm} ለዲፕሎማቶችና ለቢዝነስ ተጓዦች`;
+        if (titleLen === 'concise') {
+          title = `በ${locAmharic} የሚሸጥ ባለ ${bedAm} ${typeAm}`;
+        } else if (titleLen === 'extended') {
+          title = `በ${locAmharic} የሚሸጥ ዘመናዊ የቅንጦት ባለ ${bedAm} ${typeAm}${areaAm} - ሙሉ ሰነድ ያለው`;
         } else {
-          title = `በ${locAmharic} የሚገኝ የቅንጦት ባለ ${bedAm} ${typeAm}${hasGenerator ? ' ከሙሉ ጀነሬተር ጋር' : ''}`;
+          title = `በ${locAmharic} የሚሸጥ ዘመናዊ ባለ ${bedAm} ${typeAm}${areaAm}`;
+        }
+      } else {
+        if (titleLen === 'concise') {
+          if (tone === 'warm') title = `ምቹ ባለ ${bedAm} ${typeAm} በ${locAmharic}`;
+          else if (tone === 'business') title = `ዘመናዊ የቢዝነስ ማረፊያ በ${locAmharic}`;
+          else title = `የቅንጦት ባለ ${bedAm} ${typeAm} በ${locAmharic}`;
+        } else if (titleLen === 'extended') {
+          if (tone === 'warm') {
+            title = `በ${locAmharic} የሚገኝ ሰላማዊ፣ ንጹህና ለቤተሰብ እጅግ ምቹ ባለ ${bedAm} ${typeAm}`;
+          } else if (tone === 'business') {
+            title = `በ${locAmharic} ለቢዝነስና ለዲፕሎማቲክ እንግዶች የተዘጋጀ ባለ ${bedAm} ${typeAm}${hasWifi ? ' ከፈጣን ዋይፋይ ጋር' : ''}`;
+          } else {
+            title = `በ${locAmharic} የሚገኝ ከፍተኛ ደረጃውን የጠበቀ የቅንጦት ባለ ${bedAm} ${typeAm}${hasGenerator ? ' ከሙሉ ጀነሬተር ጋር' : ''}`;
+          }
+        } else {
+          // Standard
+          if (tone === 'warm') {
+            title = pick([
+              `በ${locAmharic} የሚገኝ ሰላማዊና ምቹ ባለ ${bedAm} ${typeAm}`,
+              `ሞቅ ያለ የእንግዳ ተቀባይነት መንፈስ ያለው ባለ ${bedAm} ${typeAm} በ${locAmharic}`,
+            ]);
+          } else if (tone === 'business') {
+            title = pick([
+              `በ${locAmharic} የሚገኝ ዘመናዊ ባለ ${bedAm} ${typeAm} ለዲፕሎማቶችና ለቢዝነስ ተጓዦች`,
+              `በ${locAmharic} የንግድ ማዕከል አቅራቢያ የሚገኝ ምቹ የስራና የመኖሪያ ${typeAm}`,
+            ]);
+          } else {
+            title = pick([
+              `በ${locAmharic} የሚገኝ የቅንጦት ባለ ${bedAm} ${typeAm}${hasGenerator ? ' ከሙሉ ጀነሬተር ጋር' : ''}`,
+              `ውብና ዘመናዊ ባለ ${bedAm} የቅንጦት ${typeAm} በ${locAmharic}`,
+            ]);
+          }
         }
       }
 
-      // Build verified amenities list
+      // Amenities in Amharic
       const amenitiesAm: string[] = [];
       if (hasGenerator) amenitiesAm.push('• 24/7 አስተማማኝ የመጠባበቂያ ጀነሬተር (የመብራት መቆራረጥ አያስጨንቅም)');
       if (hasWifi) amenitiesAm.push('• ፈጣን የፋይበር ኢንተርኔት (ዋይፋይ) ለስራ እና ለመዝናኛ');
@@ -711,44 +746,58 @@ export class AiService {
       if (hasWasher) amenitiesAm.push('• የልብስ ማጠቢያ ማሽን');
       if (hasAC) amenitiesAm.push('• የአየር ማቀዝቀዣ (AC)');
 
-      let locationHookAm = `በ${locAmharic} እምብርት የሚገኝ ውብና ዘመናዊ ${typeAm}።`;
-      if (isDebreBerhan) {
-        locationHookAm = `በደብረ ብርሃን ከተማ ጸጥታ የሰፈነበት ሰፈር ውስጥ የሚገኝ፣ ንጹህ አየርና የተረጋጋ የመኖሪያ ድባብ ያለው ማረፊያ ${typeAm}።`;
-      } else if (isBahirDar) {
-        locationHookAm = `በባሕር ዳር ከተማ በጣና ሐይቅ አቅራቢያ የሚገኝ ማራኪና የተሟላ ${typeAm}።`;
-      } else if (isHawassa) {
-        locationHookAm = `በሐዋሳ ሐይቅ አካባቢ የሚገኝ ውብና ዘመናዊ ${typeAm}።`;
-      } else if (isBishoftu) {
-        locationHookAm = `በቢሾፍቱ የሐይቆች ከተማ ውስጥ የሚገኝ ድንቅ የዕረፍት ማረፊያ ${typeAm}።`;
-      }
+      // Dynamic Tone-Driven Openers
+      const warmOpeners = [
+        `ወደዚህ በ${locAmharic} ወደሚገኝ እውነተኛ የኢትዮጵያ እንግዳ ተቀባይነት መንፈስ ወዳለው ምቹ ማረፊያ እንኳን በደህና መጡ።`,
+        `በ${locAmharic} ሰላማዊ የመኖሪያ ሰፈር ውስጥ የሚገኝ፣ ከቤተሰብዎ ጋር የሚያርፉበት ውብና ረጋ ያለ ${typeAm}።`,
+        `እንደራስዎ ቤት የሚሰማዎትን ሞቅ ያለ እና የተረጋጋ መንፈስ በ${locAmharic} ያግኙ።`,
+      ];
+      const businessOpeners = [
+        `ለቢዝነስ ስራ አስፈፃሚዎች፣ ለዲፕሎማቶች እና ለርቀት ሰራተኞች በ${locAmharic} በልዩ ሁኔታ የተዘጋጀ ከፍተኛ ደረጃውን የጠበቀ ${typeAm}።`,
+        `በ${locAmharic} የዲፕሎማቲክ እና የንግድ ማዕከላት ቅርብ ርቀት ላይ የሚገኝ፣ ያልተቋረጠ የስራ ምቹነትን የሚያረጋግጥ ዘመናዊ ማረፊያ።`,
+        `ጊዜዎን እና ምቾትዎን በአስተማማኝ ሁኔታ የሚያስጠብቅ፣ ለስራና ለእረፍት ተስማሚ የሆነ በ${locAmharic} የሚገኝ ${typeAm}።`,
+      ];
+      const luxuryOpeners = [
+        `በ${locAmharic} እምብርት የሚገኝ፣ ልዩ የቅንጦትና የዘመናዊ አኗኗር ደረጃን የሚያንፀባርቅ ማራኪ ${typeAm}።`,
+        `የላቀ ጥራት ባላቸው የቤት እቃዎች የተዋበ፣ ከፍተኛ ዲፕሎማሲያዊ ደረጃውን የጠበቀ የ${locAmharic} የቅንጦት ማረፊያ።`,
+        `የተረጋጋ ግርማ ሞገስ እና አስደናቂ እይታ ያለው በ${locAmharic} የሚገኝ ድንቅ ${typeAm}።`,
+      ];
+
+      const selectedOpener = pick(
+        tone === 'warm' ? warmOpeners : tone === 'business' ? businessOpeners : luxuryOpeners,
+      );
 
       let description = '';
-      if (isSale) {
-        description = `${locationHookAm} ይህ ንብረት ለግል መኖሪያም ሆነ ለከፍተኛ የኢንቨስትመንት ገቢ እጅግ ተመራጭ ነው።
+      if (descLength === 'short') {
+        description = `${selectedOpener} ባለ ${bedAm} እና ${bathAm} ሲሆን፣ ምቹ ሳሎን እና አስተማማኝ መሰረተ ልማቶችን ያካትታል።
+${amenitiesAm.slice(0, 4).join('\n')}
 
-የንብረቱ ስፋትና የክፍሎች አደረጃጀት:
-${areaSqm > 0 ? `ጠቅላላ የቦታው ስፋት ${areaSqm} ካሬ ሜትር ሲሆን፣ ` : ''}ባለ ${bedAm} እና ${bathAm} በጥራት የተገነባ ነው። ሰፊ ሳሎን፣ ዘመናዊ ወጥ ቤት እና ምቹ የመኖሪያ ክፍሎችን ያካትታል።
+አሁኑኑ ያስይዙ ወይም ለተጨማሪ መረጃ ያነጋግሩን!`;
+      } else if (descLength === 'long') {
+        description = `${selectedOpener}
 
-የተሟሉ አገልግሎቶች:
+የክፍሎች አደረጃጀትና ዝርዝር:
+${areaSqm > 0 ? `ጠቅላላ ስፋቱ ${areaSqm} ካሬ ሜትር ሲሆን፣ ` : ''}ባለ ${bedAm} በጥንቃቄ የተዘጋጁ ኦርቶፔዲክ አልጋዎችን ያካተተ ነው። ${bathAm}፣ ሰፊ የቀን ብርሃን የሚገባው ሳሎን፣ እና የተሟላ ዘመናዊ ወጥ ቤት ይዟል።
+
+የተረጋገጡ አገልግሎቶችና መሰረተ-ልማት:
 ${amenitiesAm.length > 0 ? amenitiesAm.join('\n') : '• በሰፈሩ ውስጥ የተሟሉ መሰረተ-ልማቶች ይገኛሉ'}
 
 አካባቢና መዳረሻ:
-ከዋና አስፋልት መንገድ፣ ከትምህርት ቤቶች፣ ከገበያ እና ከትራንስፖርት መዳረሻዎች ቅርብ ርቀት ላይ የሚገኝ አስተማማኝ የመኖሪያ ቀጠና ነው።
+በ${locAmharic} ጸጥታ በሰፈነበት አካባቢ የሚገኝ ሲሆን፣ ከዋና አስፋልት መንገዶች፣ ታዋቂ ምግብ ቤቶች፣ የገበያ ማዕከላት እና ኤምባሲዎች ጥቂት ደቂቃዎች ብቻ ይርቃል።
 
-የይዞታ ማረጋገጫ ሰነድ የተሟላ ሲሆን፣ ፍላጎት ካለዎት አሁኑኑ ያነጋግሩን!`;
+እውነተኛውን የኢትዮጵያ እንግዳ ተቀባይነት (እንግዳ ተቀባይነት) በታላቅ ክብር እናቀርባለን። አሁኑኑ ያስይዙ!`;
       } else {
-        description = `${locationHookAm} ለዲፕሎማቶች፣ ለቢዝነስ ተጓዦች፣ ለዳያስፖራ እና ለቤተሰብ እጅግ ምቹና ሰላማዊ ማረፊያ ነው።
+        // Medium (Default)
+        description = `${selectedOpener} ባለ ${bedAm} እና ${bathAm} ያካተተ ሲሆን፣ ለዲፕሎማቶች፣ ለዳያስፖራ እና ለቤተሰብ እጅግ ምቹ ነው።
 
 የመኖሪያ ክፍሉ ዝርዝር:
-የመኖሪያ ክፍሉ ሰፊና ዘመናዊ የቤት እቃዎች የተሟሉለት ሲሆን፣ በቂ የተፈጥሮ ብርሃን ወደ ውስጥ ይገባል። ባለ ${bedAm} እና ${bathAm} ያካተተ ሲሆን፣ ለመዝናናት እና ለምቾትዎ በጥንቃቄ የተዘጋጀ ነው።
+ሰፊ ሳሎን፣ ዘመናዊ ወጥ ቤት እና ምቹ የመኝታ ክፍሎችን ያካተተ ነው። ለመዝናናት እና ለሰላማዊ እረፍትዎ በጥንቃቄ የተዘጋጀ ነው።
 
-የተረጋገጡ አገልግሎቶችና መሰረተ-ልማት:
+የተረጋገጡ አገልግሎቶች:
 ${amenitiesAm.length > 0 ? amenitiesAm.join('\n') : '• ምቹና ዘመናዊ የመኖሪያ አገልግሎቶች'}
 
 አካባቢና መዳረሻ:
-ከዋና ዋና አውራ ጎዳናዎች፣ ከታወቁ ሬስቶራንቶች እና የገበያ ማዕከላት ጥቂት ደቂቃዎች ርቀት ላይ ይገኛል። ጸጥታ የሰፈነበትና አስተማማኝ የመኖሪያ ሰፈር ነው።
-
-እውነተኛውን የኢትዮጵያ እንግዳ ተቀባይነት ባህል በደስታ እናቀርብልዎታለን። አሁኑኑ ያስይዙ!`;
+ከዋና ዋና አውራ ጎዳናዎች እና የገበያ ማዕከላት ቅርብ ርቀት ላይ የሚገኝ አስተማማኝ የመኖሪያ ሰፈር ነው። አሁኑኑ ያስይዙ!`;
       }
 
       const highlights: string[] = [];
@@ -761,13 +810,7 @@ ${amenitiesAm.length > 0 ? amenitiesAm.join('\n') : '• ምቹና ዘመናዊ 
       if (hasPhotos) highlights.push('በጥራት የተነሱ ማራኪ ፎቶግራፎች');
       if (highlights.length === 0) highlights.push('ዘመናዊ አፓርታማ', 'ምቹ አካባቢ');
 
-      return {
-        title,
-        description,
-        language: 'am',
-        tone,
-        highlights,
-      };
+      return { title, description, language: 'am', tone, highlights };
     }
 
     // ─────────────────────────────────────────────────────────
@@ -788,69 +831,156 @@ ${amenitiesAm.length > 0 ? amenitiesAm.join('\n') : '• ምቹና ዘመናዊ 
     const bedText = bedrooms > 0 ? `${bedrooms}BR` : 'Cozy';
     const areaText = areaSqm > 0 ? ` (${areaSqm} m²)` : '';
 
+    // Title Generation by length & tone
     let title = '';
     if (isSale) {
-      title = `Prime ${bedText} ${typeText} For Sale in ${locText}${areaText}`;
-    } else {
-      if (tone === 'warm') {
-        title = `Serene & Authentic ${bedText} ${typeText} in ${locText}`;
-      } else if (tone === 'business') {
-        title = `Modern Serviced ${bedText} ${typeText} in ${locText} | Dedicated Workspace`;
+      if (titleLen === 'concise') {
+        title = `Prime ${bedText} ${typeText} For Sale in ${locText}`;
+      } else if (titleLen === 'extended') {
+        title = `Exceptional ${bedText} ${typeText} For Sale in ${locText}${areaText} | Clear Title Deed & Prime Location`;
       } else {
-        title = `Executive ${bedText} ${typeText} in ${locText}${hasGenerator ? ' with Standby Generator' : ''}`;
+        title = `Prime ${bedText} ${typeText} For Sale in ${locText}${areaText}`;
+      }
+    } else {
+      if (titleLen === 'concise') {
+        if (tone === 'warm') {
+          title = pick([
+            `Cozy ${bedText} Haven in ${locText}`,
+            `Serene ${bedText} ${typeText} in ${locText}`,
+            `Peaceful ${bedText} Stay in ${locText}`,
+          ]);
+        } else if (tone === 'business') {
+          title = pick([
+            `Executive ${bedText} Suite in ${locText}`,
+            `Modern ${bedText} Corporate Flat in ${locText}`,
+            `Serviced ${bedText} ${typeText} in ${locText}`,
+          ]);
+        } else {
+          title = pick([
+            `Luxury ${bedText} ${typeText} in ${locText}`,
+            `Opulent ${bedText} Residence in ${locText}`,
+            `Curated ${bedText} Penthouse in ${locText}`,
+          ]);
+        }
+      } else if (titleLen === 'extended') {
+        if (tone === 'warm') {
+          title = `Spacious & Peaceful ${bedText} Family ${typeText} in ${locText}${hasSecurity ? ' with 24/7 Gated Security' : ''}${hasGarden ? ' & Garden' : ''}`;
+        } else if (tone === 'business') {
+          title = `Corporate Executive ${bedText} Residence in ${locText} with Dedicated Fiber WiFi${hasGenerator ? ' & Automatic Generator' : ''}`;
+        } else {
+          title = `Exclusive ${bedrooms > 0 ? `${bedrooms}-Bedroom ` : ''}Luxury ${typeText} in ${locText}${hasGenerator ? ' with Standby Generator' : ''}${hasPool ? ' & Pool' : ''}`;
+        }
+      } else {
+        // Standard
+        if (tone === 'warm') {
+          title = pick([
+            `Serene & Authentic ${bedText} ${typeText} in ${locText}`,
+            `Charming & Welcoming ${bedText} ${typeText} in ${locText} | Warm Hospitality`,
+            `Restful ${bedText} ${typeText} in ${locText} | Peaceful Neighborhood`,
+          ]);
+        } else if (tone === 'business') {
+          title = pick([
+            `Modern Serviced ${bedText} ${typeText} in ${locText} | Dedicated Workspace`,
+            `Executive ${bedText} Apartment in ${locText} | High-Speed Fiber WiFi`,
+            `Corporate ${bedText} Residence in ${locText} | 24/7 Power & Security`,
+          ]);
+        } else {
+          title = pick([
+            `Executive ${bedText} ${typeText} in ${locText}${hasGenerator ? ' with Standby Generator' : ''}`,
+            `Contemporary Luxury ${bedText} ${typeText} in ${locText} | Prime Views`,
+            `Prestige ${bedText} ${typeText} in ${locText} | Curated Designer Finishes`,
+          ]);
+        }
       }
     }
 
+    // Amenities in English
     const amenitiesEn: string[] = [];
-    if (hasGenerator) amenitiesEn.push('• 24/7 Automatic Standby Generator (uninterrupted electricity during outages)');
-    if (hasWifi) amenitiesEn.push('• High-Speed Dedicated Fiber WiFi (for seamless remote work & streaming)');
-    if (hasHotWater) amenitiesEn.push('• Pressurized High-Capacity Water Reservoir & Continuous Hot Water');
-    if (hasSecurity) amenitiesEn.push('• 24/7 Gated Concierge Security & Perimeter Guard');
-    if (hasParking) amenitiesEn.push('• Secure On-Site Gated Parking Space');
-    if (hasKitchen) amenitiesEn.push('• Fully Equipped Chef\'s Kitchen with modern appliances');
-    if (hasPool) amenitiesEn.push('• Private / Shared Swimming Pool Access');
+    if (hasGenerator) amenitiesEn.push('• 24/7 Automatic Standby Generator (continuous electricity during power outages)');
+    if (hasWifi) amenitiesEn.push('• Dedicated High-Speed Fiber WiFi (low-latency for streaming & video calls)');
+    if (hasHotWater) amenitiesEn.push('• High-Capacity Water Reservoir & Constant Pressure Hot Water');
+    if (hasSecurity) amenitiesEn.push('• 24/7 Gated Concierge Security, Perimeter Guard & CCTV');
+    if (hasParking) amenitiesEn.push('• Dedicated Gated On-Site Parking Space');
+    if (hasKitchen) amenitiesEn.push('• Fully Outfitted Chef\'s Kitchen with modern appliances & cookware');
+    if (hasPool) amenitiesEn.push('• Swimming Pool Access');
     if (hasGarden) amenitiesEn.push('• Private Landscaped Garden & Outdoor Veranda');
-    if (hasWasher) amenitiesEn.push('• In-Unit Washing Machine & Laundry Facilities');
+    if (hasWasher) amenitiesEn.push('• In-Unit Automatic Laundry Machine');
     if (hasAC) amenitiesEn.push('• Climate-Controlled Air Conditioning');
 
-    let locationHookEn = `Welcome to your refined sanctuary in ${locText}.`;
-    if (isDebreBerhan) {
-      locationHookEn = `Nestled in the tranquil, refreshing mountain highlands of Debre Berhan, this property offers crisp highland air, peaceful residential quietude, and supreme comfort.`;
-    } else if (isBahirDar) {
-      locationHookEn = `Wake up to gentle lakefront breezes in Bahir Dar. Located near the scenic shores of Lake Tana, this residence combines relaxation with easy access to city attractions.`;
-    } else if (isHawassa) {
-      locationHookEn = `Experience the vibrant leisure of the Great Rift Valley in Hawassa. Situated in a peaceful neighborhood moments from Lake Hawassa.`;
-    } else if (isBishoftu) {
-      locationHookEn = `The perfect leisure escape in Bishoftu, situated near the volcanic crater lakes with tranquil resort surroundings.`;
-    }
+    // Dynamic Tone-Driven Openers & Narrative Bodies
+    const luxuryHooks = [
+      `Elevate your stay in ${locText} within this impeccably appointed architectural ${typeText.toLowerCase()}. Crafted for diplomats, executives, and luxury travelers who demand supreme refinement.`,
+      `Welcome to an exclusive high-altitude retreat in ${locText}. Combining contemporary European elegance with curated Ethiopian touches, this residence delivers an uncompromising standard of prestige.`,
+      `Immerse yourself in understated luxury in ${locText}. Thoughtfully styled with high-end designer finishes, sun-drenched living salons, and expansive city outlooks.`,
+    ];
+
+    const warmHooks = [
+      `Feel genuinely embraced by authentic Ethiopian warmth (እንግዳ ተቀባይነት) in this charming, peaceful ${bedText.toLowerCase()} ${typeText.toLowerCase()} nestled in ${locText}.`,
+      `Welcome to your tranquil sanctuary in ${locText}. Designed as a comforting home-away-from-home, where diaspora visitors, visiting families, and leisure travelers can unwind in serene tranquility.`,
+      `A sunlit, restorative haven in ${locText}. Experience the heartfelt hospitality and quiet leafy charm of one of the city's most pleasant residential pockets.`,
+    ];
+
+    const businessHooks = [
+      `Engineered for high-performing executives, remote professionals, and diplomatic delegations, this serviced ${bedText.toLowerCase()} ${typeText.toLowerCase()} in ${locText} combines zero-friction productivity with executive comfort.`,
+      `Strategically positioned in ${locText} near key commercial corridors and diplomatic missions, this modern residence provides an uninterrupted work environment with dedicated high-speed fiber connectivity.`,
+      `A streamlined corporate base in ${locText}. Featuring quiet acoustic insulation, ergonomic workspace facilities, and dependable 24/7 utility infrastructure.`,
+    ];
+
+    const selectedHook = pick(
+      tone === 'warm' ? warmHooks : tone === 'business' ? businessHooks : luxuryHooks,
+    );
 
     let description = '';
-    if (isSale) {
-      description = `${locationHookEn} An exceptional real estate opportunity combining high construction standards, strategic positioning, and solid long-term capital appreciation.
+    if (descLength === 'short') {
+      description = `${selectedHook}
 
-Property Layout & Dimensions:
-${areaSqm > 0 ? `Boasts a generous total area of ${areaSqm} square meters. ` : ''}Features ${bedrooms} spacious bedroom${bedrooms > 1 ? 's' : ''}, ${bathrooms} modern bathroom${bathrooms > 1 ? 's' : ''}, an expansive living and dining salon, and a contemporary kitchen layout designed for comfortable family living or high-yield rental returns.
+Featuring ${bedrooms} restful bedroom${bedrooms > 1 ? 's' : ''}, ${bathrooms} immaculate bathroom${bathrooms > 1 ? 's' : ''}, and a spacious, sunlit living salon.
+${amenitiesEn.slice(0, 4).join('\n')}
+
+Enjoy complete peace of mind in a secure, prime residential neighborhood. Inquire now or book your dates today!`;
+    } else if (descLength === 'long') {
+      const spaceNarrative = tone === 'business'
+        ? `The Space & Work Infrastructure:
+Designed to keep you operating at peak efficiency. Features a dedicated ergonomic workstation, bright natural daylight, and a comfortable executive lounge. The ${bedrooms} bedroom${bedrooms > 1 ? 's' : ''} are fitted with premium orthopedic mattresses to guarantee deep restorative rest between demanding meetings.`
+        : tone === 'warm'
+        ? `The Space & Family Comfort:
+Warm wooden textures, plush textiles, and welcoming open spaces make this residence instantly inviting. Featuring ${bedrooms} peaceful bedroom${bedrooms > 1 ? 's' : ''} with hotel-grade linens, ${bathrooms} pristine bathroom${bathrooms > 1 ? 's' : ''}, and a joyful dining area perfect for sharing meals.`
+        : `The Living Salon & Private Suites:
+An expansive, architectural layout boasting high ceilings, designer fixtures, and abundant natural sunlight. Each of the ${bedrooms} private bedroom suites features custom orthopedic bedding, blackout curtains, and generous wardrobe storage. ${bathrooms} bespoke bathroom${bathrooms > 1 ? 's' : ''} provide spa-like relaxation with pressurized hot water.`;
+
+      description = `${selectedHook}
+
+${spaceNarrative}
+
+Verified Utilities & Comfort Standards:
+${amenitiesEn.length > 0 ? amenitiesEn.join('\n') : '• Dependable municipal utilities and verified residential comfort standards in place'}
+
+Neighborhood & Regional Connectivity:
+Conveniently located in ${locText} with immediate, paved access to premier dining, international supermarkets, embassies, and major transit hubs. Enjoy total tranquility inside while staying just moments from the heartbeat of the city.
+
+We take pride in delivering gracious, responsive service throughout your stay. Reserve your booking today!`;
+    } else {
+      // Medium (Default)
+      const mediumBody = tone === 'business'
+        ? `The Space:
+Features a quiet, dedicated desk with low-latency WiFi, sunlit executive living salon, ${bedrooms} quiet bedroom${bedrooms > 1 ? 's' : ''}, and ${bathrooms} modern bathroom${bathrooms > 1 ? 's' : ''}. Optimized for focused concentration and restful evenings.`
+        : tone === 'warm'
+        ? `The Space:
+Features a sunlit, comfortable living room, restful orthopedic bedding across ${bedrooms} bedroom${bedrooms > 1 ? 's' : ''}, and ${bathrooms} sparkling clean bathroom${bathrooms > 1 ? 's' : ''}. Every room is curated for tranquility and family comfort.`
+        : `The Space:
+Features an airy, open-concept living salon, restful orthopedic bedding across ${bedrooms} bedroom${bedrooms > 1 ? 's' : ''}, and ${bathrooms} immaculate bathroom${bathrooms > 1 ? 's' : ''}. Thoughtfully appointed for executive relaxation and privacy.`;
+
+      description = `${selectedHook}
+
+${mediumBody}
 
 Verified Infrastructure & Amenities:
-${amenitiesEn.length > 0 ? amenitiesEn.join('\n') : '• Essential municipal infrastructure and neighborhood conveniences in place'}
-
-Location & Connectivity:
-Centrally positioned in ${locText} with immediate access to paved roadways, commercial centers, reputable schools, and everyday transit.
-
-Full legal ownership documentation and title deed (carte) in order. Serious buyers are invited to arrange a private viewing today!`;
-    } else {
-      description = `${locationHookEn} Designed with an elegant blend of contemporary comfort and warm Ethiopian hospitality, this ${bedText.toLowerCase()} ${typeText.toLowerCase()} is the ideal urban retreat for business travelers, diplomats, diaspora visitors, and visiting families.
-
-The Space:
-Features a sunlit, spacious living salon, restful orthopedic bedding across ${bedrooms} bedroom${bedrooms > 1 ? 's' : ''}, and ${bathrooms} immaculate bathroom${bathrooms > 1 ? 's' : ''}. Every room is curated for maximum tranquility and restorative sleep.
-
-Verified Utilities & Comfort Standard:
-${amenitiesEn.length > 0 ? amenitiesEn.join('\n') : '• Dependable essential utilities and comfortable amenities'}
+${amenitiesEn.length > 0 ? amenitiesEn.join('\n') : '• Dependable essential utilities and verified comfort amenities'}
 
 Neighborhood & Proximity:
-Conveniently situated with seamless access to dining, supermarkets, and major transit routes. Enjoy complete peace of mind in a safe, quiet residential environment.
+Centrally situated in ${locText} with convenient access to shopping, dining, and major transportation routes in a safe, peaceful neighborhood.
 
-We take pride in delivering authentic Ethiopian warmth (እንግዳ ተቀባይነት). Inquire now or book your stay today!`;
+Book your stay today or contact us with any questions!`;
     }
 
     const highlights: string[] = [];
@@ -863,13 +993,7 @@ We take pride in delivering authentic Ethiopian warmth (እንግዳ ተቀባ�
     if (hasPhotos) highlights.push('Verified High-Resolution Photo Gallery');
     if (highlights.length === 0) highlights.push('Quality Residence', 'Prime Location');
 
-    return {
-      title,
-      description,
-      language: 'en',
-      tone,
-      highlights,
-    };
+    return { title, description, language: 'en', tone, highlights };
   }
 
   private fallbackRecommendations(): RecommendationResponse {

@@ -139,7 +139,7 @@ export default function HostListingLivePreview({
                   isSale ? 'bg-amber-600 text-white' : 'bg-[#234B36] text-white'
                 }`}
               >
-                {isSale ? 'For Sale' : 'Nightly Stay'}
+                {isSale ? 'For Sale' : 'For Rent'}
               </span>
             </div>
 

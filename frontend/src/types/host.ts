@@ -453,6 +453,8 @@ export interface GenerateListingContentRequest {
   amenities: string[];
   language?: 'en' | 'am';
   tone?: 'luxury' | 'warm' | 'business';
+  descriptionLength?: 'short' | 'medium' | 'long';
+  titleLength?: 'concise' | 'standard' | 'extended';
   coverImage?: string;
   images?: string[];
 }
