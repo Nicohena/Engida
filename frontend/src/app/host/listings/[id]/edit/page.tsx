@@ -815,64 +815,62 @@ export default function EditListingPage() {
                 {errors.pricePerNight && (
                   <p className="text-xs text-red-600 font-semibold">{errors.pricePerNight}</p>
                 )}
-              </div>
 
-              {/* ✨ AI Dynamic Price Recommendation (ETB) */}
-              <AiPricingWidget
-                city={form.city}
-                subCity={form.subCity}
-                neighborhood={form.neighborhood}
-                propertyType={form.propertyType}
-                listingType={listing.listingType}
-                bedrooms={form.bedrooms}
-                bathrooms={form.bathrooms}
-                maxGuests={form.maxGuests}
-                areaSqm={form.areaSqm}
-                amenityIds={form.amenityIds}
-                amenityCatalog={amenitiesCatalog}
-                currentPrice={form.pricePerNight}
-                onApplyPrice={(price) => {
-                  setIsDirty(true);
-                  setForm((prev) => (prev ? { ...prev, pricePerNight: String(price) } : prev));
-                  if (errors.pricePerNight) {
-                    setErrors((prev) => {
-                      const next = { ...prev };
-                      delete next.pricePerNight;
-                      return next;
-                    });
-                  }
-                }}
-              />
+                {/* ✨ AI Dynamic Price Recommendation (ETB) */}
+                <AiPricingWidget
+                  city={form.city}
+                  subCity={form.subCity}
+                  neighborhood={form.neighborhood}
+                  propertyType={form.propertyType}
+                  listingType={listing.listingType}
+                  bedrooms={form.bedrooms}
+                  bathrooms={form.bathrooms}
+                  maxGuests={form.maxGuests}
+                  areaSqm={form.areaSqm}
+                  amenityIds={form.amenityIds}
+                  amenityCatalog={amenitiesCatalog}
+                  currentPrice={form.pricePerNight}
+                  onApplyPrice={(price) => {
+                    setIsDirty(true);
+                    setForm((prev) => (prev ? { ...prev, pricePerNight: String(price) } : prev));
+                    if (errors.pricePerNight) {
+                      setErrors((prev) => {
+                        const next = { ...prev };
+                        delete next.pricePerNight;
+                        return next;
+                      });
+                    }
+                  }}
+                />
+              </div>
             </div>
           ) : (
-            <div className="space-y-4">
-              <div className="space-y-1.5 max-w-sm">
-                <label htmlFor="salePrice" className="block text-sm font-bold text-[#3a302a]">
-                  Total Sale Price (ETB) <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-black text-[#605850]">
-                    ETB
-                  </span>
-                  <input
-                    id="salePrice"
-                    name="salePrice"
-                    type="number"
-                    min="1"
-                    step="any"
-                    value={form.salePrice}
-                    onChange={handleChange}
-                    className={`w-full pl-14 pr-4 py-2.5 rounded-xl border text-sm font-medium text-[#3a302a] focus:outline-none focus:ring-2 transition ${
-                      errors.salePrice
-                        ? 'border-red-400 focus:ring-red-200'
-                        : 'border-[#d8d0c8] focus:ring-[#c2652a]/20 focus:border-[#c2652a]'
-                    }`}
-                  />
-                </div>
-                {errors.salePrice && (
-                  <p className="text-xs text-red-600 font-semibold">{errors.salePrice}</p>
-                )}
+            <div className="space-y-1.5 max-w-sm">
+              <label htmlFor="salePrice" className="block text-sm font-bold text-[#3a302a]">
+                Total Sale Price (ETB) <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-black text-[#605850]">
+                  ETB
+                </span>
+                <input
+                  id="salePrice"
+                  name="salePrice"
+                  type="number"
+                  min="1"
+                  step="any"
+                  value={form.salePrice}
+                  onChange={handleChange}
+                  className={`w-full pl-14 pr-4 py-2.5 rounded-xl border text-sm font-medium text-[#3a302a] focus:outline-none focus:ring-2 transition ${
+                    errors.salePrice
+                      ? 'border-red-400 focus:ring-red-200'
+                      : 'border-[#d8d0c8] focus:ring-[#c2652a]/20 focus:border-[#c2652a]'
+                  }`}
+                />
               </div>
+              {errors.salePrice && (
+                <p className="text-xs text-red-600 font-semibold">{errors.salePrice}</p>
+              )}
 
               {/* ✨ AI Property Valuation (ETB) for Sale */}
               <AiPricingWidget

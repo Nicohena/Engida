@@ -408,6 +408,14 @@ export interface AiKeyPriceDriver {
   type: 'positive' | 'neutral' | 'premium';
 }
 
+export interface AiPriceStrategyTier {
+  rate: number;
+  label: string;
+  badge?: string;
+  rationale: string;
+  occupancyTarget?: string;
+}
+
 export interface AiPricePredictionResponse {
   predictedPrice: number;
   currency: 'ETB';
@@ -416,6 +424,12 @@ export interface AiPricePredictionResponse {
     min: number;
     max: number;
   };
+  tiers?: {
+    fastBooking: AiPriceStrategyTier;
+    optimal: AiPriceStrategyTier;
+    peakSeason: AiPriceStrategyTier;
+  };
+  hostTip?: string;
   breakdown: {
     baseRateEtb: number;
     locationMultiplier: number;
