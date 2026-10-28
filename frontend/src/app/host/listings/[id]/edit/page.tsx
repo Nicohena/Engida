@@ -587,8 +587,8 @@ export default function EditListingPage() {
             LEFT COLUMN: Structured Sequential Form (65%)
         ═══════════════════════════════════════════════════ */}
         <div className="lg:col-span-7 xl:col-span-8 space-y-6">
-          {/* Sticky Section Quick Jump Bar */}
-          <div className="sticky top-2 z-10 bg-white/90 backdrop-blur-md border border-[#E5E0D5] rounded-2xl p-1.5 shadow-xs overflow-x-auto flex items-center gap-1">
+          {/* Section Quick Jump Bar (Static Header Navigation) */}
+          <div className="bg-white border border-[#E5E0D5] rounded-2xl p-1.5 shadow-2xs overflow-x-auto no-scrollbar flex items-center gap-1">
             {SECTIONS_NAV.map((sec) => (
               <button
                 key={sec.id}
