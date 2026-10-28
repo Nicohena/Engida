@@ -33,6 +33,9 @@ export interface HostEarningsSummaryResponse {
   cancelledCount: number;
   cancelledBookingValue: number;
   monthlyBreakdown: MonthlyEarningItem[];
+  ledgerAvailableMinor?: string;
+  ledgerPendingEscrowMinor?: string;
+  ledgerPaidTotalMinor?: string;
 }
 
 export interface HostTransactionItem {

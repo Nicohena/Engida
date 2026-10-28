@@ -462,4 +462,76 @@ export class HostController {
   ) {
     return this.hostService.getHostReviews(user.id, query, user.role);
   }
+
+  // ─────────────────────────────────────────
+  // 13. PAYOUTS & BANKING ACCOUNTS
+  // ─────────────────────────────────────────
+
+  /**
+   * GET /host/payouts
+   * List payouts disbursed or pending for the authenticated host.
+   */
+  @Get('payouts')
+  async getHostPayouts(@GetUser() user: User) {
+    return this.hostService.getHostPayouts(user.id);
+  }
+
+  /**
+   * GET /host/payouts/:id
+   * Get detailed statement & line items for a single payout.
+   */
+  @Get('payouts/:id')
+  async getHostPayoutDetail(
+    @Param('id', ParseUUIDPipe) id: string,
+    @GetUser() user: User,
+  ) {
+    return this.hostService.getHostPayoutDetail(user.id, id);
+  }
+
+  /**
+   * GET /host/payouts/:id/statement
+   * Download / view payout remittance statement.
+   */
+  @Get('payouts/:id/statement')
+  async getHostPayoutStatement(
+    @Param('id', ParseUUIDPipe) id: string,
+    @GetUser() user: User,
+  ) {
+    return this.hostService.getHostPayoutStatement(user.id, id);
+  }
+
+  /**
+   * GET /host/payout-accounts
+   * Returns list of configured payout accounts with masked numbers.
+   */
+  @Get('payout-accounts')
+  async getHostPayoutAccounts(@GetUser() user: User) {
+    return this.hostService.getHostPayoutAccounts(user.id);
+  }
+
+  /**
+   * POST /host/payout-accounts
+   * Register a new payout account (bank / telebirr).
+   */
+  @Post('payout-accounts')
+  @HttpCode(HttpStatus.CREATED)
+  async createHostPayoutAccount(
+    @GetUser() user: User,
+    @Body() dto: any,
+  ) {
+    return this.hostService.createHostPayoutAccount(user.id, dto, user);
+  }
+
+  /**
+   * PATCH /host/payout-accounts/:id
+   * Update payout account (e.g. disable).
+   */
+  @Patch('payout-accounts/:id')
+  async updateHostPayoutAccount(
+    @Param('id', ParseUUIDPipe) id: string,
+    @GetUser() user: User,
+    @Body() dto: any,
+  ) {
+    return this.hostService.updateHostPayoutAccount(user.id, id, dto);
+  }
 }

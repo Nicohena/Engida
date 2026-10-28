@@ -54,6 +54,10 @@ import {
   HostTransactionItem,
   HostTransactionsResponse,
 } from './dto/host-earnings-response.dto';
+import {
+  HostReservationsPage,
+  HostReservationResponse,
+} from './dto/host-reservation-response.dto';
 import { Review } from '../reviews/entities/review.entity';
 import { ReviewModerationStatus } from '../reviews/entities/review.entity';
 import {
@@ -69,9 +73,13 @@ import {
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/entities/notification.entity';
 import { AuditService, AuditRequestContext } from '../audit/audit.service';
-import { HostReservationResponse, HostReservationsPage } from './dto/host-reservation-response.dto';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { sanitizeListingUpdatePayload } from '../properties/constants/moderation.constants';
+import { LedgerService } from '../finance/services/ledger.service';
+import { Payout } from '../finance/entities/payout.entity';
+import { PayoutAccount, PayoutAccountStatus } from '../finance/entities/payout-account.entity';
+import { EscrowHold, EscrowHoldStatus } from '../finance/entities/escrow-hold.entity';
+import { PayoutsService } from '../finance/services/payouts.service';
 
 // ─────────────────────────────────────────────
 // Allowed status transitions for listings
@@ -139,6 +147,19 @@ export class HostService {
     private readonly guestReviewRepository?: Repository<Review>,
     @Optional()
     private readonly identityVerificationService?: IdentityVerificationService,
+    @Optional()
+    private readonly ledgerService?: LedgerService,
+    @Optional()
+    @InjectRepository(Payout)
+    private readonly payoutRepo?: Repository<Payout>,
+    @Optional()
+    @InjectRepository(PayoutAccount)
+    private readonly payoutAccountRepo?: Repository<PayoutAccount>,
+    @Optional()
+    @InjectRepository(EscrowHold)
+    private readonly escrowRepo?: Repository<EscrowHold>,
+    @Optional()
+    private readonly payoutsService?: PayoutsService,
   ) {}
 
   // ─────────────────────────────────────────
@@ -1546,6 +1567,51 @@ export class HostService {
       b.yearMonth.localeCompare(a.yearMonth),
     );
 
+    let ledgerAvailableMinor = '0';
+    let ledgerPendingEscrowMinor = '0';
+    let ledgerPaidTotalMinor = '0';
+
+    if (this.ledgerService) {
+      try {
+        const balance = await this.ledgerService.getHostPayableBalance(hostId);
+        ledgerAvailableMinor = balance.toString();
+      } catch (err: any) {
+        this.logger.warn(`Failed to fetch ledger balance for host ${hostId}: ${err.message}`);
+      }
+    }
+
+    if (this.escrowRepo) {
+      try {
+        const escrowRes = await this.escrowRepo
+          .createQueryBuilder('hold')
+          .innerJoin('hold.booking', 'b')
+          .innerJoin('b.property', 'p')
+          .select('COALESCE(SUM(hold.amount_minor - hold.refunded_minor), 0)', 'total')
+          .where('p.host_id = :hostId', { hostId })
+          .andWhere('hold.status IN (:...statuses)', {
+            statuses: [EscrowHoldStatus.HELD, EscrowHoldStatus.PARTIALLY_REFUNDED, EscrowHoldStatus.FROZEN],
+          })
+          .getRawOne();
+        ledgerPendingEscrowMinor = escrowRes?.total || '0';
+      } catch (err: any) {
+        this.logger.warn(`Failed to fetch escrow holds for host ${hostId}: ${err.message}`);
+      }
+    }
+
+    if (this.payoutRepo) {
+      try {
+        const payoutRes = await this.payoutRepo
+          .createQueryBuilder('payout')
+          .select('COALESCE(SUM(payout.amount_minor), 0)', 'total')
+          .where('payout.host_id = :hostId', { hostId })
+          .andWhere('payout.status = :status', { status: 'PAID' })
+          .getRawOne();
+        ledgerPaidTotalMinor = payoutRes?.total || '0';
+      } catch (err: any) {
+        this.logger.warn(`Failed to fetch payouts for host ${hostId}: ${err.message}`);
+      }
+    }
+
     return {
       currency,
       totalBookingsCount,
@@ -1561,6 +1627,9 @@ export class HostService {
       cancelledCount,
       cancelledBookingValue: Math.round(cancelledBookingValue * 100) / 100,
       monthlyBreakdown,
+      ledgerAvailableMinor,
+      ledgerPendingEscrowMinor,
+      ledgerPaidTotalMinor,
     };
   }
 
@@ -1878,5 +1947,120 @@ export class HostService {
       // For sale listings, rental-style availability blocks are not relevant
       // Price validation happens at publish time
     }
+  }
+
+  // ─────────────────────────────────────────
+  // 14. HOST PAYOUTS & ACCOUNTS (PHASE 3)
+  // ─────────────────────────────────────────
+
+  async getHostPayouts(hostId: string) {
+    if (!this.payoutRepo) return [];
+    const payouts = await this.payoutRepo.find({
+      where: { hostId },
+      relations: ['payoutAccount'],
+      order: { createdAt: 'DESC' },
+    });
+    return payouts.map((p) => ({
+      id: p.id,
+      amountMinor: p.amountMinor,
+      currency: p.currency,
+      status: p.status,
+      periodStart: p.periodStart,
+      periodEnd: p.periodEnd,
+      providerTransferId: p.providerTransferId,
+      paidAt: p.paidAt,
+      accountLast4: p.payoutAccount?.accountNumberLast4 || '',
+      createdAt: p.createdAt,
+    }));
+  }
+
+  async getHostPayoutDetail(hostId: string, payoutId: string) {
+    if (!this.payoutRepo) throw new NotFoundException('Payouts service not initialized');
+    const payout = await this.payoutRepo.findOne({
+      where: { id: payoutId, hostId },
+      relations: ['payoutAccount', 'items', 'events'],
+    });
+    if (!payout) throw new NotFoundException('Payout not found');
+
+    return {
+      id: payout.id,
+      amountMinor: payout.amountMinor,
+      currency: payout.currency,
+      status: payout.status,
+      periodStart: payout.periodStart,
+      periodEnd: payout.periodEnd,
+      providerTransferId: payout.providerTransferId,
+      paidAt: payout.paidAt,
+      failureCode: payout.failureCode,
+      failureMessage: payout.failureMessage,
+      items: payout.items,
+      events: payout.events,
+      account: {
+        accountName: payout.payoutAccount?.accountName,
+        accountNumberLast4: payout.payoutAccount?.accountNumberLast4,
+        bankName: payout.payoutAccount?.bankName,
+      },
+      createdAt: payout.createdAt,
+    };
+  }
+
+  async getHostPayoutStatement(hostId: string, payoutId: string) {
+    const detail = await this.getHostPayoutDetail(hostId, payoutId);
+    return {
+      statementId: `STMT-${detail.id.slice(0, 8)}`,
+      payoutId: detail.id,
+      periodStart: detail.periodStart,
+      periodEnd: detail.periodEnd,
+      amountMinor: detail.amountMinor,
+      currency: detail.currency,
+      status: detail.status,
+      items: detail.items,
+      generatedAt: new Date().toISOString(),
+    };
+  }
+
+  async getHostPayoutAccounts(hostId: string) {
+    if (!this.payoutAccountRepo) return [];
+    const accounts = await this.payoutAccountRepo.find({
+      where: { hostId },
+      order: { createdAt: 'DESC' },
+    });
+    return accounts.map((acc) => ({
+      id: acc.id,
+      provider: acc.provider,
+      accountName: acc.accountName,
+      accountNumberLast4: acc.accountNumberLast4,
+      phoneLast4: acc.phoneLast4,
+      bankName: acc.bankName,
+      bankBranch: acc.bankBranch,
+      currency: acc.currency,
+      status: acc.status,
+      verifiedAt: acc.verifiedAt,
+      createdAt: acc.createdAt,
+    }));
+  }
+
+  async createHostPayoutAccount(hostId: string, dto: any, user: User) {
+    if (!this.payoutsService) throw new NotFoundException('Payouts service not initialized');
+    return this.payoutsService.createPayoutAccount(hostId, dto, user);
+  }
+
+  async updateHostPayoutAccount(hostId: string, accountId: string, updates: any) {
+    if (!this.payoutAccountRepo) throw new NotFoundException('Payout account repo not initialized');
+    const account = await this.payoutAccountRepo.findOne({
+      where: { id: accountId, hostId },
+    });
+    if (!account) throw new NotFoundException('Payout account not found');
+
+    if (updates.status === 'DISABLED') {
+      account.status = PayoutAccountStatus.DISABLED;
+      await this.payoutAccountRepo.save(account);
+    }
+    return {
+      id: account.id,
+      accountName: account.accountName,
+      accountNumberLast4: account.accountNumberLast4,
+      status: account.status,
+    };
   }
 }
