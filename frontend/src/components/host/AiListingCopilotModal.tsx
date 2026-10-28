@@ -103,6 +103,7 @@ export default function AiListingCopilotModal({
   const [tone, setTone] = useState<ToneOption>('luxury');
   const [descriptionLength, setDescriptionLength] = useState<DescriptionLengthOption>('medium');
   const [titleLength, setTitleLength] = useState<TitleLengthOption>('standard');
+  const [regenerationCount, setRegenerationCount] = useState(0);
   const [result, setResult] = useState<GenerateListingContentResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -116,6 +117,7 @@ export default function AiListingCopilotModal({
       setError(null);
       setAppliedField(null);
       setLoading(false);
+      setRegenerationCount(0);
     }
   }, [isOpen, mode]);
 
@@ -168,6 +170,9 @@ export default function AiListingCopilotModal({
     const activeDescLen   = targetDescLen   ?? descriptionLength;
     const activeTitleLen  = targetTitleLen  ?? titleLength;
 
+    const nextCount = regenerationCount + 1;
+    setRegenerationCount(nextCount);
+
     setLoading(true);
     setError(null);
     setAppliedField(null);
@@ -190,6 +195,7 @@ export default function AiListingCopilotModal({
         titleLength:        activeTitleLen,
         coverImage:         coverImage?.trim() || undefined,
         images:             images && images.length > 0 ? images : undefined,
+        regenerationIndex:  nextCount,
       };
 
       const response = await apiFetch<GenerateListingContentResponse>('/ai/generate-listing-content', {
@@ -390,10 +396,10 @@ export default function AiListingCopilotModal({
               </div>
             </div>
 
-            {/* Tone selector */}
-            <div className="flex items-start gap-3">
-              <span className="text-xs font-bold text-[#73776F] w-20 shrink-0 pt-0.5">Tone:</span>
-              <div className="flex flex-wrap gap-2">
+            {/* Tone selector — fixed 3-col grid, no wrapping */}
+            <div className="space-y-1.5">
+              <span className="text-xs font-bold text-[#73776F]">Tone:</span>
+              <div className="grid grid-cols-3 gap-2">
                 {TONE_OPTIONS.map((t) => (
                   <button
                     key={t.value}
@@ -403,24 +409,24 @@ export default function AiListingCopilotModal({
                       if (result) handleGenerate(language, t.value, descriptionLength, titleLength);
                     }}
                     title={t.desc}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
+                    className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg text-xs font-bold border transition ${
                       tone === t.value
                         ? `${accentCls} text-white border-transparent shadow-sm`
                         : 'border-[#E5E0D5] text-[#73776F] hover:border-[#234B36]/50 hover:text-[#252923] bg-white'
                     }`}
                   >
                     <span>{t.emoji}</span>
-                    <span>{t.label}</span>
+                    <span className="truncate">{t.label}</span>
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Title Length selector (if mode is 'title' or 'both') */}
+            {/* Title Length selector — fixed 3-col grid, no wrapping */}
             {(mode === 'title' || mode === 'both') && (
-              <div className="flex items-start gap-3 pt-2 border-t border-[#EEF3EF]">
-                <span className="text-xs font-bold text-[#73776F] w-20 shrink-0 pt-0.5">Title Size:</span>
-                <div className="flex flex-wrap gap-2">
+              <div className="space-y-1.5 pt-2 border-t border-[#EEF3EF]">
+                <span className="text-xs font-bold text-[#73776F]">Title Size:</span>
+                <div className="grid grid-cols-3 gap-2">
                   {TITLE_LENGTH_OPTIONS.map((opt) => (
                     <button
                       key={opt.value}
@@ -430,15 +436,15 @@ export default function AiListingCopilotModal({
                         if (result) handleGenerate(language, tone, descriptionLength, opt.value);
                       }}
                       title={`${opt.desc} (${opt.detail})`}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
+                      className={`flex flex-col items-center justify-center px-2 py-2 rounded-lg text-xs font-bold border transition ${
                         titleLength === opt.value
                           ? `${accentCls} text-white border-transparent shadow-sm`
                           : 'border-[#E5E0D5] text-[#73776F] hover:border-[#234B36]/50 hover:text-[#252923] bg-white'
                       }`}
                     >
                       <span>{opt.label}</span>
-                      <span className={`text-[10px] ${titleLength === opt.value ? 'text-white/80' : 'text-[#73776F]'}`}>
-                        ({opt.detail})
+                      <span className={`text-[10px] mt-0.5 ${titleLength === opt.value ? 'text-white/70' : 'text-[#A0988A]'}`}>
+                        {opt.detail}
                       </span>
                     </button>
                   ))}
@@ -446,11 +452,11 @@ export default function AiListingCopilotModal({
               </div>
             )}
 
-            {/* Description Length selector (if mode is 'description' or 'both') */}
+            {/* Description Length selector — fixed 3-col grid, no wrapping */}
             {(mode === 'description' || mode === 'both') && (
-              <div className="flex items-start gap-3 pt-2 border-t border-[#EEF3EF]">
-                <span className="text-xs font-bold text-[#73776F] w-20 shrink-0 pt-0.5">Length:</span>
-                <div className="flex flex-wrap gap-2">
+              <div className="space-y-1.5 pt-2 border-t border-[#EEF3EF]">
+                <span className="text-xs font-bold text-[#73776F]">Length:</span>
+                <div className="grid grid-cols-3 gap-2">
                   {DESC_LENGTH_OPTIONS.map((opt) => (
                     <button
                       key={opt.value}
@@ -460,15 +466,15 @@ export default function AiListingCopilotModal({
                         if (result) handleGenerate(language, tone, opt.value, titleLength);
                       }}
                       title={`${opt.desc} (${opt.detail})`}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
+                      className={`flex flex-col items-center justify-center px-2 py-2 rounded-lg text-xs font-bold border transition ${
                         descriptionLength === opt.value
                           ? `${accentCls} text-white border-transparent shadow-sm`
                           : 'border-[#E5E0D5] text-[#73776F] hover:border-[#234B36]/50 hover:text-[#252923] bg-white'
                       }`}
                     >
                       <span>{opt.label}</span>
-                      <span className={`text-[10px] ${descriptionLength === opt.value ? 'text-white/80' : 'text-[#73776F]'}`}>
-                        ({opt.detail})
+                      <span className={`text-[10px] mt-0.5 ${descriptionLength === opt.value ? 'text-white/70' : 'text-[#A0988A]'}`}>
+                        {opt.detail}
                       </span>
                     </button>
                   ))}
@@ -503,17 +509,7 @@ export default function AiListingCopilotModal({
             </div>
           )}
 
-          {/* ── Generate button (pre-result state) ── */}
-          {!result && !loading && (
-            <button
-              type="button"
-              onClick={() => handleGenerate()}
-              className={`w-full flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-xl ${accentCls} hover:bg-[#2D5E43] text-white text-sm font-black shadow-md hover:shadow-lg transition`}
-            >
-              <Sparkles className="w-4 h-4 text-[#E6C687]" />
-              <span>{modalMeta.btnLabel}</span>
-            </button>
-          )}
+          {/* Generate button moved to footer — empty placeholder here */}
 
           {/* ── Loading skeleton ── */}
           {loading && (
@@ -544,7 +540,7 @@ export default function AiListingCopilotModal({
             <div className="space-y-3">
               {/* Title card — show for 'title' or 'both' mode */}
               {(mode === 'title' || mode === 'both') && (
-                <div className={`rounded-xl border p-4 space-y-2.5 transition ${
+                <div className={`rounded-xl border p-4 space-y-2 transition ${
                   appliedField === 'title' || appliedField === 'both'
                     ? 'border-emerald-300 bg-emerald-50/60'
                     : 'border-[#E5E0D5] bg-white'
@@ -556,22 +552,11 @@ export default function AiListingCopilotModal({
                         {mode === 'title' ? 'Generated Title' : 'Proposed Title'}
                       </span>
                     </div>
-                    <button
-                      type="button"
-                      onClick={applyTitle}
-                      disabled={appliedField === 'title' || appliedField === 'both'}
-                      className={`inline-flex items-center gap-1 text-[11px] font-black transition rounded-lg px-2.5 py-1 ${
-                        appliedField === 'title' || appliedField === 'both'
-                          ? 'text-emerald-700 bg-emerald-100 cursor-default'
-                          : 'text-[#234B36] bg-[#234B36]/10 hover:bg-[#234B36]/15'
-                      }`}
-                    >
-                      {appliedField === 'title' || appliedField === 'both' ? (
-                        <><Check className="w-3 h-3" /> Applied</>
-                      ) : (
-                        <><ArrowRight className="w-3 h-3" /> {mode === 'title' ? 'Apply Title' : 'Apply Title Only'}</>
-                      )}
-                    </button>
+                    {(appliedField === 'title' || appliedField === 'both') && (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-black text-emerald-700 bg-emerald-100 rounded-lg px-2.5 py-1">
+                        <Check className="w-3 h-3" /> Applied
+                      </span>
+                    )}
                   </div>
                   <p className="text-sm font-black text-[#252923] leading-snug">{result.title}</p>
                 </div>
@@ -591,22 +576,11 @@ export default function AiListingCopilotModal({
                         {mode === 'description' ? 'Generated Description' : 'Proposed Description'}
                       </span>
                     </div>
-                    <button
-                      type="button"
-                      onClick={applyDescription}
-                      disabled={appliedField === 'description' || appliedField === 'both'}
-                      className={`inline-flex items-center gap-1 text-[11px] font-black transition rounded-lg px-2.5 py-1 ${
-                        appliedField === 'description' || appliedField === 'both'
-                          ? 'text-emerald-700 bg-emerald-100 cursor-default'
-                          : 'text-[#234B36] bg-[#234B36]/10 hover:bg-[#234B36]/15'
-                      }`}
-                    >
-                      {appliedField === 'description' || appliedField === 'both' ? (
-                        <><Check className="w-3 h-3" /> Applied</>
-                      ) : (
-                        <><ArrowRight className="w-3 h-3" /> {mode === 'description' ? 'Apply Description' : 'Apply Description Only'}</>
-                      )}
-                    </button>
+                    {(appliedField === 'description' || appliedField === 'both') && (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-black text-emerald-700 bg-emerald-100 rounded-lg px-2.5 py-1">
+                        <Check className="w-3 h-3" /> Applied
+                      </span>
+                    )}
                   </div>
                   <div className="text-xs text-[#252923] whitespace-pre-line leading-relaxed bg-[#FCFAF6] border border-[#E5E0D5]/70 rounded-lg p-3 max-h-52 overflow-y-auto">
                     {result.description}
@@ -632,77 +606,79 @@ export default function AiListingCopilotModal({
           )}
         </div>
 
-        {/* ════════ FOOTER ════════ */}
-        <div className="px-5 py-4 border-t border-[#EEF3EF] bg-[#FCFAF6] flex items-center justify-between gap-3 rounded-b-2xl">
-          {result ? (
-            <>
-              {/* Regenerate */}
+        {/* ════════ STICKY FOOTER — always visible, paired action buttons ════════ */}
+        <div className="px-5 py-3.5 border-t border-[#EEF3EF] bg-[#FCFAF6] flex items-center justify-between gap-3 rounded-b-2xl shrink-0">
+          {/* Left: Regenerate (only after first result) */}
+          <div>
+            {result && (
               <button
                 type="button"
                 onClick={() => handleGenerate()}
                 disabled={loading}
                 className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[#E5E0D5] hover:bg-white text-xs font-bold text-[#73776F] transition disabled:opacity-50"
               >
-                <RotateCcw className="w-3.5 h-3.5" />
+                <RotateCcw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
                 Regenerate
               </button>
+            )}
+          </div>
 
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-4 py-2 rounded-lg text-xs font-bold text-[#73776F] hover:bg-[#EEF3EF] transition"
-                >
-                  {appliedField ? 'Done' : 'Cancel'}
-                </button>
+          {/* Right: Cancel + Primary CTA */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 rounded-lg text-xs font-bold text-[#73776F] hover:bg-[#EEF3EF] transition"
+            >
+              {appliedField ? 'Done' : 'Cancel'}
+            </button>
 
-                {/* Primary CTA — only show "Apply Both" in 'both' mode */}
-                {mode === 'both' && !appliedField && (
-                  <button
-                    type="button"
-                    onClick={applyBoth}
-                    className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl ${accentCls} hover:bg-[#2D5E43] text-white text-xs font-black shadow-md transition`}
-                  >
-                    <Check className="w-3.5 h-3.5 text-emerald-300" />
-                    Apply Both Title & Description
-                  </button>
-                )}
-
-                {/* Single-field mode primary CTA */}
-                {mode === 'title' && result && !appliedField && (
-                  <button
-                    type="button"
-                    onClick={applyTitle}
-                    className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl ${accentCls} hover:bg-[#2D5E43] text-white text-xs font-black shadow-md transition`}
-                  >
-                    <Check className="w-3.5 h-3.5 text-emerald-300" />
-                    Apply This Title
-                  </button>
-                )}
-
-                {mode === 'description' && result && !appliedField && (
-                  <button
-                    type="button"
-                    onClick={applyDescription}
-                    className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl ${accentCls} hover:bg-[#2D5E43] text-white text-xs font-black shadow-md transition`}
-                  >
-                    <Check className="w-3.5 h-3.5 text-emerald-300" />
-                    Apply This Description
-                  </button>
-                )}
-              </div>
-            </>
-          ) : (
-            <div className="flex justify-end w-full">
+            {/* Pre-result: Generate CTA */}
+            {!result && !loading && (
               <button
                 type="button"
-                onClick={onClose}
-                className="px-4 py-2 rounded-lg text-xs font-bold text-[#73776F] hover:bg-[#EEF3EF] transition"
+                onClick={() => handleGenerate()}
+                className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl ${accentCls} hover:bg-[#2D5E43] text-white text-xs font-black shadow-md hover:shadow-lg transition`}
               >
-                Cancel
+                <Sparkles className="w-4 h-4 text-[#E6C687]" />
+                {modalMeta.btnLabel}
               </button>
-            </div>
-          )}
+            )}
+
+            {/* Post-result Apply CTAs */}
+            {mode === 'both' && result && !appliedField && (
+              <button
+                type="button"
+                onClick={applyBoth}
+                className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl ${accentCls} hover:bg-[#2D5E43] text-white text-xs font-black shadow-md transition`}
+              >
+                <Check className="w-3.5 h-3.5 text-emerald-300" />
+                Apply Both
+              </button>
+            )}
+
+            {mode === 'title' && result && !appliedField && (
+              <button
+                type="button"
+                onClick={applyTitle}
+                className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl ${accentCls} hover:bg-[#2D5E43] text-white text-xs font-black shadow-md transition`}
+              >
+                <Check className="w-3.5 h-3.5 text-emerald-300" />
+                Apply Title
+              </button>
+            )}
+
+            {mode === 'description' && result && !appliedField && (
+              <button
+                type="button"
+                onClick={applyDescription}
+                className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl ${accentCls} hover:bg-[#2D5E43] text-white text-xs font-black shadow-md transition`}
+              >
+                <Check className="w-3.5 h-3.5 text-emerald-300" />
+                Apply Description
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

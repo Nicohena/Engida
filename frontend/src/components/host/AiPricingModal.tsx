@@ -69,6 +69,7 @@ export default function AiPricingModal({
   const [error, setError] = useState<string | null>(null);
   const [applied, setApplied] = useState(false);
   const [showBreakdown, setShowBreakdown] = useState(false);
+  const [recalculateCount, setRecalculateCount] = useState(0);
   const [, startTransition] = useTransition();
 
   const isSale = (listingType || '').toUpperCase() === 'SALE';
@@ -92,7 +93,12 @@ export default function AiPricingModal({
   const hasWater = selectedAmenityNames.some((a) => /water|tank|reservoir|heater/i.test(a));
   const hasSecurity = selectedAmenityNames.some((a) => /security|guard|cctv|gated/i.test(a));
 
-  const handlePredictPrice = async () => {
+  const handlePredictPrice = async (forceRecalculate = false) => {
+    const nextCount = forceRecalculate ? recalculateCount + 1 : recalculateCount;
+    if (forceRecalculate) {
+      setRecalculateCount(nextCount);
+    }
+
     setLoading(true);
     setError(null);
     setApplied(false);
@@ -111,6 +117,7 @@ export default function AiPricingModal({
         amenities: selectedAmenityNames.length > 0 ? selectedAmenityNames : amenityIds,
         coverImage: coverImage?.trim() || undefined,
         images: images && images.length > 0 ? images : undefined,
+        regenerationIndex: nextCount,
       };
 
       const result = await apiFetch<AiPricePredictionResponse>('/ai/predict-price', {
@@ -136,7 +143,8 @@ export default function AiPricingModal({
     if (isOpen) {
       setApplied(false);
       setError(null);
-      handlePredictPrice();
+      setRecalculateCount(0);
+      handlePredictPrice(false);
     }
   }, [isOpen]);
 
@@ -463,7 +471,7 @@ export default function AiPricingModal({
               <span>{error}</span>
               <button
                 type="button"
-                onClick={handlePredictPrice}
+                onClick={() => handlePredictPrice(false)}
                 className="text-xs font-bold underline hover:no-underline shrink-0"
               >
                 Retry
@@ -549,18 +557,18 @@ export default function AiPricingModal({
                 )}
               </div>
 
-              {/* ════════ 3-TIER DYNAMIC STRATEGY CORRIDOR ════════ */}
+                {/* ════════ 3-TIER DYNAMIC STRATEGY CORRIDOR ════════ */}
               <div>
                 <span className="text-[10px] font-black uppercase tracking-wider text-[#73776F] block mb-2">
                   Select A Pricing Strategy:
                 </span>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 items-stretch">
                   {/* Tier 1: Fast Booking */}
                   <button
                     type="button"
                     onClick={() => setSelectedTier('min')}
-                    className={`p-3.5 rounded-xl border text-left transition-all ${
+                    className={`p-3.5 rounded-xl border text-left transition-all flex flex-col h-full ${
                       selectedTier === 'min'
                         ? 'border-[#234B36] bg-[#234B36]/5 ring-2 ring-[#234B36] shadow-xs'
                         : 'border-[#E5E0D5] bg-white hover:border-[#234B36]/40 hover:bg-[#FCFAF6]'
@@ -578,7 +586,7 @@ export default function AiPricingModal({
                     <div className="text-base font-black text-[#252923] mt-1.5">
                       ETB {prediction.priceRange.min.toLocaleString()}
                     </div>
-                    <p className="text-[11px] text-[#73776F] mt-1.5 leading-snug">
+                    <p className="text-[11px] text-[#73776F] mt-1.5 leading-snug flex-1">
                       {fastRationale}
                     </p>
                   </button>
@@ -587,7 +595,7 @@ export default function AiPricingModal({
                   <button
                     type="button"
                     onClick={() => setSelectedTier('recommended')}
-                    className={`p-3.5 rounded-xl border text-left transition-all ${
+                    className={`p-3.5 rounded-xl border text-left transition-all flex flex-col h-full ${
                       selectedTier === 'recommended'
                         ? 'border-[#234B36] bg-emerald-50/50 ring-2 ring-[#234B36] shadow-xs'
                         : 'border-[#E5E0D5] bg-white hover:border-[#234B36]/40 hover:bg-[#FCFAF6]'
@@ -605,7 +613,7 @@ export default function AiPricingModal({
                     <div className="text-base font-black text-[#252923] mt-1.5">
                       ETB {prediction.predictedPrice.toLocaleString()}
                     </div>
-                    <p className="text-[11px] text-[#73776F] mt-1.5 leading-snug">
+                    <p className="text-[11px] text-[#73776F] mt-1.5 leading-snug flex-1">
                       {optimalRationale}
                     </p>
                   </button>
@@ -614,7 +622,7 @@ export default function AiPricingModal({
                   <button
                     type="button"
                     onClick={() => setSelectedTier('max')}
-                    className={`p-3.5 rounded-xl border text-left transition-all ${
+                    className={`p-3.5 rounded-xl border text-left transition-all flex flex-col h-full ${
                       selectedTier === 'max'
                         ? 'border-[#234B36] bg-[#234B36]/5 ring-2 ring-[#234B36] shadow-xs'
                         : 'border-[#E5E0D5] bg-white hover:border-[#234B36]/40 hover:bg-[#FCFAF6]'
@@ -632,7 +640,7 @@ export default function AiPricingModal({
                     <div className="text-base font-black text-[#252923] mt-1.5">
                       ETB {prediction.priceRange.max.toLocaleString()}
                     </div>
-                    <p className="text-[11px] text-[#73776F] mt-1.5 leading-snug">
+                    <p className="text-[11px] text-[#73776F] mt-1.5 leading-snug flex-1">
                       {peakRationale}
                     </p>
                   </button>
@@ -795,22 +803,24 @@ export default function AiPricingModal({
           )}
         </div>
 
-        {/* ════════ FOOTER ════════ */}
-        <div className="px-5 py-4 border-t border-[#EEF3EF] bg-[#FCFAF6] flex items-center justify-between gap-3 rounded-b-2xl">
-          {prediction ? (
-            <button
-              type="button"
-              onClick={handlePredictPrice}
-              disabled={loading}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[#E5E0D5] hover:bg-white text-xs font-bold text-[#73776F] transition disabled:opacity-50"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              Recalculate
-            </button>
-          ) : (
-            <div />
-          )}
+        {/* ════════ STICKY FOOTER — 3 clear zones ════════ */}
+        <div className="px-5 py-3.5 border-t border-[#EEF3EF] bg-[#FCFAF6] flex items-center justify-between gap-3 rounded-b-2xl shrink-0">
+          {/* Left: Recalculate (ghost) */}
+          <div>
+            {prediction && (
+              <button
+                type="button"
+                onClick={() => handlePredictPrice(true)}
+                disabled={loading}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[#E5E0D5] hover:bg-white text-xs font-bold text-[#73776F] transition disabled:opacity-50"
+              >
+                <RotateCcw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+                Recalculate
+              </button>
+            )}
+          </div>
 
+          {/* Right: Cancel (ghost) + Apply (solid) */}
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -825,14 +835,14 @@ export default function AiPricingModal({
                 type="button"
                 onClick={() => handleApply()}
                 disabled={applied}
-                className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#234B36] hover:bg-[#2D5E43] text-white text-xs font-black shadow-md transition ${
-                  applied ? 'bg-emerald-700' : ''
+                className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-white text-xs font-black shadow-md transition ${
+                  applied ? 'bg-emerald-700' : 'bg-[#234B36] hover:bg-[#2D5E43]'
                 }`}
               >
                 {applied ? (
                   <>
                     <Check className="w-4 h-4 text-emerald-300" />
-                    <span>Applied to Listing ✓</span>
+                    <span>Applied ✓</span>
                   </>
                 ) : (
                   <>

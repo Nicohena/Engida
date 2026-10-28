@@ -52,6 +52,11 @@ export class PredictPriceDto {
   @IsString({ each: true })
   @IsOptional()
   images?: string[];
+
+  @IsInt()
+  @IsOptional()
+  @Type(() => Number)
+  regenerationIndex?: number;
 }
 
 export class RecommendationsDto {
@@ -145,4 +150,9 @@ export class GenerateListingContentDto {
   @IsString({ each: true })
   @IsOptional()
   images?: string[];
+
+  @IsInt()
+  @IsOptional()
+  @Type(() => Number)
+  regenerationIndex?: number;
 }
