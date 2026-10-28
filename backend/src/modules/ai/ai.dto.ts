@@ -16,6 +16,10 @@ export class PredictPriceDto {
   @IsString()
   propertyType: string;
 
+  @IsString()
+  @IsOptional()
+  listingType?: string; // 'RENTAL' | 'SALE'
+
   @IsInt()
   @Min(0)
   @Type(() => Number)
@@ -30,6 +34,11 @@ export class PredictPriceDto {
   @Min(1)
   @Type(() => Number)
   maxGuests: number;
+
+  @IsNumber()
+  @IsOptional()
+  @Type(() => Number)
+  areaSqm?: number;
 
   @IsArray()
   @IsString({ each: true })
@@ -65,6 +74,10 @@ export class GenerateListingContentDto {
   propertyType: string;
 
   @IsString()
+  @IsOptional()
+  listingType?: string; // 'RENTAL' | 'SALE'
+
+  @IsString()
   city: string;
 
   @IsString()
@@ -89,6 +102,11 @@ export class GenerateListingContentDto {
   @Min(1)
   @Type(() => Number)
   maxGuests: number;
+
+  @IsNumber()
+  @IsOptional()
+  @Type(() => Number)
+  areaSqm?: number;
 
   @IsArray()
   @IsString({ each: true })

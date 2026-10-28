@@ -410,19 +410,14 @@ export interface AiKeyPriceDriver {
 
 export interface AiPricePredictionResponse {
   predictedPrice: number;
-  predictedPriceUsd: number;
   currency: 'ETB';
-  exchangeRate: number;
   confidence: number;
   priceRange: {
     min: number;
     max: number;
-    minUsd: number;
-    maxUsd: number;
   };
   breakdown: {
     baseRateEtb: number;
-    baseRateUsd: number;
     locationMultiplier: number;
     locationTier: string;
     propertyTypeMultiplier: number;
@@ -433,12 +428,14 @@ export interface AiPricePredictionResponse {
 
 export interface GenerateListingContentRequest {
   propertyType: string;
+  listingType?: string; // 'RENTAL' | 'SALE'
   city: string;
   subCity?: string;
   neighborhood?: string;
   bedrooms: number;
   bathrooms: number;
   maxGuests: number;
+  areaSqm?: number;
   amenities: string[];
   language?: 'en' | 'am';
   tone?: 'luxury' | 'warm' | 'business';

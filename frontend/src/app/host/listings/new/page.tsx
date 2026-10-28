@@ -12,7 +12,7 @@ import type {
 import AmenitySelector from '../../../../components/host/AmenitySelector';
 import GalleryManager from '../../../../components/host/GalleryManager';
 import AiPricingWidget from '../../../../components/host/AiPricingWidget';
-import AiListingCopilot from '../../../../components/host/AiListingCopilot';
+import AiListingCopilotModal from '../../../../components/host/AiListingCopilotModal';
 import {
   ArrowLeft,
   Building2,
@@ -132,6 +132,22 @@ export default function CreateListingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
+  const [isCopilotOpen, setIsCopilotOpen] = useState(false);
+  const [amenitiesCatalog, setAmenitiesCatalog] = useState<{ id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    let ignore = false;
+    apiFetch<{ id: string; name: string }[]>('/amenities')
+      .then((data) => {
+        if (!ignore && Array.isArray(data)) {
+          setAmenitiesCatalog(data);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   // Unsaved changes warning
   const handleBeforeUnload = useCallback(
@@ -501,57 +517,22 @@ export default function CreateListingPage() {
             <h2 className="text-lg font-black text-[#252923]">Basic Information</h2>
           </div>
 
-          {/* ✨ AI Multilingual Listing Copilot (English & Amharic) */}
-          <AiListingCopilot
-            propertyType={form.propertyType}
-            city={form.city}
-            subCity={form.subCity}
-            neighborhood={form.neighborhood}
-            bedrooms={form.bedrooms}
-            bathrooms={form.bathrooms}
-            maxGuests={form.maxGuests}
-            amenityIds={form.amenityIds}
-            currentTitle={form.title}
-            currentDescription={form.description}
-            onApplyTitle={(title) => {
-              setIsDirty(true);
-              setForm((prev) => ({ ...prev, title }));
-              if (errors.title) {
-                setErrors((prev) => {
-                  const next = { ...prev };
-                  delete next.title;
-                  return next;
-                });
-              }
-            }}
-            onApplyDescription={(description) => {
-              setIsDirty(true);
-              setForm((prev) => ({ ...prev, description }));
-              if (errors.description) {
-                setErrors((prev) => {
-                  const next = { ...prev };
-                  delete next.description;
-                  return next;
-                });
-              }
-            }}
-            onApplyBoth={(title, description) => {
-              setIsDirty(true);
-              setForm((prev) => ({ ...prev, title, description }));
-              setErrors((prev) => {
-                const next = { ...prev };
-                delete next.title;
-                delete next.description;
-                return next;
-              });
-            }}
-          />
-
           {/* Title */}
           <div className="space-y-1.5">
-            <label htmlFor="title" className="block text-sm font-bold text-[#252923]">
-              Listing Title <span className="text-red-500">*</span>
-            </label>
+            <div className="flex items-center justify-between">
+              <label htmlFor="title" className="block text-sm font-bold text-[#252923]">
+                Listing Title <span className="text-red-500">*</span>
+              </label>
+              <button
+                type="button"
+                onClick={() => setIsCopilotOpen(true)}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#234B36] hover:text-[#2D5E43] bg-[#234B36]/10 hover:bg-[#234B36]/15 px-2.5 py-1 rounded-lg transition"
+                title="Generate enterprise title and description grounded in property specs"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-[#234B36]" />
+                <span>✨ AI Title &amp; Copilot</span>
+              </button>
+            </div>
             <input
               id="title"
               name="title"
@@ -619,9 +600,20 @@ export default function CreateListingPage() {
 
           {/* Description */}
           <div className="space-y-1.5">
-            <label htmlFor="description" className="block text-sm font-bold text-[#252923]">
-              Description <span className="text-red-500">*</span>
-            </label>
+            <div className="flex items-center justify-between">
+              <label htmlFor="description" className="block text-sm font-bold text-[#252923]">
+                Description <span className="text-red-500">*</span>
+              </label>
+              <button
+                type="button"
+                onClick={() => setIsCopilotOpen(true)}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#234B36] hover:text-[#2D5E43] bg-[#234B36]/10 hover:bg-[#234B36]/15 px-2.5 py-1 rounded-lg transition"
+                title="Draft description in English & Amharic grounded in property specs"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-[#234B36]" />
+                <span>✨ Draft with AI (English &amp; አማርኛ)</span>
+              </button>
+            </div>
             <textarea
               id="description"
               name="description"
@@ -746,16 +738,18 @@ export default function CreateListingPage() {
                 )}
               </div>
 
-              {/* ✨ AI Dynamic Price Recommendation (Dual-Currency ETB & USD) */}
+              {/* ✨ AI Dynamic Price Recommendation (ETB) */}
               <AiPricingWidget
                 city={form.city}
                 subCity={form.subCity}
                 neighborhood={form.neighborhood}
                 propertyType={form.propertyType}
+                listingType={form.listingType}
                 bedrooms={form.bedrooms}
                 bathrooms={form.bathrooms}
                 maxGuests={form.maxGuests}
                 amenityIds={form.amenityIds}
+                amenityCatalog={amenitiesCatalog}
                 currentPrice={form.pricePerNight}
                 onApplyPrice={(price) => {
                   setIsDirty(true);
@@ -1210,6 +1204,58 @@ export default function CreateListingPage() {
         </section>
 
         {/* ═══════════════════════════════════════════════════
+            SECTION 7: Master AI Listing Review & Optimizer
+        ═══════════════════════════════════════════════════ */}
+        <section className="bg-gradient-to-br from-[#FAF8F5] via-white to-[#F2F6F3] border-2 border-[#234B36]/20 rounded-2xl p-6 md:p-8 space-y-5 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-start gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#234B36] to-[#2D5E43] text-[#E6C687] flex items-center justify-center shrink-0 shadow-sm">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base sm:text-lg font-black text-[#252923]">
+                    ✨ AI Listing Review &amp; Copy Optimizer
+                  </h2>
+                  <span className="text-[10px] font-black uppercase tracking-wider bg-[#234B36]/10 text-[#234B36] px-2 py-0.5 rounded-full">
+                    Enterprise Copilot
+                  </span>
+                </div>
+                <p className="text-xs text-[#73776F] mt-1 max-w-xl">
+                  Generate or polish your listing title &amp; description using your complete property specifications, verified amenities, and exact location. Supports bilingual drafting in English and Amharic (አማርኛ).
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsCopilotOpen(true)}
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#234B36] hover:bg-[#2D5E43] text-white text-xs font-black shadow-md hover:shadow-lg transition cursor-pointer shrink-0"
+            >
+              <Sparkles className="w-4 h-4 text-[#E6C687]" />
+              <span>Launch AI Listing Copilot</span>
+            </button>
+          </div>
+
+          {/* Summary tags of what the AI will base its response on */}
+          <div className="pt-3 border-t border-[#E5E0D5]/70 flex flex-wrap items-center gap-2 text-xs">
+            <span className="text-[11px] font-bold text-[#73776F]">Grounded In:</span>
+            <span className="px-2.5 py-1 rounded-lg bg-white border border-[#E5E0D5] font-semibold text-[#252923]">
+              📍 {form.neighborhood ? `${form.neighborhood}, ` : ''}{form.subCity ? `${form.subCity}, ` : ''}{form.city || 'Addis Ababa'}
+            </span>
+            <span className="px-2.5 py-1 rounded-lg bg-white border border-[#E5E0D5] font-semibold text-[#252923]">
+              🏠 {form.listingType === 'SALE' ? 'For Sale' : 'Rental'} • {form.propertyType}
+            </span>
+            <span className="px-2.5 py-1 rounded-lg bg-white border border-[#E5E0D5] font-semibold text-[#252923]">
+              🛏️ {form.bedrooms || 0} Beds • 🚿 {form.bathrooms || 0} Baths{form.areaSqm ? ` • 📐 ${form.areaSqm} m²` : ''}
+            </span>
+            <span className="px-2.5 py-1 rounded-lg bg-white border border-[#E5E0D5] font-semibold text-[#252923]">
+              ✨ {form.amenityIds.length} Amenities Selected
+            </span>
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════════════
             Bottom Action Bar
         ═══════════════════════════════════════════════════ */}
         <div className="sticky bottom-4 z-20 bg-white/95 backdrop-blur-md border border-[#E5E0D5] rounded-2xl p-4 shadow-lg flex items-center justify-between gap-4">
@@ -1243,6 +1289,57 @@ export default function CreateListingPage() {
           </div>
         </div>
       </form>
+
+      {/* ✨ AI Listing Copilot Modal */}
+      <AiListingCopilotModal
+        isOpen={isCopilotOpen}
+        onClose={() => setIsCopilotOpen(false)}
+        propertyType={form.propertyType}
+        listingType={form.listingType}
+        city={form.city}
+        subCity={form.subCity}
+        neighborhood={form.neighborhood}
+        bedrooms={form.bedrooms}
+        bathrooms={form.bathrooms}
+        maxGuests={form.maxGuests}
+        areaSqm={form.areaSqm}
+        amenityIds={form.amenityIds}
+        amenityCatalog={amenitiesCatalog}
+        currentTitle={form.title}
+        currentDescription={form.description}
+        onApplyTitle={(title) => {
+          setIsDirty(true);
+          setForm((prev) => ({ ...prev, title }));
+          if (errors.title) {
+            setErrors((prev) => {
+              const next = { ...prev };
+              delete next.title;
+              return next;
+            });
+          }
+        }}
+        onApplyDescription={(description) => {
+          setIsDirty(true);
+          setForm((prev) => ({ ...prev, description }));
+          if (errors.description) {
+            setErrors((prev) => {
+              const next = { ...prev };
+              delete next.description;
+              return next;
+            });
+          }
+        }}
+        onApplyBoth={(title, description) => {
+          setIsDirty(true);
+          setForm((prev) => ({ ...prev, title, description }));
+          setErrors((prev) => {
+            const next = { ...prev };
+            delete next.title;
+            delete next.description;
+            return next;
+          });
+        }}
+      />
     </div>
   );
 }
