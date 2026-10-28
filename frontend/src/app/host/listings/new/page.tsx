@@ -1175,6 +1175,7 @@ export default function CreateListingPage() {
             images={form.images}
             amenityIds={form.amenityIds}
             amenityCatalog={amenitiesCatalog}
+            description={form.description}
             isSubmitting={isSubmitting}
             onSubmit={handleSubmit}
             submitLabel="Save Draft Listing"

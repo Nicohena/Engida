@@ -1232,6 +1232,8 @@ export default function EditListingPage() {
             images={form.images}
             amenityIds={form.amenityIds}
             amenityCatalog={amenitiesCatalog}
+            description={form.description}
+            propertyId={listing.id}
             isSubmitting={isSubmitting}
             onSubmit={handleSubmit}
             submitLabel="Save Changes"

@@ -540,7 +540,7 @@ export default function AiListingCopilotModal({
             <div className="space-y-3">
               {/* Title card — show for 'title' or 'both' mode */}
               {(mode === 'title' || mode === 'both') && (
-                <div className={`rounded-xl border p-4 space-y-2.5 transition ${
+                <div className={`rounded-xl border p-4 space-y-2 transition ${
                   appliedField === 'title' || appliedField === 'both'
                     ? 'border-emerald-300 bg-emerald-50/60'
                     : 'border-[#E5E0D5] bg-white'
@@ -552,22 +552,11 @@ export default function AiListingCopilotModal({
                         {mode === 'title' ? 'Generated Title' : 'Proposed Title'}
                       </span>
                     </div>
-                    <button
-                      type="button"
-                      onClick={applyTitle}
-                      disabled={appliedField === 'title' || appliedField === 'both'}
-                      className={`inline-flex items-center gap-1 text-[11px] font-black transition rounded-lg px-2.5 py-1 ${
-                        appliedField === 'title' || appliedField === 'both'
-                          ? 'text-emerald-700 bg-emerald-100 cursor-default'
-                          : 'text-[#234B36] bg-[#234B36]/10 hover:bg-[#234B36]/15'
-                      }`}
-                    >
-                      {appliedField === 'title' || appliedField === 'both' ? (
-                        <><Check className="w-3 h-3" /> Applied</>
-                      ) : (
-                        <><ArrowRight className="w-3 h-3" /> {mode === 'title' ? 'Apply Title' : 'Apply Title Only'}</>
-                      )}
-                    </button>
+                    {(appliedField === 'title' || appliedField === 'both') && (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-black text-emerald-700 bg-emerald-100 rounded-lg px-2.5 py-1">
+                        <Check className="w-3 h-3" /> Applied
+                      </span>
+                    )}
                   </div>
                   <p className="text-sm font-black text-[#252923] leading-snug">{result.title}</p>
                 </div>
@@ -587,22 +576,11 @@ export default function AiListingCopilotModal({
                         {mode === 'description' ? 'Generated Description' : 'Proposed Description'}
                       </span>
                     </div>
-                    <button
-                      type="button"
-                      onClick={applyDescription}
-                      disabled={appliedField === 'description' || appliedField === 'both'}
-                      className={`inline-flex items-center gap-1 text-[11px] font-black transition rounded-lg px-2.5 py-1 ${
-                        appliedField === 'description' || appliedField === 'both'
-                          ? 'text-emerald-700 bg-emerald-100 cursor-default'
-                          : 'text-[#234B36] bg-[#234B36]/10 hover:bg-[#234B36]/15'
-                      }`}
-                    >
-                      {appliedField === 'description' || appliedField === 'both' ? (
-                        <><Check className="w-3 h-3" /> Applied</>
-                      ) : (
-                        <><ArrowRight className="w-3 h-3" /> {mode === 'description' ? 'Apply Description' : 'Apply Description Only'}</>
-                      )}
-                    </button>
+                    {(appliedField === 'description' || appliedField === 'both') && (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-black text-emerald-700 bg-emerald-100 rounded-lg px-2.5 py-1">
+                        <Check className="w-3 h-3" /> Applied
+                      </span>
+                    )}
                   </div>
                   <div className="text-xs text-[#252923] whitespace-pre-line leading-relaxed bg-[#FCFAF6] border border-[#E5E0D5]/70 rounded-lg p-3 max-h-52 overflow-y-auto">
                     {result.description}
