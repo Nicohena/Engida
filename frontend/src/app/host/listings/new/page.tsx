@@ -706,28 +706,58 @@ export default function CreateListingPage() {
           {/* Pricing fields react to listingType */}
           {form.listingType === 'RENTAL' && (
             <div className="space-y-4 max-w-xl">
-              <div className="space-y-1.5 max-w-sm">
+              <div className="space-y-1.5">
                 <label htmlFor="pricePerNight" className="block text-sm font-bold text-[#252923]">
                   Price Per Night (ETB) <span className="text-red-500">*</span>
                 </label>
-                <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-black text-[#73776F]">
-                    ETB
-                  </span>
-                  <input
-                    id="pricePerNight"
-                    name="pricePerNight"
-                    type="number"
-                    min="1"
-                    step="any"
-                    value={form.pricePerNight}
-                    onChange={handleChange}
-                    placeholder="e.g. 4500"
-                    className={`w-full pl-14 pr-4 py-2.5 rounded-xl border text-sm font-medium text-[#252923] focus:outline-none focus:ring-2 transition ${
-                      errors.pricePerNight
-                        ? 'border-red-400 focus:ring-red-200'
-                        : 'border-[#E5E0D5] focus:ring-[#234B36]/20 focus:border-[#234B36]'
-                    }`}
+                {/* Inline Row: Price Input + AI Dynamic Recommendation Button */}
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <div className="relative w-full sm:w-64">
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-black text-[#73776F]">
+                      ETB
+                    </span>
+                    <input
+                      id="pricePerNight"
+                      name="pricePerNight"
+                      type="number"
+                      min="1"
+                      step="any"
+                      value={form.pricePerNight}
+                      onChange={handleChange}
+                      placeholder="e.g. 4500"
+                      className={`w-full pl-14 pr-4 py-2.5 rounded-xl border text-sm font-medium text-[#252923] focus:outline-none focus:ring-2 transition ${
+                        errors.pricePerNight
+                          ? 'border-red-400 focus:ring-red-200'
+                          : 'border-[#E5E0D5] focus:ring-[#234B36]/20 focus:border-[#234B36]'
+                      }`}
+                    />
+                  </div>
+
+                  {/* ✨ AI Dynamic Price Recommendation (ETB) */}
+                  <AiPricingWidget
+                    city={form.city}
+                    subCity={form.subCity}
+                    neighborhood={form.neighborhood}
+                    propertyType={form.propertyType}
+                    listingType={form.listingType}
+                    bedrooms={form.bedrooms}
+                    bathrooms={form.bathrooms}
+                    maxGuests={form.maxGuests}
+                    areaSqm={form.areaSqm}
+                    amenityIds={form.amenityIds}
+                    amenityCatalog={amenitiesCatalog}
+                    currentPrice={form.pricePerNight}
+                    onApplyPrice={(price) => {
+                      setIsDirty(true);
+                      setForm((prev) => ({ ...prev, pricePerNight: String(price) }));
+                      if (errors.pricePerNight) {
+                        setErrors((prev) => {
+                          const next = { ...prev };
+                          delete next.pricePerNight;
+                          return next;
+                        });
+                      }
+                    }}
                   />
                 </div>
                 {errors.pricePerNight ? (
@@ -737,60 +767,63 @@ export default function CreateListingPage() {
                     Rate charged to guests per night in Ethiopian Birr.
                   </p>
                 )}
+              </div>
+            </div>
+          )}
 
-                {/* ✨ AI Dynamic Price Recommendation (ETB) */}
+          {form.listingType === 'SALE' && (
+            <div className="space-y-1.5 max-w-xl">
+              <label htmlFor="salePrice" className="block text-sm font-bold text-[#252923]">
+                Total Sale Price (ETB) <span className="text-red-500">*</span>
+              </label>
+              {/* Inline Row: Sale Price Input + AI Valuation Button */}
+              <div className="flex flex-wrap items-center gap-2.5">
+                <div className="relative w-full sm:w-64">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-black text-[#73776F]">
+                    ETB
+                  </span>
+                  <input
+                    id="salePrice"
+                    name="salePrice"
+                    type="number"
+                    min="1"
+                    step="any"
+                    value={form.salePrice}
+                    onChange={handleChange}
+                    placeholder="e.g. 8500000"
+                    className={`w-full pl-14 pr-4 py-2.5 rounded-xl border text-sm font-medium text-[#252923] focus:outline-none focus:ring-2 transition ${
+                      errors.salePrice
+                        ? 'border-red-400 focus:ring-red-200'
+                        : 'border-[#E5E0D5] focus:ring-[#234B36]/20 focus:border-[#234B36]'
+                    }`}
+                  />
+                </div>
+
+                {/* ✨ AI Property Valuation (ETB) for Sale */}
                 <AiPricingWidget
                   city={form.city}
                   subCity={form.subCity}
                   neighborhood={form.neighborhood}
                   propertyType={form.propertyType}
-                  listingType={form.listingType}
+                  listingType="SALE"
                   bedrooms={form.bedrooms}
                   bathrooms={form.bathrooms}
                   maxGuests={form.maxGuests}
                   areaSqm={form.areaSqm}
                   amenityIds={form.amenityIds}
                   amenityCatalog={amenitiesCatalog}
-                  currentPrice={form.pricePerNight}
+                  currentPrice={form.salePrice}
                   onApplyPrice={(price) => {
                     setIsDirty(true);
-                    setForm((prev) => ({ ...prev, pricePerNight: String(price) }));
-                    if (errors.pricePerNight) {
+                    setForm((prev) => ({ ...prev, salePrice: String(price) }));
+                    if (errors.salePrice) {
                       setErrors((prev) => {
                         const next = { ...prev };
-                        delete next.pricePerNight;
+                        delete next.salePrice;
                         return next;
                       });
                     }
                   }}
-                />
-              </div>
-            </div>
-          )}
-
-          {form.listingType === 'SALE' && (
-            <div className="space-y-1.5 max-w-sm">
-              <label htmlFor="salePrice" className="block text-sm font-bold text-[#252923]">
-                Total Sale Price (ETB) <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-black text-[#73776F]">
-                  ETB
-                </span>
-                <input
-                  id="salePrice"
-                  name="salePrice"
-                  type="number"
-                  min="1"
-                  step="any"
-                  value={form.salePrice}
-                  onChange={handleChange}
-                  placeholder="e.g. 8500000"
-                  className={`w-full pl-14 pr-4 py-2.5 rounded-xl border text-sm font-medium text-[#252923] focus:outline-none focus:ring-2 transition ${
-                    errors.salePrice
-                      ? 'border-red-400 focus:ring-red-200'
-                      : 'border-[#E5E0D5] focus:ring-[#234B36]/20 focus:border-[#234B36]'
-                  }`}
                 />
               </div>
               {errors.salePrice ? (
@@ -800,33 +833,6 @@ export default function CreateListingPage() {
                   Total purchase asking price in Ethiopian Birr.
                 </p>
               )}
-
-              {/* ✨ AI Property Valuation (ETB) for Sale */}
-              <AiPricingWidget
-                city={form.city}
-                subCity={form.subCity}
-                neighborhood={form.neighborhood}
-                propertyType={form.propertyType}
-                listingType="SALE"
-                bedrooms={form.bedrooms}
-                bathrooms={form.bathrooms}
-                maxGuests={form.maxGuests}
-                areaSqm={form.areaSqm}
-                amenityIds={form.amenityIds}
-                amenityCatalog={amenitiesCatalog}
-                currentPrice={form.salePrice}
-                onApplyPrice={(price) => {
-                  setIsDirty(true);
-                  setForm((prev) => ({ ...prev, salePrice: String(price) }));
-                  if (errors.salePrice) {
-                    setErrors((prev) => {
-                      const next = { ...prev };
-                      delete next.salePrice;
-                      return next;
-                    });
-                  }
-                }}
-              />
             </div>
           )}
         </section>
