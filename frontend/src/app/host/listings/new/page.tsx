@@ -419,7 +419,7 @@ export default function CreateListingPage() {
         payload.longitude = parseFloat(form.longitude);
       }
 
-      const res = await apiFetch<{ id: string }>('/properties', {
+      const res = await apiFetch<{ id: string }>('/host/listings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
