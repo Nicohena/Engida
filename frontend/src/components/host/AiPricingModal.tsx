@@ -37,6 +37,8 @@ interface AiPricingModalProps {
   amenityIds: string[];
   amenityCatalog?: Array<{ id: string; name: string }>;
   currentPrice?: number | string;
+  coverImage?: string;
+  images?: string[];
   onApplyPrice: (priceInEtb: number) => void;
 }
 
@@ -57,6 +59,8 @@ export default function AiPricingModal({
   amenityIds,
   amenityCatalog = [],
   currentPrice,
+  coverImage,
+  images = [],
   onApplyPrice,
 }: AiPricingModalProps) {
   const [prediction, setPrediction] = useState<AiPricePredictionResponse | null>(null);
@@ -105,6 +109,8 @@ export default function AiPricingModal({
         maxGuests: numMaxGuests,
         areaSqm: numAreaSqm > 0 ? numAreaSqm : undefined,
         amenities: selectedAmenityNames.length > 0 ? selectedAmenityNames : amenityIds,
+        coverImage: coverImage?.trim() || undefined,
+        images: images && images.length > 0 ? images : undefined,
       };
 
       const result = await apiFetch<AiPricePredictionResponse>('/ai/predict-price', {
@@ -398,6 +404,18 @@ export default function AiPricingModal({
               {propertyType} · {numBedrooms} Bed · {numBathrooms} Bath
               {numAreaSqm > 0 && ` · ${numAreaSqm} m²`}
             </span>
+            {coverImage && (
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white border border-[#E5E0D5] font-bold text-[#252923]">
+                <img
+                  src={coverImage}
+                  alt="Cover"
+                  className="w-4 h-4 rounded object-cover border border-[#EEF3EF]"
+                />
+                <span className="text-[11px]">
+                  {images && images.length > 0 ? `${images.length} photos` : 'Cover photo'}
+                </span>
+              </span>
+            )}
             {hasGenerator && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-100/70 text-emerald-800 font-bold text-[11px]">
                 ⚡ Generator

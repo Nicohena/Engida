@@ -17,6 +17,8 @@ interface AiPricingWidgetProps {
   amenityIds: string[];
   amenityCatalog?: Array<{ id: string; name: string }>;
   currentPrice?: number | string;
+  coverImage?: string;
+  images?: string[];
   onApplyPrice: (priceInEtb: number) => void;
   className?: string;
 }
@@ -34,6 +36,8 @@ export default function AiPricingWidget({
   amenityIds,
   amenityCatalog = [],
   currentPrice,
+  coverImage,
+  images = [],
   onApplyPrice,
   className = '',
 }: AiPricingWidgetProps) {
@@ -104,6 +108,8 @@ export default function AiPricingWidget({
         amenityIds={amenityIds}
         amenityCatalog={amenityCatalog}
         currentPrice={currentPrice}
+        coverImage={coverImage}
+        images={images}
         onApplyPrice={handleApplyFromModal}
       />
     </>

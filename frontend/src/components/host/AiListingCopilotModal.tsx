@@ -40,6 +40,8 @@ interface AiListingCopilotModalProps {
   amenityCatalog?: Array<{ id: string; name: string }>;
   currentTitle?: string;
   currentDescription?: string;
+  coverImage?: string;
+  images?: string[];
   onApplyTitle: (title: string) => void;
   onApplyDescription: (description: string) => void;
   onApplyBoth: (title: string, description: string) => void;
@@ -77,6 +79,8 @@ export default function AiListingCopilotModal({
   amenityCatalog = [],
   currentTitle,
   currentDescription,
+  coverImage,
+  images = [],
   onApplyTitle,
   onApplyDescription,
   onApplyBoth,
@@ -159,6 +163,8 @@ export default function AiListingCopilotModal({
         amenities:     selectedAmenityNames.length > 0 ? selectedAmenityNames : amenityIds,
         language:      activeLang,
         tone:          activeTone,
+        coverImage:    coverImage?.trim() || undefined,
+        images:        images && images.length > 0 ? images : undefined,
       };
 
       const response = await apiFetch<GenerateListingContentResponse>('/ai/generate-listing-content', {
@@ -251,6 +257,33 @@ export default function AiListingCopilotModal({
               <BadgeCheck className="w-3.5 h-3.5 text-[#234B36]" />
               <span className="text-[10px] font-black uppercase tracking-widest text-[#73776F]">Detected Property Specs</span>
             </div>
+
+            {/* Visual Photos Context */}
+            {coverImage ? (
+              <div className="flex items-center gap-3 p-2.5 bg-white border border-[#E5E0D5] rounded-xl">
+                <img
+                  src={coverImage}
+                  alt="Listing cover"
+                  className="w-12 h-12 object-cover rounded-lg border border-[#EEF3EF] shrink-0"
+                />
+                <div className="min-w-0">
+                  <div className="text-xs font-bold text-[#252923] flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                    <span>Visual Context Linked</span>
+                  </div>
+                  <div className="text-[11px] text-[#73776F] truncate">
+                    {images && images.length > 0
+                      ? `${images.length} gallery photo${images.length > 1 ? 's' : ''} + Cover photo ready`
+                      : 'Cover photo ready for AI grounding'}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 text-[11px] text-[#73776F] bg-white/70 border border-[#E5E0D5] rounded-lg px-2.5 py-1.5">
+                <Info className="w-3.5 h-3.5 text-[#A0988A] shrink-0" />
+                <span>No photos uploaded yet. Uploading in Section 1 provides AI with visual context.</span>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div className="flex items-center gap-2 text-xs font-bold text-[#252923]">

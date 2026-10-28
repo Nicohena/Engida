@@ -12,6 +12,8 @@ export interface PricePredictionRequest {
   maxGuests: number;
   areaSqm?: number;
   amenities: string[];
+  coverImage?: string;
+  images?: string[];
 }
 
 export interface KeyPriceDriver {
@@ -65,6 +67,8 @@ export interface GenerateListingContentRequest {
   amenities: string[];
   language?: 'en' | 'am';
   tone?: 'luxury' | 'warm' | 'business';
+  coverImage?: string;
+  images?: string[];
 }
 
 export interface GenerateListingContentResponse {
@@ -653,6 +657,7 @@ export class AiService {
     const hasWasher = hasAmenity(['washer', 'washing', 'laundry', '90c4bda9']);
     const hasGarden = hasAmenity(['garden', 'yard', 'trees', '1d0cc66e']);
     const hasAC = hasAmenity(['ac', 'air conditioning', 'cooling', 'c109b028']);
+    const hasPhotos = Boolean(request.coverImage || (request.images && request.images.length > 0));
 
     // Location detection
     const isDebreBerhan = city.toLowerCase().includes('debre berhan') || city.toLowerCase().includes('debreberhan');
@@ -753,6 +758,7 @@ ${amenitiesAm.length > 0 ? amenitiesAm.join('\n') : '• ምቹና ዘመናዊ 
       if (hasSecurity) highlights.push('24/7 ጥበቃና ደህንነት');
       if (hasPool) highlights.push('የመዋኛ ገንዳ');
       if (hasGarden) highlights.push('የአትክልት ስፍራ');
+      if (hasPhotos) highlights.push('በጥራት የተነሱ ማራኪ ፎቶግራፎች');
       if (highlights.length === 0) highlights.push('ዘመናዊ አፓርታማ', 'ምቹ አካባቢ');
 
       return {
@@ -854,6 +860,7 @@ We take pride in delivering authentic Ethiopian warmth (እንግዳ ተቀባ�
     if (hasSecurity) highlights.push('24/7 Gated Security');
     if (hasPool) highlights.push('Swimming Pool');
     if (hasGarden) highlights.push('Landscaped Garden');
+    if (hasPhotos) highlights.push('Verified High-Resolution Photo Gallery');
     if (highlights.length === 0) highlights.push('Quality Residence', 'Prime Location');
 
     return {

@@ -43,6 +43,15 @@ export class PredictPriceDto {
   @IsArray()
   @IsString({ each: true })
   amenities: string[];
+
+  @IsString()
+  @IsOptional()
+  coverImage?: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  images?: string[];
 }
 
 export class RecommendationsDto {
@@ -119,4 +128,13 @@ export class GenerateListingContentDto {
   @IsString()
   @IsOptional()
   tone?: 'luxury' | 'warm' | 'business';
+
+  @IsString()
+  @IsOptional()
+  coverImage?: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  images?: string[];
 }

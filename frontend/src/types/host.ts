@@ -453,6 +453,8 @@ export interface GenerateListingContentRequest {
   amenities: string[];
   language?: 'en' | 'am';
   tone?: 'luxury' | 'warm' | 'business';
+  coverImage?: string;
+  images?: string[];
 }
 
 export interface GenerateListingContentResponse {

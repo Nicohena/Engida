@@ -14,6 +14,7 @@ import GalleryManager from '../../../../../components/host/GalleryManager';
 import HostRoomsManager from '../../../../../components/host/HostRoomsManager';
 import AiPricingWidget from '../../../../../components/host/AiPricingWidget';
 import AiListingCopilotModal, { type CopilotMode } from '../../../../../components/host/AiListingCopilotModal';
+import HostListingLivePreview from '../../../../../components/host/HostListingLivePreview';
 import {
   ArrowLeft,
   Building2,
@@ -29,6 +30,10 @@ import {
   Lock,
   Sparkles,
   Info,
+  Tag,
+  Clock,
+  ShieldCheck,
+  CheckCircle2,
 } from 'lucide-react';
 
 function initFormFromListing(data: HostListingDetail): EditFormState {
@@ -153,6 +158,16 @@ const PROPERTY_TYPE_OPTIONS: {
   },
 ];
 
+const SECTIONS_NAV = [
+  { id: 'section-location', label: '1. Location' },
+  { id: 'section-space', label: '2. Space' },
+  { id: 'section-amenities', label: '3. Amenities' },
+  { id: 'section-photos', label: '4. Photos' },
+  { id: 'section-narrative', label: '5. Story & AI' },
+  { id: 'section-pricing', label: '6. Pricing' },
+  { id: 'section-policies', label: '7. Policies' },
+];
+
 interface EditFormState {
   title: string;
   description: string;
@@ -200,21 +215,39 @@ export default function EditListingPage() {
   const [copilotMode, setCopilotMode] = useState<CopilotMode>('both');
   const [amenitiesCatalog, setAmenitiesCatalog] = useState<{ id: string; name: string }[]>([]);
 
-  useEffect(() => {
-    let ignore = false;
-    apiFetch<{ id: string; name: string }[]>('/amenities')
-      .then((data) => {
-        if (!ignore && Array.isArray(data)) {
-          setAmenitiesCatalog(data);
-        }
-      })
-      .catch(() => {});
-    return () => {
-      ignore = true;
-    };
-  }, []);
+  const fetchListing = useCallback(async () => {
+    try {
+      setLoading(true);
+      setFetchError(null);
+      setIs404(false);
 
-  // Unsaved changes listener
+      const [listingData, amenitiesData] = await Promise.all([
+        apiFetch<HostListingDetail>(`/host/listings/${listingId}`),
+        apiFetch<{ id: string; name: string }[]>('/amenities').catch(() => []),
+      ]);
+
+      setListing(listingData);
+      setForm(initFormFromListing(listingData));
+      if (Array.isArray(amenitiesData)) {
+        setAmenitiesCatalog(amenitiesData);
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to load listing.';
+      if (msg.includes('404') || msg.toLowerCase().includes('not found')) {
+        setIs404(true);
+      } else {
+        setFetchError(msg);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [listingId]);
+
+  useEffect(() => {
+    fetchListing();
+  }, [fetchListing]);
+
+  // Unsaved changes warning
   const handleBeforeUnload = useCallback(
     (e: BeforeUnloadEvent) => {
       if (isDirty && !isSubmitting && !isSuccess) {
@@ -230,62 +263,9 @@ export default function EditListingPage() {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [handleBeforeUnload]);
 
-  // Fetch listing data
-  const fetchListing = useCallback(async () => {
-    if (!listingId) return;
-
-    try {
-      setLoading(true);
-      const data = await apiFetch<HostListingDetail>(`/host/listings/${listingId}`);
-      setListing(data);
-      setFetchError(null);
-      setIs404(false);
-      setForm(initFormFromListing(data));
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to load listing.';
-      if (msg.toLowerCase().includes('not found') || msg.includes('404')) {
-        setIs404(true);
-      } else {
-        setFetchError(msg);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [listingId]);
-
-  useEffect(() => {
-    if (!listingId) return;
-    let ignore = false;
-    apiFetch<HostListingDetail>(`/host/listings/${listingId}`)
-      .then((data) => {
-        if (!ignore) {
-          setListing(data);
-          setFetchError(null);
-          setIs404(false);
-          setForm(initFormFromListing(data));
-          setLoading(false);
-        }
-      })
-      .catch((err: unknown) => {
-        if (!ignore) {
-          const msg = err instanceof Error ? err.message : 'Failed to load listing.';
-          if (msg.toLowerCase().includes('not found') || msg.includes('404')) {
-            setIs404(true);
-          } else {
-            setFetchError(msg);
-          }
-          setLoading(false);
-        }
-      });
-    return () => {
-      ignore = true;
-    };
-  }, [listingId]);
-
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) => {
-    if (!form) return;
     const { name, value } = e.target;
     setIsDirty(true);
     setForm((prev) => (prev ? { ...prev, [name]: value } : prev));
@@ -302,6 +282,13 @@ export default function EditListingPage() {
   const handlePropertyTypeChange = (type: PropertyType) => {
     setIsDirty(true);
     setForm((prev) => (prev ? { ...prev, propertyType: type } : prev));
+  };
+
+  const scrollToSection = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   };
 
   // ─────────────────────────────────────────────────────────
@@ -321,20 +308,18 @@ export default function EditListingPage() {
       newErrors.description = 'Description is required';
     }
 
-    // Pricing based on immutable listingType
     if (listing.listingType === 'RENTAL') {
       const p = Number(form.pricePerNight);
       if (!form.pricePerNight || isNaN(p) || p <= 0) {
         newErrors.pricePerNight = 'Price per night must be greater than 0 ETB';
       }
-    } else {
+    } else if (listing.listingType === 'SALE') {
       const s = Number(form.salePrice);
       if (!form.salePrice || isNaN(s) || s <= 0) {
         newErrors.salePrice = 'Sale price must be greater than 0 ETB';
       }
     }
 
-    // Numerics
     if (form.maxGuests !== '') {
       const g = parseInt(form.maxGuests, 10);
       if (isNaN(g) || g < 1) newErrors.maxGuests = 'Max guests must be at least 1';
@@ -344,15 +329,17 @@ export default function EditListingPage() {
     if (form.bedrooms !== '') {
       const b = parseInt(form.bedrooms, 10);
       if (isNaN(b) || b < 0) newErrors.bedrooms = 'Bedrooms cannot be negative';
+      else if (b > 50) newErrors.bedrooms = 'Bedrooms cannot exceed 50';
     }
 
     if (form.bathrooms !== '') {
       const b = parseInt(form.bathrooms, 10);
       if (isNaN(b) || b < 0) newErrors.bathrooms = 'Bathrooms cannot be negative';
+      else if (b > 50) newErrors.bathrooms = 'Bathrooms cannot exceed 50';
     }
 
     if (form.areaSqm !== '') {
-      const a = parseInt(form.areaSqm, 10);
+      const a = parseFloat(form.areaSqm);
       if (isNaN(a) || a < 0) newErrors.areaSqm = 'Area cannot be negative';
     }
 
@@ -361,7 +348,6 @@ export default function EditListingPage() {
       if (isNaN(p) || p < 0) newErrors.parkingSpaces = 'Parking spaces cannot be negative';
     }
 
-    // Address & City
     if (!form.address.trim()) {
       newErrors.address = 'Street address is required';
     } else if (form.address.trim().length > 255) {
@@ -374,7 +360,6 @@ export default function EditListingPage() {
       newErrors.city = 'City must be 100 characters or fewer';
     }
 
-    // Coordinates
     if (form.latitude.trim() !== '') {
       const lat = parseFloat(form.latitude);
       if (isNaN(lat) || lat < -90 || lat > 90) {
@@ -389,7 +374,6 @@ export default function EditListingPage() {
       }
     }
 
-    // Cover Image URL
     if (form.coverImage.trim() !== '') {
       try {
         const url = new URL(form.coverImage.trim());
@@ -401,7 +385,6 @@ export default function EditListingPage() {
       }
     }
 
-    // Gallery Images validation (optional)
     if (form.images && form.images.length > 0) {
       for (const imgUrl of form.images) {
         try {
@@ -443,8 +426,6 @@ export default function EditListingPage() {
     setIsSubmitting(true);
 
     try {
-      // Build UpdateHostListingPayload matching UpdateHostListingDto
-      // Never send userId, hostId, status, or verificationStatus
       const payload: UpdateHostListingPayload = {
         title: form.title.trim(),
         description: form.description.trim(),
@@ -471,7 +452,7 @@ export default function EditListingPage() {
       if (form.maxGuests !== '') payload.maxGuests = parseInt(form.maxGuests, 10);
       if (form.bedrooms !== '') payload.bedrooms = parseInt(form.bedrooms, 10);
       if (form.bathrooms !== '') payload.bathrooms = parseInt(form.bathrooms, 10);
-      if (form.areaSqm !== '') payload.areaSqm = parseInt(form.areaSqm, 10);
+      if (form.areaSqm !== '') payload.areaSqm = parseFloat(form.areaSqm);
       if (form.parkingSpaces !== '') payload.parkingSpaces = parseInt(form.parkingSpaces, 10);
 
       if (form.latitude.trim() !== '') payload.latitude = parseFloat(form.latitude);
@@ -493,16 +474,15 @@ export default function EditListingPage() {
     }
   };
 
-  // ─────────────────────────────────────────────────────────
-  // Loading & Error States
-  // ─────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-6 animate-pulse">
-        <div className="h-6 w-36 bg-[#f2ece4] rounded-lg" />
-        <div className="h-10 w-1/2 bg-[#f2ece4] rounded-xl" />
-        <div className="h-64 bg-[#f2ece4] rounded-2xl" />
-        <div className="h-48 bg-[#f2ece4] rounded-2xl" />
+      <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 animate-pulse">
+        <div className="h-6 w-36 bg-[#EEF3EF] rounded-lg" />
+        <div className="h-10 w-1/2 bg-[#EEF3EF] rounded-xl" />
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="lg:col-span-8 h-96 bg-[#EEF3EF] rounded-2xl" />
+          <div className="lg:col-span-4 h-96 bg-[#EEF3EF] rounded-2xl" />
+        </div>
       </div>
     );
   }
@@ -510,78 +490,72 @@ export default function EditListingPage() {
   if (is404) {
     return (
       <div className="p-6 md:p-12 max-w-xl mx-auto text-center space-y-5">
-        <div className="w-16 h-16 rounded-2xl bg-[#faf5ee] border border-[#d8d0c8] flex items-center justify-center mx-auto text-[#605850]">
+        <div className="w-16 h-16 rounded-2xl bg-[#F8F5ED] border border-[#E5E0D5] flex items-center justify-center mx-auto text-[#73776F]">
           <Building2 className="w-8 h-8" />
         </div>
-        <h1 className="text-2xl font-black text-[#3a302a]">Listing Not Found</h1>
-        <p className="text-sm text-[#605850]">
-          The listing with ID <code className="font-mono text-xs bg-[#f2ece4] px-1.5 py-0.5 rounded text-[#3a302a]">{listingId}</code> does
+        <h1 className="text-2xl font-black text-[#252923]">Listing Not Found</h1>
+        <p className="text-sm text-[#73776F]">
+          The listing with ID <code className="font-mono text-xs bg-[#EEF3EF] px-1.5 py-0.5 rounded text-[#252923]">{listingId}</code> does
           not exist or you do not have permission to edit it.
         </p>
         <Link
           href="/host/listings"
-          className="inline-flex items-center gap-2 bg-[#c2652a] hover:bg-[#e08850] active:bg-[#a65320] text-white text-sm font-bold px-6 py-2.5 rounded-xl transition shadow-sm"
+          className="inline-flex items-center gap-2 bg-[#234B36] text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow transition"
         >
-          <ArrowLeft className="w-4 h-4" /> Back to Listings
+          <ArrowLeft className="w-4 h-4" /> Return to My Listings
         </Link>
       </div>
     );
   }
 
-  if (fetchError || !listing || !form) {
+  if (fetchError || !form || !listing) {
     return (
       <div className="p-6 md:p-12 max-w-xl mx-auto text-center space-y-5">
-        <div className="w-16 h-16 rounded-2xl bg-red-50 border border-red-200 flex items-center justify-center mx-auto text-red-500">
+        <div className="w-16 h-16 rounded-2xl bg-red-50 border border-red-200 flex items-center justify-center mx-auto text-red-600">
           <AlertTriangle className="w-8 h-8" />
         </div>
-        <h1 className="text-2xl font-black text-[#3a302a]">Failed to load listing</h1>
-        <p className="text-sm text-[#605850]">{fetchError || 'Unable to retrieve listing data.'}</p>
-        <div className="flex justify-center gap-3">
-          <Link
-            href="/host/listings"
-            className="px-5 py-2.5 rounded-xl border border-[#d8d0c8] text-sm font-bold text-[#3a302a] hover:bg-[#faf5ee] transition"
-          >
-            Back to Listings
-          </Link>
-          <button
-            onClick={() => {
-              setLoading(true);
-              fetchListing();
-            }}
-            className="inline-flex items-center gap-2 bg-[#c2652a] hover:bg-[#e08850] active:bg-[#a65320] text-white text-sm font-bold px-5 py-2.5 rounded-xl transition shadow-sm"
-          >
-            <RotateCcw className="w-4 h-4" /> Retry
-          </button>
-        </div>
+        <h1 className="text-2xl font-black text-[#252923]">Error Loading Listing</h1>
+        <p className="text-sm text-red-700">{fetchError || 'Unable to load listing details.'}</p>
+        <button
+          onClick={fetchListing}
+          className="inline-flex items-center gap-2 bg-[#234B36] text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow transition"
+        >
+          <RotateCcw className="w-4 h-4" /> Retry
+        </button>
       </div>
     );
   }
 
-  return (
-    <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-6">
-      {/* ── Top Bar ── */}
-      <div className="flex items-center justify-between">
-        <Link
-          href={`/host/listings/${listing.id}`}
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-[#605850] hover:text-[#c2652a] transition"
-        >
-          <ArrowLeft className="w-4 h-4" /> Back to Listing Detail
-        </Link>
-      </div>
+  const isPendingReview = listing.activeReview?.status === 'PENDING';
 
-      {/* ── Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-[#d8d0c8]">
-        <div>
-          <h1 className="text-2xl font-black text-[#3a302a] tracking-tight">Edit Listing</h1>
-          <p className="text-sm text-[#605850] mt-1">
-            Updating: <strong className="text-[#3a302a]">{listing.title}</strong>
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      {/* ── Top Breadcrumbs & Page Header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[#E5E0D5] pb-5">
+        <div className="space-y-1">
+          <Link
+            href={`/host/listings/${listing.id}`}
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-[#73776F] hover:text-[#234B36] transition"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" /> Back to Listing Overview
+          </Link>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-black text-[#252923] tracking-tight">
+              Edit Listing: {listing.title}
+            </h1>
+            <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-[#234B36]/10 text-[#234B36] border border-[#234B36]/20">
+              {listing.status}
+            </span>
+          </div>
+          <p className="text-xs text-[#73776F]">
+            Sequential enterprise editor. Changes reflect in real-time on your live preview card.
           </p>
         </div>
 
-        <div className="flex items-center gap-3 flex-shrink-0">
+        <div className="flex items-center gap-2.5 self-start sm:self-auto">
           <Link
             href={`/host/listings/${listing.id}`}
-            className="px-4 py-2 rounded-xl text-sm font-semibold text-[#3a302a] bg-[#faf5ee] hover:bg-[#f2ece4] border border-[#d8d0c8] transition"
+            className="px-4 py-2 rounded-xl text-xs font-bold text-[#73776F] hover:bg-[#F8F5ED] border border-[#E5E0D5] transition"
           >
             Cancel
           </Link>
@@ -589,36 +563,30 @@ export default function EditListingPage() {
             type="button"
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="inline-flex items-center gap-2 bg-[#c2652a] hover:bg-[#e08850] active:bg-[#a65320] text-white text-sm font-bold px-5 py-2 rounded-xl shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 bg-[#234B36] hover:bg-[#2D5E43] active:bg-[#1A3828] text-white text-xs font-bold px-5 py-2 rounded-xl shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? (
               <>
-                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 Saving Changes…
               </>
             ) : (
               <>
-                <Save className="w-4 h-4" /> Save Changes
+                <Save className="w-3.5 h-3.5" /> Save Changes
               </>
             )}
           </button>
         </div>
       </div>
 
-      {/* ── Important Edits Moderation Notice ── */}
-      {(listing.status === 'PUBLISHED' || listing.status === 'PAUSED') && (
-        <div className="bg-sky-50 border border-sky-200/90 rounded-2xl p-4 flex items-start gap-3.5 text-sky-950">
-          <div className="w-8 h-8 rounded-xl bg-sky-100 flex items-center justify-center flex-shrink-0 text-sky-600 mt-0.5">
-            <Info className="w-4 h-4" />
-          </div>
-          <div className="text-xs md:text-sm leading-relaxed">
-            <p className="font-bold text-sky-900 mb-0.5">
-              Live Listing Moderation Policy
-            </p>
-            <p className="text-sky-800">
-              This listing is currently <strong className="uppercase font-semibold">{listing.status}</strong>. Significant modifications to
-              pricing, location, property type, or photos will be submitted as an <strong>edit proposal for administrative review</strong>.
-              Your public listing stays active and bookable with its existing details until the changes are reviewed and approved.
+      {/* ── Pending Review Banner ── */}
+      {isPendingReview && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3">
+          <Info className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
+          <div className="text-sm">
+            <h4 className="font-bold text-amber-900">Review Pending</h4>
+            <p className="text-xs text-amber-800 mt-0.5">
+              You currently have proposed changes awaiting administrative review. Saving new changes here will update your draft submission.
             </p>
           </div>
         </div>
@@ -629,682 +597,687 @@ export default function EditListingPage() {
         <div className="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-start gap-3 text-red-800">
           <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
           <div className="flex-1 text-sm font-medium">
-            <p className="font-bold mb-0.5">Could not update listing</p>
+            <p className="font-bold mb-0.5">Could not save changes</p>
             <p className="text-red-700">{serverError}</p>
           </div>
-          <button
-            onClick={() => setServerError(null)}
-            className="text-red-400 hover:text-red-600 transition"
-          >
+          <button onClick={() => setServerError(null)} className="text-red-400 hover:text-red-600">
             <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
-      {/* ── Form Body ── */}
-      <form onSubmit={handleSubmit} className="space-y-6">
+      {/* ── OPTION B: Two-Column Responsive Layout ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* ═══════════════════════════════════════════════════
-            SECTION 1: Basic Information
+            LEFT COLUMN: Structured Sequential Form (65%)
         ═══════════════════════════════════════════════════ */}
-        <section className="bg-white border border-[#d8d0c8] rounded-2xl p-6 md:p-8 space-y-6">
-          <div className="flex items-center gap-2.5 pb-3 border-b border-[#d8d0c8]">
-            <Building2 className="w-5 h-5 text-[#c2652a]" />
-            <h2 className="text-lg font-black text-[#3a302a]">Basic Information</h2>
-          </div>
-
-          {/* Title */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label htmlFor="title" className="block text-sm font-bold text-[#3a302a]">
-                Listing Title <span className="text-red-500">*</span>
-              </label>
+        <div className="lg:col-span-7 xl:col-span-8 space-y-6">
+          {/* Sticky Section Quick Jump Bar */}
+          <div className="sticky top-2 z-10 bg-white/90 backdrop-blur-md border border-[#E5E0D5] rounded-2xl p-1.5 shadow-xs overflow-x-auto flex items-center gap-1">
+            {SECTIONS_NAV.map((sec) => (
               <button
+                key={sec.id}
                 type="button"
-                onClick={() => { setCopilotMode('title'); setIsCopilotOpen(true); }}
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#c2652a] hover:text-[#a65320] bg-[#c2652a]/10 hover:bg-[#c2652a]/15 px-2.5 py-1 rounded-lg transition"
-                title="Generate a title grounded in your property specs"
+                onClick={() => scrollToSection(sec.id)}
+                className="px-3 py-1 rounded-xl text-xs font-bold text-[#73776F] hover:text-[#252923] hover:bg-[#F8F5ED] whitespace-nowrap transition"
               >
-                <Sparkles className="w-3.5 h-3.5 text-[#c2652a]" />
-                <span>✨ Generate Title with AI</span>
+                {sec.label}
               </button>
-            </div>
-            <input
-              id="title"
-              name="title"
-              type="text"
-              value={form.title}
-              onChange={handleChange}
-              maxLength={255}
-              className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium text-[#3a302a] focus:outline-none focus:ring-2 transition ${
-                errors.title
-                  ? 'border-red-400 focus:ring-red-200'
-                  : 'border-[#d8d0c8] focus:ring-[#c2652a]/20 focus:border-[#c2652a]'
-              }`}
-            />
-            <div className="flex justify-between items-center text-xs">
-              {errors.title ? (
-                <span className="text-red-600 font-semibold">{errors.title}</span>
-              ) : (
-                <span className="text-[#605850]">Clear, descriptive listing title.</span>
-              )}
-              <span className="text-[#605850]">{form.title.length}/255</span>
-            </div>
+            ))}
           </div>
 
-          {/* Property Type */}
-          <div className="space-y-2">
-            <label className="block text-sm font-bold text-[#3a302a]">Property Type</label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {PROPERTY_TYPE_OPTIONS.map((opt) => {
-                const IconComponent = opt.icon;
-                const isSelected = form.propertyType === opt.value;
-                return (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => handlePropertyTypeChange(opt.value)}
-                    className={`flex items-start gap-3 p-3.5 rounded-xl border text-left transition ${
-                      isSelected
-                        ? 'border-[#c2652a] bg-[#f2ece4]/50 ring-1 ring-[#c2652a]'
-                        : 'border-[#d8d0c8] hover:border-[#c2652a] bg-white'
-                    }`}
-                  >
-                    <div
-                      className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                        isSelected ? 'bg-[#c2652a] text-white' : 'bg-[#faf5ee] text-[#605850]'
-                      }`}
-                    >
-                      <IconComponent className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <div className="text-sm font-bold text-[#3a302a]">{opt.label}</div>
-                      <p className="text-xs text-[#605850] leading-snug mt-0.5">
-                        {opt.description}
-                      </p>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* ═══════════════════════════════════════════════════
+                SECTION 1: Property Identity & Location
+            ═══════════════════════════════════════════════════ */}
+            <section
+              id="section-location"
+              className="bg-white border border-[#E5E0D5] rounded-2xl p-6 md:p-8 space-y-6 scroll-mt-14"
+            >
+              <div className="flex items-center gap-2.5 pb-3 border-b border-[#EEF3EF]">
+                <MapPin className="w-5 h-5 text-[#234B36]" />
+                <div>
+                  <h2 className="text-lg font-black text-[#252923]">1. Property Identity &amp; Location</h2>
+                  <p className="text-xs text-[#73776F] mt-0.5">
+                    Property category and geographic coordinates for your listing.
+                  </p>
+                </div>
+              </div>
 
-          {/* Description */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label htmlFor="description" className="block text-sm font-bold text-[#3a302a]">
-                Description <span className="text-red-500">*</span>
-              </label>
-              <button
-                type="button"
-                onClick={() => { setCopilotMode('description'); setIsCopilotOpen(true); }}
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#c2652a] hover:text-[#a65320] bg-[#c2652a]/10 hover:bg-[#c2652a]/15 px-2.5 py-1 rounded-lg transition"
-                title="Draft description grounded in your property specs"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-[#c2652a]" />
-                <span>✨ Draft Description with AI</span>
-              </button>
-            </div>
-            <textarea
-              id="description"
-              name="description"
-              rows={4}
-              value={form.description}
-              onChange={handleChange}
-              className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium text-[#3a302a] focus:outline-none focus:ring-2 transition ${
-                errors.description
-                  ? 'border-red-400 focus:ring-red-200'
-                  : 'border-[#d8d0c8] focus:ring-[#c2652a]/20 focus:border-[#c2652a]'
-              }`}
-            />
-            {errors.description && (
-              <p className="text-xs text-red-600 font-semibold">{errors.description}</p>
-            )}
-          </div>
-        </section>
-
-        {/* ═══════════════════════════════════════════════════
-            SECTION 2: Listing Type & Pricing
-        ═══════════════════════════════════════════════════ */}
-        <section className="bg-white border border-[#d8d0c8] rounded-2xl p-6 md:p-8 space-y-6">
-          <div className="flex items-center gap-2.5 pb-3 border-b border-[#d8d0c8]">
-            <Lock className="w-5 h-5 text-[#605850]" />
-            <h2 className="text-lg font-black text-[#3a302a]">Listing Type & Pricing</h2>
-          </div>
-
-          {/* Immutable Listing Type Note */}
-          <div className="bg-[#faf5ee] border border-[#d8d0c8] rounded-xl p-4 flex items-center justify-between gap-3">
-            <div>
-              <span className="text-xs font-bold text-[#605850] uppercase tracking-wider block">
-                Listing Type (Fixed)
-              </span>
-              <span className="text-sm font-bold text-[#3a302a]">
-                {listing.listingType === 'RENTAL' ? 'Rental Property (Nightly Stay)' : 'Property For Sale'}
-              </span>
-            </div>
-            <span className="text-xs font-semibold text-[#605850] bg-white px-2.5 py-1 rounded-lg border border-[#d8d0c8]">
-              Cannot be changed after creation
-            </span>
-          </div>
-
-          {/* Pricing Input based on listingType */}
-          {listing.listingType === 'RENTAL' ? (
-            <div className="space-y-4 max-w-xl">
-              <div className="space-y-1.5">
-                <label htmlFor="pricePerNight" className="block text-sm font-bold text-[#3a302a]">
-                  Price Per Night (ETB) <span className="text-red-500">*</span>
-                </label>
-                {/* Inline Row: Price Input + AI Dynamic Recommendation Button */}
-                <div className="flex flex-wrap items-center gap-2.5">
-                  <div className="relative w-full sm:w-64">
-                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-black text-[#605850]">
-                      ETB
+              {/* Immutable Listing Type Note */}
+              <div className="bg-[#F8F5ED] border border-[#E5E0D5] rounded-xl p-4 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <Lock className="w-4 h-4 text-[#73776F]" />
+                  <div>
+                    <span className="text-xs font-bold text-[#252923]">Listing Intent: </span>
+                    <span className="text-xs font-black text-[#234B36] uppercase tracking-wide">
+                      {listing.listingType === 'SALE' ? 'Property For Sale' : 'Nightly Stay Rental'}
                     </span>
-                    <input
-                      id="pricePerNight"
-                      name="pricePerNight"
-                      type="number"
-                      min="1"
-                      step="any"
-                      value={form.pricePerNight}
-                      onChange={handleChange}
-                      className={`w-full pl-14 pr-4 py-2.5 rounded-xl border text-sm font-medium text-[#3a302a] focus:outline-none focus:ring-2 transition ${
-                        errors.pricePerNight
-                          ? 'border-red-400 focus:ring-red-200'
-                          : 'border-[#d8d0c8] focus:ring-[#c2652a]/20 focus:border-[#c2652a]'
-                      }`}
-                    />
                   </div>
+                </div>
+                <span className="text-[11px] text-[#73776F] font-semibold bg-white px-2 py-0.5 rounded border border-[#E5E0D5]">
+                  Immutable
+                </span>
+              </div>
 
-                  {/* ✨ AI Dynamic Price Recommendation (ETB) */}
-                  <AiPricingWidget
-                    city={form.city}
-                    subCity={form.subCity}
-                    neighborhood={form.neighborhood}
-                    propertyType={form.propertyType}
-                    listingType={listing.listingType}
-                    bedrooms={form.bedrooms}
-                    bathrooms={form.bathrooms}
-                    maxGuests={form.maxGuests}
-                    areaSqm={form.areaSqm}
-                    amenityIds={form.amenityIds}
-                    amenityCatalog={amenitiesCatalog}
-                    currentPrice={form.pricePerNight}
-                    onApplyPrice={(price) => {
-                      setIsDirty(true);
-                      setForm((prev) => (prev ? { ...prev, pricePerNight: String(price) } : prev));
-                      if (errors.pricePerNight) {
-                        setErrors((prev) => {
-                          const next = { ...prev };
-                          delete next.pricePerNight;
-                          return next;
-                        });
-                      }
-                    }}
+              {/* Property Type Grid */}
+              <div className="space-y-2">
+                <label className="block text-sm font-bold text-[#252923]">
+                  Property Type <span className="text-red-500">*</span>
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                  {PROPERTY_TYPE_OPTIONS.map((opt) => {
+                    const Icon = opt.icon;
+                    const isSelected = form.propertyType === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => handlePropertyTypeChange(opt.value)}
+                        className={`p-3 rounded-xl border text-left transition ${
+                          isSelected
+                            ? 'border-[#234B36] bg-[#234B36]/5 ring-2 ring-[#234B36]/20'
+                            : 'border-[#E5E0D5] bg-white hover:bg-[#F8F5ED]'
+                        }`}
+                      >
+                        <Icon
+                          className={`w-4 h-4 mb-1.5 ${
+                            isSelected ? 'text-[#234B36]' : 'text-[#73776F]'
+                          }`}
+                        />
+                        <div className="text-xs font-bold text-[#252923]">{opt.label}</div>
+                        <div className="text-[10px] text-[#73776F] line-clamp-1 mt-0.5">
+                          {opt.description}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Address inputs */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                <div className="sm:col-span-2 space-y-1.5">
+                  <label htmlFor="address" className="block text-sm font-bold text-[#252923]">
+                    Street Address <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="address"
+                    name="address"
+                    type="text"
+                    value={form.address}
+                    onChange={handleChange}
+                    maxLength={255}
+                    className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium text-[#252923] focus:outline-none focus:ring-2 transition ${
+                      errors.address
+                        ? 'border-red-400 focus:ring-red-200'
+                        : 'border-[#E5E0D5] focus:ring-[#234B36]/20 focus:border-[#234B36]'
+                    }`}
+                  />
+                  {errors.address && (
+                    <p className="text-xs text-red-600 font-semibold">{errors.address}</p>
+                  )}
+                </div>
+
+                <div className="space-y-1.5">
+                  <label htmlFor="city" className="block text-sm font-bold text-[#252923]">
+                    City <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="city"
+                    name="city"
+                    type="text"
+                    value={form.city}
+                    onChange={handleChange}
+                    maxLength={100}
+                    className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium text-[#252923] focus:outline-none focus:ring-2 transition ${
+                      errors.city
+                        ? 'border-red-400 focus:ring-red-200'
+                        : 'border-[#E5E0D5] focus:ring-[#234B36]/20 focus:border-[#234B36]'
+                    }`}
+                  />
+                  {errors.city && <p className="text-xs text-red-600 font-semibold">{errors.city}</p>}
+                </div>
+              </div>
+
+              {/* Sub-city & Neighborhood */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="space-y-1.5">
+                  <label htmlFor="subCity" className="block text-xs font-bold text-[#252923]">
+                    Sub-City (Kifle Ketema)
+                  </label>
+                  <input
+                    id="subCity"
+                    name="subCity"
+                    type="text"
+                    value={form.subCity}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 rounded-xl border border-[#E5E0D5] text-sm font-medium text-[#252923] focus:outline-none focus:ring-2 focus:ring-[#234B36]/20 focus:border-[#234B36] transition"
                   />
                 </div>
-                {errors.pricePerNight && (
-                  <p className="text-xs text-red-600 font-semibold">{errors.pricePerNight}</p>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-1.5 max-w-xl">
-              <label htmlFor="salePrice" className="block text-sm font-bold text-[#3a302a]">
-                Total Sale Price (ETB) <span className="text-red-500">*</span>
-              </label>
-              {/* Inline Row: Sale Price Input + AI Valuation Button */}
-              <div className="flex flex-wrap items-center gap-2.5">
-                <div className="relative w-full sm:w-64">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-black text-[#605850]">
-                    ETB
-                  </span>
+
+                <div className="space-y-1.5">
+                  <label htmlFor="neighborhood" className="block text-xs font-bold text-[#252923]">
+                    Neighborhood / Area
+                  </label>
                   <input
-                    id="salePrice"
-                    name="salePrice"
+                    id="neighborhood"
+                    name="neighborhood"
+                    type="text"
+                    value={form.neighborhood}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 rounded-xl border border-[#E5E0D5] text-sm font-medium text-[#252923] focus:outline-none focus:ring-2 focus:ring-[#234B36]/20 focus:border-[#234B36] transition"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label htmlFor="woreda" className="block text-xs font-bold text-[#252923]">
+                    Woreda (Optional)
+                  </label>
+                  <input
+                    id="woreda"
+                    name="woreda"
+                    type="text"
+                    value={form.woreda}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 rounded-xl border border-[#E5E0D5] text-sm font-medium text-[#252923] focus:outline-none focus:ring-2 focus:ring-[#234B36]/20 focus:border-[#234B36] transition"
+                  />
+                </div>
+              </div>
+            </section>
+
+            {/* ═══════════════════════════════════════════════════
+                SECTION 2: Space & Capacity
+            ═══════════════════════════════════════════════════ */}
+            <section
+              id="section-space"
+              className="bg-white border border-[#E5E0D5] rounded-2xl p-6 md:p-8 space-y-6 scroll-mt-14"
+            >
+              <div className="flex items-center gap-2.5 pb-3 border-b border-[#EEF3EF]">
+                <Layers className="w-5 h-5 text-[#234B36]" />
+                <div>
+                  <h2 className="text-lg font-black text-[#252923]">2. Space &amp; Capacity</h2>
+                  <p className="text-xs text-[#73776F] mt-0.5">
+                    Physical dimensions, guest capacity, and room layout.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                <div className="space-y-1.5">
+                  <label htmlFor="bedrooms" className="block text-xs font-bold text-[#252923]">
+                    Bedrooms <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="bedrooms"
+                    name="bedrooms"
+                    type="number"
+                    min="0"
+                    max="50"
+                    value={form.bedrooms}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 rounded-xl border border-[#E5E0D5] text-sm font-medium text-[#252923] focus:outline-none focus:ring-2 focus:ring-[#234B36]/20 focus:border-[#234B36] transition"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label htmlFor="bathrooms" className="block text-xs font-bold text-[#252923]">
+                    Bathrooms <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="bathrooms"
+                    name="bathrooms"
+                    type="number"
+                    min="0"
+                    max="50"
+                    value={form.bathrooms}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 rounded-xl border border-[#E5E0D5] text-sm font-medium text-[#252923] focus:outline-none focus:ring-2 focus:ring-[#234B36]/20 focus:border-[#234B36] transition"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label htmlFor="maxGuests" className="block text-xs font-bold text-[#252923]">
+                    Max Guests <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="maxGuests"
+                    name="maxGuests"
                     type="number"
                     min="1"
-                    step="any"
-                    value={form.salePrice}
+                    max="50"
+                    value={form.maxGuests}
                     onChange={handleChange}
-                    className={`w-full pl-14 pr-4 py-2.5 rounded-xl border text-sm font-medium text-[#3a302a] focus:outline-none focus:ring-2 transition ${
-                      errors.salePrice
-                        ? 'border-red-400 focus:ring-red-200'
-                        : 'border-[#d8d0c8] focus:ring-[#c2652a]/20 focus:border-[#c2652a]'
-                    }`}
+                    className="w-full px-3 py-2 rounded-xl border border-[#E5E0D5] text-sm font-medium text-[#252923] focus:outline-none focus:ring-2 focus:ring-[#234B36]/20 focus:border-[#234B36] transition"
                   />
                 </div>
 
-                {/* ✨ AI Property Valuation (ETB) for Sale */}
-                <AiPricingWidget
-                  city={form.city}
-                  subCity={form.subCity}
-                  neighborhood={form.neighborhood}
-                  propertyType={form.propertyType}
-                  listingType="SALE"
-                  bedrooms={form.bedrooms}
-                  bathrooms={form.bathrooms}
-                  maxGuests={form.maxGuests}
-                  areaSqm={form.areaSqm}
-                  amenityIds={form.amenityIds}
-                  amenityCatalog={amenitiesCatalog}
-                  currentPrice={form.salePrice}
-                  onApplyPrice={(price) => {
-                    setIsDirty(true);
-                    setForm((prev) => (prev ? { ...prev, salePrice: String(price) } : prev));
-                    if (errors.salePrice) {
-                      setErrors((prev) => {
-                        const next = { ...prev };
-                        delete next.salePrice;
-                        return next;
-                      });
-                    }
+                <div className="space-y-1.5">
+                  <label htmlFor="areaSqm" className="block text-xs font-bold text-[#252923]">
+                    Area (m²)
+                  </label>
+                  <input
+                    id="areaSqm"
+                    name="areaSqm"
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={form.areaSqm}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 rounded-xl border border-[#E5E0D5] text-sm font-medium text-[#252923] focus:outline-none focus:ring-2 focus:ring-[#234B36]/20 focus:border-[#234B36] transition"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label htmlFor="parkingSpaces" className="block text-xs font-bold text-[#252923]">
+                    Parking
+                  </label>
+                  <input
+                    id="parkingSpaces"
+                    name="parkingSpaces"
+                    type="number"
+                    min="0"
+                    value={form.parkingSpaces}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 rounded-xl border border-[#E5E0D5] text-sm font-medium text-[#252923] focus:outline-none focus:ring-2 focus:ring-[#234B36]/20 focus:border-[#234B36] transition"
+                  />
+                </div>
+              </div>
+            </section>
+
+            {/* ═══════════════════════════════════════════════════
+                SECTION 3: Features & Amenities
+            ═══════════════════════════════════════════════════ */}
+            <section
+              id="section-amenities"
+              className="bg-white border border-[#E5E0D5] rounded-2xl p-6 md:p-8 space-y-6 scroll-mt-14"
+            >
+              <div className="flex items-center gap-2.5 pb-3 border-b border-[#EEF3EF]">
+                <Sparkles className="w-5 h-5 text-[#234B36]" />
+                <div>
+                  <h2 className="text-lg font-black text-[#252923]">3. Features &amp; Infrastructure</h2>
+                  <p className="text-xs text-[#73776F] mt-0.5">
+                    Verified infrastructure amenities (Generator, Water, WiFi).
+                  </p>
+                </div>
+              </div>
+
+              <AmenitySelector
+                selectedIds={form.amenityIds}
+                onChange={(ids) => {
+                  setIsDirty(true);
+                  setForm((prev) => (prev ? { ...prev, amenityIds: ids } : prev));
+                }}
+              />
+            </section>
+
+            {/* ═══════════════════════════════════════════════════
+                SECTION 4: Photos & Gallery
+            ═══════════════════════════════════════════════════ */}
+            <section
+              id="section-photos"
+              className="bg-white border border-[#E5E0D5] rounded-2xl p-6 md:p-8 space-y-6 scroll-mt-14"
+            >
+              <div className="flex items-center gap-2.5 pb-3 border-b border-[#EEF3EF]">
+                <ImageIcon className="w-5 h-5 text-[#234B36]" />
+                <div>
+                  <h2 className="text-lg font-black text-[#252923]">4. Photos &amp; Gallery</h2>
+                  <p className="text-xs text-[#73776F] mt-0.5">
+                    Manage your cover image and uploaded photo gallery.
+                  </p>
+                </div>
+              </div>
+
+              <GalleryManager
+                coverImage={form.coverImage}
+                images={form.images}
+                propertyId={listing.id}
+                listingStatus={listing.status}
+                isPendingReview={isPendingReview}
+                onCoverImageChange={(url) => {
+                  setIsDirty(true);
+                  setForm((prev) => (prev ? { ...prev, coverImage: url } : prev));
+                  if (errors.coverImage) {
+                    setErrors((prev) => {
+                      const next = { ...prev };
+                      delete next.coverImage;
+                      return next;
+                    });
+                  }
+                }}
+                onImagesChange={(urls) => {
+                  setIsDirty(true);
+                  setForm((prev) => (prev ? { ...prev, images: urls } : prev));
+                  if (errors.gallery) {
+                    setErrors((prev) => {
+                      const next = { ...prev };
+                      delete next.gallery;
+                      return next;
+                    });
+                  }
+                }}
+                coverError={errors.coverImage}
+              />
+              {errors.gallery && (
+                <p className="text-xs text-red-600 font-semibold">{errors.gallery}</p>
+              )}
+            </section>
+
+            {/* ═══════════════════════════════════════════════════
+                SECTION 5: Title & Narrative (AI Copilot)
+            ═══════════════════════════════════════════════════ */}
+            <section
+              id="section-narrative"
+              className="bg-white border border-[#E5E0D5] rounded-2xl p-6 md:p-8 space-y-6 scroll-mt-14"
+            >
+              <div className="flex items-center justify-between pb-3 border-b border-[#EEF3EF]">
+                <div className="flex items-center gap-2.5">
+                  <Sparkles className="w-5 h-5 text-[#234B36]" />
+                  <div>
+                    <h2 className="text-lg font-black text-[#252923]">5. Title &amp; Narrative</h2>
+                    <p className="text-xs text-[#73776F] mt-0.5">
+                      Grounded in your property specs and uploaded photo gallery.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCopilotMode('both');
+                    setIsCopilotOpen(true);
                   }}
-                />
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-gradient-to-r from-[#234B36] to-[#2D5E43] hover:from-[#1E3F2E] hover:to-[#234B36] px-3.5 py-1.5 rounded-xl shadow-xs transition"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-[#E6C687]" />
+                  <span>✨ AI Copilot Suite</span>
+                </button>
               </div>
-              {errors.salePrice && (
-                <p className="text-xs text-red-600 font-semibold">{errors.salePrice}</p>
-              )}
-            </div>
-          )}
-        </section>
 
-        {/* ═══════════════════════════════════════════════════
-            SECTION 3: Property Details
-        ═══════════════════════════════════════════════════ */}
-        <section className="bg-white border border-[#d8d0c8] rounded-2xl p-6 md:p-8 space-y-6">
-          <div className="flex items-center gap-2.5 pb-3 border-b border-[#d8d0c8]">
-            <Layers className="w-5 h-5 text-[#c2652a]" />
-            <h2 className="text-lg font-black text-[#3a302a]">Property Details</h2>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-            <div className="space-y-1.5">
-              <label htmlFor="maxGuests" className="block text-xs font-bold text-[#3a302a]">
-                Max Guests
-              </label>
-              <input
-                id="maxGuests"
-                name="maxGuests"
-                type="number"
-                min="1"
-                max="50"
-                value={form.maxGuests}
-                onChange={handleChange}
-                className="w-full px-3 py-2 rounded-xl border border-[#d8d0c8] text-sm font-semibold text-[#3a302a] focus:outline-none focus:ring-2 focus:ring-[#c2652a]/20 focus:border-[#c2652a] transition"
-              />
-              {errors.maxGuests && <p className="text-xs text-red-600">{errors.maxGuests}</p>}
-            </div>
-
-            <div className="space-y-1.5">
-              <label htmlFor="bedrooms" className="block text-xs font-bold text-[#3a302a]">
-                Bedrooms
-              </label>
-              <input
-                id="bedrooms"
-                name="bedrooms"
-                type="number"
-                min="0"
-                value={form.bedrooms}
-                onChange={handleChange}
-                className="w-full px-3 py-2 rounded-xl border border-[#d8d0c8] text-sm font-semibold text-[#3a302a] focus:outline-none focus:ring-2 focus:ring-[#c2652a]/20 focus:border-[#c2652a] transition"
-              />
-              {errors.bedrooms && <p className="text-xs text-red-600">{errors.bedrooms}</p>}
-            </div>
-
-            <div className="space-y-1.5">
-              <label htmlFor="bathrooms" className="block text-xs font-bold text-[#3a302a]">
-                Bathrooms
-              </label>
-              <input
-                id="bathrooms"
-                name="bathrooms"
-                type="number"
-                min="0"
-                value={form.bathrooms}
-                onChange={handleChange}
-                className="w-full px-3 py-2 rounded-xl border border-[#d8d0c8] text-sm font-semibold text-[#3a302a] focus:outline-none focus:ring-2 focus:ring-[#c2652a]/20 focus:border-[#c2652a] transition"
-              />
-              {errors.bathrooms && <p className="text-xs text-red-600">{errors.bathrooms}</p>}
-            </div>
-
-            <div className="space-y-1.5">
-              <label htmlFor="areaSqm" className="block text-xs font-bold text-[#3a302a]">
-                Area (m²)
-              </label>
-              <input
-                id="areaSqm"
-                name="areaSqm"
-                type="number"
-                min="0"
-                value={form.areaSqm}
-                onChange={handleChange}
-                className="w-full px-3 py-2 rounded-xl border border-[#d8d0c8] text-sm font-semibold text-[#3a302a] focus:outline-none focus:ring-2 focus:ring-[#c2652a]/20 focus:border-[#c2652a] transition"
-              />
-              {errors.areaSqm && <p className="text-xs text-red-600">{errors.areaSqm}</p>}
-            </div>
-
-            <div className="space-y-1.5">
-              <label htmlFor="parkingSpaces" className="block text-xs font-bold text-[#3a302a]">
-                Parking Spaces
-              </label>
-              <input
-                id="parkingSpaces"
-                name="parkingSpaces"
-                type="number"
-                min="0"
-                value={form.parkingSpaces}
-                onChange={handleChange}
-                className="w-full px-3 py-2 rounded-xl border border-[#d8d0c8] text-sm font-semibold text-[#3a302a] focus:outline-none focus:ring-2 focus:ring-[#c2652a]/20 focus:border-[#c2652a] transition"
-              />
-              {errors.parkingSpaces && (
-                <p className="text-xs text-red-600">{errors.parkingSpaces}</p>
-              )}
-            </div>
-          </div>
-        </section>
-
-        {/* ═══════════════════════════════════════════════════
-            SECTION 4: Location & Address
-        ═══════════════════════════════════════════════════ */}
-        <section className="bg-white border border-[#d8d0c8] rounded-2xl p-6 md:p-8 space-y-6">
-          <div className="flex items-center gap-2.5 pb-3 border-b border-[#d8d0c8]">
-            <MapPin className="w-5 h-5 text-[#c2652a]" />
-            <h2 className="text-lg font-black text-[#3a302a]">Location & Address</h2>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="sm:col-span-2 space-y-1.5">
-              <label htmlFor="address" className="block text-sm font-bold text-[#3a302a]">
-                Street Address <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="address"
-                name="address"
-                type="text"
-                value={form.address}
-                onChange={handleChange}
-                maxLength={255}
-                className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium text-[#3a302a] focus:outline-none focus:ring-2 transition ${
-                  errors.address
-                    ? 'border-red-400 focus:ring-red-200'
-                    : 'border-[#d8d0c8] focus:ring-[#c2652a]/20 focus:border-[#c2652a]'
-                }`}
-              />
-              {errors.address && (
-                <p className="text-xs text-red-600 font-semibold">{errors.address}</p>
-              )}
-            </div>
-
-            <div className="space-y-1.5">
-              <label htmlFor="city" className="block text-sm font-bold text-[#3a302a]">
-                City <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="city"
-                name="city"
-                type="text"
-                value={form.city}
-                onChange={handleChange}
-                maxLength={100}
-                className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium text-[#3a302a] focus:outline-none focus:ring-2 transition ${
-                  errors.city
-                    ? 'border-red-400 focus:ring-red-200'
-                    : 'border-[#d8d0c8] focus:ring-[#c2652a]/20 focus:border-[#c2652a]'
-                }`}
-              />
-              {errors.city && <p className="text-xs text-red-600 font-semibold">{errors.city}</p>}
-            </div>
-          </div>
-
-          {/* Ethiopian Administrative Hierarchy */}
-          <div className="pt-2">
-            <h3 className="text-xs font-black uppercase tracking-wider text-[#605850] mb-3">
-              Ethiopian Administrative Hierarchy
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {/* Title */}
               <div className="space-y-1.5">
-                <label htmlFor="subCity" className="block text-xs font-bold text-[#3a302a]">
-                  Sub-City (Kifle Ketema)
-                </label>
+                <div className="flex items-center justify-between">
+                  <label htmlFor="title" className="block text-sm font-bold text-[#252923]">
+                    Listing Title <span className="text-red-500">*</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCopilotMode('title');
+                      setIsCopilotOpen(true);
+                    }}
+                    className="inline-flex items-center gap-1 text-xs font-bold text-[#234B36] hover:underline"
+                  >
+                    <Sparkles className="w-3 h-3 text-[#234B36]" />
+                    <span>Auto-draft Title</span>
+                  </button>
+                </div>
                 <input
-                  id="subCity"
-                  name="subCity"
+                  id="title"
+                  name="title"
                   type="text"
-                  value={form.subCity}
+                  value={form.title}
                   onChange={handleChange}
-                  maxLength={100}
-                  className="w-full px-3 py-2 rounded-xl border border-[#d8d0c8] text-sm font-medium text-[#3a302a] focus:outline-none focus:ring-2 focus:ring-[#c2652a]/20 focus:border-[#c2652a] transition"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label htmlFor="woreda" className="block text-xs font-bold text-[#3a302a]">
-                  Woreda
-                </label>
-                <input
-                  id="woreda"
-                  name="woreda"
-                  type="text"
-                  value={form.woreda}
-                  onChange={handleChange}
-                  maxLength={100}
-                  className="w-full px-3 py-2 rounded-xl border border-[#d8d0c8] text-sm font-medium text-[#3a302a] focus:outline-none focus:ring-2 focus:ring-[#c2652a]/20 focus:border-[#c2652a] transition"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label htmlFor="neighborhood" className="block text-xs font-bold text-[#3a302a]">
-                  Neighborhood / Area
-                </label>
-                <input
-                  id="neighborhood"
-                  name="neighborhood"
-                  type="text"
-                  value={form.neighborhood}
-                  onChange={handleChange}
-                  maxLength={150}
-                  className="w-full px-3 py-2 rounded-xl border border-[#d8d0c8] text-sm font-medium text-[#3a302a] focus:outline-none focus:ring-2 focus:ring-[#c2652a]/20 focus:border-[#c2652a] transition"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label htmlFor="region" className="block text-xs font-bold text-[#3a302a]">
-                  Region / Chartered City
-                </label>
-                <input
-                  id="region"
-                  name="region"
-                  type="text"
-                  value={form.region}
-                  onChange={handleChange}
-                  maxLength={100}
-                  className="w-full px-3 py-2 rounded-xl border border-[#d8d0c8] text-sm font-medium text-[#3a302a] focus:outline-none focus:ring-2 focus:ring-[#c2652a]/20 focus:border-[#c2652a] transition"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label htmlFor="zone" className="block text-xs font-bold text-[#3a302a]">
-                  Zone
-                </label>
-                <input
-                  id="zone"
-                  name="zone"
-                  type="text"
-                  value={form.zone}
-                  onChange={handleChange}
-                  maxLength={100}
-                  className="w-full px-3 py-2 rounded-xl border border-[#d8d0c8] text-sm font-medium text-[#3a302a] focus:outline-none focus:ring-2 focus:ring-[#c2652a]/20 focus:border-[#c2652a] transition"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label htmlFor="country" className="block text-xs font-bold text-[#3a302a]">
-                  Country
-                </label>
-                <input
-                  id="country"
-                  name="country"
-                  type="text"
-                  value={form.country}
-                  onChange={handleChange}
-                  maxLength={100}
-                  className="w-full px-3 py-2 rounded-xl border border-[#d8d0c8] text-sm font-medium text-[#3a302a] bg-[#faf5ee] focus:outline-none transition"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Coordinates */}
-          <div className="pt-2 border-t border-[#d8d0c8]">
-            <h3 className="text-xs font-black uppercase tracking-wider text-[#605850] mb-3">
-              Geographic Coordinates
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg">
-              <div className="space-y-1.5">
-                <label htmlFor="latitude" className="block text-xs font-bold text-[#3a302a]">
-                  Latitude (-90 to 90)
-                </label>
-                <input
-                  id="latitude"
-                  name="latitude"
-                  type="number"
-                  step="any"
-                  value={form.latitude}
-                  onChange={handleChange}
-                  className={`w-full px-3 py-2 rounded-xl border text-sm font-medium text-[#3a302a] focus:outline-none focus:ring-2 transition ${
-                    errors.latitude
+                  maxLength={255}
+                  className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium text-[#252923] focus:outline-none focus:ring-2 transition ${
+                    errors.title
                       ? 'border-red-400 focus:ring-red-200'
-                      : 'border-[#d8d0c8] focus:ring-[#c2652a]/20 focus:border-[#c2652a]'
+                      : 'border-[#E5E0D5] focus:ring-[#234B36]/20 focus:border-[#234B36]'
                   }`}
                 />
-                {errors.latitude && (
-                  <p className="text-xs text-red-600 font-semibold">{errors.latitude}</p>
-                )}
+                {errors.title && <p className="text-xs text-red-600 font-semibold">{errors.title}</p>}
               </div>
 
+              {/* Description */}
               <div className="space-y-1.5">
-                <label htmlFor="longitude" className="block text-xs font-bold text-[#3a302a]">
-                  Longitude (-180 to 180)
-                </label>
-                <input
-                  id="longitude"
-                  name="longitude"
-                  type="number"
-                  step="any"
-                  value={form.longitude}
+                <div className="flex items-center justify-between">
+                  <label htmlFor="description" className="block text-sm font-bold text-[#252923]">
+                    Description <span className="text-red-500">*</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCopilotMode('description');
+                      setIsCopilotOpen(true);
+                    }}
+                    className="inline-flex items-center gap-1 text-xs font-bold text-[#234B36] hover:underline"
+                  >
+                    <Sparkles className="w-3 h-3 text-[#234B36]" />
+                    <span>Auto-draft Description</span>
+                  </button>
+                </div>
+                <textarea
+                  id="description"
+                  name="description"
+                  rows={6}
+                  value={form.description}
                   onChange={handleChange}
-                  className={`w-full px-3 py-2 rounded-xl border text-sm font-medium text-[#3a302a] focus:outline-none focus:ring-2 transition ${
-                    errors.longitude
+                  className={`w-full px-4 py-3 rounded-xl border text-sm font-medium text-[#252923] focus:outline-none focus:ring-2 transition ${
+                    errors.description
                       ? 'border-red-400 focus:ring-red-200'
-                      : 'border-[#d8d0c8] focus:ring-[#c2652a]/20 focus:border-[#c2652a]'
+                      : 'border-[#E5E0D5] focus:ring-[#234B36]/20 focus:border-[#234B36]'
                   }`}
                 />
-                {errors.longitude && (
-                  <p className="text-xs text-red-600 font-semibold">{errors.longitude}</p>
+                {errors.description && (
+                  <p className="text-xs text-red-600 font-semibold">{errors.description}</p>
                 )}
               </div>
-            </div>
-          </div>
-        </section>
+            </section>
+
+            {/* ═══════════════════════════════════════════════════
+                SECTION 6: Pricing & Financials
+            ═══════════════════════════════════════════════════ */}
+            <section
+              id="section-pricing"
+              className="bg-white border border-[#E5E0D5] rounded-2xl p-6 md:p-8 space-y-6 scroll-mt-14"
+            >
+              <div className="flex items-center gap-2.5 pb-3 border-b border-[#EEF3EF]">
+                <Tag className="w-5 h-5 text-[#234B36]" />
+                <div>
+                  <h2 className="text-lg font-black text-[#252923]">6. Pricing &amp; Commercial Value</h2>
+                  <p className="text-xs text-[#73776F] mt-0.5">
+                    Calibrated market pricing in Ethiopian Birr (ETB).
+                  </p>
+                </div>
+              </div>
+
+              {listing.listingType === 'RENTAL' ? (
+                <div className="space-y-1.5 max-w-xl">
+                  <label htmlFor="pricePerNight" className="block text-sm font-bold text-[#252923]">
+                    Nightly Rate (ETB) <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <div className="relative w-full sm:w-64">
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-black text-[#73776F]">
+                        ETB
+                      </span>
+                      <input
+                        id="pricePerNight"
+                        name="pricePerNight"
+                        type="number"
+                        min="1"
+                        step="any"
+                        value={form.pricePerNight}
+                        onChange={handleChange}
+                        className={`w-full pl-14 pr-4 py-2.5 rounded-xl border text-sm font-medium text-[#252923] focus:outline-none focus:ring-2 transition ${
+                          errors.pricePerNight
+                            ? 'border-red-400 focus:ring-red-200'
+                            : 'border-[#E5E0D5] focus:ring-[#234B36]/20 focus:border-[#234B36]'
+                        }`}
+                      />
+                    </div>
+
+                    <AiPricingWidget
+                      city={form.city}
+                      subCity={form.subCity}
+                      neighborhood={form.neighborhood}
+                      propertyType={form.propertyType}
+                      listingType={listing.listingType}
+                      bedrooms={form.bedrooms}
+                      bathrooms={form.bathrooms}
+                      maxGuests={form.maxGuests}
+                      areaSqm={form.areaSqm}
+                      amenityIds={form.amenityIds}
+                      amenityCatalog={amenitiesCatalog}
+                      currentPrice={form.pricePerNight}
+                      coverImage={form.coverImage}
+                      images={form.images}
+                      onApplyPrice={(price) => {
+                        setIsDirty(true);
+                        setForm((prev) => (prev ? { ...prev, pricePerNight: String(price) } : prev));
+                        if (errors.pricePerNight) {
+                          setErrors((prev) => {
+                            const next = { ...prev };
+                            delete next.pricePerNight;
+                            return next;
+                          });
+                        }
+                      }}
+                    />
+                  </div>
+                  {errors.pricePerNight && (
+                    <p className="text-xs text-red-600 font-semibold">{errors.pricePerNight}</p>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-1.5 max-w-xl">
+                  <label htmlFor="salePrice" className="block text-sm font-bold text-[#252923]">
+                    Total Sale Price (ETB) <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <div className="relative w-full sm:w-64">
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-black text-[#73776F]">
+                        ETB
+                      </span>
+                      <input
+                        id="salePrice"
+                        name="salePrice"
+                        type="number"
+                        min="1"
+                        step="any"
+                        value={form.salePrice}
+                        onChange={handleChange}
+                        className={`w-full pl-14 pr-4 py-2.5 rounded-xl border text-sm font-medium text-[#252923] focus:outline-none focus:ring-2 transition ${
+                          errors.salePrice
+                            ? 'border-red-400 focus:ring-red-200'
+                            : 'border-[#E5E0D5] focus:ring-[#234B36]/20 focus:border-[#234B36]'
+                        }`}
+                      />
+                    </div>
+
+                    <AiPricingWidget
+                      city={form.city}
+                      subCity={form.subCity}
+                      neighborhood={form.neighborhood}
+                      propertyType={form.propertyType}
+                      listingType="SALE"
+                      bedrooms={form.bedrooms}
+                      bathrooms={form.bathrooms}
+                      maxGuests={form.maxGuests}
+                      areaSqm={form.areaSqm}
+                      amenityIds={form.amenityIds}
+                      amenityCatalog={amenitiesCatalog}
+                      currentPrice={form.salePrice}
+                      coverImage={form.coverImage}
+                      images={form.images}
+                      onApplyPrice={(price) => {
+                        setIsDirty(true);
+                        setForm((prev) => (prev ? { ...prev, salePrice: String(price) } : prev));
+                        if (errors.salePrice) {
+                          setErrors((prev) => {
+                            const next = { ...prev };
+                            delete next.salePrice;
+                            return next;
+                          });
+                        }
+                      }}
+                    />
+                  </div>
+                  {errors.salePrice && (
+                    <p className="text-xs text-red-600 font-semibold">{errors.salePrice}</p>
+                  )}
+                </div>
+              )}
+            </section>
+
+            {/* ═══════════════════════════════════════════════════
+                SECTION 7: Operational Policies & Rooms
+            ═══════════════════════════════════════════════════ */}
+            <section
+              id="section-policies"
+              className="bg-white border border-[#E5E0D5] rounded-2xl p-6 md:p-8 space-y-5 scroll-mt-14"
+            >
+              <div className="flex items-center gap-2.5 pb-3 border-b border-[#EEF3EF]">
+                <ShieldCheck className="w-5 h-5 text-[#234B36]" />
+                <div>
+                  <h2 className="text-lg font-black text-[#252923]">7. Policies &amp; Room Configuration</h2>
+                  <p className="text-xs text-[#73776F] mt-0.5">
+                    Standard guest rules and individual room allocations.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-4 rounded-xl bg-[#F8F5ED] border border-[#E5E0D5] space-y-1">
+                  <div className="flex items-center gap-2 text-xs font-bold text-[#252923]">
+                    <Clock className="w-4 h-4 text-[#234B36]" /> Check-in &amp; Check-out
+                  </div>
+                  <p className="text-[11px] text-[#73776F]">
+                    Standard Check-in: 2:00 PM | Check-out: 11:00 AM
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-xl bg-[#F8F5ED] border border-[#E5E0D5] space-y-1">
+                  <div className="flex items-center gap-2 text-xs font-bold text-[#252923]">
+                    <ShieldCheck className="w-4 h-4 text-[#234B36]" /> Booking Terms
+                  </div>
+                  <p className="text-[11px] text-[#73776F]">
+                    All changes are immediately reflected on live guest search results.
+                  </p>
+                </div>
+              </div>
+
+              {listing.listingType === 'RENTAL' && (
+                <div className="pt-4 border-t border-[#EEF3EF]">
+                  <h3 className="text-xs font-black uppercase tracking-wider text-[#73776F] mb-3">
+                    Room-by-Room Management
+                  </h3>
+                  <HostRoomsManager listingId={listing.id} initialRooms={listing.rooms || []} />
+                </div>
+              )}
+            </section>
+          </form>
+        </div>
 
         {/* ═══════════════════════════════════════════════════
-            SECTION 5: Photos & Gallery Management
+            RIGHT COLUMN: Sticky Live Guest Preview Console (35%)
         ═══════════════════════════════════════════════════ */}
-        <section className="bg-white border border-[#d8d0c8] rounded-2xl p-6 md:p-8 space-y-6">
-          <div className="flex items-center gap-2.5 pb-3 border-b border-[#d8d0c8]">
-            <ImageIcon className="w-5 h-5 text-[#c2652a]" />
-            <h2 className="text-lg font-black text-[#3a302a]">Photos &amp; Gallery</h2>
-          </div>
-
-          <GalleryManager
+        <div className="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-6">
+          <HostListingLivePreview
+            title={form.title}
+            propertyType={form.propertyType}
+            listingType={listing.listingType}
+            city={form.city}
+            subCity={form.subCity}
+            neighborhood={form.neighborhood}
+            bedrooms={form.bedrooms}
+            bathrooms={form.bathrooms}
+            maxGuests={form.maxGuests}
+            areaSqm={form.areaSqm}
+            pricePerNight={form.pricePerNight}
+            salePrice={form.salePrice}
             coverImage={form.coverImage}
             images={form.images}
-            propertyId={listing.id}
-            listingStatus={listing.status}
-            isPendingReview={listing.activeReview?.status === 'PENDING'}
-            onCoverImageChange={(url) => {
-              setIsDirty(true);
-              setForm((prev) => (prev ? { ...prev, coverImage: url } : prev));
-              if (errors.coverImage) {
-                setErrors((prev) => {
-                  const next = { ...prev };
-                  delete next.coverImage;
-                  return next;
-                });
-              }
-            }}
-            onImagesChange={(urls) => {
-              setIsDirty(true);
-              setForm((prev) => (prev ? { ...prev, images: urls } : prev));
-              if (errors.gallery) {
-                setErrors((prev) => {
-                  const next = { ...prev };
-                  delete next.gallery;
-                  return next;
-                });
-              }
-            }}
-            coverError={errors.coverImage}
+            amenityIds={form.amenityIds}
+            amenityCatalog={amenitiesCatalog}
+            isSubmitting={isSubmitting}
+            onSubmit={handleSubmit}
+            submitLabel="Save Changes"
+            submittingLabel="Saving Changes…"
+            cancelHref={`/host/listings/${listing.id}`}
           />
-          {errors.gallery && (
-            <p className="text-xs text-red-600 font-semibold">{errors.gallery}</p>
-          )}
-        </section>
-
-        {/* ═══════════════════════════════════════════════════
-            SECTION 6: Features & Amenities
-        ═══════════════════════════════════════════════════ */}
-        <section className="bg-white border border-[#d8d0c8] rounded-2xl p-6 md:p-8 space-y-6">
-          <div className="flex items-center gap-2.5 pb-3 border-b border-[#d8d0c8]">
-            <Sparkles className="w-5 h-5 text-[#c2652a]" />
-            <h2 className="text-lg font-black text-[#3a302a]">Features &amp; Amenities</h2>
-          </div>
-
-          <AmenitySelector
-            selectedIds={form.amenityIds}
-            onChange={(ids) => {
-              setIsDirty(true);
-              setForm((prev) => (prev ? { ...prev, amenityIds: ids } : prev));
-            }}
-          />
-        </section>
-
-        {/* ═══════════════════════════════════════════════════
-            Bottom Sticky Action Bar
-        ═══════════════════════════════════════════════════ */}
-        <div className="sticky bottom-4 z-20 bg-white/95 backdrop-blur-md border border-[#d8d0c8] rounded-2xl p-4 shadow-lg flex items-center justify-between gap-4">
-          <div className="text-xs text-[#605850]">
-            All changes will be saved to your property listing immediately.
-          </div>
-          <div className="flex items-center gap-3">
-            <Link
-              href={`/host/listings/${listing.id}`}
-              className="px-4 py-2.5 rounded-xl text-sm font-semibold text-[#3a302a] bg-[#faf5ee] hover:bg-[#f2ece4] border border-[#d8d0c8] transition"
-            >
-              Cancel
-            </Link>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="inline-flex items-center gap-2 bg-[#c2652a] hover:bg-[#e08850] active:bg-[#a65320] text-white text-sm font-bold px-6 py-2.5 rounded-xl shadow transition disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSubmitting ? (
-                <>
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Saving Changes…
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" /> Save Changes
-                </>
-              )}
-            </button>
-          </div>
         </div>
-      </form>
-      {listing.listingType === 'RENTAL' && (
-        <HostRoomsManager listingId={listing.id} initialRooms={listing.rooms || []} />
-      )}
+      </div>
 
       {/* ✨ AI Listing Copilot Modal */}
       <AiListingCopilotModal
@@ -1324,6 +1297,8 @@ export default function EditListingPage() {
         amenityCatalog={amenitiesCatalog}
         currentTitle={form.title}
         currentDescription={form.description}
+        coverImage={form.coverImage}
+        images={form.images}
         onApplyTitle={(title) => {
           setIsDirty(true);
           setForm((prev) => (prev ? { ...prev, title } : prev));
