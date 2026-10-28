@@ -107,15 +107,14 @@ describe('PaymentsService Integration Acceptance', () => {
     it('returns supported Ethiopian and international payment methods with exchange rates', () => {
       const result = service.getPaymentMethods();
       expect(result.methods).toBeDefined();
-      expect(result.methods.length).toBeGreaterThanOrEqual(7);
+      expect(result.methods.length).toBeGreaterThanOrEqual(6);
 
       const chapa = result.methods.find((m) => m.id === PaymentMethod.CHAPA);
       expect(chapa).toBeDefined();
       expect(chapa?.category).toBe('ETHIOPIA_LOCAL');
 
       const cash = result.methods.find((m) => m.id === PaymentMethod.CASH_ON_ARRIVAL);
-      expect(cash).toBeDefined();
-      expect(cash?.category).toBe('CASH');
+      expect(cash).toBeUndefined();
 
       expect(result.exchangeRate.base).toBe('USD');
       expect(result.exchangeRate.target).toBe('ETB');
@@ -198,7 +197,7 @@ describe('PaymentsService Integration Acceptance', () => {
   });
 
   describe('Payment Verification', () => {
-    it('verifies payment and updates booking payment status to PAID', async () => {
+    it('verifies payment safely without directly marking booking as PAID', async () => {
       const bookingCopy = { ...mockBooking, paymentStatus: PaymentStatus.PENDING };
       mockBookingRepo.findOne.mockResolvedValue(bookingCopy);
 
@@ -207,11 +206,9 @@ describe('PaymentsService Integration Acceptance', () => {
         bookingId: mockBooking.id,
       });
 
-      expect(result.status).toBe('success');
-      expect(result.verified).toBe(true);
-      expect(bookingCopy.paymentStatus).toBe(PaymentStatus.PAID);
-      expect(bookingCopy.paymentReference).toBe('ENGIDA-CHAPA-TX999');
-      expect(bookingCopy.paidAt).toBeInstanceOf(Date);
+      expect(result.status).toBe('pending');
+      expect(result.verified).toBe(false);
+      expect(bookingCopy.paymentStatus).toBe(PaymentStatus.PENDING);
     });
   });
 });

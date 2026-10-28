@@ -100,13 +100,19 @@ describe('Admin RBAC permissions', () => {
     expect(permissions).not.toContain(Permission.REVIEWS_MODERATE);
   });
 
-  it('gives finance managers audit access without moderation powers', () => {
+  it('gives finance managers audit access and finance capabilities without moderation powers', () => {
     const permissions = getAdminPermissions({
       role: UserRole.ADMIN,
       adminRole: AdminRole.FINANCE_MANAGER,
     });
 
     expect(permissions).toContain(Permission.AUDIT_VIEW);
+    expect(permissions).toContain(Permission.FINANCE_VIEW);
+    expect(permissions).toContain(Permission.FINANCE_REFUNDS);
+    expect(permissions).toContain(Permission.FINANCE_PAYOUTS);
+    expect(permissions).toContain(Permission.FINANCE_RECONCILE);
+    expect(permissions).toContain(Permission.FINANCE_CONFIG);
+    expect(permissions).toContain(Permission.FINANCE_EXPORT);
     expect(permissions).not.toContain(Permission.REPORTS_VIEW);
     expect(permissions).not.toContain(Permission.REVIEWS_MODERATE);
   });

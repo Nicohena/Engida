@@ -43,6 +43,25 @@ import { CaseNote } from './modules/admin/cases/entities/case-note.entity';
 import { CaseAttachment } from './modules/admin/cases/entities/case-attachment.entity';
 import { CaseEvent } from './modules/admin/cases/entities/case-event.entity';
 import { CannedResponse } from './modules/admin/cases/entities/canned-response.entity';
+import { FinanceModule } from './modules/finance/finance.module';
+import { Payment } from './modules/finance/entities/payment.entity';
+import { ProviderEvent } from './modules/finance/entities/provider-event.entity';
+import { EscrowHold } from './modules/finance/entities/escrow-hold.entity';
+import { LedgerAccount } from './modules/finance/entities/ledger-account.entity';
+import { LedgerTransaction } from './modules/finance/entities/ledger-transaction.entity';
+import { LedgerEntry } from './modules/finance/entities/ledger-entry.entity';
+import { Refund } from './modules/finance/entities/refund.entity';
+import { RefundEvent } from './modules/finance/entities/refund-event.entity';
+import { PayoutAccount } from './modules/finance/entities/payout-account.entity';
+import { Payout } from './modules/finance/entities/payout.entity';
+import { PayoutItem } from './modules/finance/entities/payout-item.entity';
+import { PayoutEvent } from './modules/finance/entities/payout-event.entity';
+import { TaxLine } from './modules/finance/entities/tax-line.entity';
+import { CommissionSnapshot } from './modules/finance/entities/commission-snapshot.entity';
+import { FinancialAdjustment } from './modules/finance/entities/financial-adjustment.entity';
+import { ReconciliationIssue } from './modules/finance/entities/reconciliation-issue.entity';
+import { JobRun } from './modules/finance/entities/job-run.entity';
+import { FinanceSetting } from './modules/finance/entities/finance-setting.entity';
 import { validate } from './config/env.validation';
 
 @Module({
@@ -86,6 +105,24 @@ import { validate } from './config/env.validation';
           CaseAttachment,
           CaseEvent,
           CannedResponse,
+          Payment,
+          ProviderEvent,
+          EscrowHold,
+          LedgerAccount,
+          LedgerTransaction,
+          LedgerEntry,
+          Refund,
+          RefundEvent,
+          PayoutAccount,
+          Payout,
+          PayoutItem,
+          PayoutEvent,
+          TaxLine,
+          CommissionSnapshot,
+          FinancialAdjustment,
+          ReconciliationIssue,
+          JobRun,
+          FinanceSetting,
         ];
 
         if (databaseUrl) {
@@ -135,6 +172,7 @@ import { validate } from './config/env.validation';
     PaymentsModule,
     ListingModerationModule,
     AdminModule,
+    FinanceModule,
     NotificationsModule,
     AuditModule,
     ReportsModule,

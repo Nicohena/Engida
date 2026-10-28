@@ -89,14 +89,6 @@ export class PaymentsService {
         supportedCurrencies: ['USD', 'EUR', 'GBP'],
         feePercentage: 0.5,
       },
-      {
-        id: PaymentMethod.CASH_ON_ARRIVAL,
-        name: 'Pay Upon Arrival',
-        category: 'CASH',
-        description: 'Pay cash in Ethiopian Birr (ETB) or US Dollars (USD) directly to the host at check-in',
-        supportedCurrencies: ['ETB', 'USD'],
-        feePercentage: 0,
-      },
     ];
 
     return {
@@ -176,24 +168,25 @@ export class PaymentsService {
   }
 
   async verifyPayment(dto: VerifyPaymentDto, userId?: string) {
-    this.logger.log(`Verifying payment reference: ${dto.transactionReference}`);
+    this.logger.log(`Checking payment reference status: ${dto.transactionReference}`);
 
-    // If a booking ID was provided, mark it as paid
+    // Read status securely without client-driven mutation
     if (dto.bookingId) {
       const booking = await this.bookingRepository.findOne({ where: { id: dto.bookingId } });
-      if (booking) {
-        booking.paymentStatus = PaymentStatus.PAID;
-        booking.paymentReference = dto.transactionReference;
-        booking.paidAt = new Date();
-        await this.bookingRepository.save(booking);
-      }
+      const isPaid = booking?.paymentStatus === PaymentStatus.PAID;
+      return {
+        status: isPaid ? 'success' : 'pending',
+        verified: isPaid,
+        transactionReference: dto.transactionReference,
+        verifiedAt: booking?.paidAt ? booking.paidAt.toISOString() : null,
+      };
     }
 
     return {
-      status: 'success',
-      verified: true,
+      status: 'pending',
+      verified: false,
       transactionReference: dto.transactionReference,
-      verifiedAt: new Date().toISOString(),
+      verifiedAt: null,
     };
   }
 

@@ -10,6 +10,7 @@ async function bootstrap() {
   const isDebug = process.env.DEBUG === 'true' || process.env.VERBOSE_LOGS === 'true';
 
   const app = await NestFactory.create(AppModule, {
+    rawBody: true,
     logger: isDebug ? ['log', 'error', 'warn', 'debug', 'verbose'] : ['error', 'warn'],
   });
 

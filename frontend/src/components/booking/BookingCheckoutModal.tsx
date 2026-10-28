@@ -50,7 +50,7 @@ export default function BookingCheckoutModal({
   const ETB_USD_RATE = 125;
   const usdPrice = Math.round((totalPrice / ETB_USD_RATE) * 100) / 100;
 
-  const [category, setCategory] = useState<'LOCAL' | 'INTERNATIONAL' | 'CASH'>('LOCAL');
+  const [category, setCategory] = useState<'LOCAL' | 'INTERNATIONAL'>('LOCAL');
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('CHAPA');
   const [currency, setCurrency] = useState<'ETB' | 'USD'>('ETB');
 
@@ -92,34 +92,7 @@ export default function BookingCheckoutModal({
     setError(null);
 
     try {
-      // 1. Initialize payment session with backend payments service
-      const effectiveAmount = currency === 'USD' ? usdPrice : totalPrice;
-      const initPayload = {
-        propertyId: property.id,
-        amount: effectiveAmount,
-        currency,
-        paymentMethod: selectedMethod,
-        customerEmail: 'guest@engida.com',
-        customerName: cardName || 'Engida Guest',
-        customerPhone: telebirrPhone || undefined,
-      };
-
-      let txRef = `ENGIDA-${selectedMethod}-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
-
-      try {
-        const initRes = await apiFetch<{ transactionReference: string }>('/payments/initialize', {
-          method: 'POST',
-          body: JSON.stringify(initPayload),
-        });
-        if (initRes.transactionReference) {
-          txRef = initRes.transactionReference;
-        }
-      } catch (initErr) {
-        // Fallback to local tx reference if payments init proxy fails
-        console.warn('Payment init proxy fallback:', initErr);
-      }
-
-      // 2. Submit verified booking to backend
+      // 1. Submit booking to backend (server authoritative price calculation)
       const bookingPayload = {
         propertyId: property.id,
         ...(selectedRoom ? { roomId: selectedRoom.id } : {}),
@@ -127,7 +100,6 @@ export default function BookingCheckoutModal({
         checkOutDate: checkOut,
         guestCount,
         paymentMethod: selectedMethod,
-        paymentReference: selectedMethod === 'CASH_ON_ARRIVAL' ? undefined : txRef,
         paymentCurrency: currency,
       };
 
@@ -135,6 +107,32 @@ export default function BookingCheckoutModal({
         method: 'POST',
         body: JSON.stringify(bookingPayload),
       });
+
+      // 2. Bind authoritative payment session with backend payments service
+      try {
+        const session = await apiFetch<{
+          paymentId: string;
+          checkoutUrl?: string;
+          status: string;
+        }>('/payments/sessions', {
+          method: 'POST',
+          body: JSON.stringify({
+            bookingId: booking.id,
+            paymentMethod: selectedMethod,
+            currency,
+            customerPhone: telebirrPhone || undefined,
+            returnUrl: typeof window !== 'undefined' ? `${window.location.origin}/dashboard` : undefined,
+          }),
+        });
+
+        if (session.checkoutUrl && session.checkoutUrl.startsWith('http')) {
+          // If a hosted checkout URL was returned (e.g. Chapa hosted checkout)
+          window.location.href = session.checkoutUrl;
+          return;
+        }
+      } catch (sessionErr) {
+        console.warn('Quote session binding fallback:', sessionErr);
+      }
 
       setCompletedBooking(booking);
       onBookingSuccess(booking);
@@ -299,7 +297,7 @@ export default function BookingCheckoutModal({
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
                   Select Payment Option
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => {
@@ -334,24 +332,6 @@ export default function BookingCheckoutModal({
                       <span>🌍 International</span>
                     </div>
                     <p className="text-[11px] text-slate-500 mt-0.5 truncate">Visa, MC, PayPal, Wise</p>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCategory('CASH');
-                      setSelectedMethod('CASH_ON_ARRIVAL');
-                    }}
-                    className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
-                      category === 'CASH'
-                        ? 'border-blue-600 bg-blue-50/70 text-blue-900 ring-2 ring-blue-500/20'
-                        : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
-                    }`}
-                  >
-                    <div className="flex items-center gap-1.5 font-bold text-xs">
-                      <span>💵 Pay on Arrival</span>
-                    </div>
-                    <p className="text-[11px] text-slate-500 mt-0.5 truncate">Cash at check-in</p>
                   </button>
                 </div>
               </div>
@@ -638,18 +618,6 @@ export default function BookingCheckoutModal({
                       </p>
                     </div>
                   )}
-                </div>
-              )}
-
-              {category === 'CASH' && (
-                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 space-y-2">
-                  <div className="flex items-center gap-2 text-amber-800 font-bold text-xs">
-                    <Receipt className="w-4 h-4" />
-                    <span>Pay in Cash Upon Arrival at Property</span>
-                  </div>
-                  <p className="text-xs text-amber-900 leading-relaxed">
-                    You can pay the host directly in <strong>Ethiopian Birr (ETB)</strong> or <strong>US Dollars (USD)</strong> upon key handover. Your booking will be set to <strong>Pending Arrival</strong>.
-                  </p>
                 </div>
               )}
 

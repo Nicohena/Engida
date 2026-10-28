@@ -10,6 +10,7 @@ import {
   Flag,
   LayoutDashboard,
   LogOut,
+  Landmark,
   Menu,
   MessagesSquare,
   ScrollText,
@@ -41,6 +42,12 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Overview',
     icon: LayoutDashboard,
     permission: ADMIN_PERMISSIONS.DASHBOARD_VIEW,
+  },
+  {
+    href: '/admin/finance',
+    label: 'Finance & Escrow',
+    icon: Landmark,
+    permission: ADMIN_PERMISSIONS.FINANCE_VIEW,
   },
   {
     href: '/admin/bookings',
