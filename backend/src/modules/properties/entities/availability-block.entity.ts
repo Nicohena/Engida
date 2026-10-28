@@ -27,6 +27,12 @@ export class AvailabilityBlock {
   @JoinColumn({ name: 'property_id' })
   property: Property;
 
+  @Column({ type: 'varchar', length: 20, default: 'HOST' })
+  source: string;
+
+  @Column({ type: 'uuid', name: 'created_by_id', nullable: true })
+  createdById: string | null;
+
   @Column({ type: 'date', name: 'start_date' })
   startDate: string;
 

@@ -78,3 +78,6 @@ docker-compose.override.yml
 # Misc
 .turbo
 .vercel
+
+# Private case attachments
+backend/storage/

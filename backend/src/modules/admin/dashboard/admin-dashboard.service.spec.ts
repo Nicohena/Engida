@@ -35,6 +35,8 @@ describe('AdminDashboardService', () => {
       countRepository() as any,
       countRepository() as any,
       countRepository() as any,
+      countRepository() as any,
+      countRepository() as any,
       auditService as any,
     );
   });

@@ -137,6 +137,59 @@ export async function apiFetch<T = unknown>(endpoint: string, options: FetchOpti
   return data as T;
 }
 
+function extractFilename(contentDisposition: string | null, fallback: string): string {
+  if (!contentDisposition) return fallback;
+  const match = /filename="?([^";]+)"?/i.exec(contentDisposition);
+  return match?.[1]?.trim() || fallback;
+}
+
+/**
+ * Download an authenticated CSV/file response. A plain anchor cannot carry the
+ * bearer token, so this keeps the same refresh flow as apiFetch and hands the
+ * browser a temporary object URL.
+ */
+export async function downloadAuthedFile(
+  endpoint: string,
+  fallbackFilename = 'engida-export.csv',
+): Promise<void> {
+  const baseUrl = getApiBaseUrl();
+  const url = `${baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+  const headers: Record<string, string> = {};
+
+  if (inMemoryToken) headers['Authorization'] = `Bearer ${inMemoryToken}`;
+
+  let response = await fetch(url, { headers, credentials: 'include' });
+  if (response.status === 401 && !endpoint.includes('/auth/')) {
+    const newToken = await executeTokenRefresh();
+    if (newToken) {
+      headers['Authorization'] = `Bearer ${newToken}`;
+      response = await fetch(url, { headers, credentials: 'include' });
+    }
+  }
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    const message = Array.isArray(data.message)
+      ? data.message.join(', ')
+      : data.message || 'The export could not be prepared';
+    throw new Error(message);
+  }
+
+  const blob = await response.blob();
+  const filename = extractFilename(
+    response.headers.get('content-disposition'),
+    fallbackFilename,
+  );
+  const objectUrl = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = objectUrl;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(objectUrl);
+}
+
 /**
  * Build the URL that starts the Google Sign-In flow on the backend.
  * The backend owns the OAuth client, verifies the identity and then hands the

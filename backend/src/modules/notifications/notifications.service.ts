@@ -113,11 +113,11 @@ export class NotificationsService {
 
     const qb = this.notificationRepository
       .createQueryBuilder('notification')
-      .where('notification.user_id = :userId', { userId })
-      .orderBy('notification.created_at', 'DESC');
+      .where('notification.userId = :userId', { userId })
+      .orderBy('notification.createdAt', 'DESC');
 
     if (query?.unreadOnly) {
-      qb.andWhere('notification.is_read = false');
+      qb.andWhere('notification.isRead = false');
     }
 
     const [data, total] = await qb.skip(skip).take(limit).getManyAndCount();

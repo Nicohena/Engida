@@ -5,11 +5,15 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
+  OneToMany,
   JoinColumn,
 } from 'typeorm';
 import { Property } from '../../properties/entities/property.entity';
 import { Room } from '../../properties/entities/room.entity';
 import { User } from '../../../users/entities/user.entity';
+import { BookingStatusHistory } from './booking-status-history.entity';
+import { CancellationRequest } from './cancellation-request.entity';
+import { CancellationPolicyTier } from './cancellation-policy';
 
 export enum BookingStatus {
   PENDING = 'PENDING',
@@ -40,6 +44,18 @@ export enum PaymentStatus {
 export class Booking {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  /** Human-readable reference, e.g. BKG-2026-000042. */
+  @Column({ type: 'varchar', length: 32, unique: true })
+  reference: string;
+
+  @Column({
+    type: 'varchar',
+    length: 20,
+    name: 'cancellation_policy',
+    default: CancellationPolicyTier.MODERATE,
+  })
+  cancellationPolicy: CancellationPolicyTier;
 
   @Column({ type: 'uuid', name: 'property_id' })
   propertyId: string;
@@ -80,6 +96,24 @@ export class Booking {
     default: BookingStatus.PENDING,
   })
   status: BookingStatus;
+
+  @Column({ type: 'uuid', name: 'cancelled_by_id', nullable: true })
+  cancelledById: string | null;
+
+  @Column({ type: 'varchar', length: 20, name: 'cancelled_by_type', nullable: true })
+  cancelledByType: string | null;
+
+  @Column({ type: 'timestamptz', name: 'cancelled_at', nullable: true })
+  cancelledAt: Date | null;
+
+  @Column({ type: 'text', name: 'cancellation_reason', nullable: true })
+  cancellationReason: string | null;
+
+  @OneToMany(() => BookingStatusHistory, (history) => history.booking)
+  statusHistory?: BookingStatusHistory[];
+
+  @OneToMany(() => CancellationRequest, (request) => request.booking)
+  cancellationRequests?: CancellationRequest[];
 
   @Column({
     type: 'varchar',

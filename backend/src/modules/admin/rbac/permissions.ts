@@ -18,6 +18,11 @@ export enum Permission {
   REVIEWS_MODERATE = 'reviews.moderate',
   REPORTS_VIEW = 'reports.view',
   REPORTS_RESOLVE = 'reports.resolve',
+  BOOKINGS_VIEW = 'bookings.view',
+  BOOKINGS_MANAGE = 'bookings.manage',
+  CASES_VIEW = 'cases.view',
+  CASES_MANAGE = 'cases.manage',
+  CASES_COMPENSATE = 'cases.compensate',
   AUDIT_VIEW = 'audit.view',
 }
 
@@ -27,7 +32,7 @@ export const ALL_PERMISSIONS: Permission[] = Object.values(Permission);
  * Role -> permission map for the fixed MVP role set.
  *
  * Phase 1 is deliberately code-defined: roles are stable and permission changes
- * go through code review. Phase 2 will add booking/case permissions here.
+ * go through code review. Phase 2 adds the booking and case permissions here.
  */
 export const ADMIN_ROLE_PERMISSIONS: Record<AdminRole, Permission[]> = {
   [AdminRole.SUPER_ADMIN]: ALL_PERMISSIONS,
@@ -55,6 +60,10 @@ export const ADMIN_ROLE_PERMISSIONS: Record<AdminRole, Permission[]> = {
     Permission.REVIEWS_VIEW,
     Permission.REPORTS_VIEW,
     Permission.REPORTS_RESOLVE,
+    Permission.BOOKINGS_VIEW,
+    Permission.CASES_VIEW,
+    Permission.CASES_MANAGE,
+    Permission.CASES_COMPENSATE,
   ],
 
   [AdminRole.BOOKING_MANAGER]: [
@@ -64,6 +73,11 @@ export const ADMIN_ROLE_PERMISSIONS: Record<AdminRole, Permission[]> = {
     Permission.LISTINGS_VIEW,
     Permission.REVIEWS_VIEW,
     Permission.REPORTS_VIEW,
+    Permission.BOOKINGS_VIEW,
+    Permission.BOOKINGS_MANAGE,
+    Permission.CASES_VIEW,
+    Permission.CASES_MANAGE,
+    Permission.CASES_COMPENSATE,
   ],
 
   [AdminRole.FINANCE_MANAGER]: [
@@ -71,6 +85,7 @@ export const ADMIN_ROLE_PERMISSIONS: Record<AdminRole, Permission[]> = {
     Permission.USERS_VIEW,
     Permission.HOSTS_VIEW,
     Permission.LISTINGS_VIEW,
+    Permission.BOOKINGS_VIEW,
     Permission.AUDIT_VIEW,
   ],
 };

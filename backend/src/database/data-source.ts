@@ -18,6 +18,14 @@ import { ListingReview } from '../modules/properties/entities/listing-review.ent
 import { Notification } from '../modules/notifications/entities/notification.entity';
 import { AuditLog } from '../modules/audit/entities/audit-log.entity';
 import { Report } from '../modules/reports/entities/report.entity';
+import { BookingStatusHistory } from '../modules/bookings/entities/booking-status-history.entity';
+import { CancellationRequest } from '../modules/bookings/entities/cancellation-request.entity';
+import { Case } from '../modules/admin/cases/entities/case.entity';
+import { CaseMessage } from '../modules/admin/cases/entities/case-message.entity';
+import { CaseNote } from '../modules/admin/cases/entities/case-note.entity';
+import { CaseAttachment } from '../modules/admin/cases/entities/case-attachment.entity';
+import { CaseEvent } from '../modules/admin/cases/entities/case-event.entity';
+import { CannedResponse } from '../modules/admin/cases/entities/canned-response.entity';
 
 const databaseUrl = process.env.DATABASE_URL;
 
@@ -35,11 +43,19 @@ const AppDataSource = new DataSource(
           AvailabilityBlock,
           Amenity,
           Booking,
+          BookingStatusHistory,
+          CancellationRequest,
           Review,
           ListingReview,
           Notification,
           AuditLog,
           Report,
+          Case,
+          CaseMessage,
+          CaseNote,
+          CaseAttachment,
+          CaseEvent,
+          CannedResponse,
         ],
         migrations: [path.join(__dirname, 'migrations/*{.ts,.js}')],
         synchronize: false,
@@ -61,11 +77,19 @@ const AppDataSource = new DataSource(
           AvailabilityBlock,
           Amenity,
           Booking,
+          BookingStatusHistory,
+          CancellationRequest,
           Review,
           ListingReview,
           Notification,
           AuditLog,
           Report,
+          Case,
+          CaseMessage,
+          CaseNote,
+          CaseAttachment,
+          CaseEvent,
+          CannedResponse,
         ],
         migrations: [path.join(__dirname, 'migrations/*{.ts,.js}')],
         synchronize: false,

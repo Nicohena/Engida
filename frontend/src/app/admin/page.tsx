@@ -1,16 +1,18 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
   AlertTriangle,
   ArrowRight,
+  ArrowUpRight,
   BadgeCheck,
-  Building2,
+  CalendarRange,
   ClipboardCheck,
   Clock3,
   EyeOff,
   Flag,
+  MessagesSquare,
   RefreshCw,
   ShieldCheck,
   Star,
@@ -19,6 +21,7 @@ import {
 } from 'lucide-react';
 import { apiFetch } from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
+import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import {
   ADMIN_PERMISSIONS,
   can,
@@ -39,379 +42,636 @@ function relativeTime(value: string): string {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
+interface QueueItem {
+  label: string;
+  description: string;
+  value: number;
+  href: string;
+  permission: (typeof ADMIN_PERMISSIONS)[keyof typeof ADMIN_PERMISSIONS];
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+}
+
+interface PulseItem {
+  label: string;
+  hint: string;
+  value: number;
+  href?: string;
+  permission?: (typeof ADMIN_PERMISSIONS)[keyof typeof ADMIN_PERMISSIONS];
+}
+
 export default function AdminOverviewPage() {
   const { user } = useAuth();
   const [summary, setSummary] = useState<AdminDashboardSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await apiFetch<AdminDashboardSummary>('/admin/dashboard/summary');
-      setSummary(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not load the dashboard');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const [refreshTick, setRefreshTick] = useState(0);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    let cancelled = false;
+    apiFetch<AdminDashboardSummary>('/admin/dashboard/summary')
+      .then((data) => {
+        if (cancelled) return;
+        setSummary(data);
+        setError(null);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setError(err instanceof Error ? err.message : 'Could not load the dashboard');
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [refreshTick]);
+
+  const refresh = () => {
+    setLoading(true);
+    setError(null);
+    setRefreshTick((tick) => tick + 1);
+  };
 
   const counts = summary?.counts;
   const canViewAudit = can(user?.permissions, ADMIN_PERMISSIONS.AUDIT_VIEW);
 
-  const cards = [
+  const queueItems: QueueItem[] = [
     {
-      label: 'Pending listing reviews',
+      label: 'Bookings awaiting host',
+      description: 'Stay requests that need a host decision or a desk correction.',
+      value: counts?.pendingBookings ?? 0,
+      href: '/admin/bookings',
+      permission: ADMIN_PERMISSIONS.BOOKINGS_VIEW,
+      icon: CalendarRange,
+    },
+    {
+      label: 'Open support cases',
+      description: 'Complaints, disputes and guest support that still need an owner.',
+      value: counts?.openCases ?? 0,
+      href: '/admin/cases',
+      permission: ADMIN_PERMISSIONS.CASES_VIEW,
+      icon: MessagesSquare,
+    },
+    {
+      label: 'Listing reviews',
+      description: 'New properties and listing edits awaiting a decision.',
       value: counts?.pendingListingReviews ?? 0,
-      hint: 'Awaiting a moderation decision',
-      icon: ClipboardCheck,
-      tone: 'amber',
       href: '/admin/moderation',
       permission: ADMIN_PERMISSIONS.LISTINGS_REVIEW,
+      icon: ClipboardCheck,
     },
     {
-      label: 'Pending host checks',
+      label: 'Host verifications',
+      description: 'Identity files that need a trust decision.',
       value: counts?.pendingHostVerifications ?? 0,
-      hint: 'Identity verification queue',
-      icon: BadgeCheck,
-      tone: 'blue',
       href: '/admin/moderation',
       permission: ADMIN_PERMISSIONS.HOSTS_VERIFY,
+      icon: BadgeCheck,
     },
     {
-      label: 'Active users',
-      value: counts?.activeUsers ?? 0,
+      label: 'Open reports',
+      description: 'Guest and host reports awaiting triage.',
+      value: counts?.openReports ?? 0,
+      href: '/admin/reports',
+      permission: ADMIN_PERMISSIONS.REPORTS_VIEW,
+      icon: Flag,
+    },
+  ];
+
+  const visibleQueues = queueItems.filter((item) => can(user?.permissions, item.permission));
+  const openTotal = visibleQueues.reduce((sum, item) => sum + item.value, 0);
+
+  const pulseItems: PulseItem[] = [
+    {
+      label: 'Confirmed stays',
+      hint: 'Reservations on the books',
+      value: counts?.confirmedBookings ?? 0,
+      href: '/admin/bookings',
+      permission: ADMIN_PERMISSIONS.BOOKINGS_VIEW,
+    },
+    {
+      label: 'Unassigned cases',
+      hint: 'Support work without an owner',
+      value: counts?.unassignedCases ?? 0,
+      href: '/admin/cases',
+      permission: ADMIN_PERMISSIONS.CASES_VIEW,
+    },
+    {
+      label: 'Active accounts',
       hint: 'Guests, hosts and admins',
-      icon: Users,
-      tone: 'emerald',
+      value: counts?.activeUsers ?? 0,
       href: '/admin/users',
       permission: ADMIN_PERMISSIONS.USERS_VIEW,
     },
     {
-      label: 'Suspended users',
-      value: counts?.suspendedUsers ?? 0,
-      hint: 'Accounts currently blocked',
-      icon: AlertTriangle,
-      tone: 'rose',
-      href: '/admin/users?isActive=false',
-      permission: ADMIN_PERMISSIONS.USERS_VIEW,
-    },
-    {
-      label: 'Published listings',
+      label: 'Published stays',
+      hint: 'Visible on the marketplace',
       value: counts?.publishedListings ?? 0,
-      hint: 'Visible on the public site',
-      icon: Building2,
-      tone: 'indigo',
       href: '/admin/moderation',
       permission: ADMIN_PERMISSIONS.LISTINGS_REVIEW,
     },
     {
-      label: 'Hidden listings',
-      value: counts?.hiddenListings ?? 0,
-      hint: 'Removed from public view',
-      icon: EyeOff,
-      tone: 'slate',
-      href: '/admin/moderation',
-      permission: ADMIN_PERMISSIONS.LISTINGS_HIDE,
+      label: 'Guest reviews',
+      hint: 'Reviews on record',
+      value: counts?.totalReviews ?? 0,
+      href: '/admin/reviews',
+      permission: ADMIN_PERMISSIONS.REVIEWS_VIEW,
     },
     {
       label: 'Active admins',
+      hint: 'Console accounts with access',
       value: counts?.activeAdmins ?? 0,
-      hint: 'Accounts with console access',
-      icon: ShieldCheck,
-      tone: 'violet',
       href: '/admin/users?role=ADMIN',
       permission: ADMIN_PERMISSIONS.USERS_VIEW,
     },
     {
-      label: 'Open reports',
-      value: counts?.openReports ?? 0,
-      hint: 'Awaiting trust and safety triage',
-      icon: Flag,
-      tone: 'rose',
-      href: '/admin/reports',
-      permission: ADMIN_PERMISSIONS.REPORTS_VIEW,
+      label: 'Hidden stays',
+      hint: 'Removed from public view',
+      value: counts?.hiddenListings ?? 0,
+      href: '/admin/moderation',
+      permission: ADMIN_PERMISSIONS.LISTINGS_HIDE,
+    },
+    {
+      label: 'Suspended accounts',
+      hint: 'Accounts currently blocked',
+      value: counts?.suspendedUsers ?? 0,
+      href: '/admin/users?isActive=false',
+      permission: ADMIN_PERMISSIONS.USERS_VIEW,
     },
   ];
 
-  const toneClasses: Record<string, string> = {
-    amber: 'bg-amber-50 text-amber-700 border-amber-100',
-    blue: 'bg-blue-50 text-blue-700 border-blue-100',
-    emerald: 'bg-emerald-50 text-emerald-700 border-emerald-100',
-    rose: 'bg-rose-50 text-rose-700 border-rose-100',
-    indigo: 'bg-indigo-50 text-indigo-700 border-indigo-100',
-    slate: 'bg-slate-100 text-slate-700 border-slate-200',
-    violet: 'bg-violet-50 text-violet-700 border-violet-100',
-    teal: 'bg-teal-50 text-teal-700 border-teal-100',
+  const quickActions = useMemo(() => {
+    const moderationActions = can(user?.permissions, ADMIN_PERMISSIONS.LISTINGS_REVIEW)
+      ? [
+          {
+            href: '/admin/moderation',
+            label: 'Moderation desk',
+            hint: 'Listings and host checks',
+            icon: ClipboardCheck,
+            permission: ADMIN_PERMISSIONS.LISTINGS_REVIEW,
+          },
+        ]
+      : can(user?.permissions, ADMIN_PERMISSIONS.HOSTS_VERIFY)
+        ? [
+            {
+              href: '/admin/moderation',
+              label: 'Host verifications',
+              hint: 'Identity review queue',
+              icon: UserCheck,
+              permission: ADMIN_PERMISSIONS.HOSTS_VERIFY,
+            },
+          ]
+        : [];
+
+    return [
+      ...moderationActions,
+      {
+        href: '/admin/bookings',
+        label: 'Booking ledger',
+        hint: 'Inspect stays, corrections and cancellations',
+        icon: CalendarRange,
+        permission: ADMIN_PERMISSIONS.BOOKINGS_VIEW,
+      },
+      {
+        href: '/admin/cases',
+        label: 'Support desk',
+        hint: 'Assign, answer and resolve cases',
+        icon: MessagesSquare,
+        permission: ADMIN_PERMISSIONS.CASES_VIEW,
+      },
+      {
+        href: '/admin/users',
+        label: 'Accounts & access',
+        hint: 'Search, suspend and assign roles',
+        icon: Users,
+        permission: ADMIN_PERMISSIONS.USERS_VIEW,
+      },
+      {
+        href: '/admin/reviews',
+        label: 'Guest reviews',
+        hint: 'Moderate the review record',
+        icon: Star,
+        permission: ADMIN_PERMISSIONS.REVIEWS_VIEW,
+      },
+      {
+        href: '/admin/reports',
+        label: 'Trust reports',
+        hint: 'Triage and resolve reports',
+        icon: Flag,
+        permission: ADMIN_PERMISSIONS.REPORTS_VIEW,
+      },
+      {
+        href: '/admin/audit',
+        label: 'Audit trail',
+        hint: 'Inspect privileged actions',
+        icon: ShieldCheck,
+        permission: ADMIN_PERMISSIONS.AUDIT_VIEW,
+      },
+    ].filter((action) => can(user?.permissions, action.permission));
+  }, [user?.permissions]);
+
+  const displayValue = (value: number) => {
+    if (!summary) return '—';
+    return value.toLocaleString();
   };
 
   return (
-    <div className="space-y-7">
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="relative bg-[#0F172A] px-6 py-7 sm:px-8">
-          <div className="absolute -right-14 -top-14 h-44 w-44 rounded-full bg-[#33599E]/30 blur-2xl" />
-          <div className="relative flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+    <div className="space-y-8">
+      <AdminPageHeader
+        title="Operations overview"
+        description="Bookings, support and trust in one working view. The queue shows what needs a human next."
+        actions={
+          <button
+            type="button"
+            onClick={refresh}
+            disabled={loading}
+            className="admin-btn admin-btn-secondary"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} strokeWidth={1.8} />
+            Refresh
+          </button>
+        }
+      />
+
+      {can(user?.permissions, ADMIN_PERMISSIONS.BOOKINGS_VIEW) ||
+      can(user?.permissions, ADMIN_PERMISSIONS.CASES_VIEW) ? (
+        <section className="border-y border-[#d8d0c8]" aria-labelledby="live-operations-title">
+          <div className="flex flex-wrap items-end justify-between gap-3 py-4">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#8FB3F5]">
-                Operations snapshot
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#78706a]">
+                Live operations
               </p>
-              <h2 className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight text-white">
-                Keep trust work moving.
+              <h2
+                id="live-operations-title"
+                className="mt-1 font-headline text-[1.6rem] font-semibold leading-none tracking-[-0.02em] text-[#3a302a]"
+              >
+                Stays and service, right now
               </h2>
-              <p className="mt-2 max-w-xl text-sm text-slate-300">
-                Review new listings, verify hosts and keep account access under control.
-                Every privileged action is recorded in the audit log.
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              {can(user?.permissions, ADMIN_PERMISSIONS.BOOKINGS_VIEW) ? (
+                <Link
+                  href="/admin/bookings"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#b3541e] hover:text-[#934313]"
+                >
+                  Booking ledger
+                  <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.8} />
+                </Link>
+              ) : null}
+              {can(user?.permissions, ADMIN_PERMISSIONS.CASES_VIEW) ? (
+                <Link
+                  href="/admin/cases"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#b3541e] hover:text-[#934313]"
+                >
+                  Support desk
+                  <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.8} />
+                </Link>
+              ) : null}
+            </div>
+          </div>
+          <div className="admin-stats-strip border-t-0">
+            <Link href="/admin/bookings" className="admin-stat group transition-colors hover:bg-[#f6f0e8]">
+              <p className="admin-stat-label">Awaiting host</p>
+              <p className="admin-stat-value">{displayValue(counts?.pendingBookings ?? 0)}</p>
+              <p className="admin-stat-note">Booking requests to watch</p>
+            </Link>
+            <Link href="/admin/bookings" className="admin-stat group transition-colors hover:bg-[#f6f0e8]">
+              <p className="admin-stat-label">Confirmed stays</p>
+              <p className="admin-stat-value">{displayValue(counts?.confirmedBookings ?? 0)}</p>
+              <p className="admin-stat-note">Reservations on the books</p>
+            </Link>
+            <Link href="/admin/cases" className="admin-stat group transition-colors hover:bg-[#f6f0e8]">
+              <p className="admin-stat-label">Open cases</p>
+              <p className="admin-stat-value">{displayValue(counts?.openCases ?? 0)}</p>
+              <p className="admin-stat-note">Support work in the desk</p>
+            </Link>
+            <Link
+              href="/admin/cases"
+              className="admin-stat group transition-colors hover:bg-[#f6f0e8]"
+            >
+              <p className="admin-stat-label">Overdue cases</p>
+              <p className="admin-stat-value text-[#9a3f33]">
+                {displayValue(counts?.overdueCases ?? 0)}
+              </p>
+              <p className="admin-stat-note">
+                {counts?.unassignedCases
+                  ? `${counts.unassignedCases} unassigned`
+                  : 'Past the resolution SLA'}
+              </p>
+            </Link>
+          </div>
+        </section>
+      ) : null}
+
+      {error && (
+        <div
+          role="alert"
+          className="flex items-start gap-3 rounded-xl border border-[#ecd0c9] bg-[#f8e9e5] px-4 py-3.5 text-sm text-[#8f4035]"
+        >
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.8} />
+          <div>
+            <p className="font-semibold">The dashboard could not be refreshed</p>
+            <p className="mt-0.5 text-[13px] text-[#9a5449]">{error}</p>
+          </div>
+        </div>
+      )}
+
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(21rem,0.8fr)]">
+        <section
+          className="admin-panel flex flex-col overflow-hidden"
+          aria-labelledby="priority-queues-title"
+        >
+          <div className="flex flex-col gap-3 border-b border-[#d8d0c8] px-5 py-5 sm:flex-row sm:items-start sm:justify-between sm:px-6">
+            <div>
+              <h2
+                id="priority-queues-title"
+                className="font-headline text-[1.4rem] font-semibold leading-tight tracking-[-0.015em] text-[#3a302a]"
+              >
+                Priority queues
+              </h2>
+              <p className="mt-1 text-xs leading-5 text-[#78706a]">
+                Bookings, support and trust decisions that need a person today.
               </p>
             </div>
-            <button
-              type="button"
-              onClick={load}
-              disabled={loading}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white hover:bg-white/15 disabled:opacity-60 transition"
-            >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              Refresh
-            </button>
+            {visibleQueues.length > 0 && summary && (
+              <span
+                className={`inline-flex w-fit items-center gap-2 rounded-full border px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.12em] ${
+                  openTotal > 0
+                    ? 'border-[#ecd9c2] bg-[#f7ebda] text-[#95631f]'
+                    : 'border-[#d6dfcd] bg-[#edf1e8] text-[#536b4a]'
+                }`}
+              >
+                <span
+                  className={`h-1.5 w-1.5 rounded-full ${
+                    openTotal > 0 ? 'bg-[#b37936]' : 'bg-[#6b815d]'
+                  }`}
+                />
+                {openTotal > 0 ? `${openTotal} open` : 'Queue clear'}
+              </span>
+            )}
           </div>
-        </div>
 
-        {error && (
-          <div className="flex items-start gap-3 border-b border-rose-100 bg-rose-50 px-6 py-4 text-sm text-rose-700">
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-            <div>
-              <p className="font-semibold">Dashboard could not be refreshed</p>
-              <p className="mt-0.5 text-rose-600">{error}</p>
+          {visibleQueues.length > 0 ? (
+            <div className="flex flex-1 flex-col divide-y divide-[#ece4d9]">
+              {visibleQueues.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    className="group flex flex-1 flex-col gap-4 px-5 py-5 transition-colors hover:bg-[#fbf7f1] sm:flex-row sm:items-center sm:px-6"
+                  >
+                    <div className="flex min-w-0 flex-1 items-center gap-4">
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#e6ddd2] bg-[#f6f0e8] text-[#a85d2c]">
+                        <Icon className="h-[18px] w-[18px]" strokeWidth={1.8} />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-[#3a302a]">{item.label}</p>
+                        <p className="mt-0.5 text-xs leading-5 text-[#78706a]">
+                          {item.description}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between gap-5 sm:ml-auto sm:justify-end">
+                      <div className="text-left sm:text-right">
+                        <p className="admin-numeric font-headline text-3xl font-semibold leading-none text-[#3a302a]">
+                          {displayValue(item.value)}
+                        </p>
+                        <p
+                          className={`mt-1.5 text-[11px] font-bold uppercase tracking-[0.12em] ${
+                            !summary
+                              ? 'text-[#6c5d52]'
+                              : item.value > 0
+                                ? 'text-[#95631f]'
+                                : 'text-[#536b4a]'
+                          }`}
+                        >
+                          {!summary
+                            ? loading
+                              ? 'loading'
+                              : 'unavailable'
+                            : item.value > 0
+                              ? 'waiting'
+                              : 'clear'}
+                        </p>
+                      </div>
+                      <ArrowUpRight
+                        className="h-4 w-4 text-[#c9bdb1] transition-colors group-hover:text-[#b3541e]"
+                        strokeWidth={1.8}
+                      />
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
+          ) : (
+            <div className="px-5 py-10 text-center sm:px-6">
+              <ShieldCheck className="mx-auto h-7 w-7 text-[#c9bdb1]" strokeWidth={1.6} />
+              <p className="mt-3 text-sm font-semibold text-[#3a302a]">No queues assigned</p>
+              <p className="mx-auto mt-1 max-w-sm text-xs leading-5 text-[#78706a]">
+                Your role has read-only access to the operations overview.
+              </p>
+            </div>
+          )}
+
+          {visibleQueues.length > 0 && (
+            <div className="flex flex-col gap-2 border-t border-[#ece4d9] bg-[#fbf7f1] px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+              <p className="text-xs leading-5 text-[#78706a]">
+                Moderation decisions are written to the audit trail.
+              </p>
+              {canViewAudit && (
+                <Link
+                  href="/admin/audit"
+                  className="inline-flex shrink-0 items-center gap-1.5 text-xs font-bold text-[#b3541e] transition-colors hover:text-[#934313]"
+                >
+                  Audit trail
+                  <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.8} />
+                </Link>
+              )}
+            </div>
+          )}
+        </section>
+
+        <section className="admin-panel overflow-hidden" aria-labelledby="marketplace-pulse-title">
+          <div className="border-b border-[#d8d0c8] px-5 py-5 sm:px-6">
+            <h2
+              id="marketplace-pulse-title"
+              className="font-headline text-[1.4rem] font-semibold leading-tight tracking-[-0.015em] text-[#3a302a]"
+            >
+              Marketplace pulse
+            </h2>
+            <p className="mt-1 text-xs leading-5 text-[#78706a]">
+              What is live, and who can act on it.
+            </p>
           </div>
-        )}
 
-        <div className="grid grid-cols-1 gap-px bg-slate-200 sm:grid-cols-2 xl:grid-cols-4">
-          {cards.map((card) => {
-            const Icon = card.icon;
-            const allowed = can(user?.permissions, card.permission);
-            const body = (
-              <div className="h-full bg-white p-5 transition hover:bg-slate-50/80">
-                <div className="flex items-start justify-between gap-3">
-                  <div className={`rounded-xl border p-2 ${toneClasses[card.tone]}`}>
-                    <Icon className="h-4 w-4" />
+          <div className="grid grid-cols-2 gap-px bg-[#ece4d9]">
+            {pulseItems.map((item) => {
+              const allowed = item.permission
+                ? can(user?.permissions, item.permission)
+                : false;
+              const content = (
+                <>
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-[11px] font-bold uppercase leading-4 tracking-[0.13em] text-[#6c5d52]">
+                      {item.label}
+                    </p>
+                    {allowed && (
+                      <ArrowUpRight
+                        className="h-3.5 w-3.5 shrink-0 text-[#d8d0c8] transition-colors group-hover:text-[#b3541e]"
+                        strokeWidth={1.8}
+                      />
+                    )}
                   </div>
-                  {allowed && <ArrowRight className="h-4 w-4 text-slate-300" />}
-                </div>
-                <p className="mt-4 text-3xl font-bold tracking-tight text-slate-900">
-                  {loading && !summary ? '—' : card.value.toLocaleString()}
-                </p>
-                <p className="mt-1 text-sm font-semibold text-slate-700">{card.label}</p>
-                <p className="mt-0.5 text-xs text-slate-500">{card.hint}</p>
-              </div>
-            );
+                  <p className="admin-numeric mt-3 font-headline text-3xl font-semibold leading-none text-[#3a302a]">
+                    {displayValue(item.value)}
+                  </p>
+                  <p className="mt-2 text-xs leading-4 text-[#78706a]">{item.hint}</p>
+                </>
+              );
 
-            return allowed ? (
-              <Link key={card.label} href={card.href} className="block">
-                {body}
-              </Link>
-            ) : (
-              <div key={card.label}>{body}</div>
-            );
-          })}
-        </div>
-      </section>
+              return allowed && item.href ? (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className="group bg-white px-5 py-5 transition-colors hover:bg-[#fbf7f1]"
+                >
+                  {content}
+                </Link>
+              ) : (
+                <div key={item.label} className="bg-white px-5 py-5">
+                  {content}
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      </div>
 
       <div
         className={
           canViewAudit
-            ? 'grid gap-6 lg:grid-cols-[1.15fr_0.85fr]'
-            : 'grid gap-6'
+            ? 'grid gap-5 lg:grid-cols-[minmax(0,1.25fr)_minmax(20rem,0.75fr)]'
+            : 'grid gap-5'
         }
       >
         {canViewAudit && (
-        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <h3 className="text-base font-bold text-slate-900">Recent privileged actions</h3>
-              <p className="mt-0.5 text-xs text-slate-500">Latest entries from the audit trail.</p>
-            </div>
-            {can(user?.permissions, ADMIN_PERMISSIONS.AUDIT_VIEW) && (
-              <Link
-                href="/admin/audit"
-                className="inline-flex items-center gap-1 text-xs font-bold text-[#33599E] hover:text-[#284A86]"
-              >
-                View all <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            )}
-          </div>
-
-          <div className="mt-4 divide-y divide-slate-100">
-            {loading && !summary ? (
-              Array.from({ length: 5 }).map((_, index) => (
-                <div key={index} className="flex items-center gap-3 py-3.5">
-                  <div className="h-8 w-8 animate-pulse rounded-lg bg-slate-100" />
-                  <div className="flex-1 space-y-1.5">
-                    <div className="h-3 w-2/5 animate-pulse rounded bg-slate-100" />
-                    <div className="h-2.5 w-3/5 animate-pulse rounded bg-slate-100" />
-                  </div>
-                </div>
-              ))
-            ) : summary?.recentAudit?.length ? (
-              summary.recentAudit.map((entry) => (
-                <div key={entry.id} className="flex items-start gap-3 py-3.5">
-                  <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
-                    <Clock3 className="h-4 w-4" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-slate-800">
-                      {formatAction(entry.action)}
-                    </p>
-                    <p className="truncate text-xs text-slate-500">
-                      {entry.actorEmail || 'System'} · {entry.entityType}
-                      {entry.entityId ? ` · ${entry.entityId.slice(0, 8)}` : ''}
-                    </p>
-                  </div>
-                  <span className="shrink-0 text-[11px] font-medium text-slate-400">
-                    {relativeTime(entry.createdAt)}
-                  </span>
-                </div>
-              ))
-            ) : (
-              <div className="py-10 text-center">
-                <ShieldCheck className="mx-auto h-8 w-8 text-slate-300" />
-                <p className="mt-2 text-sm font-semibold text-slate-600">No audit entries yet</p>
-                <p className="mt-1 text-xs text-slate-500">
-                  Privileged actions will appear here as your team works.
+          <section className="admin-panel overflow-hidden" aria-labelledby="recent-actions-title">
+            <div className="flex items-start justify-between gap-4 border-b border-[#d8d0c8] px-5 py-5 sm:px-6">
+              <div>
+                <h2
+                  id="recent-actions-title"
+                  className="font-headline text-[1.4rem] font-semibold leading-tight tracking-[-0.015em] text-[#3a302a]"
+                >
+                  Recent privileged actions
+                </h2>
+                <p className="mt-1 text-xs leading-5 text-[#78706a]">
+                  The latest entries in the audit trail.
                 </p>
               </div>
-            )}
-          </div>
-        </section>
-        )}
-
-        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-          <h3 className="text-base font-bold text-slate-900">Quick actions</h3>
-          <p className="mt-0.5 text-xs text-slate-500">The highest-value queues for this shift.</p>
-
-          <div className="mt-4 space-y-2.5">
-            {can(user?.permissions, ADMIN_PERMISSIONS.LISTINGS_REVIEW) && (
-              <Link
-                href="/admin/moderation"
-                className="group flex items-center gap-3 rounded-xl border border-slate-200 p-3.5 hover:border-[#33599E]/30 hover:bg-[#33599E]/5 transition"
-              >
-                <div className="rounded-lg bg-amber-50 p-2 text-amber-700">
-                  <ClipboardCheck className="h-4 w-4" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-slate-800">Review listing queue</p>
-                  <p className="text-xs text-slate-500">
-                    {counts?.pendingListingReviews ?? 0} listing
-                    {(counts?.pendingListingReviews ?? 0) === 1 ? '' : 's'} waiting
-                  </p>
-                </div>
-                <ArrowRight className="h-4 w-4 text-slate-300 group-hover:text-[#33599E]" />
-              </Link>
-            )}
-
-            {can(user?.permissions, ADMIN_PERMISSIONS.HOSTS_VERIFY) && (
-              <Link
-                href="/admin/moderation"
-                className="group flex items-center gap-3 rounded-xl border border-slate-200 p-3.5 hover:border-[#33599E]/30 hover:bg-[#33599E]/5 transition"
-              >
-                <div className="rounded-lg bg-blue-50 p-2 text-blue-700">
-                  <UserCheck className="h-4 w-4" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-slate-800">Verify host identities</p>
-                  <p className="text-xs text-slate-500">
-                    {counts?.pendingHostVerifications ?? 0} host
-                    {(counts?.pendingHostVerifications ?? 0) === 1 ? '' : 's'} pending
-                  </p>
-                </div>
-                <ArrowRight className="h-4 w-4 text-slate-300 group-hover:text-[#33599E]" />
-              </Link>
-            )}
-
-            {can(user?.permissions, ADMIN_PERMISSIONS.USERS_VIEW) && (
-              <Link
-                href="/admin/users"
-                className="group flex items-center gap-3 rounded-xl border border-slate-200 p-3.5 hover:border-[#33599E]/30 hover:bg-[#33599E]/5 transition"
-              >
-                <div className="rounded-lg bg-emerald-50 p-2 text-emerald-700">
-                  <Users className="h-4 w-4" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-slate-800">Manage accounts</p>
-                  <p className="text-xs text-slate-500">Search, suspend and assign admin roles</p>
-                </div>
-                <ArrowRight className="h-4 w-4 text-slate-300 group-hover:text-[#33599E]" />
-              </Link>
-            )}
-
-            {can(user?.permissions, ADMIN_PERMISSIONS.REVIEWS_VIEW) && (
-              <Link
-                href="/admin/reviews"
-                className="group flex items-center gap-3 rounded-xl border border-slate-200 p-3.5 hover:border-[#33599E]/30 hover:bg-[#33599E]/5 transition"
-              >
-                <div className="rounded-lg bg-teal-50 p-2 text-teal-700">
-                  <Star className="h-4 w-4" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-slate-800">Moderate guest reviews</p>
-                  <p className="text-xs text-slate-500">
-                    {counts?.totalReviews ?? 0} review
-                    {(counts?.totalReviews ?? 0) === 1 ? '' : 's'} on record
-                  </p>
-                </div>
-                <ArrowRight className="h-4 w-4 text-slate-300 group-hover:text-[#33599E]" />
-              </Link>
-            )}
-
-            {can(user?.permissions, ADMIN_PERMISSIONS.REPORTS_VIEW) && (
-              <Link
-                href="/admin/reports"
-                className="group flex items-center gap-3 rounded-xl border border-slate-200 p-3.5 hover:border-[#33599E]/30 hover:bg-[#33599E]/5 transition"
-              >
-                <div className="rounded-lg bg-rose-50 p-2 text-rose-700">
-                  <Flag className="h-4 w-4" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-slate-800">Triage reports</p>
-                  <p className="text-xs text-slate-500">
-                    {counts?.openReports ?? 0} open report
-                    {(counts?.openReports ?? 0) === 1 ? '' : 's'}
-                  </p>
-                </div>
-                <ArrowRight className="h-4 w-4 text-slate-300 group-hover:text-[#33599E]" />
-              </Link>
-            )}
-
-            {can(user?.permissions, ADMIN_PERMISSIONS.AUDIT_VIEW) && (
               <Link
                 href="/admin/audit"
-                className="group flex items-center gap-3 rounded-xl border border-slate-200 p-3.5 hover:border-[#33599E]/30 hover:bg-[#33599E]/5 transition"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-md py-1 text-xs font-bold text-[#b3541e] transition-colors hover:text-[#934313]"
               >
-                <div className="rounded-lg bg-violet-50 p-2 text-violet-700">
-                  <ShieldCheck className="h-4 w-4" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-slate-800">Open audit log</p>
-                  <p className="text-xs text-slate-500">Inspect who changed what</p>
-                </div>
-                <ArrowRight className="h-4 w-4 text-slate-300 group-hover:text-[#33599E]" />
+                Full log
+                <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.8} />
               </Link>
-            )}
+            </div>
 
-            {!can(user?.permissions, ADMIN_PERMISSIONS.LISTINGS_REVIEW) &&
-              !can(user?.permissions, ADMIN_PERMISSIONS.HOSTS_VERIFY) &&
-              !can(user?.permissions, ADMIN_PERMISSIONS.USERS_VIEW) &&
-              !can(user?.permissions, ADMIN_PERMISSIONS.AUDIT_VIEW) && (
-                <p className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">
-                  Your role has read-only access to the overview.
-                </p>
+            <div className="divide-y divide-[#ece4d9]">
+              {loading && !summary ? (
+                Array.from({ length: 5 }).map((_, index) => (
+                  <div key={index} className="flex items-center gap-4 px-5 py-4 sm:px-6">
+                    <span className="h-2 w-2 animate-pulse rounded-full bg-[#e6ddd2]" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-3 w-2/5 animate-pulse rounded bg-[#ece4d9]" />
+                      <div className="h-2.5 w-3/5 animate-pulse rounded bg-[#f2ece4]" />
+                    </div>
+                  </div>
+                ))
+              ) : summary?.recentAudit?.length ? (
+                summary.recentAudit.map((entry) => (
+                  <div key={entry.id} className="flex items-start gap-4 px-5 py-4 sm:px-6">
+                    <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-[#b3541e]" />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[13px] font-semibold text-[#3a302a]">
+                        {formatAction(entry.action)}
+                      </p>
+                      <p className="mt-1 truncate text-xs text-[#78706a]">
+                        {entry.actorEmail || 'System'} · {entry.entityType}
+                        {entry.entityId ? ` · ${entry.entityId.slice(0, 8)}` : ''}
+                      </p>
+                    </div>
+                    <time
+                      dateTime={entry.createdAt}
+                      className="shrink-0 pt-0.5 text-xs font-medium text-[#6c5d52]"
+                    >
+                      {relativeTime(entry.createdAt)}
+                    </time>
+                  </div>
+                ))
+              ) : (
+                <div className="px-6 py-12 text-center">
+                  <Clock3 className="mx-auto h-7 w-7 text-[#c9bdb1]" strokeWidth={1.6} />
+                  <p className="mt-3 text-sm font-semibold text-[#3a302a]">No actions recorded yet</p>
+                  <p className="mt-1 text-xs leading-5 text-[#78706a]">
+                    Privileged actions will appear here as your team works.
+                  </p>
+                </div>
               )}
+            </div>
+          </section>
+        )}
+
+        <section className="admin-panel overflow-hidden" aria-labelledby="quick-actions-title">
+          <div className="border-b border-[#d8d0c8] px-5 py-5 sm:px-6">
+            <h2
+              id="quick-actions-title"
+              className="font-headline text-[1.4rem] font-semibold leading-tight tracking-[-0.015em] text-[#3a302a]"
+            >
+              Go straight there
+            </h2>
+            <p className="mt-1 text-xs leading-5 text-[#78706a]">
+              The work surfaces available to your role.
+            </p>
           </div>
+
+          {quickActions.length > 0 ? (
+            <div className="divide-y divide-[#ece4d9]">
+              {quickActions.map((action) => {
+                const Icon = action.icon;
+                return (
+                  <Link
+                    key={`${action.href}-${action.label}`}
+                    href={action.href}
+                    className="group flex items-center gap-3 px-5 py-3.5 transition-colors hover:bg-[#fbf7f1] sm:px-6"
+                  >
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#f6f0e8] text-[#8f6a50]">
+                      <Icon className="h-4 w-4" strokeWidth={1.8} />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[13px] font-semibold text-[#3a302a]">
+                        {action.label}
+                      </p>
+                      <p className="mt-0.5 truncate text-xs text-[#78706a]">{action.hint}</p>
+                    </div>
+                    <ArrowRight
+                      className="h-4 w-4 shrink-0 text-[#c9bdb1] transition-colors group-hover:text-[#b3541e]"
+                      strokeWidth={1.8}
+                    />
+                  </Link>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="px-6 py-10 text-center">
+              <EyeOff className="mx-auto h-6 w-6 text-[#c9bdb1]" strokeWidth={1.6} />
+              <p className="mt-3 text-sm font-semibold text-[#3a302a]">Read-only access</p>
+              <p className="mt-1 text-xs leading-5 text-[#78706a]">
+                Your role can view the overview but has no management queues.
+              </p>
+            </div>
+          )}
         </section>
       </div>
     </div>
