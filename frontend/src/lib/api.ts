@@ -1,16 +1,11 @@
 export function getApiBaseUrl(): string {
-  if (typeof window !== 'undefined') {
-    // When accessing via localhost/127.0.0.1, always target localhost:3000
+  if (typeof window !== 'undefined' && window.location.hostname) {
+    // When accessing via localhost/127.0.0.1, target configured API or default to localhost:3000
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      return 'http://localhost:3000';
+      return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
     }
-    // When accessing via LAN IP or hostname on port 3001, dynamically match port 3000
-    if (window.location.hostname) {
-      const configured = process.env.NEXT_PUBLIC_API_URL;
-      if (!configured || (!configured.includes('localhost') && !configured.includes(window.location.hostname))) {
-        return `http://${window.location.hostname}:3000`;
-      }
-    }
+    // When accessing via a LAN IP or custom domain, match the current hostname on port 3000
+    return `http://${window.location.hostname}:3000`;
   }
   return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 }

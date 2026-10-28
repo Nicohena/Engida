@@ -14,6 +14,7 @@ import GalleryManager from '../../../../components/host/GalleryManager';
 import AiPricingWidget from '../../../../components/host/AiPricingWidget';
 import AiListingCopilotModal, { type CopilotMode } from '../../../../components/host/AiListingCopilotModal';
 import HostListingLivePreview from '../../../../components/host/HostListingLivePreview';
+import HostLocationPickerMap from '../../../../components/maps/HostLocationPickerMap';
 import {
   ArrowLeft,
   Building2,
@@ -418,7 +419,7 @@ export default function CreateListingPage() {
         payload.longitude = parseFloat(form.longitude);
       }
 
-      const res = await apiFetch<{ id: string }>('/properties', {
+      const res = await apiFetch<{ id: string }>('/host/listings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -497,8 +498,8 @@ export default function CreateListingPage() {
             LEFT COLUMN: Structured Sequential Form (65%)
         ═══════════════════════════════════════════════════ */}
         <div className="lg:col-span-7 xl:col-span-8 space-y-6">
-          {/* Sticky Section Quick Jump Bar */}
-          <div className="sticky top-2 z-10 bg-white/90 backdrop-blur-md border border-[#E5E0D5] rounded-2xl p-1.5 shadow-xs overflow-x-auto flex items-center gap-1">
+          {/* Section Quick Jump Bar (Static Header Navigation) */}
+          <div className="bg-white border border-[#E5E0D5] rounded-2xl p-1.5 shadow-2xs overflow-x-auto no-scrollbar flex items-center gap-1">
             {SECTIONS_NAV.map((sec) => (
               <button
                 key={sec.id}
@@ -608,6 +609,43 @@ export default function CreateListingPage() {
                     );
                   })}
                 </div>
+              </div>
+
+              {/* Interactive Real Map Location Picker */}
+              <div className="space-y-2 pt-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-sm font-bold text-[#252923]">
+                    Interactive Property Location Map <span className="text-xs text-[#73776F] font-normal">(Drag pin or search to auto-fill address)</span>
+                  </label>
+                  <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                    Live Auto-Fill Active
+                  </span>
+                </div>
+                <HostLocationPickerMap
+                  initialLat={form.latitude ? parseFloat(form.latitude) : null}
+                  initialLng={form.longitude ? parseFloat(form.longitude) : null}
+                  initialAddress={form.address}
+                  initialCity={form.city}
+                  initialSubCity={form.subCity}
+                  initialNeighborhood={form.neighborhood}
+                  onLocationChange={(loc) => {
+                    setForm((prev) => ({
+                      ...prev,
+                      address: loc.address || prev.address,
+                      city: loc.city || prev.city,
+                      subCity: loc.subCity || prev.subCity,
+                      neighborhood: loc.neighborhood || prev.neighborhood,
+                      latitude: loc.latitude.toString(),
+                      longitude: loc.longitude.toString(),
+                    }));
+                    setErrors((prev) => {
+                      const next = { ...prev };
+                      if (loc.address) delete next.address;
+                      if (loc.city) delete next.city;
+                      return next;
+                    });
+                  }}
+                />
               </div>
 
               {/* Location Address */}
@@ -1162,9 +1200,12 @@ export default function CreateListingPage() {
             title={form.title}
             propertyType={form.propertyType}
             listingType={form.listingType}
+            address={form.address}
             city={form.city}
             subCity={form.subCity}
             neighborhood={form.neighborhood}
+            latitude={form.latitude}
+            longitude={form.longitude}
             bedrooms={form.bedrooms}
             bathrooms={form.bathrooms}
             maxGuests={form.maxGuests}
