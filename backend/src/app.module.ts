@@ -71,6 +71,7 @@ import { CouponRedemption } from './modules/coupons/entities/coupon-redemption.e
 import { ContentModule } from './modules/content/content.module';
 import { FaqItem } from './modules/content/entities/faq-item.entity';
 import { ContentBlock } from './modules/content/entities/content-block.entity';
+import { SystemSetting } from './modules/admin/settings/entities/system-setting.entity';
 import { validate } from './config/env.validation';
 
 @Module({
@@ -138,6 +139,7 @@ import { validate } from './config/env.validation';
           CouponRedemption,
           FaqItem,
           ContentBlock,
+          SystemSetting,
         ];
 
         if (databaseUrl) {
