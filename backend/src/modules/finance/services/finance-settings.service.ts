@@ -161,4 +161,58 @@ export class FinanceSettingsService {
 
     return after;
   }
+
+  async getRawSettingsList(): Promise<FinanceSetting[]> {
+    return this.settingsRepo.find({ order: { key: 'ASC' } });
+  }
+
+  async updateSingleSetting(
+    key: string,
+    value: string,
+    actor: User,
+    context?: { ipAddress?: string | null; userAgent?: string | null },
+  ): Promise<FinanceSetting> {
+    let setting = await this.settingsRepo.findOne({ where: { key } });
+    const beforeValue = setting?.value ?? null;
+    if (!setting) {
+      setting = this.settingsRepo.create({
+        key,
+        value,
+        type: value === 'true' || value === 'false' ? 'boolean' : 'string',
+        updatedById: actor.id,
+      });
+    } else {
+      setting.value = value;
+      setting.updatedById = actor.id;
+    }
+    const saved = await this.settingsRepo.save(setting);
+
+    // Also sync equivalent alias keys if applicable (e.g. commission_rate_bps vs platform_commission_bps)
+    if (key === 'finance.platform_commission_bps' || key === 'finance.commission_rate_bps') {
+      const aliasKey =
+        key === 'finance.platform_commission_bps'
+          ? 'finance.commission_rate_bps'
+          : 'finance.platform_commission_bps';
+      let aliasSetting = await this.settingsRepo.findOne({ where: { key: aliasKey } });
+      if (aliasSetting) {
+        aliasSetting.value = value;
+        aliasSetting.updatedById = actor.id;
+        await this.settingsRepo.save(aliasSetting);
+      }
+    }
+
+    await this.auditService.record({
+      actor,
+      action: 'finance.settings_changed',
+      entityType: 'finance_settings',
+      entityId: key,
+      before: { key, value: beforeValue },
+      after: { key, value },
+      metadata: { key, value },
+      ipAddress: context?.ipAddress ?? null,
+      userAgent: context?.userAgent ?? null,
+    });
+
+    return saved;
+  }
 }

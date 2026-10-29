@@ -60,20 +60,42 @@ export default function ReconciliationTab() {
     setImportResult(null);
 
     try {
-      let records = [];
-      try {
-        records = JSON.parse(rawSettlementData);
-      } catch {
-        // If not json, create simulated report
-        records = [
-          {
-            transactionReference: rawSettlementData.trim() || 'SAMPLE-REF-001',
-            providerTransactionId: 'CHAPA-SIM-999',
-            amountMinor: '150000',
-            status: 'success',
-            paidAt: new Date().toISOString(),
-          },
-        ];
+      const trimmed = rawSettlementData.trim();
+      if (!trimmed) {
+        throw new Error('Please enter settlement data as a JSON array or CSV lines.');
+      }
+
+      let records: any[] = [];
+      if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+        const parsed = JSON.parse(trimmed);
+        records = Array.isArray(parsed) ? parsed : [parsed];
+      } else {
+        // Parse CSV lines: reference, amount, type, date
+        const lines = trimmed.split('\n').map((l) => l.trim()).filter(Boolean);
+        for (const line of lines) {
+          if (
+            line.toLowerCase().startsWith('reference') ||
+            line.toLowerCase().startsWith('transaction') ||
+            line.toLowerCase().startsWith('ref,')
+          ) {
+            continue;
+          }
+          const parts = line.split(',').map((p) => p.trim());
+          if (parts.length >= 2) {
+            records.push({
+              transactionReference: parts[0],
+              amount: parseFloat(parts[1]) || 0,
+              transactionType: parts[2]?.toUpperCase() || 'CHARGE',
+              paidAt: parts[3] || new Date().toISOString(),
+            });
+          }
+        }
+      }
+
+      if (records.length === 0) {
+        throw new Error(
+          'No valid settlement records found. Provide a JSON array or CSV lines (e.g. REF-1001, 1500, CHARGE, 2026-10-29).',
+        );
       }
 
       const res = await apiFetch<any>('/admin/finance/reconciliation/settlement-report', {

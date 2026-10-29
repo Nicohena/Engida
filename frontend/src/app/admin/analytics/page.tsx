@@ -321,6 +321,12 @@ export default function AdminAnalyticsPage() {
           </div>
         </div>
 
+        {data && data.kpis.grossBookingValueEtb === 0 && data.kpis.totalBookings === 0 && (
+          <div className="mt-3 rounded-xl border border-[#ece4d9] bg-[#faf5ee] px-3.5 py-2 text-xs text-[#78706a]">
+            Zero reservation volume recorded in the selected period ({PERIOD_LABELS[period]}). The trajectory curve will plot real-time activity as bookings occur.
+          </div>
+        )}
+
         {/* Hover Point Inspector Tooltip */}
         <div className="mt-3 flex h-8 items-center justify-between rounded-lg bg-[#f6f0e8] px-3 text-xs">
           {hoveredPoint ? (
@@ -504,20 +510,26 @@ export default function AdminAnalyticsPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {data?.categoryDistribution.map((cat) => (
-                <div
-                  key={cat.slug}
-                  className="rounded-xl border border-[#d8d0c8] bg-[#faf5ee] p-3 text-center"
-                >
-                  <p className="truncate text-xs font-bold text-[#3a302a]">{cat.category}</p>
-                  <p className="mt-1 font-headline text-2xl font-bold text-[#b3541e]">
-                    {cat.listingsCount}
-                  </p>
-                  <p className="text-[11px] font-semibold text-[#78706a]">
-                    {cat.sharePercent}% of supply
-                  </p>
+              {data?.categoryDistribution && data.categoryDistribution.length > 0 ? (
+                data.categoryDistribution.map((cat) => (
+                  <div
+                    key={cat.slug}
+                    className="rounded-xl border border-[#d8d0c8] bg-[#faf5ee] p-3 text-center"
+                  >
+                    <p className="truncate text-xs font-bold text-[#3a302a]">{cat.category}</p>
+                    <p className="mt-1 font-headline text-2xl font-bold text-[#b3541e]">
+                      {cat.listingsCount}
+                    </p>
+                    <p className="text-[11px] font-semibold text-[#78706a]">
+                      {cat.sharePercent}% of supply
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-full py-6 text-center text-xs text-[#78706a]">
+                  No active property categories or listings recorded yet.
                 </div>
-              ))}
+              )}
             </div>
           </div>
 

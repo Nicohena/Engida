@@ -25,7 +25,7 @@ import { AdminFinanceService } from './admin-finance.service';
 import { RefundsService, ProposeRefundDto } from '../../finance/services/refunds.service';
 import { PayoutsService } from '../../finance/services/payouts.service';
 import { EscrowService } from '../../finance/services/escrow.service';
-import { ReconciliationService } from '../../finance/services/reconciliation.service';
+import { ReconciliationService, SettlementRow } from '../../finance/services/reconciliation.service';
 import { FinanceSettingsService } from '../../finance/services/finance-settings.service';
 import { FinanceJobsService } from '../../finance/services/finance-jobs.service';
 
@@ -142,10 +142,16 @@ export class AdminFinanceController {
     return this.adminFinanceService.getPayoutDetail(id);
   }
 
-  @Post('payouts/batch/generate')
+  @Post(['payouts/batch', 'payouts/batch/generate'])
   @RequirePermissions(Permission.FINANCE_PAYOUTS)
-  generateBatch(@GetUser() actor: User) {
-    return this.payoutsService.generateDailyPayoutBatch(actor);
+  async generateBatch(@GetUser() actor: User) {
+    const res = await this.payoutsService.generateDailyPayoutBatch(actor);
+    return {
+      draftedCount: res.draftedCount,
+      createdCount: res.draftedCount,
+      totalAmountMinor: res.totalAmountMinor.toString(),
+      payoutIds: res.payoutIds,
+    };
   }
 
   @Post('payouts/:id/approve')
@@ -211,7 +217,7 @@ export class AdminFinanceController {
     return this.payoutsService.verifyPayoutAccount(id, actor, { ipAddress, userAgent });
   }
 
-  @Post('payout-accounts/:id/reject')
+  @Post(['payout-accounts/:id/reject', 'payout-accounts/:id/disable'])
   @RequirePermissions(Permission.FINANCE_PAYOUTS)
   rejectPayoutAccount(
     @Param('id', ParseUUIDPipe) id: string,
@@ -220,7 +226,12 @@ export class AdminFinanceController {
     @Ip() ipAddress: string,
     @Headers('user-agent') userAgent?: string,
   ) {
-    return this.payoutsService.rejectPayoutAccount(id, actor, reason, { ipAddress, userAgent });
+    return this.payoutsService.rejectPayoutAccount(
+      id,
+      actor,
+      reason || 'Disabled by administrator',
+      { ipAddress, userAgent },
+    );
   }
 
   @Get('ledger')
@@ -229,13 +240,13 @@ export class AdminFinanceController {
     return this.adminFinanceService.listLedgerTransactions(query);
   }
 
-  @Get('escrow')
+  @Get(['escrow', 'escrow-holds'])
   @RequirePermissions(Permission.FINANCE_VIEW)
   listEscrow(@Query() query: any) {
     return this.adminFinanceService.listEscrowHolds(query);
   }
 
-  @Post('escrow/:id/release')
+  @Post(['escrow/:id/release', 'escrow-holds/:id/release'])
   @RequirePermissions(Permission.FINANCE_PAYOUTS)
   releaseEscrow(
     @Param('id', ParseUUIDPipe) id: string,
@@ -245,7 +256,7 @@ export class AdminFinanceController {
     return this.escrowService.releaseHold(id, actor, reason);
   }
 
-  @Post('escrow/:id/freeze')
+  @Post(['escrow/:id/freeze', 'escrow-holds/:id/freeze'])
   @RequirePermissions(Permission.FINANCE_REFUNDS)
   freezeEscrow(
     @Param('id', ParseUUIDPipe) id: string,
@@ -257,7 +268,7 @@ export class AdminFinanceController {
     return this.escrowService.freezeHold(id, reason, actor, { ipAddress, userAgent });
   }
 
-  @Post('escrow/:id/unfreeze')
+  @Post(['escrow/:id/unfreeze', 'escrow-holds/:id/unfreeze'])
   @RequirePermissions(Permission.FINANCE_REFUNDS)
   unfreezeEscrow(
     @Param('id', ParseUUIDPipe) id: string,
@@ -269,39 +280,100 @@ export class AdminFinanceController {
     return this.escrowService.unfreezeHold(id, reason, actor, { ipAddress, userAgent });
   }
 
-  @Get('reconciliation')
+  @Get(['reconciliation', 'reconciliation/issues'])
   @RequirePermissions(Permission.FINANCE_VIEW)
   listReconciliation(@Query() query: any) {
     return this.adminFinanceService.listReconciliationIssues(query);
   }
 
-  @Post('reconciliation/:id/resolve')
+  @Post(['reconciliation/settlement-report', 'reconciliation/settlement'])
+  @RequirePermissions(Permission.FINANCE_RECONCILE)
+  async ingestSettlementReport(
+    @Body()
+    body: {
+      provider?: string;
+      reportReference?: string;
+      records?: any[];
+      rows?: any[];
+    },
+    @GetUser() actor: User,
+  ) {
+    const rawRows = body.records || body.rows || [];
+    const mappedRows: SettlementRow[] = rawRows.map((r: any) => ({
+      providerReference:
+        r.providerReference ||
+        r.transactionReference ||
+        r.reference ||
+        r.providerTransactionId ||
+        '',
+      transactionType: (r.transactionType || (r.status === 'refund' ? 'REFUND' : 'CHARGE')) as any,
+      amount:
+        r.amount !== undefined
+          ? r.amount
+          : r.amountMinor
+            ? Number(r.amountMinor) / 100
+            : 0,
+      currency: r.currency || 'ETB',
+      date: r.date || r.paidAt || new Date().toISOString(),
+      fee: r.fee || 0,
+    }));
+    const result = await this.reconService.ingestSettlementReport(
+      body.provider || 'CHAPA',
+      mappedRows,
+      actor,
+    );
+    return {
+      matchedCount: result.matched,
+      issuesCreatedCount: result.issuesCreated,
+      processedCount: result.processed,
+    };
+  }
+
+  @Post(['reconciliation/:id/resolve', 'reconciliation/issues/:id/resolve'])
   @RequirePermissions(Permission.FINANCE_RECONCILE)
   resolveReconciliationIssue(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body('note') note: string,
+    @Body() body: any,
     @GetUser() actor: User,
     @Ip() ipAddress: string,
     @Headers('user-agent') userAgent?: string,
   ) {
+    const note =
+      (typeof body === 'string' ? body : null) ||
+      body?.notes ||
+      body?.note ||
+      (body?.action ? `Action: ${body.action}` : 'Resolved by administrator');
     return this.reconService.resolveIssue(id, note, actor, { ipAddress, userAgent });
   }
 
   @Get('settings')
   @RequirePermissions(Permission.FINANCE_VIEW)
   getSettings() {
-    return this.settingsService.getAllSettings();
+    return this.settingsService.getRawSettingsList();
   }
 
-  @Patch('settings')
+  @Patch(['settings/:key', 'settings'])
   @RequirePermissions(Permission.FINANCE_CONFIG)
   updateSettings(
-    @Body() body: { updates: any; reason: string },
+    @Param('key') key: string | undefined,
+    @Body() body: any,
     @GetUser() actor: User,
     @Ip() ipAddress: string,
     @Headers('user-agent') userAgent?: string,
   ) {
-    return this.settingsService.updateSettings(body.updates, body.reason, actor, { ipAddress, userAgent });
+    if (key) {
+      const value = body?.value !== undefined ? String(body.value) : '';
+      return this.settingsService.updateSingleSetting(key, value, actor, {
+        ipAddress,
+        userAgent,
+      });
+    }
+    return this.settingsService.updateSettings(
+      body?.updates || body,
+      body?.reason || 'Finance settings updated by admin',
+      actor,
+      { ipAddress, userAgent },
+    );
   }
 
   @Get('exports/:type.csv')

@@ -258,23 +258,15 @@ export class AdminAnalyticsService {
     );
 
     // Top Destinations Leaderboard
-    const knownRegions: Record<string, string> = {
-      'Addis Ababa': 'Shewa / Central',
-      'Bishoftu': 'Oromia / Rift Valley',
-      'Hawassa': 'Sidama',
-      'Bahir Dar': 'Amhara / Lake Tana',
-      'Lalibela': 'Amhara / Lasta',
-    };
-
+    const knownRegions: Record<string, string> = {};
     for (const d of destinations) {
       knownRegions[d.name] = d.region;
     }
 
-    // Ensure common hubs appear
-    const defaultCities = ['Addis Ababa', 'Bishoftu', 'Hawassa', 'Bahir Dar', 'Lalibela'];
-    for (const c of defaultCities) {
-      if (!cityStats[c]) {
-        cityStats[c] = { bookings: 0, gbvMinor: 0 };
+    // Include registered destinations from DB with 0 bookings if not yet in cityStats
+    for (const d of destinations) {
+      if (!cityStats[d.name]) {
+        cityStats[d.name] = { bookings: 0, gbvMinor: 0 };
       }
     }
 
@@ -295,33 +287,47 @@ export class AdminAnalyticsService {
     });
     const typeCounts: Record<string, number> = {};
     for (const p of properties) {
-      const type = p.propertyType || 'Villas';
-      typeCounts[type] = (typeCounts[type] || 0) + 1;
+      const type = (p.propertyType || '').toLowerCase().trim();
+      if (type) {
+        typeCounts[type] = (typeCounts[type] || 0) + 1;
+      }
     }
 
-    const categoryDistribution: CategoryMetric[] = (
-      categories.length > 0
-        ? categories.map((cat) => ({
+    const categoryDistribution: CategoryMetric[] = categories.length > 0
+      ? categories.map((cat) => {
+          const slugKey = (cat.slug || '').toLowerCase().trim();
+          const nameKey = (cat.name || '').toLowerCase().trim();
+          let count = 0;
+          for (const [t, c] of Object.entries(typeCounts)) {
+            if (
+              t === slugKey ||
+              t === nameKey ||
+              t === slugKey.replace(/s$/, '') ||
+              slugKey === `${t}s` ||
+              t.includes(slugKey) ||
+              slugKey.includes(t)
+            ) {
+              count += c;
+            }
+          }
+          return {
             category: cat.name,
             slug: cat.slug,
-            listingsCount: typeCounts[cat.slug] || typeCounts[cat.name] || 0,
+            listingsCount: count,
             sharePercent:
-              properties.length > 0
-                ? Math.round(
-                    ((typeCounts[cat.slug] || typeCounts[cat.name] || 0) /
-                      properties.length) *
-                      100,
-                  )
-                : 0,
+              properties.length > 0 ? Math.round((count / properties.length) * 100) : 0,
+          };
+        })
+      : properties.length > 0
+        ? Object.entries(typeCounts).map(([type, count]) => ({
+            category: type.charAt(0).toUpperCase() + type.slice(1),
+            slug: type,
+            listingsCount: count,
+            sharePercent: Math.round((count / properties.length) * 100),
           }))
-        : [
-            { category: 'Luxury Villas', slug: 'villas', listingsCount: 14, sharePercent: 35 },
-            { category: 'Modern Apartments', slug: 'apartments', listingsCount: 12, sharePercent: 30 },
-            { category: 'Penthouses', slug: 'penthouses', listingsCount: 6, sharePercent: 15 },
-            { category: 'Eco Lodges', slug: 'eco-lodges', listingsCount: 5, sharePercent: 12 },
-            { category: 'Lakefront Stays', slug: 'lakefront', listingsCount: 3, sharePercent: 8 },
-          ]
-    ).sort((a, b) => b.listingsCount - a.listingsCount);
+        : [];
+
+    categoryDistribution.sort((a, b) => b.listingsCount - a.listingsCount);
 
     // Booking Status Funnel
     const bookingStatusFunnel: StatusFunnelItem[] = [
