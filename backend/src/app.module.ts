@@ -62,6 +62,16 @@ import { FinancialAdjustment } from './modules/finance/entities/financial-adjust
 import { ReconciliationIssue } from './modules/finance/entities/reconciliation-issue.entity';
 import { JobRun } from './modules/finance/entities/job-run.entity';
 import { FinanceSetting } from './modules/finance/entities/finance-setting.entity';
+import { CatalogModule } from './modules/catalog/catalog.module';
+import { PropertyCategory } from './modules/catalog/entities/property-category.entity';
+import { Destination } from './modules/catalog/entities/destination.entity';
+import { CouponsModule } from './modules/coupons/coupons.module';
+import { Coupon } from './modules/coupons/entities/coupon.entity';
+import { CouponRedemption } from './modules/coupons/entities/coupon-redemption.entity';
+import { ContentModule } from './modules/content/content.module';
+import { FaqItem } from './modules/content/entities/faq-item.entity';
+import { ContentBlock } from './modules/content/entities/content-block.entity';
+import { SystemSetting } from './modules/admin/settings/entities/system-setting.entity';
 import { validate } from './config/env.validation';
 
 @Module({
@@ -123,6 +133,13 @@ import { validate } from './config/env.validation';
           ReconciliationIssue,
           JobRun,
           FinanceSetting,
+          PropertyCategory,
+          Destination,
+          Coupon,
+          CouponRedemption,
+          FaqItem,
+          ContentBlock,
+          SystemSetting,
         ];
 
         if (databaseUrl) {
@@ -176,6 +193,9 @@ import { validate } from './config/env.validation';
     NotificationsModule,
     AuditModule,
     ReportsModule,
+    CatalogModule,
+    CouponsModule,
+    ContentModule,
   ],
   controllers: [AppController],
   providers: [

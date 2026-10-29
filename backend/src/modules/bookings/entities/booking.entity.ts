@@ -146,6 +146,12 @@ export class Booking {
   @Column({ type: 'varchar', length: 32, default: 'UNVERIFIED', name: 'payment_reconciliation_status' })
   paymentReconciliationStatus: string;
 
+  @Column({ type: 'varchar', length: 50, nullable: true, name: 'coupon_code' })
+  couponCode: string | null;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0, name: 'discount_amount' })
+  discountAmount: number;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

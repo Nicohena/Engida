@@ -30,6 +30,14 @@ export enum Permission {
   FINANCE_RECONCILE = 'finance.reconcile',
   FINANCE_CONFIG = 'finance.config',
   FINANCE_EXPORT = 'finance.export',
+  CATALOG_MANAGE = 'catalog.manage',
+  COUPONS_MANAGE = 'coupons.manage',
+  CONTENT_MANAGE = 'content.manage',
+  ANALYTICS_VIEW = 'analytics.view',
+  SETTINGS_VIEW = 'settings.view',
+  SETTINGS_MANAGE = 'settings.manage',
+  SYSTEM_VIEW = 'system.view',
+  SYSTEM_MANAGE = 'system.manage',
 }
 
 export const ALL_PERMISSIONS: Permission[] = Object.values(Permission);
@@ -40,6 +48,7 @@ export const ALL_PERMISSIONS: Permission[] = Object.values(Permission);
  * Phase 1 is deliberately code-defined: roles are stable and permission changes
  * go through code review. Phase 2 adds the booking and case permissions here.
  * Phase 3 adds complete finance and escrow operations permissions.
+ * Phase 4 adds catalog, growth, and content permissions.
  */
 export const ADMIN_ROLE_PERMISSIONS: Record<AdminRole, Permission[]> = {
   [AdminRole.SUPER_ADMIN]: ALL_PERMISSIONS,
@@ -56,6 +65,9 @@ export const ADMIN_ROLE_PERMISSIONS: Record<AdminRole, Permission[]> = {
     Permission.REVIEWS_MODERATE,
     Permission.REPORTS_VIEW,
     Permission.REPORTS_RESOLVE,
+    Permission.CATALOG_MANAGE,
+    Permission.CONTENT_MANAGE,
+    Permission.ANALYTICS_VIEW,
   ],
 
   [AdminRole.SUPPORT_AGENT]: [
@@ -71,6 +83,9 @@ export const ADMIN_ROLE_PERMISSIONS: Record<AdminRole, Permission[]> = {
     Permission.CASES_VIEW,
     Permission.CASES_MANAGE,
     Permission.CASES_COMPENSATE,
+    Permission.CONTENT_MANAGE,
+    Permission.ANALYTICS_VIEW,
+    Permission.SETTINGS_VIEW,
   ],
 
   [AdminRole.BOOKING_MANAGER]: [
@@ -85,6 +100,9 @@ export const ADMIN_ROLE_PERMISSIONS: Record<AdminRole, Permission[]> = {
     Permission.CASES_VIEW,
     Permission.CASES_MANAGE,
     Permission.CASES_COMPENSATE,
+    Permission.COUPONS_MANAGE,
+    Permission.ANALYTICS_VIEW,
+    Permission.SETTINGS_VIEW,
   ],
 
   [AdminRole.FINANCE_MANAGER]: [
@@ -100,6 +118,9 @@ export const ADMIN_ROLE_PERMISSIONS: Record<AdminRole, Permission[]> = {
     Permission.FINANCE_RECONCILE,
     Permission.FINANCE_CONFIG,
     Permission.FINANCE_EXPORT,
+    Permission.COUPONS_MANAGE,
+    Permission.ANALYTICS_VIEW,
+    Permission.SETTINGS_VIEW,
   ],
 };
 

@@ -4,18 +4,24 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
+  Activity,
   ArrowUpRight,
+  BarChart3,
   CalendarRange,
   ClipboardCheck,
+  FileText,
   Flag,
   LayoutDashboard,
   LogOut,
   Landmark,
+  MapPin,
   Menu,
   MessagesSquare,
   ScrollText,
   ShieldCheck,
+  Sliders,
   Star,
+  Tag,
   Users,
   X,
 } from 'lucide-react';
@@ -42,6 +48,12 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Overview',
     icon: LayoutDashboard,
     permission: ADMIN_PERMISSIONS.DASHBOARD_VIEW,
+  },
+  {
+    href: '/admin/analytics',
+    label: 'Analytics & BI',
+    icon: BarChart3,
+    permission: ADMIN_PERMISSIONS.ANALYTICS_VIEW,
   },
   {
     href: '/admin/finance',
@@ -84,6 +96,36 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Reports',
     icon: Flag,
     permission: ADMIN_PERMISSIONS.REPORTS_VIEW,
+  },
+  {
+    href: '/admin/categories',
+    label: 'Categories & Locations',
+    icon: MapPin,
+    permission: ADMIN_PERMISSIONS.CATALOG_MANAGE,
+  },
+  {
+    href: '/admin/coupons',
+    label: 'Coupons & Discounts',
+    icon: Tag,
+    permission: ADMIN_PERMISSIONS.COUPONS_MANAGE,
+  },
+  {
+    href: '/admin/content',
+    label: 'Content & CMS',
+    icon: FileText,
+    permission: ADMIN_PERMISSIONS.CONTENT_MANAGE,
+  },
+  {
+    href: '/admin/settings',
+    label: 'Platform Settings',
+    icon: Sliders,
+    permission: ADMIN_PERMISSIONS.SETTINGS_VIEW,
+  },
+  {
+    href: '/admin/system',
+    label: 'System Health',
+    icon: Activity,
+    permission: ADMIN_PERMISSIONS.SYSTEM_VIEW,
   },
   {
     href: '/admin/audit',
