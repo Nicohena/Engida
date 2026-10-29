@@ -28,6 +28,21 @@ import { ListingReview } from '../properties/entities/listing-review.entity';
 import { RefreshToken } from '../../auth/entities/refresh-token.entity';
 import { Report } from '../reports/entities/report.entity';
 import { Case } from './cases/entities/case.entity';
+import { SystemSetting } from './settings/entities/system-setting.entity';
+import { JobRun } from '../finance/entities/job-run.entity';
+import { LedgerEntry } from '../finance/entities/ledger-entry.entity';
+import { AuditLog } from '../audit/entities/audit-log.entity';
+import { PropertyCategory } from '../catalog/entities/property-category.entity';
+import { Destination } from '../catalog/entities/destination.entity';
+import {
+  AdminSettingsController,
+  PublicSettingsController,
+} from './settings/admin-settings.controller';
+import { AdminSettingsService } from './settings/admin-settings.service';
+import { AdminAnalyticsController } from './analytics/admin-analytics.controller';
+import { AdminAnalyticsService } from './analytics/admin-analytics.service';
+import { AdminSystemController } from './system/admin-system.controller';
+import { AdminSystemService } from './system/admin-system.service';
 
 @Module({
   imports: [
@@ -41,6 +56,12 @@ import { Case } from './cases/entities/case.entity';
       RefreshToken,
       Report,
       Case,
+      SystemSetting,
+      JobRun,
+      LedgerEntry,
+      AuditLog,
+      PropertyCategory,
+      Destination,
     ]),
     ListingModerationModule,
     HostModule,
@@ -57,6 +78,10 @@ import { Case } from './cases/entities/case.entity';
     AdminDashboardController,
     AdminGuestReviewsController,
     AdminReportsController,
+    AdminSettingsController,
+    PublicSettingsController,
+    AdminAnalyticsController,
+    AdminSystemController,
   ],
   providers: [
     AdminUsersService,
@@ -64,7 +89,16 @@ import { Case } from './cases/entities/case.entity';
     AdminDashboardService,
     AdminGuestReviewsService,
     AdminReportsService,
+    AdminSettingsService,
+    AdminAnalyticsService,
+    AdminSystemService,
     PermissionsGuard,
+  ],
+  exports: [
+    AdminSettingsService,
+    AdminAnalyticsService,
+    AdminSystemService,
   ],
 })
 export class AdminModule {}
+
