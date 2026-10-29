@@ -1,7 +1,12 @@
-import { IsString, IsOptional, IsInt, IsNumber, IsArray, Min } from 'class-validator';
+import { IsString, IsOptional, IsInt, IsNumber, IsArray, Min, IsEnum, IsUUID, MaxLength } from 'class-validator';
 import { Type } from 'class-transformer';
+import { HostRecommendationAction } from './entities/price-recommendation-log.entity';
 
 export class PredictPriceDto {
+  @IsString()
+  @IsOptional()
+  propertyId?: string;
+
   @IsString()
   city: string;
 
@@ -155,4 +160,23 @@ export class GenerateListingContentDto {
   @IsOptional()
   @Type(() => Number)
   regenerationIndex?: number;
+}
+
+export class RecordRecommendationFeedbackDto {
+  @IsUUID()
+  recommendationId: string;
+
+  @IsEnum(HostRecommendationAction)
+  action: HostRecommendationAction;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  @Type(() => Number)
+  chosenPrice?: number;
+
+  @IsString()
+  @MaxLength(500)
+  @IsOptional()
+  feedbackReason?: string;
 }

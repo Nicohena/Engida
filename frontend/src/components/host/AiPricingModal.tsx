@@ -20,11 +20,13 @@ import {
   Award,
   Layers,
   X,
+  Tag,
 } from 'lucide-react';
 
 interface AiPricingModalProps {
   isOpen: boolean;
   onClose: () => void;
+  propertyId?: string;
   city: string;
   subCity?: string;
   neighborhood?: string;
@@ -47,6 +49,7 @@ type SelectedTier = 'min' | 'recommended' | 'max';
 export default function AiPricingModal({
   isOpen,
   onClose,
+  propertyId,
   city,
   subCity,
   neighborhood,
@@ -105,6 +108,7 @@ export default function AiPricingModal({
 
     try {
       const payload = {
+        propertyId: propertyId || undefined,
         city: city || 'Addis Ababa',
         subCity: subCity || undefined,
         neighborhood: neighborhood || undefined,
@@ -161,6 +165,19 @@ export default function AiPricingModal({
     const tier = tierToApply || selectedTier;
     const target = getTierPrice(tier);
     if (!target) return;
+
+    // Record host pricing decision & feedback
+    if (prediction?.recommendationId) {
+      apiFetch('/ai/recommendations/feedback', {
+        method: 'POST',
+        body: JSON.stringify({
+          recommendationId: prediction.recommendationId,
+          action: tier === 'recommended' ? 'ACCEPTED' : 'MODIFIED',
+          chosenPrice: target,
+          feedbackReason: `Host applied ${tier} tier rate`,
+        }),
+      }).catch(() => {});
+    }
 
     onApplyPrice(target);
     setApplied(true);
@@ -490,9 +507,17 @@ export default function AiPricingModal({
                       <span className="text-[10px] font-black uppercase tracking-widest text-[#73776F]">
                         {isSale ? 'Selected Asking Valuation' : 'Selected Price per night'}
                       </span>
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-800 border border-emerald-200">
+                      <span
+                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black border ${
+                          prediction.confidenceLevel === 'HIGH'
+                            ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                            : prediction.confidenceLevel === 'LOW'
+                            ? 'bg-slate-100 text-slate-700 border-slate-200'
+                            : 'bg-amber-50 text-amber-800 border-amber-200'
+                        }`}
+                      >
                         <ShieldCheck className="w-3 h-3 text-emerald-600" />
-                        {Math.round(prediction.confidence * 100)}% Confidence
+                        {prediction.confidenceLevel || 'MEDIUM'} Confidence ({Math.round(prediction.confidence * 100)}%)
                       </span>
                     </div>
 
@@ -511,6 +536,72 @@ export default function AiPricingModal({
                       <span>•</span>
                       <span>ETB benchmark model</span>
                     </p>
+
+                    {/* Confidence Explanation */}
+                    {prediction.confidenceExplanation && (
+                      <p className="text-[11px] text-[#73776F] bg-white/70 p-2 rounded-lg border border-[#E5E0D5]/70 leading-snug">
+                        <span className="font-bold text-[#252923]">Confidence Calibration: </span>
+                        {prediction.confidenceExplanation}
+                      </p>
+                    )}
+
+                    {/* Comparable Market Evidence */}
+                    {prediction.comparables && (
+                      <div className="p-2.5 rounded-xl bg-white/80 border border-[#234B36]/15 space-y-1 text-[11px]">
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <span className="font-bold text-[#234B36] flex items-center gap-1.5">
+                            <Tag className="w-3.5 h-3.5 text-[#234B36] shrink-0" />
+                            {prediction.comparables.sampleCount > 0 ? (
+                              <span>
+                                {prediction.comparables.retainedCount !== undefined && prediction.comparables.eligibleCount !== undefined
+                                  ? `${prediction.comparables.retainedCount} of ${prediction.comparables.eligibleCount} active competitor listings retained`
+                                  : `${prediction.comparables.sampleCount} active competitor listings`}
+                                {prediction.comparables.averageQualityScore !== undefined && (
+                                  <span className="ml-1.5 font-black text-[#234B36]">
+                                    ({Math.round(prediction.comparables.averageQualityScore * 100)}% quality match)
+                                  </span>
+                                )}
+                              </span>
+                            ) : (
+                              <span>No active competitor comparables in this sub-market</span>
+                            )}
+                          </span>
+                          {prediction.comparables.sampleCount > 0 && (
+                            <span className="text-[#73776F] font-semibold">
+                              Median Asking: <strong>ETB {prediction.comparables.medianPrice.toLocaleString()}</strong>
+                              {prediction.comparables.pricePerSqmMedian ? ` (~ETB ${prediction.comparables.pricePerSqmMedian.toLocaleString()}/m²)` : ''}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-[#73776F] italic">
+                          Source: Active platform competitor listings. Completed transactions recorded: 0.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Seasonal Intelligence Banner */}
+                    {prediction.seasonalAdjustment && (
+                      <div
+                        className={`p-2.5 rounded-xl border flex items-start gap-2 text-[11px] leading-snug ${
+                          prediction.seasonalAdjustment.status === 'evidence_calibrated'
+                            ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
+                            : 'bg-[#FDFBF7] border-[#E5E0D5] text-[#73776F]'
+                        }`}
+                      >
+                        <Zap className="w-3.5 h-3.5 text-[#234B36] shrink-0 mt-0.5" />
+                        <div>
+                          <span className="font-bold text-[#252923]">
+                            {prediction.seasonalAdjustment.status === 'evidence_calibrated'
+                              ? `Seasonality Applied: ${prediction.seasonalAdjustment.seasonName}`
+                              : isSale
+                              ? 'Non-Seasonal Capital Valuation'
+                              : 'Standard Rate Baseline'}
+                            :
+                          </span>{' '}
+                          <span>{prediction.seasonalAdjustment.reason}</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Benchmark Comparison against host's current input */}

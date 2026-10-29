@@ -432,6 +432,33 @@ export interface HostReviewsSummary {
   propertySummaries: PropertyReviewSummary[];
 }
 
+export interface AiSeasonalAdjustmentInfo {
+  applied: boolean;
+  seasonalMultiplier: number;
+  seasonName: string;
+  status: 'insufficient_historical_data' | 'not_applicable_to_sales' | 'evidence_calibrated';
+  reason: string;
+  historicalBookingCount: number;
+  minimumRequiredCount: number;
+}
+
+export interface AiComparableMarketData {
+  sampleCount: number;
+  medianPrice: number;
+  minPrice: number;
+  maxPrice: number;
+  averagePrice: number;
+  pricePerSqmMedian?: number;
+  evidenceType: 'active_asking_prices';
+  subCityMatchCount?: number;
+  cityMatchCount?: number;
+  blendingWeight: number;
+  eligibleCount?: number;
+  retainedCount?: number;
+  averageQualityScore?: number;
+  priceDispersionCv?: number;
+}
+
 export interface AiKeyPriceDriver {
   factor: string;
   impact: string;
@@ -447,9 +474,12 @@ export interface AiPriceStrategyTier {
 }
 
 export interface AiPricePredictionResponse {
+  recommendationId?: string;
   predictedPrice: number;
   currency: 'ETB';
   confidence: number;
+  confidenceLevel?: 'HIGH' | 'MEDIUM' | 'LOW';
+  confidenceExplanation?: string;
   priceRange: {
     min: number;
     max: number;
@@ -468,9 +498,13 @@ export interface AiPricePredictionResponse {
     amenitiesPremiumEtb: number;
     keyDrivers: AiKeyPriceDriver[];
   };
+  valuationSource?: string;
+  comparables?: AiComparableMarketData;
+  seasonalAdjustment?: AiSeasonalAdjustmentInfo;
 }
 
 export interface AiPricePredictionRequest {
+  propertyId?: string;
   city: string;
   subCity?: string;
   neighborhood?: string;

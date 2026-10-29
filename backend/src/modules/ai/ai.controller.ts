@@ -6,10 +6,16 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Req,
 } from '@nestjs/common';
 import { AiService } from './ai.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-import { PredictPriceDto, RecommendationsDto, GenerateListingContentDto } from './ai.dto';
+import {
+  PredictPriceDto,
+  RecommendationsDto,
+  GenerateListingContentDto,
+  RecordRecommendationFeedbackDto,
+} from './ai.dto';
 
 @Controller('ai')
 export class AiController {
@@ -21,8 +27,23 @@ export class AiController {
   @Post('predict-price')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  async predictPrice(@Body() request: PredictPriceDto) {
-    return this.aiService.predictPrice(request);
+  async predictPrice(@Body() request: PredictPriceDto, @Req() req?: any) {
+    const hostId = req?.user?.id || req?.user?.userId;
+    return this.aiService.predictPrice(request, hostId);
+  }
+
+  /**
+   * Protected: Record host pricing decision & feedback on a recommendation
+   */
+  @Post('recommendations/feedback')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async recordFeedback(
+    @Body() request: RecordRecommendationFeedbackDto,
+    @Req() req?: any,
+  ) {
+    const hostId = req?.user?.id || req?.user?.userId;
+    return this.aiService.recordFeedback(request, hostId);
   }
 
   /**

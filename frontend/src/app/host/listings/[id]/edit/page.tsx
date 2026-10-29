@@ -1111,6 +1111,7 @@ export default function EditListingPage() {
                     </div>
 
                     <AiPricingWidget
+                      propertyId={listing.id}
                       city={form.city}
                       subCity={form.subCity}
                       neighborhood={form.neighborhood}
@@ -1169,6 +1170,7 @@ export default function EditListingPage() {
                     </div>
 
                     <AiPricingWidget
+                      propertyId={listing.id}
                       city={form.city}
                       subCity={form.subCity}
                       neighborhood={form.neighborhood}

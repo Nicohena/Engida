@@ -5,6 +5,7 @@ import { Sparkles } from 'lucide-react';
 import AiPricingModal from './AiPricingModal';
 
 interface AiPricingWidgetProps {
+  propertyId?: string;
   city: string;
   subCity?: string;
   neighborhood?: string;
@@ -24,6 +25,7 @@ interface AiPricingWidgetProps {
 }
 
 export default function AiPricingWidget({
+  propertyId,
   city,
   subCity,
   neighborhood,
@@ -63,6 +65,7 @@ export default function AiPricingWidget({
       <AiPricingModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+        propertyId={propertyId}
         city={city}
         subCity={subCity}
         neighborhood={neighborhood}
