@@ -33,6 +33,11 @@ export enum Permission {
   CATALOG_MANAGE = 'catalog.manage',
   COUPONS_MANAGE = 'coupons.manage',
   CONTENT_MANAGE = 'content.manage',
+  ANALYTICS_VIEW = 'analytics.view',
+  SETTINGS_VIEW = 'settings.view',
+  SETTINGS_MANAGE = 'settings.manage',
+  SYSTEM_VIEW = 'system.view',
+  SYSTEM_MANAGE = 'system.manage',
 }
 
 export const ALL_PERMISSIONS: Permission[] = Object.values(Permission);
@@ -62,6 +67,7 @@ export const ADMIN_ROLE_PERMISSIONS: Record<AdminRole, Permission[]> = {
     Permission.REPORTS_RESOLVE,
     Permission.CATALOG_MANAGE,
     Permission.CONTENT_MANAGE,
+    Permission.ANALYTICS_VIEW,
   ],
 
   [AdminRole.SUPPORT_AGENT]: [
@@ -78,6 +84,8 @@ export const ADMIN_ROLE_PERMISSIONS: Record<AdminRole, Permission[]> = {
     Permission.CASES_MANAGE,
     Permission.CASES_COMPENSATE,
     Permission.CONTENT_MANAGE,
+    Permission.ANALYTICS_VIEW,
+    Permission.SETTINGS_VIEW,
   ],
 
   [AdminRole.BOOKING_MANAGER]: [
@@ -93,6 +101,8 @@ export const ADMIN_ROLE_PERMISSIONS: Record<AdminRole, Permission[]> = {
     Permission.CASES_MANAGE,
     Permission.CASES_COMPENSATE,
     Permission.COUPONS_MANAGE,
+    Permission.ANALYTICS_VIEW,
+    Permission.SETTINGS_VIEW,
   ],
 
   [AdminRole.FINANCE_MANAGER]: [
@@ -109,6 +119,8 @@ export const ADMIN_ROLE_PERMISSIONS: Record<AdminRole, Permission[]> = {
     Permission.FINANCE_CONFIG,
     Permission.FINANCE_EXPORT,
     Permission.COUPONS_MANAGE,
+    Permission.ANALYTICS_VIEW,
+    Permission.SETTINGS_VIEW,
   ],
 };
 

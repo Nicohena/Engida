@@ -54,6 +54,7 @@ describe('Admin RBAC permissions', () => {
         Permission.REPORTS_RESOLVE,
         Permission.CATALOG_MANAGE,
         Permission.CONTENT_MANAGE,
+        Permission.ANALYTICS_VIEW,
       ]),
     );
     expect(permissions).not.toContain(Permission.USERS_MANAGE);

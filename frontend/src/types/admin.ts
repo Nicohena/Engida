@@ -50,6 +50,11 @@ export const ADMIN_PERMISSIONS = {
   CATALOG_MANAGE: 'catalog.manage',
   COUPONS_MANAGE: 'coupons.manage',
   CONTENT_MANAGE: 'content.manage',
+  ANALYTICS_VIEW: 'analytics.view',
+  SETTINGS_VIEW: 'settings.view',
+  SETTINGS_MANAGE: 'settings.manage',
+  SYSTEM_VIEW: 'system.view',
+  SYSTEM_MANAGE: 'system.manage',
 } as const;
 
 export type Permission = (typeof ADMIN_PERMISSIONS)[keyof typeof ADMIN_PERMISSIONS];
