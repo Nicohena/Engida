@@ -198,8 +198,9 @@ export class LedgerService {
     const accRepo = manager ? manager.getRepository(LedgerAccount) : this.accountRepository;
     const entryRepo = manager ? manager.getRepository(LedgerEntry) : this.entryRepository;
 
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(codeOrId);
     const account = await accRepo.findOne({
-      where: [{ id: codeOrId }, { code: codeOrId }],
+      where: isUuid ? [{ id: codeOrId }, { code: codeOrId }] : { code: codeOrId },
     });
     if (!account) {
       return 0n;
