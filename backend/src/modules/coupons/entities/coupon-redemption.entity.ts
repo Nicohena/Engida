@@ -35,9 +35,9 @@ export class CouponRedemption {
   @Column({ type: 'uuid', name: 'booking_id', nullable: true })
   bookingId: string | null;
 
-  @Column({ type: 'bigint' })
+  @Column({ type: 'bigint', name: 'discount_amount_minor' })
   discountAmountMinor: number;
 
-  @CreateDateColumn({ type: 'timestamptz' })
+  @CreateDateColumn({ type: 'timestamptz', name: 'redeemed_at' })
   redeemedAt: Date;
 }

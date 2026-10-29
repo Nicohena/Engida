@@ -23,13 +23,13 @@ export class ContentBlock {
   @Column({ type: 'text' })
   content: string;
 
-  @Column({ type: 'varchar', length: 300, nullable: true })
+  @Column({ type: 'varchar', length: 300, nullable: true, name: 'meta_description' })
   metaDescription: string | null;
 
-  @Column({ type: 'boolean', default: true })
+  @Column({ type: 'boolean', default: true, name: 'is_published' })
   isPublished: boolean;
 
-  @Column({ type: 'timestamptz', nullable: true })
+  @Column({ type: 'timestamptz', nullable: true, name: 'published_at' })
   publishedAt: Date | null;
 
   @Column({ type: 'uuid', nullable: true, name: 'last_edited_by_admin_id' })
@@ -38,9 +38,9 @@ export class ContentBlock {
   @Column({ type: 'int', default: 1 })
   version: number;
 
-  @CreateDateColumn({ type: 'timestamptz' })
+  @CreateDateColumn({ type: 'timestamptz', name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'timestamptz' })
+  @UpdateDateColumn({ type: 'timestamptz', name: 'updated_at' })
   updatedAt: Date;
 }

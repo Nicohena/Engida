@@ -32,24 +32,24 @@ export class FaqItem {
   @Column({ type: 'varchar', length: 300 })
   question: string;
 
-  @Column({ type: 'varchar', length: 350, nullable: true })
+  @Column({ type: 'varchar', length: 350, nullable: true, name: 'question_amharic' })
   questionAmharic: string | null;
 
   @Column({ type: 'text' })
   answer: string;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ type: 'text', nullable: true, name: 'answer_amharic' })
   answerAmharic: string | null;
 
-  @Column({ type: 'int', default: 0 })
+  @Column({ type: 'int', default: 0, name: 'display_order' })
   displayOrder: number;
 
-  @Column({ type: 'boolean', default: true })
+  @Column({ type: 'boolean', default: true, name: 'is_published' })
   isPublished: boolean;
 
-  @CreateDateColumn({ type: 'timestamptz' })
+  @CreateDateColumn({ type: 'timestamptz', name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'timestamptz' })
+  @UpdateDateColumn({ type: 'timestamptz', name: 'updated_at' })
   updatedAt: Date;
 }

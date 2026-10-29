@@ -31,6 +31,7 @@ export class Coupon {
     type: 'enum',
     enum: CouponDiscountType,
     default: CouponDiscountType.PERCENTAGE,
+    name: 'discount_type',
   })
   discountType: CouponDiscountType;
 
@@ -38,42 +39,42 @@ export class Coupon {
    * For PERCENTAGE: integer between 1 and 100 (e.g. 15 for 15%).
    * For FIXED_AMOUNT: minor units (e.g. 50000 = 500 ETB).
    */
-  @Column({ type: 'bigint' })
+  @Column({ type: 'bigint', name: 'discount_value' })
   discountValue: number;
 
   @Column({ type: 'varchar', length: 10, default: 'ETB' })
   currency: string;
 
-  @Column({ type: 'bigint', default: 0 })
+  @Column({ type: 'bigint', default: 0, name: 'min_booking_amount_minor' })
   minBookingAmountMinor: number;
 
-  @Column({ type: 'bigint', nullable: true })
+  @Column({ type: 'bigint', nullable: true, name: 'max_discount_amount_minor' })
   maxDiscountAmountMinor: number | null;
 
-  @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', name: 'starts_at' })
   startsAt: Date;
 
-  @Column({ type: 'timestamptz', nullable: true })
+  @Column({ type: 'timestamptz', nullable: true, name: 'expires_at' })
   expiresAt: Date | null;
 
-  @Column({ type: 'int', nullable: true })
+  @Column({ type: 'int', nullable: true, name: 'max_redemptions' })
   maxRedemptions: number | null;
 
-  @Column({ type: 'int', default: 0 })
+  @Column({ type: 'int', default: 0, name: 'redemptions_count' })
   redemptionsCount: number;
 
-  @Column({ type: 'int', default: 1 })
+  @Column({ type: 'int', default: 1, name: 'per_user_limit' })
   perUserLimit: number;
 
-  @Column({ type: 'boolean', default: true })
+  @Column({ type: 'boolean', default: true, name: 'is_active' })
   isActive: boolean;
 
   @OneToMany(() => CouponRedemption, (redemption) => redemption.coupon)
   redemptions: CouponRedemption[];
 
-  @CreateDateColumn({ type: 'timestamptz' })
+  @CreateDateColumn({ type: 'timestamptz', name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'timestamptz' })
+  @UpdateDateColumn({ type: 'timestamptz', name: 'updated_at' })
   updatedAt: Date;
 }
