@@ -300,7 +300,20 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
 
   // User menu and language menu
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [currency, setCurrency] = useState('USD');
+  const [currencyModalOpen, setCurrencyModalOpen] = useState(false);
+  const [currency, setCurrency] = useState('ETB');
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  // Click outside to close user menu
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const formatPrice = (usdAmount: number) => {
     if (currency === 'ETB') {
@@ -444,28 +457,38 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
 
           {/* Right Actions: Become a Host & User Profile */}
           <div className="flex items-center gap-4">
-            <Link
-              href="/become-a-host"
-              className="hidden sm:inline-flex items-center px-4 py-2 rounded-lg bg-[#EEF3EF] text-[#252923] font-semibold text-sm hover:bg-[#234B36] hover:text-white transition-all duration-200 active:scale-95 shadow-sm hover:shadow"
-            >
-              Become a Host
-            </Link>
+            {user?.hostProfile ? (
+              <Link
+                href="/host/dashboard"
+                className="hidden sm:inline-flex items-center px-4 py-2 rounded-lg bg-[#234B36] text-white font-semibold text-sm hover:bg-[#2D5E43] transition-all duration-200 active:scale-95 shadow-sm hover:shadow"
+              >
+                Host Dashboard
+              </Link>
+            ) : (
+              <Link
+                href="/become-a-host"
+                className="hidden sm:inline-flex items-center px-4 py-2 rounded-lg bg-[#EEF3EF] text-[#252923] font-semibold text-sm hover:bg-[#234B36] hover:text-white transition-all duration-200 active:scale-95 shadow-sm hover:shadow"
+              >
+                Become a Host
+              </Link>
+            )}
 
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2">
               <button
                 type="button"
                 aria-label="Global currency and language"
-                onClick={() => setCurrency((c) => (c === 'USD' ? 'ETB' : 'USD'))}
-                title={`Currency: ${currency}. Click to toggle`}
-                className="hidden md:flex items-center justify-center w-10 h-10 rounded-full hover:bg-[#EEF3EF] transition-all duration-200 text-[#73776F] hover:text-[#234B36] active:scale-90"
+                onClick={() => setCurrencyModalOpen(true)}
+                title={`Language: English / አማርኛ • Currency: ${currency}. Click to change`}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-[#EEF3EF] transition-all duration-200 text-[#73776F] hover:text-[#234B36] active:scale-95 text-xs font-bold border border-transparent hover:border-[#E5E0D5]"
               >
-                <span className="material-symbols-outlined text-lg transition-transform duration-200 hover:rotate-12">
+                <span className="material-symbols-outlined text-lg">
                   language
                 </span>
+                <span className="hidden sm:inline font-mono">{currency}</span>
               </button>
 
               {/* User Menu Trigger */}
-              <div className="relative">
+              <div className="relative" ref={userMenuRef}>
                 <button
                   type="button"
                   aria-label="User menu"
@@ -484,26 +507,58 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
 
                 {/* User Dropdown */}
                 {userMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-[#E5E0D5]/60 py-2 z-50 animate-fade-in-up">
+                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-[#E5E0D5]/80 py-2 z-50 animate-fade-in-up">
                     {user ? (
                       <>
-                        <div className="px-4 py-2 border-b border-[#E5E0D5]/40">
+                        <div className="px-4 py-2 border-b border-[#E5E0D5]/50">
                           <p className="text-xs text-[#73776F]">Signed in as</p>
                           <p className="text-sm font-bold text-[#252923] truncate">{user.name || user.email}</p>
+                          {user.hostProfile && (
+                            <span className="mt-1 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#234B36]/10 text-[#234B36]">
+                              Verified Host
+                            </span>
+                          )}
                         </div>
+                        {user.hostProfile ? (
+                          <>
+                            <Link
+                              href="/host/dashboard"
+                              onClick={() => setUserMenuOpen(false)}
+                              className="block px-4 py-2.5 text-sm text-[#234B36] font-bold hover:bg-[#F8F5ED]"
+                            >
+                              Host Dashboard
+                            </Link>
+                            <Link
+                              href="/host/listings"
+                              onClick={() => setUserMenuOpen(false)}
+                              className="block px-4 py-2.5 text-sm text-[#252923] hover:bg-[#F8F5ED] hover:text-[#234B36] font-medium"
+                            >
+                              My Listings
+                            </Link>
+                            <Link
+                              href="/host/reservations"
+                              onClick={() => setUserMenuOpen(false)}
+                              className="block px-4 py-2.5 text-sm text-[#252923] hover:bg-[#F8F5ED] hover:text-[#234B36] font-medium"
+                            >
+                              Host Reservations
+                            </Link>
+                          </>
+                        ) : (
+                          <Link
+                            href="/become-a-host"
+                            onClick={() => setUserMenuOpen(false)}
+                            className="block px-4 py-2.5 text-sm text-[#234B36] font-bold hover:bg-[#F8F5ED]"
+                          >
+                            Become a Host
+                          </Link>
+                        )}
+                        <div className="h-[1px] bg-[#E5E0D5]/50 my-1"></div>
                         <Link
                           href="/dashboard"
                           onClick={() => setUserMenuOpen(false)}
                           className="block px-4 py-2.5 text-sm text-[#252923] hover:bg-[#F8F5ED] hover:text-[#234B36] font-medium"
                         >
-                          My Dashboard
-                        </Link>
-                        <Link
-                          href="/host"
-                          onClick={() => setUserMenuOpen(false)}
-                          className="block px-4 py-2.5 text-sm text-[#252923] hover:bg-[#F8F5ED] hover:text-[#234B36] font-medium"
-                        >
-                          Host Portal
+                          Guest Trips & Dashboard
                         </Link>
                         <button
                           type="button"
@@ -511,7 +566,7 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
                             setUserMenuOpen(false);
                             logout();
                           }}
-                          className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 font-medium"
+                          className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 font-medium cursor-pointer"
                         >
                           Sign out
                         </button>
@@ -519,11 +574,19 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
                     ) : (
                       <>
                         <Link
+                          href="/login?next=/host/dashboard"
+                          onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center justify-between px-4 py-2.5 text-sm font-bold text-[#234B36] hover:bg-[#F8F5ED]"
+                        >
+                          <span>Host Sign In</span>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#234B36]/10 text-[#234B36]">Host Portal</span>
+                        </Link>
+                        <Link
                           href="/login"
                           onClick={() => setUserMenuOpen(false)}
                           className="block px-4 py-2.5 text-sm font-semibold text-[#252923] hover:bg-[#F8F5ED] hover:text-[#234B36]"
                         >
-                          Sign In
+                          Guest Sign In
                         </Link>
                         <Link
                           href="/register"
@@ -532,13 +595,13 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
                         >
                           Create Account
                         </Link>
-                        <div className="h-[1px] bg-[#E5E0D5]/40 my-1"></div>
+                        <div className="h-[1px] bg-[#E5E0D5]/50 my-1"></div>
                         <Link
                           href="/become-a-host"
                           onClick={() => setUserMenuOpen(false)}
                           className="block px-4 py-2.5 text-sm text-[#73776F] hover:bg-[#F8F5ED] hover:text-[#234B36]"
                         >
-                          Engida your home
+                          Engida your home (Become Host)
                         </Link>
                       </>
                     )}
@@ -1102,6 +1165,56 @@ export default function StitchHomePage({ onNavigateTab, activeNavTab = 'stays' }
       </main>
 
       {/* ============================================================ */}
+      {/* Language & Currency Modal */}
+      {currencyModalOpen && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in-up">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-[#E5E0D5]">
+            <div className="flex items-center justify-between pb-4 border-b border-[#E5E0D5]/60 mb-5">
+              <h3 className="text-lg font-bold font-headline text-[#252923]">Language & Currency</h3>
+              <button
+                type="button"
+                onClick={() => setCurrencyModalOpen(false)}
+                className="text-[#73776F] hover:text-[#234B36] p-1.5 rounded-full hover:bg-[#F8F5ED]"
+              >
+                <span className="material-symbols-outlined text-lg">close</span>
+              </button>
+            </div>
+            <div className="space-y-5">
+              <div>
+                <label className="text-xs font-bold text-[#73776F] uppercase tracking-wider block mb-2">Display Currency</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => { setCurrency('ETB'); setCurrencyModalOpen(false); }}
+                    className={`p-3.5 rounded-xl border text-left font-semibold text-sm transition ${currency === 'ETB' ? 'border-[#234B36] bg-[#234B36]/10 text-[#234B36]' : 'border-[#E5E0D5] hover:border-[#234B36]'}`}
+                  >
+                    <div className="font-bold">ETB</div>
+                    <div className="text-xs text-[#73776F]">Ethiopian Birr</div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setCurrency('USD'); setCurrencyModalOpen(false); }}
+                    className={`p-3.5 rounded-xl border text-left font-semibold text-sm transition ${currency === 'USD' ? 'border-[#234B36] bg-[#234B36]/10 text-[#234B36]' : 'border-[#E5E0D5] hover:border-[#234B36]'}`}
+                  >
+                    <div className="font-bold">USD</div>
+                    <div className="text-xs text-[#73776F]">US Dollar ($)</div>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div className="mt-6 pt-4 border-t border-[#E5E0D5]/60 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setCurrencyModalOpen(false)}
+                className="px-5 py-2 rounded-xl bg-[#234B36] text-white text-xs font-bold hover:bg-[#2D5E43] transition"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 7. FILTER MODAL                                              */}
       {/* ============================================================ */}
       {filterModalOpen && (
