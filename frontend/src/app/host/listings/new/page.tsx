@@ -81,7 +81,7 @@ const SECTIONS_NAV = [
   { id: 'section-space', label: '2. Space' },
   { id: 'section-amenities', label: '3. Amenities' },
   { id: 'section-photos', label: '4. Photos' },
-  { id: 'section-narrative', label: '5. Story & AI' },
+  { id: 'section-narrative', label: '5. Title & Description' },
   { id: 'section-pricing', label: '6. Pricing' },
   { id: 'section-policies', label: '7. Policies' },
 ];
@@ -934,7 +934,7 @@ export default function CreateListingPage() {
                 <div className="flex items-center gap-2.5">
                   <Sparkles className="w-5 h-5 text-[#234B36]" />
                   <div>
-                    <h2 className="text-lg font-black text-[#252923]">5. Title &amp; Narrative</h2>
+                    <h2 className="text-lg font-black text-[#252923]">5. Title &amp; Description</h2>
                     <p className="text-xs text-[#73776F] mt-0.5">
                       Grounded in your location, room specs, amenities, and uploaded photos.
                     </p>
