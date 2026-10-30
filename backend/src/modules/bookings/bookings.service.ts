@@ -21,6 +21,9 @@ import { UpdateBookingStatusDto } from './dto/update-booking-status.dto';
 import { UserRole, User } from '../../users/entities/user.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/entities/notification.entity';
+import { AdminCouponsService } from '../coupons/admin-coupons.service';
+import { Coupon } from '../coupons/entities/coupon.entity';
+import { CouponRedemption } from '../coupons/entities/coupon-redemption.entity';
 
 @Injectable()
 export class BookingsService {
@@ -42,6 +45,8 @@ export class BookingsService {
     @Optional()
     @InjectRepository(BookingStatusHistory)
     private readonly statusHistoryRepository?: Repository<BookingStatusHistory>,
+    @Optional()
+    private readonly adminCouponsService?: AdminCouponsService,
   ) {}
 
   async create(createBookingDto: CreateBookingDto, guestId: string): Promise<Booking> {
@@ -155,7 +160,34 @@ export class BookingsService {
         throw new BadRequestException('The selected dates are blocked by the host and not available for booking');
       }
 
-      const totalPrice = nights * pricePerNight;
+      const grossTotal = nights * pricePerNight;
+      let discountAmount = 0;
+      let appliedCouponCode: string | null = null;
+
+      if (createBookingDto.couponCode && createBookingDto.couponCode.trim()) {
+        if (!this.adminCouponsService) {
+          throw new BadRequestException('Coupon validation service is currently unavailable');
+        }
+        const grossAmountMinor = Math.round(grossTotal * 100);
+        const validation = await this.adminCouponsService.validateCoupon(
+          {
+            code: createBookingDto.couponCode,
+            bookingAmountMinor: grossAmountMinor,
+          },
+          guestId,
+        );
+
+        if (!validation.valid) {
+          throw new BadRequestException(
+            validation.reason || `Promotional code "${createBookingDto.couponCode}" is invalid or cannot be applied.`,
+          );
+        }
+
+        discountAmount = validation.discountAmountMinor / 100;
+        appliedCouponCode = validation.code;
+      }
+
+      const totalPrice = Math.max(0, grossTotal - discountAmount);
       const method = createBookingDto.paymentMethod || PaymentMethod.CASH_ON_ARRIVAL;
       const isOnlinePaid =
         [
@@ -191,8 +223,13 @@ export class BookingsService {
         paymentReference: createBookingDto.paymentReference || null,
         paymentCurrency: createBookingDto.paymentCurrency || 'ETB',
         paidAt: isOnlinePaid ? new Date() : null,
+        couponCode: appliedCouponCode,
+        discountAmount,
       });
       const saved = await bookingRepository.save(booking);
+      if (paymentStatus === PaymentStatus.PAID && appliedCouponCode) {
+        await this.recordCouponRedemptionIfEligible(manager, saved);
+      }
       return {
         id: saved.id,
         reference,
@@ -433,6 +470,10 @@ export class BookingsService {
       }
     }
 
+    if (updateDto.status === BookingStatus.CONFIRMED && booking.couponCode) {
+      await this.recordCouponRedemptionIfEligible(this.bookingRepository.manager, booking);
+    }
+
     this.logger.log(`Booking ${id} status updated to ${updateDto.status} by user ${userId}`);
     return this.findOne(id, userId, userRole);
   }
@@ -442,6 +483,39 @@ export class BookingsService {
    * transaction. The database sequence is the source of truth; the fallback
    * keeps isolated unit-test mocks usable.
    */
+  private async recordCouponRedemptionIfEligible(
+    manager: EntityManager,
+    booking: Booking,
+  ): Promise<void> {
+    if (!booking.couponCode) return;
+    try {
+      const redRepo = manager.getRepository(CouponRedemption);
+      const existing = await redRepo.findOne({
+        where: { bookingId: booking.id },
+      });
+      if (existing) return;
+
+      const coupRepo = manager.getRepository(Coupon);
+      const coupon = await coupRepo.findOne({
+        where: { code: booking.couponCode.trim().toUpperCase() },
+      });
+      if (!coupon) return;
+
+      const discountAmountMinor = Math.round(Number(booking.discountAmount || 0) * 100);
+      const redemption = redRepo.create({
+        couponId: coupon.id,
+        userId: booking.guestId,
+        bookingId: booking.id,
+        discountAmountMinor,
+      });
+      coupon.redemptionsCount += 1;
+      await Promise.all([redRepo.save(redemption), coupRepo.save(coupon)]);
+      this.logger.log(`Recorded coupon redemption for booking ${booking.id} (${coupon.code})`);
+    } catch (err) {
+      this.logger.warn(`Failed to record coupon redemption for booking ${booking.id}: ${err}`);
+    }
+  }
+
   private async nextBookingReference(manager: EntityManager): Promise<string> {
     const year = new Date().getUTCFullYear();
     const query = (manager as unknown as { query?: (sql: string) => Promise<unknown> })

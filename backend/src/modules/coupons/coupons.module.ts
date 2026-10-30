@@ -4,11 +4,12 @@ import { Coupon } from './entities/coupon.entity';
 import { CouponRedemption } from './entities/coupon-redemption.entity';
 import { AdminCouponsService } from './admin-coupons.service';
 import { AdminCouponsController } from './admin-coupons.controller';
+import { CouponsController } from './coupons.controller';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Coupon, CouponRedemption])],
-  controllers: [AdminCouponsController],
+  controllers: [CouponsController, AdminCouponsController],
   providers: [AdminCouponsService],
-  exports: [AdminCouponsService],
+  exports: [AdminCouponsService, TypeOrmModule],
 })
 export class CouponsModule {}

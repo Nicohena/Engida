@@ -15,6 +15,8 @@ import { HostProfile, HostVerificationStatus } from '../../users/entities/host-p
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/entities/notification.entity';
 import { UserRole } from '../../users/entities/user.entity';
+import { AdminCouponsService } from '../coupons/admin-coupons.service';
+import { CouponDiscountType } from '../coupons/entities/coupon.entity';
 
 describe('BookingsService Integration Acceptance', () => {
   let service: BookingsService;
@@ -24,6 +26,7 @@ describe('BookingsService Integration Acceptance', () => {
   let mockAvailabilityBlockRepo: any;
   let mockHostProfileRepo: any;
   let mockNotificationsService: any;
+  let mockCouponsService: any;
 
   const HOST_ID = 'host-uuid-1';
   const GUEST_ID = 'guest-uuid-1';
@@ -154,6 +157,11 @@ describe('BookingsService Integration Acceptance', () => {
       }),
     };
 
+    mockCouponsService = {
+      validateCoupon: jest.fn(),
+      recordRedemption: jest.fn(),
+    };
+
     mockNotificationsService = {
       createNotification: jest.fn().mockResolvedValue({ id: 'notif-1' }),
     };
@@ -167,6 +175,7 @@ describe('BookingsService Integration Acceptance', () => {
         { provide: getRepositoryToken(AvailabilityBlock), useValue: mockAvailabilityBlockRepo },
         { provide: getRepositoryToken(HostProfile), useValue: mockHostProfileRepo },
         { provide: NotificationsService, useValue: mockNotificationsService },
+        { provide: AdminCouponsService, useValue: mockCouponsService },
       ],
     }).compile();
 
@@ -478,6 +487,72 @@ describe('BookingsService Integration Acceptance', () => {
           UserRole.HOST,
         ),
       ).rejects.toThrow('Cannot transition from "CANCELLED" to "CONFIRMED"');
+    });
+  });
+
+  describe('Coupon Integration in Booking Flow', () => {
+    it('applies valid percentage coupon and recalculates total price on server', async () => {
+      mockCouponsService.validateCoupon.mockResolvedValue({
+        valid: true,
+        code: 'WELCOME10',
+        couponId: 'cpn-10',
+        discountType: CouponDiscountType.PERCENTAGE,
+        discountValue: 10,
+        discountAmountMinor: 75000,
+        payableAmountMinor: 675000,
+      });
+
+      const result = await service.create(
+        {
+          propertyId: PROPERTY_ID,
+          checkInDate: '2027-05-10',
+          checkOutDate: '2027-05-15',
+          guestCount: 2,
+          couponCode: 'welcome10',
+        },
+        GUEST_ID,
+      );
+
+      expect(mockCouponsService.validateCoupon).toHaveBeenCalledWith(
+        {
+          code: 'welcome10',
+          bookingAmountMinor: 750000,
+        },
+        GUEST_ID,
+      );
+      expect(mockBookingRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          totalPrice: 6750,
+          couponCode: 'WELCOME10',
+          discountAmount: 750,
+        }),
+      );
+      expect(result.totalPrice).toBe(6750);
+    });
+
+    it('rejects booking creation when coupon validation fails', async () => {
+      mockCouponsService.validateCoupon.mockResolvedValue({
+        valid: false,
+        code: 'EXPIRED',
+        discountType: CouponDiscountType.PERCENTAGE,
+        discountAmountMinor: 0,
+        payableAmountMinor: 750000,
+        reason: 'This promotional code has expired',
+      });
+
+      await expect(
+        service.create(
+          {
+            propertyId: PROPERTY_ID,
+            checkInDate: '2027-05-10',
+            checkOutDate: '2027-05-15',
+            guestCount: 2,
+            couponCode: 'EXPIRED',
+          },
+          GUEST_ID,
+        ),
+      ).rejects.toThrow('This promotional code has expired');
+    });
     });
   });
 });

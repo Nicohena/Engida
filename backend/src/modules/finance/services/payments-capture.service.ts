@@ -22,6 +22,8 @@ import { FinanceSettingsService } from './finance-settings.service';
 import { AuditService } from '../../audit/audit.service';
 import { calculateBasisPoints, toMinorUnits } from '../../../lib/money';
 import { LedgerTransactionType } from '../entities/ledger-transaction.entity';
+import { Coupon } from '../../coupons/entities/coupon.entity';
+import { CouponRedemption } from '../../coupons/entities/coupon-redemption.entity';
 
 export interface CreateSessionDto {
   bookingId: string;
@@ -392,6 +394,45 @@ export class PaymentsCaptureService {
       booking.paidAt = capturedAt;
       booking.paymentReconciliationStatus = 'MATCHED';
       await bookRepo.save(booking);
+
+      // 4b. Record coupon redemption idempotently if coupon was applied
+      if (booking.couponCode) {
+        try {
+          const redRepo = manager.getRepository(CouponRedemption);
+          const existingRedemption = await redRepo.findOne({
+            where: { bookingId: booking.id },
+          });
+          if (!existingRedemption) {
+            const coupRepo = manager.getRepository(Coupon);
+            const coupon = await coupRepo.findOne({
+              where: { code: booking.couponCode.trim().toUpperCase() },
+            });
+            if (coupon) {
+              const discountMinor = Number(booking.discountAmount) > 0
+                ? Math.round(Number(booking.discountAmount) * 100)
+                : 0;
+              const redemption = redRepo.create({
+                couponId: coupon.id,
+                userId: booking.guestId,
+                bookingId: booking.id,
+                discountAmountMinor: discountMinor,
+              });
+              coupon.redemptionsCount += 1;
+              await Promise.all([
+                redRepo.save(redemption),
+                coupRepo.save(coupon),
+              ]);
+              this.logger.log(
+                `Recorded coupon redemption for booking ${booking.id} (code: ${coupon.code}, discount: ${discountMinor} minor units)`,
+              );
+            }
+          }
+        } catch (couponRedemptionError) {
+          this.logger.warn(
+            `Failed to record coupon redemption during payment capture for booking ${booking.id}: ${couponRedemptionError}`,
+          );
+        }
+      }
 
       // 5. Update provider event
       event.status = ProviderEventStatus.PROCESSED;

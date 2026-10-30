@@ -8,6 +8,7 @@ import { Room } from '../properties/entities/room.entity';
 import { AvailabilityBlock } from '../properties/entities/availability-block.entity';
 import { HostProfile } from '../../users/entities/host-profile.entity';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { CouponsModule } from '../coupons/coupons.module';
 import { BookingsService } from './bookings.service';
 import { BookingsController } from './bookings.controller';
 
@@ -23,6 +24,7 @@ import { BookingsController } from './bookings.controller';
       HostProfile,
     ]),
     NotificationsModule,
+    CouponsModule,
   ],
   controllers: [BookingsController],
   providers: [BookingsService],

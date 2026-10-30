@@ -147,7 +147,10 @@ export interface Booking {
   paymentStatus?: PaymentStatus;
   paymentReference?: string | null;
   paymentCurrency?: string;
+  couponCode?: string;
   paidAt?: string | null;
+  couponCode?: string | null;
+  discountAmount?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -161,5 +164,6 @@ export interface CreateBookingPayload {
   paymentMethod?: PaymentMethod;
   paymentReference?: string;
   paymentCurrency?: string;
+  couponCode?: string;
 }
 
