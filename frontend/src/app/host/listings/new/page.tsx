@@ -78,7 +78,7 @@ const PROPERTY_TYPE_OPTIONS: {
 ];
 
 // ─────────────────────────────────────────────────────────
-// Wizard Steps Definition
+// Wizard Steps Definition (8 Independent Steps)
 // ─────────────────────────────────────────────────────────
 interface StepDef {
   number: number;
@@ -91,48 +91,55 @@ interface StepDef {
 const WIZARD_STEPS: StepDef[] = [
   {
     number: 1,
-    title: 'Property Identity & Location',
-    shortTitle: 'Location',
-    icon: MapPin,
-    description: 'Define your property category and location on the Ethiopian map.',
+    title: 'Property Identity & Category',
+    shortTitle: 'Category',
+    icon: Building2,
+    description: 'Select your listing intent (rent or sale) and property type category.',
   },
   {
     number: 2,
+    title: 'Location & Map Address',
+    shortTitle: 'Location',
+    icon: MapPin,
+    description: 'Pinpoint your property location on the map and enter the address.',
+  },
+  {
+    number: 3,
     title: 'Space & Capacity',
     shortTitle: 'Space',
     icon: Layers,
     description: 'Specify bedrooms, bathrooms, guest capacity, and usable square meters.',
   },
   {
-    number: 3,
+    number: 4,
     title: 'Features & Infrastructure',
     shortTitle: 'Amenities',
     icon: ShieldCheck,
     description: 'Highlight backup generator, water reservoir, security, and amenities.',
   },
   {
-    number: 4,
+    number: 5,
     title: 'Photos & Visuals',
     shortTitle: 'Photos',
     icon: ImageIcon,
     description: 'Upload high-resolution photography and establish a standout cover image.',
   },
   {
-    number: 5,
+    number: 6,
     title: 'Title & Description',
-    shortTitle: 'Title & Story',
+    shortTitle: 'Story & AI',
     icon: Sparkles,
     description: 'Craft an engaging title and narrative, or auto-draft them with AI Copilot.',
   },
   {
-    number: 6,
+    number: 7,
     title: 'Strategy & Market Pricing',
     shortTitle: 'Pricing',
     icon: Tag,
     description: 'Calibrate your price in ETB with AI benchmarks and strategy tiers.',
   },
   {
-    number: 7,
+    number: 8,
     title: 'Policies & Review',
     shortTitle: 'Review',
     icon: BookOpen,
@@ -316,13 +323,13 @@ export default function CreateListingPage() {
   };
 
   // ─────────────────────────────────────────────────────────
-  // Per-Step Validation
+  // Per-Step Validation (8 Steps)
   // ─────────────────────────────────────────────────────────
   const validateStep = (stepNumber: number): boolean => {
     const newErrors: Record<string, string> = {};
 
-    // Step 1: Location
-    if (stepNumber === 1) {
+    // Step 2: Location
+    if (stepNumber === 2) {
       if (!form.address.trim()) {
         newErrors.address = 'Street address is required';
       }
@@ -343,8 +350,8 @@ export default function CreateListingPage() {
       }
     }
 
-    // Step 2: Space & Capacity
-    if (stepNumber === 2) {
+    // Step 3: Space & Capacity
+    if (stepNumber === 3) {
       if (form.listingType === 'RENTAL' && form.maxGuests !== '') {
         const g = parseInt(form.maxGuests, 10);
         if (isNaN(g) || g < 1) {
@@ -387,8 +394,8 @@ export default function CreateListingPage() {
       }
     }
 
-    // Step 4: Photos
-    if (stepNumber === 4) {
+    // Step 5: Photos
+    if (stepNumber === 5) {
       if (form.coverImage.trim() !== '') {
         try {
           const url = new URL(form.coverImage.trim());
@@ -401,8 +408,8 @@ export default function CreateListingPage() {
       }
     }
 
-    // Step 5: Title & Narrative
-    if (stepNumber === 5) {
+    // Step 6: Title & Narrative
+    if (stepNumber === 6) {
       if (!form.title.trim()) {
         newErrors.title = 'Title is required';
       } else if (form.title.trim().length > 255) {
@@ -414,8 +421,8 @@ export default function CreateListingPage() {
       }
     }
 
-    // Step 6: Pricing
-    if (stepNumber === 6) {
+    // Step 7: Pricing
+    if (stepNumber === 7) {
       if (form.listingType === 'RENTAL') {
         const p = Number(form.pricePerNight);
         if (!form.pricePerNight || isNaN(p) || p <= 0) {
@@ -436,7 +443,7 @@ export default function CreateListingPage() {
   // Full validation before submission
   const validateAllSteps = (): boolean => {
     let valid = true;
-    for (let s = 1; s <= 7; s++) {
+    for (let s = 1; s <= 8; s++) {
       if (!validateStep(s)) {
         valid = false;
         setCurrentStep(s);
@@ -644,7 +651,7 @@ export default function CreateListingPage() {
         </div>
       )}
 
-      {/* ── Sleek Persistent Multi-Step Progress Tracker ── */}
+      {/* ── Sleek Persistent Multi-Step Progress Tracker (8 Steps) ── */}
       <div className="bg-white/95 backdrop-blur-md border border-[#E5E0D5] rounded-2xl p-4 shadow-xs">
         {/* Mobile Step Counter & Progress Bar */}
         <div className="sm:hidden space-y-2">
@@ -671,7 +678,7 @@ export default function CreateListingPage() {
 
         {/* Desktop Stepper Bar */}
         <div className="hidden sm:block">
-          <ol className="grid grid-cols-7 gap-2" role="list">
+          <ol className="grid grid-cols-4 lg:grid-cols-8 gap-2" role="list">
             {WIZARD_STEPS.map((step) => {
               const isCompleted = completedSteps.includes(step.number);
               const isCurrent = currentStep === step.number;
@@ -741,7 +748,7 @@ export default function CreateListingPage() {
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#234B36]/10 text-[#234B36]">
-                    Step {currentStep} of 7
+                    Step {currentStep} of 8
                   </span>
                   <h2 className="text-lg sm:text-xl font-black text-[#252923] tracking-tight">
                     {currentStepDef.title}
@@ -754,51 +761,51 @@ export default function CreateListingPage() {
             </div>
 
             {/* ──────────────────────────────────────────────────
-                STEP 1: Property Identity & Location
+                STEP 1: Property Identity & Category (Independent)
             ────────────────────────────────────────────────── */}
             {currentStep === 1 && (
               <div className="space-y-6 animate-fade-in">
                 {/* Listing Intent Toggle (Rental vs Sale) */}
                 <div className="space-y-2">
                   <label className="block text-sm font-bold text-[#252923]">Listing Intent</label>
-                  <div className="grid grid-cols-2 gap-3 max-w-md">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg">
                     <button
                       type="button"
                       onClick={() => handleListingTypeChange('RENTAL')}
-                      className={`p-3.5 rounded-xl border text-left transition flex items-center gap-3 ${
+                      className={`p-4 rounded-xl border text-left transition flex items-center gap-3 cursor-pointer ${
                         form.listingType === 'RENTAL'
                           ? 'border-[#234B36] bg-[#234B36]/5 ring-2 ring-[#234B36]/20'
                           : 'border-[#E5E0D5] bg-white hover:bg-[#F8F5ED]'
                       }`}
                     >
                       <Building2
-                        className={`w-5 h-5 ${
+                        className={`w-6 h-6 ${
                           form.listingType === 'RENTAL' ? 'text-[#234B36]' : 'text-[#73776F]'
                         }`}
                       />
                       <div>
-                        <div className="text-xs font-black text-[#252923]">For Rent</div>
-                        <div className="text-[11px] text-[#73776F]">Short-term & flexible guest stays</div>
+                        <div className="text-sm font-black text-[#252923]">For Rent</div>
+                        <div className="text-xs text-[#73776F]">Short-term &amp; flexible stays</div>
                       </div>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => handleListingTypeChange('SALE')}
-                      className={`p-3.5 rounded-xl border text-left transition flex items-center gap-3 ${
+                      className={`p-4 rounded-xl border text-left transition flex items-center gap-3 cursor-pointer ${
                         form.listingType === 'SALE'
                           ? 'border-amber-600 bg-amber-50 ring-2 ring-amber-500/20'
                           : 'border-[#E5E0D5] bg-white hover:bg-[#F8F5ED]'
                       }`}
                     >
                       <Tag
-                        className={`w-5 h-5 ${
+                        className={`w-6 h-6 ${
                           form.listingType === 'SALE' ? 'text-amber-600' : 'text-[#73776F]'
                         }`}
                       />
                       <div>
-                        <div className="text-xs font-black text-[#252923]">For Sale</div>
-                        <div className="text-[11px] text-[#73776F]">Real estate transaction</div>
+                        <div className="text-sm font-black text-[#252923]">For Sale</div>
+                        <div className="text-xs text-[#73776F]">Real estate transaction</div>
                       </div>
                     </button>
                   </div>
@@ -809,7 +816,10 @@ export default function CreateListingPage() {
                   <label className="block text-sm font-bold text-[#252923]">
                     Property Type <span className="text-red-500">*</span>
                   </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                  <p className="text-xs text-[#73776F]">
+                    Choose the category that best describes your property architecture.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-1">
                     {PROPERTY_TYPE_OPTIONS.map((opt) => {
                       const Icon = opt.icon;
                       const isSelected = form.propertyType === opt.value;
@@ -818,19 +828,19 @@ export default function CreateListingPage() {
                           key={opt.value}
                           type="button"
                           onClick={() => handlePropertyTypeChange(opt.value)}
-                          className={`p-3 rounded-xl border text-left transition ${
+                          className={`p-4 rounded-xl border text-left transition cursor-pointer ${
                             isSelected
                               ? 'border-[#234B36] bg-[#234B36]/5 ring-2 ring-[#234B36]/20'
                               : 'border-[#E5E0D5] bg-white hover:bg-[#F8F5ED]'
                           }`}
                         >
                           <Icon
-                            className={`w-4 h-4 mb-1.5 ${
+                            className={`w-5 h-5 mb-2 ${
                               isSelected ? 'text-[#234B36]' : 'text-[#73776F]'
                             }`}
                           />
-                          <div className="text-xs font-bold text-[#252923]">{opt.label}</div>
-                          <div className="text-[10px] text-[#73776F] line-clamp-1 mt-0.5">
+                          <div className="text-sm font-bold text-[#252923]">{opt.label}</div>
+                          <div className="text-xs text-[#73776F] line-clamp-2 mt-0.5">
                             {opt.description}
                           </div>
                         </button>
@@ -839,8 +849,22 @@ export default function CreateListingPage() {
                   </div>
                 </div>
 
+                <div className="p-4 rounded-xl bg-[#F8F5ED] border border-[#E5E0D5] text-xs text-[#73776F] flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-[#234B36] shrink-0" />
+                  <span>
+                    Your property intent and type category feed directly into our AI pricing and comparable matching algorithms.
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* ──────────────────────────────────────────────────
+                STEP 2: Location & Map Address (Independent Sleek)
+            ────────────────────────────────────────────────── */}
+            {currentStep === 2 && (
+              <div className="space-y-6 animate-fade-in">
                 {/* Interactive Real Map Location Picker */}
-                <div className="space-y-2 pt-2">
+                <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <label className="block text-sm font-bold text-[#252923]">
                       Interactive Location Map <span className="text-xs text-[#73776F] font-normal">(Drag pin or search to auto-fill)</span>
@@ -877,7 +901,7 @@ export default function CreateListingPage() {
                 </div>
 
                 {/* Location Address */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
                   <div className="sm:col-span-2 space-y-1.5">
                     <label htmlFor="address" className="block text-sm font-bold text-[#252923]">
                       Street Address <span className="text-red-500">*</span>
@@ -977,9 +1001,9 @@ export default function CreateListingPage() {
             )}
 
             {/* ──────────────────────────────────────────────────
-                STEP 2: Space & Capacity
+                STEP 3: Space & Capacity
             ────────────────────────────────────────────────── */}
-            {currentStep === 2 && (
+            {currentStep === 3 && (
               <div className="space-y-6 animate-fade-in">
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
                   <div className="space-y-1.5">
@@ -1083,9 +1107,9 @@ export default function CreateListingPage() {
             )}
 
             {/* ──────────────────────────────────────────────────
-                STEP 3: Features & Amenities
+                STEP 4: Features & Amenities
             ────────────────────────────────────────────────── */}
-            {currentStep === 3 && (
+            {currentStep === 4 && (
               <div className="space-y-6 animate-fade-in">
                 <AmenitySelector
                   selectedIds={form.amenityIds}
@@ -1098,9 +1122,9 @@ export default function CreateListingPage() {
             )}
 
             {/* ──────────────────────────────────────────────────
-                STEP 4: Photos & Visuals
+                STEP 5: Photos & Visuals
             ────────────────────────────────────────────────── */}
-            {currentStep === 4 && (
+            {currentStep === 5 && (
               <div className="space-y-6 animate-fade-in">
                 <GalleryManager
                   coverImage={form.coverImage}
@@ -1137,9 +1161,9 @@ export default function CreateListingPage() {
             )}
 
             {/* ──────────────────────────────────────────────────
-                STEP 5: Title & Description
+                STEP 6: Title & Description
             ────────────────────────────────────────────────── */}
-            {currentStep === 5 && (
+            {currentStep === 6 && (
               <div className="space-y-6 animate-fade-in">
                 {/* Title Input */}
                 <div className="space-y-1.5">
@@ -1215,9 +1239,9 @@ export default function CreateListingPage() {
             )}
 
             {/* ──────────────────────────────────────────────────
-                STEP 6: Pricing & Commercial Value
+                STEP 7: Pricing & Commercial Value
             ────────────────────────────────────────────────── */}
-            {currentStep === 6 && (
+            {currentStep === 7 && (
               <div className="space-y-6 animate-fade-in">
                 {form.listingType === 'RENTAL' ? (
                   <div className="space-y-2 max-w-2xl">
@@ -1342,9 +1366,9 @@ export default function CreateListingPage() {
             )}
 
             {/* ──────────────────────────────────────────────────
-                STEP 7: Policies & Review
+                STEP 8: Policies & Review
             ────────────────────────────────────────────────── */}
-            {currentStep === 7 && (
+            {currentStep === 8 && (
               <div className="space-y-6 animate-fade-in">
                 {/* Policies & Guidelines */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1432,7 +1456,7 @@ export default function CreateListingPage() {
               )}
 
               <div className="flex items-center gap-3">
-                {currentStep < 7 ? (
+                {currentStep < 8 ? (
                   <button
                     type="button"
                     onClick={() => handleNextStep()}
