@@ -40,7 +40,7 @@ export interface PricePredictionRequest {
   listingType?: string; // 'RENTAL' | 'SALE'
   bedrooms: number;
   bathrooms: number;
-  maxGuests: number;
+  maxGuests?: number;
   areaSqm?: number;
   amenities: string[];
   coverImage?: string;
@@ -102,7 +102,7 @@ export interface GenerateListingContentRequest {
   neighborhood?: string;
   bedrooms: number;
   bathrooms: number;
-  maxGuests: number;
+  maxGuests?: number;
   areaSqm?: number;
   amenities: string[];
   language?: 'en' | 'am';

@@ -37,8 +37,9 @@ export class PredictPriceDto {
 
   @IsInt()
   @Min(1)
+  @IsOptional()
   @Type(() => Number)
-  maxGuests: number;
+  maxGuests?: number;
 
   @IsNumber()
   @IsOptional()
@@ -119,8 +120,9 @@ export class GenerateListingContentDto {
 
   @IsInt()
   @Min(1)
+  @IsOptional()
   @Type(() => Number)
-  maxGuests: number;
+  maxGuests?: number;
 
   @IsNumber()
   @IsOptional()

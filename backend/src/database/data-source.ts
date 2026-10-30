@@ -17,6 +17,7 @@ import { Review } from '../modules/reviews/entities/review.entity';
 import { ListingReview } from '../modules/properties/entities/listing-review.entity';
 import { Notification } from '../modules/notifications/entities/notification.entity';
 import { AuditLog } from '../modules/audit/entities/audit-log.entity';
+import { PriceRecommendationLog } from '../modules/ai/entities/price-recommendation-log.entity';
 import { Report } from '../modules/reports/entities/report.entity';
 import { BookingStatusHistory } from '../modules/bookings/entities/booking-status-history.entity';
 import { CancellationRequest } from '../modules/bookings/entities/cancellation-request.entity';
@@ -88,6 +89,7 @@ const AppDataSource = new DataSource(
           ListingReview,
           Notification,
           AuditLog,
+          PriceRecommendationLog,
           Report,
           Case,
           CaseMessage,
@@ -123,6 +125,7 @@ const AppDataSource = new DataSource(
           ListingReview,
           Notification,
           AuditLog,
+          PriceRecommendationLog,
           Report,
           Case,
           CaseMessage,

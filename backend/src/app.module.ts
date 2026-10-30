@@ -24,6 +24,7 @@ import { ListingModerationModule } from './modules/properties/listing-moderation
 import { AdminModule } from './modules/admin/admin.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { AuditLog } from './modules/audit/entities/audit-log.entity';
+import { PriceRecommendationLog } from './modules/ai/entities/price-recommendation-log.entity';
 import { Property } from './modules/properties/entities/property.entity';
 import { Room } from './modules/properties/entities/room.entity';
 import { AvailabilityBlock } from './modules/properties/entities/availability-block.entity';
@@ -98,6 +99,7 @@ import { validate } from './config/env.validation';
           ListingReview,
           Notification,
           AuditLog,
+          PriceRecommendationLog,
           Report,
           Case,
           CaseMessage,
