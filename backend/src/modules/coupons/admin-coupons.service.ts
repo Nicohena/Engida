@@ -17,10 +17,12 @@ import {
 export interface CouponValidationResult {
   valid: boolean;
   code: string;
-  discountType: CouponDiscountType;
-  discountAmountMinor: number;
-  reason?: string;
   couponId?: string;
+  discountType: CouponDiscountType;
+  discountValue?: number;
+  discountAmountMinor: number;
+  payableAmountMinor: number;
+  reason?: string;
 }
 
 @Injectable()
@@ -80,7 +82,10 @@ export class AdminCouponsService {
       throw new NotFoundException(`Coupon ${id} not found`);
     }
 
-    if (dto.discountType === CouponDiscountType.PERCENTAGE || (!dto.discountType && coupon.discountType === CouponDiscountType.PERCENTAGE)) {
+    if (
+      dto.discountType === CouponDiscountType.PERCENTAGE ||
+      (!dto.discountType && coupon.discountType === CouponDiscountType.PERCENTAGE)
+    ) {
       const val = dto.discountValue ?? coupon.discountValue;
       if (val < 1 || val > 100) {
         throw new BadRequestException('Percentage discount must be between 1 and 100');
@@ -115,7 +120,18 @@ export class AdminCouponsService {
     dto: ValidateCouponDto,
     userId?: string,
   ): Promise<CouponValidationResult> {
-    const normalizedCode = dto.code.trim().toUpperCase();
+    const normalizedCode = dto.code ? dto.code.trim().toUpperCase() : '';
+    if (!normalizedCode) {
+      return {
+        valid: false,
+        code: '',
+        discountType: CouponDiscountType.PERCENTAGE,
+        discountAmountMinor: 0,
+        payableAmountMinor: dto.bookingAmountMinor,
+        reason: 'Promotional code is required',
+      };
+    }
+
     const coupon = await this.couponRepository.findOne({
       where: { code: normalizedCode },
     });
@@ -126,6 +142,7 @@ export class AdminCouponsService {
         code: normalizedCode,
         discountType: CouponDiscountType.PERCENTAGE,
         discountAmountMinor: 0,
+        payableAmountMinor: dto.bookingAmountMinor,
         reason: 'Invalid promotional code',
       };
     }
@@ -134,8 +151,11 @@ export class AdminCouponsService {
       return {
         valid: false,
         code: normalizedCode,
+        couponId: coupon.id,
         discountType: coupon.discountType,
+        discountValue: Number(coupon.discountValue),
         discountAmountMinor: 0,
+        payableAmountMinor: dto.bookingAmountMinor,
         reason: 'This promotion is currently inactive',
       };
     }
@@ -145,8 +165,11 @@ export class AdminCouponsService {
       return {
         valid: false,
         code: normalizedCode,
+        couponId: coupon.id,
         discountType: coupon.discountType,
+        discountValue: Number(coupon.discountValue),
         discountAmountMinor: 0,
+        payableAmountMinor: dto.bookingAmountMinor,
         reason: 'This promotion has not started yet',
       };
     }
@@ -155,8 +178,11 @@ export class AdminCouponsService {
       return {
         valid: false,
         code: normalizedCode,
+        couponId: coupon.id,
         discountType: coupon.discountType,
+        discountValue: Number(coupon.discountValue),
         discountAmountMinor: 0,
+        payableAmountMinor: dto.bookingAmountMinor,
         reason: 'This promotional code has expired',
       };
     }
@@ -168,19 +194,26 @@ export class AdminCouponsService {
       return {
         valid: false,
         code: normalizedCode,
+        couponId: coupon.id,
         discountType: coupon.discountType,
+        discountValue: Number(coupon.discountValue),
         discountAmountMinor: 0,
+        payableAmountMinor: dto.bookingAmountMinor,
         reason: 'This promotion has reached its maximum redemptions limit',
       };
     }
 
     if (dto.bookingAmountMinor < Number(coupon.minBookingAmountMinor)) {
+      const minFormatted = (Number(coupon.minBookingAmountMinor) / 100).toLocaleString();
       return {
         valid: false,
         code: normalizedCode,
+        couponId: coupon.id,
         discountType: coupon.discountType,
+        discountValue: Number(coupon.discountValue),
         discountAmountMinor: 0,
-        reason: `Booking total does not meet the minimum requirement of ${(Number(coupon.minBookingAmountMinor) / 100).toFixed(2)} ${coupon.currency}`,
+        payableAmountMinor: dto.bookingAmountMinor,
+        reason: `Minimum booking amount of ${coupon.currency || 'ETB'} ${minFormatted} required for this code`,
       };
     }
 
@@ -192,8 +225,11 @@ export class AdminCouponsService {
         return {
           valid: false,
           code: normalizedCode,
+          couponId: coupon.id,
           discountType: coupon.discountType,
+          discountValue: Number(coupon.discountValue),
           discountAmountMinor: 0,
+          payableAmountMinor: dto.bookingAmountMinor,
           reason: 'You have already reached the redemption limit for this promotion',
         };
       }
@@ -218,12 +254,17 @@ export class AdminCouponsService {
       );
     }
 
+    discountAmountMinor = Math.max(0, discountAmountMinor);
+    const payableAmountMinor = Math.max(0, dto.bookingAmountMinor - discountAmountMinor);
+
     return {
       valid: true,
       code: normalizedCode,
       couponId: coupon.id,
       discountType: coupon.discountType,
+      discountValue: Number(coupon.discountValue),
       discountAmountMinor,
+      payableAmountMinor,
     };
   }
 

@@ -22,6 +22,8 @@ import { Booking } from '../bookings/entities/booking.entity';
 import { CancellationRequest } from '../bookings/entities/cancellation-request.entity';
 import { Case } from '../admin/cases/entities/case.entity';
 import { User } from '../../users/entities/user.entity';
+import { Coupon } from '../coupons/entities/coupon.entity';
+import { CouponRedemption } from '../coupons/entities/coupon-redemption.entity';
 import { SandboxPaymentProvider } from './providers/sandbox-payment.provider';
 import { ChapaPaymentProvider } from './providers/chapa-payment.provider';
 import { LedgerService } from './services/ledger.service';
@@ -61,6 +63,8 @@ import { AuditModule } from '../audit/audit.module';
       CancellationRequest,
       Case,
       User,
+      Coupon,
+      CouponRedemption,
     ]),
     AuditModule,
   ],

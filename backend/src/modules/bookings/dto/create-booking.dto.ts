@@ -35,5 +35,8 @@ export class CreateBookingDto {
   @IsString()
   @IsOptional()
   paymentCurrency?: string;
-}
 
+  @IsString()
+  @IsOptional()
+  couponCode?: string;
+}

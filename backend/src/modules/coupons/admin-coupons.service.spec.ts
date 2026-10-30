@@ -186,6 +186,29 @@ describe('AdminCouponsService', () => {
       expect(result.valid).toBe(false);
       expect(result.reason).toContain('already reached the redemption limit');
     });
+
+    it('calculates correct fixed amount discount and payable amount', async () => {
+      const mockCoupon = {
+        id: 'cpn-fixed',
+        code: 'ENGIDA500',
+        isActive: true,
+        discountType: CouponDiscountType.FIXED_AMOUNT,
+        discountValue: 50000,
+        currency: 'ETB',
+        minBookingAmountMinor: 100000,
+        startsAt: new Date(Date.now() - 86400000),
+      };
+      couponRepo.findOne.mockResolvedValue(mockCoupon);
+
+      const result = await service.validateCoupon({
+        code: 'ENGIDA500',
+        bookingAmountMinor: 300000,
+      });
+
+      expect(result.valid).toBe(true);
+      expect(result.discountAmountMinor).toBe(50000);
+      expect(result.payableAmountMinor).toBe(250000);
+    });
   });
 
   describe('recordRedemption', () => {
